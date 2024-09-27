@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DataGrid, {
   Item,
   Column,
@@ -72,6 +72,19 @@ export default function Table({ data }: OrganizationTableProps) {
     setEditField(data);
     showEditPopup(true);
   };
+
+  const [popupPosition, setPopupPosition] = useState({} as any);
+
+  useEffect(() => {
+    // This runs only in the browser
+    if (typeof window !== 'undefined') {
+      setPopupPosition({
+        my: 'top right',
+        at: 'top right',
+        of: window,
+      });
+    }
+  }, []);
 
   return (
     <>
@@ -245,7 +258,7 @@ export default function Table({ data }: OrganizationTableProps) {
         showCloseButton={true}
         onHiding={() => showDeletePopup(-1)}
         contentRender={renderContent}
-        position={{ my: "center", at: "center", of: window }}
+        position={popupPosition}
       />
     </>
   );

@@ -14,14 +14,14 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ breadcrumbs }) => {
                 <React.Fragment key={index}>
                     <Link
                         href={item.href}
-                        className="ml-1 flex items-center text-[#8B8B9C] font-lato font-normal text-[14px] leading-[20px] text-center">
+                        className="ml-1 flex items-center text-themeGreyColor font-lato font-normal text-[14px] leading-[20px] text-center">
                         {item.svgPath && <Image
                             src={item.svgPath}
                             alt={item.label}
                             width={item.svgWidth}
                             height={item.svgHeight}
                         />}
-                        <span className={`ml-2 text-[14px] leading-[20px] font-['Lato'] ${item.isActive ? 'text-[#0F69AF] font-bold' : 'text-[#8B8B9C]'}`}>{item.label}</span>
+                        <span className={`ml-2 text-[14px] leading-[20px] font-['Lato'] ${item.isActive ? 'text-themeBlueColor font-bold' : 'text-themeGreyColor'}`}>{item.label}</span>
                     </Link>
                     {index < breadcrumbs.length - 1 && (
                         <span className={`ml-1`}>

@@ -5,8 +5,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --themeBlueColor: #0f69af;
+
+
+  --themeGreyColor: #8B8B9C;
+  --themeBlueColor: #0F69AF;
+  --themeYellowColor: #A5CD50;
+  --themelightGreyColor: #ECECF4;
+  --themeDarkGreyColor: #838393;
+  --themeSilverGreyColor: #F8F8FC;
 }
+
 
 @media (prefers-color-scheme: dark) {
   :root {

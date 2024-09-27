@@ -51,7 +51,7 @@ export default function LoginForm() {
     }
 
     return (
-        <form onInput={() => clearErrors()} onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-[#ECECF4] bg-white rounded-[8px]">
+        <form onInput={() => clearErrors()} onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-white rounded-[8px]">
             <div className="mb-6 flex flex-col gap-2">
                 <Image
                     src="/icons/M-icon.svg"
@@ -72,7 +72,7 @@ export default function LoginForm() {
                     type="email"
                     id="email"
                     name="email"
-                    className={`border border-gray-300 rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.EmailInput}`}
+                    className={`border border-gray-300 rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.EmailInput}`}
                     placeholder="Enter your email"
                     required
                 />
@@ -84,7 +84,7 @@ export default function LoginForm() {
                     type="password"
                     id="password"
                     name="password"
-                    className={`border border-gray-300 rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.EmailInput}`}
+                    className={`border border-gray-300 rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.EmailInput}`}
                     placeholder="Enter your password"
                     required
                 />
@@ -110,7 +110,7 @@ export default function LoginForm() {
                 {Messages.forgotPassword}
             </div>}
 
-            <button type="submit" className="w-24 h-10 p-3 bg-[#0f69af] rounded justify-center items-center inline-flex text-white text-base font-bold font-['Lato'] leading-tight">Login</button>
+            <button type="submit" className="w-24 h-10 p-3 bg-themeBlueColor rounded justify-center items-center inline-flex text-white text-base font-bold font-['Lato'] leading-tight">Login</button>
 
         </form>
     )

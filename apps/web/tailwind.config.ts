@@ -12,7 +12,12 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        themeGreyColor: "var(--themeGreyColor)",
         themeBlueColor: "var(--themeBlueColor)",
+        themeYellowColor: "var(--themeYellowColor)",
+        themelightGreyColor: "var(--themelightGreyColor)",
+        themeDarkGreyColor: "var(--themeDarkGreyColor)",
+        themeSilverGreyColor: "var(--themeSilverGreyColor)",
       },
     },
   },

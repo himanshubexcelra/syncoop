@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "status_type" AS ENUM ('0', '1');
+CREATE TYPE "status_type" AS ENUM ('0', '1', '2');
 
 -- CreateTable
 CREATE TABLE "user" (
@@ -40,6 +40,7 @@ CREATE TABLE "organization" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
+    "timezone" TEXT NOT NULL,
     "status" "status_type",
     "createdAt" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,

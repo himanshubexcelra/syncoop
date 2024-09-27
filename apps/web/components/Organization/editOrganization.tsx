@@ -24,7 +24,7 @@ export default function EditOrganization({
           <input
             id="organizationName"
             name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.customEmailInput}`}
+            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
             placeholder="Enter new organization name"
             required
             defaultValue={data.name}
@@ -68,7 +68,7 @@ export default function EditOrganization({
           <input
             id="organizationName"
             name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.customEmailInput}`}
+            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
             placeholder="First name"
             required
             defaultValue={data.name}
@@ -81,7 +81,7 @@ export default function EditOrganization({
           <input
             id="organizationName"
             name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.customEmailInput}`}
+            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
             placeholder="First name"
             required
             defaultValue={data.name}
@@ -94,7 +94,7 @@ export default function EditOrganization({
           <input
             id="organizationName"
             name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.customEmailInput}`}
+            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
             placeholder="First name"
             required
             defaultValue={data.name}
@@ -107,7 +107,7 @@ export default function EditOrganization({
           <input
             id="organizationName"
             name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-[#f8f8fc] text-[#838393] ${styles.customEmailInput}`}
+            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
             placeholder="First name"
             required
             defaultValue={data.name}

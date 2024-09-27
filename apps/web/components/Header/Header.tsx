@@ -86,7 +86,7 @@ export default function Header({ userData }: any) {
                             alt="Cart"
                             width={33}
                             height={22} />
-                        <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-[#A5CD50] right-0">
+                        <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
                             <span className="text-black text-sm">12</span>
                         </div>
                     </div>

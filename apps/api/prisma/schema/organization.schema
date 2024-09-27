@@ -1,0 +1,11 @@
+
+model organization {
+  id        Int          @id @default(autoincrement())
+  name      String
+  userId    Int          @unique
+  user      user         @relation(fields: [userId], references: [id])
+  timezone  String
+  status    status_type?
+  createdAt DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt DateTime     @default(now()) @db.Timestamp(6)
+}

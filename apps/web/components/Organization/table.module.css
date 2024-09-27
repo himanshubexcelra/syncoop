@@ -1,0 +1,42 @@
+.button_primary_toolbar {
+  padding: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  border: 1px solid var(--Full-Color-Set-RichBlue-400, #50a0de);
+  border-radius: 0;
+  background: #ecf5fc !important;
+  color: #0a3b61 !important;
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  text-transform: unset;
+  height: 40px;
+}
+
+.button_primary_toolbar span {
+  padding-left: 17px;
+}
+
+.edit_title {
+  color: #0a3b61;
+  font-family: Lato;
+  font-size: 1.75rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 2.625rem;
+}
+
+.editBtn {
+  box-shadow: none;
+}
+
+.functional_assay {
+  color: #0a3b61;
+  font-family: Lato;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 42px;
+}

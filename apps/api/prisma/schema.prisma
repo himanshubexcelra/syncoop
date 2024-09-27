@@ -1,0 +1,54 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id           Int           @id @default(autoincrement())
+  firstName    String?       @db.VarChar
+  email        String?       @unique @db.VarChar
+  password     String?       @db.VarChar
+  status       status_type?
+  createdAt    DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime      @default(now()) @db.Timestamp(6)
+  lastName     String?       @db.VarChar
+  organization organization?
+  user_role    user_role[]
+}
+
+model user_role {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  roleId Int
+  role   role @relation(fields: [roleId], references: [id])
+  user   user @relation(fields: [userId], references: [id])
+}
+
+model role {
+  id        Int          @id @default(autoincrement())
+  type      String
+  status    status_type?
+  createdAt DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt DateTime     @default(now()) @db.Timestamp(6)
+  user      user_role[]
+}
+
+model organization {
+  id        Int          @id @default(autoincrement())
+  name      String
+  userId    Int          @unique
+  status    status_type?
+  createdAt DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt DateTime     @default(now()) @db.Timestamp(6)
+  user      user         @relation(fields: [userId], references: [id])
+}
+
+enum status_type {
+  Disabled @map("0")
+  Enabled  @map("1")
+}

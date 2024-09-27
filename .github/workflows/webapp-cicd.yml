@@ -1,0 +1,31 @@
+# This workflow will build and push a nextjs application to an AWS S3 Bucket when a PR is merged to the main branch. 
+# Currently it will be a manual trigger and once the application stabilizes then we can make automatic execution on a PR
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1                          # set aws region
+  AWS_BUCKET_NAME : aidd-syncoop-webapp-dev
+  NODE_VERSION: '20.11.1'                        # set node version 
+
+# permission can be added at job level or workflow level
+permissions:
+  id-token: write   # This is required for requesting the JWT from AWS
+  contents: read    # This is required for actions/checkout
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: SYNCOOP-AWS-DEV
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::851725573613:role/github-oidc-aidd-syncoop-githubactions-role
+        aws-region: ${{ env.AWS_REGION }}
+      # Upload a file to AWS s3
+    - name:  Copy next js out folder to s3
+      run: |
+        aws s3 cp ./README.md s3://${{ env.AWS_BUCKET_NAME }}/

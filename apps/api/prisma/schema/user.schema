@@ -1,0 +1,13 @@
+// user.schema
+
+model user {
+  id        Int          @id @default(autoincrement())
+  name      String?      @db.VarChar
+  email     String?      @unique @db.VarChar
+  password  String?      @db.VarChar  
+  user      user_role[]
+  organization    organization?
+  status    status_type?
+  createdAt DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt DateTime     @default(now()) @db.Timestamp(6)
+}

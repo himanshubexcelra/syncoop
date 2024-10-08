@@ -9,46 +9,94 @@ datasource db {
 }
 
 model user {
-  id           Int           @id @default(autoincrement())
-  firstName    String?       @db.VarChar
-  email        String?       @unique @db.VarChar
-  password     String?       @db.VarChar
-  status       status_type?
-  createdAt    DateTime      @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime      @default(now()) @db.Timestamp(6)
-  lastName     String?       @db.VarChar
-  organization organization?
-  user_role    user_role[]
+  id             Int           @id @default(autoincrement())
+  firstName      String?       @db.VarChar
+  email          String?       @unique @db.VarChar
+  password       String?       @db.VarChar
+  status         status_type?
+  createdAt      DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime      @default(now()) @db.Timestamp(6)
+  lastName       String?       @db.VarChar
+  user_role      user_role[]
+  organizationId Int?
+  orgUser        organization? @relation("organizationUser", fields: [organizationId], references: [id])
+  orgAdmin       organization? @relation("organizationAdmin")
 }
 
 model user_role {
   id     Int  @id @default(autoincrement())
   userId Int
+  user   user @relation(fields: [userId], references: [id])
   roleId Int
   role   role @relation(fields: [roleId], references: [id])
-  user   user @relation(fields: [userId], references: [id])
 }
 
 model role {
-  id        Int          @id @default(autoincrement())
-  type      String
-  status    status_type?
-  createdAt DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt DateTime     @default(now()) @db.Timestamp(6)
-  user      user_role[]
+  id                            Int                             @id @default(autoincrement())
+  type                          String
+  name                          String
+  status                        status_type?
+  priority                      Int
+  createdAt                     DateTime                        @default(now()) @db.Timestamp(6)
+  updatedAt                     DateTime                        @default(now()) @db.Timestamp(6)
+  user_role                     user_role[]
+  module_action_role_permission module_action_role_permission[]
+  module_permission             module_permission[]
 }
 
 model organization {
-  id        Int          @id @default(autoincrement())
-  name      String
-  userId    Int          @unique
-  status    status_type?
-  createdAt DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt DateTime     @default(now()) @db.Timestamp(6)
-  user      user         @relation(fields: [userId], references: [id])
+  id         Int          @id @default(autoincrement())
+  name       String
+  orgAdminId Int          @unique
+  user       user         @relation("organizationAdmin", fields: [orgAdminId], references: [id])
+  status     status_type?
+  type       organization_type?
+  createdAt  DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime     @default(now()) @db.Timestamp(6)
+  metadata   Json?        @db.Json
+  orgUser    user[]       @relation("organizationUser")
+}
+
+model module {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  route             String
+  status            status_type?
+  module_action     module_action[]
+  module_permission module_permission[]
+}
+
+model module_permission {
+  id       Int    @id @default(autoincrement())
+  moduleId Int
+  module   module @relation(fields: [moduleId], references: [id])
+  roleId   Int
+  role     role   @relation(fields: [roleId], references: [id])
+}
+
+model module_action {
+  id                            Int                             @id @default(autoincrement())
+  name                          String
+  type                          String
+  moduleId                      Int
+  module                        module                          @relation(fields: [moduleId], references: [id])
+  module_action_role_permission module_action_role_permission[]
+}
+
+model module_action_role_permission {
+  id            Int           @id @default(autoincrement())
+  actionId      Int
+  module_action module_action @relation(fields: [actionId], references: [id])
+  roleId        Int
+  role          role          @relation(fields: [roleId], references: [id])
 }
 
 enum status_type {
   Disabled @map("0")
   Enabled  @map("1")
+}
+
+enum organization_type {
+  Internal @map("0")
+  External  @map("1")
 }

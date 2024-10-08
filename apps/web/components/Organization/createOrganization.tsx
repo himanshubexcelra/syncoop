@@ -11,26 +11,26 @@ import {
 import { delay } from "@/utils/helpers";
 import { createOrganizationApi } from "./service";
 import "./table.css";
+import { OrganizationCreateFields } from "@/lib/definition";
+import { DELAY } from "@/utils/constants";
 
 export default function RenderCreateOrganization({
   setCreatePopupVisibility,
-  setTableData,
   formRef,
-  tableData,
-}: any) {
-
+  fetchOrganizations,
+  role,
+}: OrganizationCreateFields) {
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
-      const response = await createOrganizationApi(values);
+      const response = await createOrganizationApi(values, role);
       if (!response.error) {
-        const tempData = [...tableData, response];
         formRef.current!.instance().reset();
-        setTableData(tempData);
+        fetchOrganizations();
         setCreatePopupVisibility(false);
       } else {
         const toastId = toast.error(`${response.error}`);
-        await delay(2000);
+        await delay(DELAY);
         toast.remove(toastId);
       }
     }
@@ -65,7 +65,7 @@ export default function RenderCreateOrganization({
         <RequiredRule message="Email is required" />
         <EmailRule message="Invalid Email Address" />
       </SimpleItem>
-      <ButtonItem horizontalAlignment="left" cssClass="btnform">
+      <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
         <ButtonOptions
           text="Create Organization"
           useSubmitBehavior={true}

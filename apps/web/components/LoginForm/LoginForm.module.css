@@ -1,5 +1,5 @@
 .Headline {
-  color: #000000;
+  color: var(--foreground);
   font-family: 'Lato', sans-serif;
   font-size: 32px;
   font-weight: 700;
@@ -7,7 +7,7 @@
 }
 
 .label {
-  color: #000000;
+  color: var(--foreground);
   font-family: 'Lato', sans-serif;
   font-size: 14px;
   font-weight: 700;
@@ -16,15 +16,15 @@
 }
 
 .emailInput {
-  color: #5E5E72;
   font-family: 'Lato', sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
+  font-style: normal;
 }
 
 .errorMessage {
-  color: #AC153B;
+  color: var(--themeErrorText);
   font-family: 'Lato', sans-serif;
   font-size: 14px;
   font-weight: 700;

@@ -1,16 +1,9 @@
 import styles from "./page.module.css";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import { isAuthenticated } from "@/utils/auth";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import { BreadCrumbsObj } from "@/lib/definition";
+import Layout from "@/components/layout";
 
 export default async function Cart() {
-
-    if (!await isAuthenticated()) {
-        revalidatePath('/');
-        redirect("/")
-    }
 
     const breadcrumbs: BreadCrumbsObj[] = [
         { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
@@ -19,7 +12,7 @@ export default async function Cart() {
     ]
 
     return (
-        <>
+        <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
             <div className={styles.page}>
                 <main className={styles.main}>
@@ -28,6 +21,6 @@ export default async function Cart() {
                     </div>
                 </main>
             </div>
-        </>
+        </Layout>
     );
 }

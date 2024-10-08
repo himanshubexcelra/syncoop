@@ -1,44 +1,75 @@
 import prisma from "@/lib/prisma";
+import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 
 export async function POST(request: Request) {
     try {
         const req = await request.json();
         const user = await prisma.user.findFirst({
             /* relationLoadStrategy: 'join', // or 'query' */
-            include: {
+            select: {
+                firstName: true,
+                lastName: true,
+                email: true,
                 user_role: {
+                    orderBy: {
+                        role: {
+                            priority: 'asc',
+                        },
+                    },
                     select: {
                         role: {
                             select: {
-                                type: true
+                                id: true,
+                                type: true,
+                                priority: true,
+                                module_permission: {
+                                    select: {
+                                        module: true
+                                    }
+                                },
+                                module_action_role_permission: {
+                                    select: {
+                                        module_action: true
+                                    }
+                                }
                             }
                         }
-                    }
+                    },
+                    take: 1,
                 },
+                orgUser: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             },
             where: {
                 email: req.email,
                 password: req.password
             },
-        } as any);
+        });
         if (user) {
             return new Response(JSON.stringify({
                 success: true,
                 data: user
             }), {
-                status: 200,
+                status: STATUS_TYPE.SUCCESS,
             });
         } else {
             return new Response(JSON.stringify({
                 success: false,
-                errorMessage: "User does not exist."
+                errorMessage: MESSAGES.USER_NOT_EXISTS
             }), {
-                status: 404,
+                status: STATUS_TYPE.NOT_FOUND,
             });
         }
     } catch (error: any) {
-        return new Response(`Webhook error: ${error?.message || error}`, {
-            status: 400,
+        return new Response(JSON.stringify({
+            success: false,
+            errorMessage: `Webhook error: ${error}`
+        }), {
+            status: STATUS_TYPE.BAD_REQUEST,
         })
     }
 }

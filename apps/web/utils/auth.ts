@@ -27,7 +27,7 @@ export async function authorize(formData: FormData) {
 
             if (response.status === 200) {
                 const output = await response.json();
-                const sessionData = output.data.email;
+                const sessionData = JSON.stringify(output.data);
                 const encryptedSessionData =
                     new Cryptr(`${process.env.AUTH_SECRET}`).encrypt(sessionData);
                 const cookie = cookies();
@@ -60,4 +60,9 @@ export async function clearSession() {
 
 export async function isAuthenticated() {
     return cookies().has('session');
+}
+
+export async function getUserData() {
+    const sessionData: any = cookies().get('session')?.value;
+    return JSON.parse(new Cryptr(`${process.env.AUTH_SECRET}`).decrypt(sessionData));
 }

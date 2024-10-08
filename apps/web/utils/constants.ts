@@ -35,3 +35,5 @@ export const tableFields = {
     { dataField: "primaryContact" },
   ],
 };
+
+export const DELAY = 2000;

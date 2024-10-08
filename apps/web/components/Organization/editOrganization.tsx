@@ -1,142 +1,147 @@
-
 "use client";
+import toast from "react-hot-toast";
+import { useEffect, useState } from "react";
+import "./table.css";
+import {
+  Form,
+  SimpleItem,
+  ButtonItem,
+  ButtonOptions,
+  RequiredRule,
+  Label,
+  GroupItem,
+} from "devextreme-react/form";
+import RadioGroup from "devextreme-react/radio-group";
+import { editOrganization } from "./service";
+import { delay } from "@/utils/helpers";
+import { DELAY, status } from "@/utils/constants";
+import { OrganizationEditField, userType, OrganizationDataFields } from "@/lib/definition";
 
-import React from "react";
-import style from "./table.module.css";
-import styles from "../LoginForm/LoginForm.module.css";
+const functionalAssay = {
+  functionalAssay1: '',
+  functionalAssay2: '',
+  functionalAssay3: '',
+  functionalAssay4: '',
+};
 
-export default function EditOrganization({
-  data,
-  showEditPopup,
-  showDeletePopup,
-}: any) {
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+export default function EditOrganization({ organizationData, showEditPopup, users, setTableData, formRef, tableData }: OrganizationEditField) {
+  const [formData, setFormData] = useState(organizationData);
+  const [primaryContactId, setPrimaryContactId] = useState(organizationData.user?.id);
+  const [metaData, setMetaData] = useState(organizationData.metadata ? organizationData.metadata : functionalAssay);
+
+  // Update local state when organizationData changes
+  useEffect(() => {
+    const data = organizationData.metadata || functionalAssay;
+    const formValue = { ...organizationData, metadata: data };
+    formRef.current?.instance().option('formData', formValue);
+    setFormData(formValue);
+    setPrimaryContactId(organizationData.user.id);
+    setMetaData(data);
+
+  }, [organizationData, formRef]);
+
+
+  const handleSubmit = async () => {
+    if (formRef.current!.instance().validate().isValid) {
+      const metadata = metaData;
+      const finalData = { ...formData, metadata: metadata };
+      const response = await editOrganization(finalData);
+      if (!response.error) {
+        const tempData = tableData.filter((organization: OrganizationDataFields) => organization.id !== response.id);
+        tempData.push(response);
+        formRef.current!.instance().reset();
+        setTableData(tempData);
+        showEditPopup(false);
+      } else {
+        const toastId = toast.error(`${response.error}`);
+        await delay(DELAY);
+        toast.remove(toastId);
+      }
+    }
   };
 
-  return (
-    <div>
-      <form onSubmit={handleSubmit} className="editForm">
-        <div className="mb-6 flex flex-col gap-2">
-          <label htmlFor="organizationName" className={styles.customEmailLabel}>
-            Organization Name
-          </label>
-          <input
-            id="organizationName"
-            name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
-            placeholder="Enter new organization name"
-            required
-            defaultValue={data.name}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="mt-3 flex">
-            <span className="flex items-center gap-x-2.5 mr-2">
-              <input
-                type="radio"
-                name="role"
-                className="form-radio border-gray-400 text-indigo-600 focus:ring-indigo-600 duration-150"
-                defaultChecked={data.status === 'Enabled'}
-              />
-              <label className="text-sm text-gray-700 font-medium">
-                Enabled
-              </label>
-            </span>
-          </div>
-          <div className="mt-3 flex">
-            <span className="flex items-center gap-x-2.5 mr-2">
-              <input
-                type="radio"
-                name="role"
-                className="form-radio border-gray-400 text-indigo-600 focus:ring-indigo-600 duration-150"
-                defaultChecked={data.status === 'Disabled'}
-              />
-              <label className="text-sm text-gray-700 font-medium">
-                Disabled
-              </label>
-            </span>
-          </div>
-        </div>
-        <h3 className={`${style.functional_assay} mt-[27px]`}>
-          Functional Assay
-        </h3>
-        <div className="mb-6 flex flex-col gap-2">
-          <label htmlFor="organizationName" className={styles.customEmailLabel}>
-            Functional Assay 1
-          </label>
-          <input
-            id="organizationName"
-            name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
-            placeholder="First name"
-            required
-            defaultValue={data.name}
-          />
-        </div>
-        <div className="mb-6 flex flex-col gap-2">
-          <label htmlFor="organizationName" className={styles.customEmailLabel}>
-            Functional Assay 2
-          </label>
-          <input
-            id="organizationName"
-            name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
-            placeholder="First name"
-            required
-            defaultValue={data.name}
-          />
-        </div>
-        <div className="mb-6 flex flex-col gap-2">
-          <label htmlFor="organizationName" className={styles.customEmailLabel}>
-            Functional Assay 3
-          </label>
-          <input
-            id="organizationName"
-            name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
-            placeholder="First name"
-            required
-            defaultValue={data.name}
-          />
-        </div>
-        <div className="mb-6 flex flex-col gap-2">
-          <label htmlFor="organizationName" className={styles.customEmailLabel}>
-            Functional Assay 4
-          </label>
-          <input
-            id="organizationName"
-            name="organizationName"
-            className={`border border-gray-300 rounded-[4px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor text-themeDarkGreyColor ${styles.customEmailInput}`}
-            placeholder="First name"
-            required
-            defaultValue={data.name}
-          />
-        </div>
+  const handleValueChange = (value: string) => {
+    setFormData((prevData: OrganizationDataFields) => ({
+      ...prevData,
+      status: value,
+    }));
+  };
 
-        <div className="mb-6 mt-[17px] flex gap-2 justify-between">
-          <div className="mb-6 flex gap-2">
-            <button type="submit" className="btn_primary">
-              Save
-            </button>
-            <button
-              onClick={() => showEditPopup(false)}
-              className="btn_secondary"
-            >
-              Cancel
-            </button>
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="btn_primary"
-              onClick={() => showDeletePopup(true)}
-            >
-              {`Delete ${data.name}`}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+  const handleContactChange = (contact: any) => {
+    const user = users.filter((val: userType) => val.id === contact.value)?.[0];
+    setFormData((prevData: OrganizationDataFields) => ({
+      ...prevData,
+      user
+    }));
+    setPrimaryContactId(user.id)
+  };
+
+  const primaryContact = {
+    key: "id",
+    dataSource: users,
+    displayExpr: (item: userType) => `${item?.firstName} ${item?.lastName || ''}`,
+    valueExpr: "id",
+    value: primaryContactId, // Bind the value to state
+    onValueChanged: handleContactChange,
+  };
+
+  const setMetaDataValue = (value) => {
+    const field = value.event.target;
+    const enteredText = field.value;
+    const data = { ...metaData };
+    data[field.name] = enteredText;
+    setFormData((prevData: OrganizationDataFields) => ({
+      ...prevData,
+      metadata: data
+    }));
+    setMetaData(data);
+  }
+
+  return (
+    <Form ref={formRef} formData={formData}>
+      <SimpleItem dataField="name" editorOptions={{ disabled: true }} cssClass="disabled-field">
+        <Label text="Organization Name" />
+        <RequiredRule message="Organization name is required" />
+      </SimpleItem>
+
+      <SimpleItem dataField="status">
+        <RadioGroup items={status} defaultValue={formData.status} onValueChange={handleValueChange} />
+      </SimpleItem>
+      <SimpleItem
+        editorType="dxSelectBox"
+        editorOptions={primaryContact}
+      >
+        <Label text="Primary Contact" />
+      </SimpleItem>
+      <SimpleItem dataField="functionalAssay1" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay1 }}>
+        <Label text="Functional Assay 1" />
+      </SimpleItem>
+      <SimpleItem dataField="functionalAssay2" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay2 }}>
+        <Label text="Functional Assay 2" />
+      </SimpleItem>
+      <SimpleItem dataField="functionalAssay3" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay3 }}>
+        <Label text="Functional Assay 3" />
+      </SimpleItem>
+      <SimpleItem dataField="functionalAssay4" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay4 }}>
+        <Label text="Functional Assay 4" />
+      </SimpleItem>
+      <GroupItem cssClass="buttons-group" colCount={2}>
+        <GroupItem cssClass="buttons-group" colCount={2}>
+          <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
+            <ButtonOptions
+              text="Save"
+              useSubmitBehavior={true}
+              onClick={handleSubmit}
+            />
+          </ButtonItem>
+          <ButtonItem horizontalAlignment="left" cssClass="btn_secondary">
+            <ButtonOptions text="Cancel" onClick={() => showEditPopup(false)} />
+          </ButtonItem>
+        </GroupItem>
+        <ButtonItem horizontalAlignment="right" cssClass="btn_primary">
+          <ButtonOptions text={`Delete`} disabled={true} />
+        </ButtonItem>
+      </GroupItem>
+    </Form>
   );
 }

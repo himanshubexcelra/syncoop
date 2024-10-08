@@ -6,7 +6,7 @@ module.exports = {
   parserOptions: {
     project: true,
   },
-  rules:{
+  rules: {
     "@typescript-eslint/no-explicit-any": "off"
   }
 };

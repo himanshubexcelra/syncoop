@@ -1,0 +1,52 @@
+.button_primary_toolbar {
+  padding: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  border: 1px solid var(--Full-Color-Set-RichBlue-400, var(--borderLightBlue));
+  border-radius: 0;
+  background: var(--buttonBgWhiteBlue) !important;
+  color: var(--editTitleBlue) !important;
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  text-transform: unset;
+  height: 40px;
+}
+
+.button_primary_toolbar span {
+  padding-left: 17px;
+}
+
+.edit_title {
+  color: var(--editTitleBlue);
+  font-family: Lato;
+  font-size: 1.75rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 2.625rem;
+}
+
+.editBtn {
+  box-shadow: none;
+}
+
+.functional_assay {
+  color: var(--editTitleBlue);
+  font-family: Lato;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 42px;
+}
+
+.roles {
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 12px;
+  border-radius: 6px;
+  background-color: var(--tableRoleGrey);
+}

@@ -1,48 +1,63 @@
 'use client'
 
-import { DropDownItem } from '@/lib/definition';
+import { DropDownItem, UserData } from '@/lib/definition';
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function Header({ userData }: any) {
+type HeaderProps = {
+    userData: UserData
+}
+
+export default function Header({ userData }: HeaderProps) {
+    const [shortName, setShortName] = useState<string>('');
+    const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
+
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropDownItems: DropDownItem[] = [
-        {
-            label: userData,
-            value: 'email',
-        },
-        {
-            label: 'Profile',
-            value: 'Profile',
-            link: '/profile'
-        },
-        {
-            label: 'Logout',
-            value: 'Logout',
-        }
-    ]
 
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
 
-    const onItemSelected = async (value: string) => {
-        if (value === 'Logout') {
+    const onItemSelected = async (item: DropDownItem) => {
+        if (item.link) {
+            router.push(item.link);
+        }
+
+        if (item.value === 'Logout') {
             if (await clearSession()) {
                 router.push('/')
             }
         }
-
-        if (value === 'Profile') {
-            router.push('/profile');
-        }
         setDropdownOpen(false)
     }
+
+    useEffect(() => {
+        if (userData) {
+            if (userData.firstName)
+                setShortName(userData.firstName.charAt(0));
+
+            setDropdownItems([
+                {
+                    label: userData?.email,
+                    value: 'email',
+                },
+                {
+                    label: 'Profile',
+                    value: 'Profile',
+                    link: '/profile'
+                },
+                {
+                    label: 'Logout',
+                    value: 'Logout',
+                }
+            ]);
+        }
+    }, [userData])
 
     return (
         <header className="top-0 left-0 w-full h-10 bg-themeBlueColor flex items-center justify-between px-4 shadow-sm">
@@ -92,10 +107,10 @@ export default function Header({ userData }: any) {
                     </div>
                 </Link>
                 <div>
-                    <div className="flex items-center justify-center w-8 h-8 text-xl text-white bg-themeBlueColor rounded-full border-2 border-white cursor-pointer" onClick={toggleDropdown}>A</div>
+                    <div className="flex items-center justify-center w-[24px] h-[24px] text-white rounded-full border-2 border-white cursor-pointer" onClick={toggleDropdown}>{shortName}</div>
                     <PopupBox
                         isOpen={dropdownOpen}
-                        onItemSelected={(value: string) => onItemSelected(value)}
+                        onItemSelected={(item: DropDownItem) => onItemSelected(item)}
                         items={dropDownItems} />
                 </div>
             </div>

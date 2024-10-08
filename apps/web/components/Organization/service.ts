@@ -12,10 +12,33 @@ export async function getOrganization() {
   return data;
 }
 
-export async function editOrganization() {
+export async function editOrganization(formData: FormData) {
+  try {
+    const response = await fetch(
+      `${process.env.API_HOST_URL}/v1/organization/`,
+      {
+        // mode: "no-cors",
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      }
+    );
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    } else {
+      const error = await response.json();
+      return { status: response.status, error };
+    }
+  } catch (error: any) {
+    console.error('error', error)
+    return error;
+  }
 }
 
-export async function createOrganizationApi(formData: FormData) {
+export async function createOrganizationApi(formData: FormData, role: number) {
   try {
     const response: any = await fetch(
       `${process.env.API_HOST_URL}/v1/organization`,
@@ -25,7 +48,7 @@ export async function createOrganizationApi(formData: FormData) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, roleId: role }),
       }
     );
 
@@ -34,13 +57,10 @@ export async function createOrganizationApi(formData: FormData) {
       return data;
     } else if (response.status === 500) {
       const error = await response.json();
-      return {status: response.status, error};
+      return { status: response.status, error };
     }
   } catch (error: any) {
     return error;
   }
 }
 
-export async function deleteOrganization() {
-  // console.log(id);
-}

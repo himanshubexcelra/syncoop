@@ -1,0 +1,18 @@
+.roleType {
+    color: var(--themeHeadingBlue);
+    text-align: center;
+    font-family: Lato;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 42px;
+}
+
+.company {
+    color:var(--themeBlueColor);
+    font-family: Lato;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 42px;
+}

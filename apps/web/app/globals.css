@@ -13,6 +13,23 @@
   --themelightGreyColor: #ECECF4;
   --themeDarkGreyColor: #838393;
   --themeSilverGreyColor: #F8F8FC;
+  --themeBorderGrey: #D1D5DB;
+  --themeErrorText: #AC153B;
+  --tableRoleGrey: #616170;
+  --editTitleBlue: #0a3b61;
+  --borderLightBlue: #50a0de;
+  --buttonBgWhiteBlue: #ecf5fc ;
+  --themeDotGreenColor: #01884C;
+  --themeDotGreyColor: #C7C7D1;
+  --themeDotRedColor: #E61E50;
+  --themeDotBlueColor: #2DBECD;
+  --themeStatsBlueColor:#DDFCFF;
+  --themeStatsGreenColor: #C6F4CD;
+  --themeStatsRedColor: #FFDADC;
+  --themeHeadingBlue: #0A3B61;
+  --moduleCheckBoxBg: #ECF5FC;
+  --assayBorder: #ccc;
+  --tabBoxShadow: #0F1A2E26;
 }
 
 
@@ -33,4 +50,9 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Hide password reveal icon in MS Edge browser */
+::-ms-reveal {
+  display: none;
 }

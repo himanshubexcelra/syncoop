@@ -1,0 +1,19 @@
+.text {
+    display: flex;
+    width: 620px;
+    height: 60px;
+    padding: 8px;
+    align-items: center;
+    color: var(--foreground);
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.row {
+    border-top: 1px solid var(--themeDotGreyColor);
+    border-bottom: 1px solid var(--themeDotGreyColor);
+    background: var(--background)
+}

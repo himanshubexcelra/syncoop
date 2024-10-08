@@ -12,7 +12,7 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": [        
+      "dependsOn": [
         "lint",
         "test",
         "^build"
@@ -32,7 +32,7 @@
       ]
     },
     "dev": {
-      "dependsOn": [ 
+      "dependsOn": [
         "lint",
         "test",
         "^dev"

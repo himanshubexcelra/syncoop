@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
+import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 
-export const dynamic = "force-static";
+const { ORGANIZATION_ALREADY_EXISTS, USER_BELONGS_TO_ANOTHER_ORG } = MESSAGES;
+const { SUCCESS, CONFLICT, BAD_REQUEST, INTERNAL_SERVER_ERROR } = STATUS_TYPE;
 
 export async function GET() {
   try {
@@ -12,11 +14,11 @@ export async function GET() {
     } as any);
     return new Response(JSON.stringify(organizations), {
       headers: { "Content-Type": "application/json" },
-      status: 200,
+      status: SUCCESS,
     });
   } catch (error: any) {
     return new Response(`Webhook error: ${error.message}`, {
-      status: 400,
+      status: BAD_REQUEST,
     });
   }
 }
@@ -24,7 +26,7 @@ export async function GET() {
 export async function POST(request: Request) {
 
   const req = await request.json();
-  const { name, firstName, lastName, email } = req;
+  const { name, firstName, lastName, email, roleId } = req;
 
   // Check if an organization with the same name already exists (case insensitive)
   try {
@@ -38,51 +40,49 @@ export async function POST(request: Request) {
     });
 
     if (existingOrganization) {
-      const message = `Organization ${existingOrganization.name} already exists`;
-      return new Response(JSON.stringify(message), {
+      return new Response(JSON.stringify(ORGANIZATION_ALREADY_EXISTS), {
         headers: { "Content-Type": "application/json" },
-        status: 500,
+        status: INTERNAL_SERVER_ERROR,
       });
-      // throw new Error(`An organization with the name "${name}" already exists.`);
     }
 
     try {
-
-      // Create the organization with the user and role
-      const organization = await prisma.organization.create({
+      // Step 1: Create the user (admin)
+      const adminUser = await prisma.user.create({
         data: {
-          name,
-          status: "Enabled",
-          user: {
+          firstName,
+          lastName,
+          email,
+          status: 'Enabled',
+          user_role: {
             create: {
-              firstName,
-              lastName,
-              email,
-              status: "Enabled",
-              user_role: {
-                create: {
-                  roleId: 2, // Assign the role to the user
-                },
-              },
-            },
-          },
-        },
-        include: {
-          user: {
-            include: {
-              user_role: {
-                include: {
-                  role: true, // Include role details if needed
-                },
-              },
+              roleId: roleId,
             },
           },
         },
       });
 
+      // Step 2: Create the organization and link the admin user
+      const organization = await prisma.organization.create({
+        data: {
+          name,
+          status: 'Enabled',
+          orgAdminId: adminUser.id, // Link the user as the org admin
+        },
+      });
+
+      // Step 3: Link the admin user as an organization user
+      await prisma.user.update({
+        where: {
+          id: adminUser.id,
+        },
+        data: {
+          organizationId: organization.id, // Associate user with the organization
+        },
+      });
       return new Response(JSON.stringify(organization), {
         headers: { "Content-Type": "application/json" },
-        status: 200,
+        status: SUCCESS,
       });
     } catch (error) {
       console.error(error);
@@ -91,5 +91,63 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error(error);
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const req = await request.json();
+    const { id, name, user: { id: orgAdminId }, status, metadata } = req;
+
+    // Check if user is associated with another organization
+    const existingUser = await prisma.organization.findFirst({
+      where: {
+        orgAdminId,
+        NOT: {
+          id,
+        },
+      },
+    });
+
+    if (existingUser) {
+      return new Response(JSON.stringify(USER_BELONGS_TO_ANOTHER_ORG), {
+        headers: { "Content-Type": "application/json" },
+        status: CONFLICT,
+      });
+    }
+
+    // Update the organization and user details
+    const updatedOrganization = await prisma.organization.update({
+      where: { id },
+      data: {
+        name,
+        orgAdminId,
+        metadata,
+        status,
+      },
+      include: {
+        user: {
+          include: {
+            user_role: {
+              include: {
+                role: true, // Include role details if needed
+              },
+            },
+          },
+        },
+      },
+    });
+    return new Response(JSON.stringify(updatedOrganization), {
+      headers: { "Content-Type": "application/json" },
+      status: SUCCESS,
+    });
+  } catch (error: any) {
+    console.error(error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { "Content-Type": "application/json" },
+      status: BAD_REQUEST, // Adjust status code as needed
+    });
+  } finally {
+    await prisma.$disconnect();
   }
 }

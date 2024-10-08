@@ -1,0 +1,35 @@
+.primaryButton {
+    height: 32px;
+    padding: 8px 10px;
+    justify-content: center;
+    align-items: center;
+    color: var(--background);
+    text-align: center;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16.8px;
+    border-radius: 4px;
+    background: var(--themeBlueColor);
+}
+
+.secondaryButton {
+    display: inline-flex;
+    height: 32px;
+    padding: 8px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    border: 2px solid var(--themeBlueColor);
+    color: var(--themeBlueColor);
+    text-align: center;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16.8px 
+}

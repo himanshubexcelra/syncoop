@@ -26,6 +26,7 @@ export interface BreadCrumbsObj {
   type?: string;
 }
 
+export interface HeadingObj extends BreadCrumbsObj { }
 export interface DropDownItem {
   label: string;
   value: string;
@@ -54,6 +55,17 @@ export interface userType {
   status: string,
 }
 
+export interface sharedUserType {
+  userId: number,
+  id: number,
+  name: string,
+  lastName: string,
+  firstName?: string,
+  email: string,
+  status: string,
+  role?: string
+}
+
 export interface metaDataType {
   functionalAssay1: string,
   functionalAssay2: string,
@@ -66,33 +78,64 @@ export interface OrganizationDataFields {
   name?: string;
   email?: string;
   status?: string;
-  user?: userType;
+  orgUser: User[];
   metadata?: metaDataType;
+  projects: ProjectDataFields[];
+  orgAdminId?: number;
 }
 
-type ShowEditPopupType = (value: boolean) => void;
+export interface OrganizationTableProps {
+  data: OrganizationDataFields;
+}
 
 type SetTableDataType = (value: OrganizationDataFields[]) => void;
+
+export type ShowEditPopupType = (value: boolean) => void;
+
+export type fetchDataType = () => void;
 
 export interface OrganizationCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
   setTableData: SetTableDataType,
   formRef: FormRef,
-  tableData: OrganizationDataFields[],
+  fetchOrganizations: fetchDataType,
+  tableData: ProjectDataFields,
+  projectData: ProjectDataFields,
+  users: User[],
+  organizationData: OrganizationDataFields[],
+  roleType: string,
+  edit: boolean,
 }
 
-type FetchUserType = (value: boolean) => void;
-
-export interface OrganizationCreateFields {
-  setCreatePopupVisibility: ShowEditPopupType,
-  formRef: FormRef,
-  fetchOrganizations: FetchUserType,
-  role: number
-}
-export interface OrganizationEditField extends OrganizationCreateFields {
+export type FetchUserType = (value: boolean) => void;
+export interface OrganizationEditField {
   organizationData: OrganizationDataFields,
   showEditPopup: ShowEditPopupType,
   users: userType[],
+  setTableData: SetTableDataType,
+  formRef: FormRef,
+  fetchOrganizations: fetchDataType,
+  tableData: ProjectDataFields[],
+  projectData: ProjectDataFields,
+  roleType: string,
+  edit: boolean,
+}
+export interface ProjectDataFields {
+  name: string;
+  id: number;
+  description?: string;
+  organizationId?: number;
+  organization: OrganizationDataFields,
+  user: userType;
+  sharedUsers: sharedUserType[];
+  target: string;
+  type: string;
+  updatedBy: userType;
+  updatedAt: Date;
+  userId?: number;
+  owner: User;
+  ownerId: number;
+  orgUser?: OrgUser;
 }
 
 export interface UserRole {
@@ -109,11 +152,14 @@ interface Organization {
 export interface User {
   id: number;
   firstName: string;
+  name?: string;
   email: string;
   status: string;
   lastName: string;
   organization: Organization;
   user_role: UserRoleType[];
+  role?: string,
+  permission: string,
 }
 
 export interface UserRoleType {
@@ -126,6 +172,13 @@ export interface UserData {
   lastName: string;
   user_role: UserRoleType[];
   organization?: object;
+  organizationId: number;
+  orgUser: User;
+  id?: number;
+}
+export interface projectType {
+  id: number,
+  name: string
 }
 
 export interface Assay {
@@ -144,8 +197,8 @@ export interface ModuleFeature {
 }
 
 export interface ModuleTableProps {
-  featuresLeft: ModuleFeature[];
-  featuresRight: ModuleFeature[];
+  features: ModuleFeature[];
+  roleType?: string;
 }
 
 export interface Status {
@@ -160,6 +213,7 @@ export interface CountCard {
   svgPath: string;
   innerGap: string;
   count: string;
+  href?: string;
 }
 
 export interface StatusComponentProps {

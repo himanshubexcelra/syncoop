@@ -1,7 +1,6 @@
 .main {
-  display: flex; 
+  display: flex;
   flex-direction: column;
-  padding: 0px 0px 10px 20px;
   align-items: flex-start;
   gap: 17px;
   color: #0a3b61;
@@ -12,6 +11,7 @@
   font-weight: 700;
   line-height: 42px;
 }
+
 .table {
   background: #fcfcfc;
   box-shadow:

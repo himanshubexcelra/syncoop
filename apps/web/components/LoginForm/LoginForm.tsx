@@ -2,7 +2,6 @@
 
 import { authorize } from "@/utils/auth";
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 import styles from "./LoginForm.module.css"
 import toast from "react-hot-toast";
@@ -11,7 +10,7 @@ import DialogPopUp from "../../ui/DialogPopUp";
 import PopupContent from "../ForgotPopUp/ForgotContent";
 import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
-
+import { UserData } from "@/lib/definition";
 
 export type ErrorType = {
     email: string,
@@ -21,10 +20,13 @@ const dialogProperties = {
     width: 336,
     height: 424,
 }
-export default function LoginForm() {
+
+type LoginFormProps = {
+    onSuccess: (userData: UserData) => void;
+}
+
+export default function LoginForm({ onSuccess }: LoginFormProps) {
     const [visible, setVisible] = useState(false);
-    const [errors, setErrors] = useState({} as ErrorType);
-    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -32,18 +34,10 @@ export default function LoginForm() {
         const formData = new FormData(event.currentTarget);
         const response = await authorize(formData);
         if (response) {
-            if (response?.errors) {
-                setErrors(response.errors);
-            } else if (response.success) {
+            if (response.success) {
                 const { data } = response;
-                const toastId = toast.success(
-                    Messages.USER_LOGGED_IN.replace('[PLACEHOLDER_FIRSTNAME]', `${data.firstName}`)
-                        .replace('[PLACEHOLDER_LASTNAME]', `${data.lastName}`)
-                );
-                await delay(DELAY);
-                toast.remove(toastId);
-                router.push('/dashboard');
-            } else if (!response?.success) {
+                await onSuccess(data);
+            } else if (response.errorMessage) {
                 const toastId = toast.error(`${response?.errorMessage}`);
                 await delay(DELAY);
                 toast.remove(toastId);
@@ -56,14 +50,10 @@ export default function LoginForm() {
         return false;
     }
 
-    const clearErrors = () => {
-        setErrors({} as ErrorType);
-    }
-
     return (
         <>
             <DialogPopUp {...{ visible, setVisible, dialogProperties, Content: PopupContent, }} />
-            <form onInput={() => clearErrors()} onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
+            <form onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
                 <div className="mb-6 flex flex-col gap-2">
                     <Image
                         src="/icons/M-icon.svg"
@@ -88,7 +78,6 @@ export default function LoginForm() {
                         placeholder="Enter your email"
                         required
                     />
-                    <span className={styles.errorMessage}>{errors?.email}</span>
                 </div>
                 <div className="flex flex-col gap-2 mb-6">
                     <label htmlFor="password" className={styles.label}>Password</label>
@@ -114,13 +103,6 @@ export default function LoginForm() {
                             />
                         </button>
                     </div>
-                    <span className={styles.errorMessage}>{
-                        errors?.password && <ul>
-                            {errors.password.map((message: string, index: number) => {
-                                return <li key={index + 1}>${message}</li>;
-                            })}
-                        </ul>}
-                    </span>
                     <div className="flex gap-1.5">
                         <Image
                             src="/icons/info-icon.svg"

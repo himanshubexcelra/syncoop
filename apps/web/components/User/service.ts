@@ -29,13 +29,11 @@ export async function createUser(formData: FormData) {
                 body: JSON.stringify(formData),
             }
         );
-
-        if (response.status === 200) {
-            const data = await response.json();
-            return data;
-        } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
+        const data = await response.json();
+        if (response.ok) {
+            return { status: response.status, data };
+        } else {
+            return { status: response.status, error: data.error || 'An error occurred' };
         }
     } catch (error: any) {
         return error;

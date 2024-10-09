@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import Header from "./Header";
+import { User, UserData } from "@/lib/definition";
 
 // Mock useRouter:
 jest.mock("next/navigation", () => ({
@@ -11,9 +12,31 @@ jest.mock("next/navigation", () => ({
   },
 }));
 
+const mockUserData: UserData = {
+  id: 1,
+  firstName: 'System',
+  lastName: 'Admin',
+  email: 'a@b.com',
+  organization: {
+    id: 1
+  },
+  organizationId: 1,
+  orgUser: {} as User,
+  user_role: [
+    {
+      role: {
+        id: 1,
+        name: 'System Admin',
+        priority: 1,
+        type: 'admin'
+      }
+    }
+  ]
+}
+
 describe("Header Component", () => {
   beforeEach(() => {
-    render(<Header />);
+    render(<Header userData={mockUserData} />);
   });
 
   test("renders the logo image", () => {

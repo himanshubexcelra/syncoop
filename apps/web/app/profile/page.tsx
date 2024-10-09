@@ -6,7 +6,7 @@ import Layout from "@/components/layout";
 export default async function Profile() {
 
     const breadcrumbs: BreadCrumbsObj[] = [
-        { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
+        { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/projects' },
         { label: 'Admin', svgPath: '/icons/admin-inactive-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
         { label: 'Profile', svgPath: '', svgWidth: 16, svgHeight: 16, href: '/', isActive: true }
     ]

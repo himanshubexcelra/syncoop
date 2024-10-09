@@ -1,7 +1,27 @@
 "use server";
 
-export async function getOrganization() {
-  const response = await fetch(`${process.env.API_HOST_URL}/v1/organization`, {
+export async function getOrganization(withRelation: string[] = []) {
+  const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+  if (withRelation.length) {
+    url.searchParams.append('with', JSON.stringify(withRelation));
+  }
+  const response = await fetch(url, {
+    mode: "no-cors",
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+}
+
+export async function getOrganizationById(withRelation: string[] = [], id: number) {
+  const url = new URL(`${process.env.API_HOST_URL}/v1/organization?id=${id}`);
+  if (withRelation.length) {
+    url.searchParams.append('with', JSON.stringify(withRelation));
+  }
+  const response = await fetch(url, {
     mode: "no-cors",
     method: "GET",
     headers: {

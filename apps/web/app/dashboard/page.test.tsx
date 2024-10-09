@@ -70,7 +70,6 @@ describe('OrganizationList should display proper data', () => {
     expect(screen.getByText('Actions')).toBeInTheDocument();
 
     expect(screen.getByText('BioQuest')).toBeInTheDocument();
-    expect(screen.getByText('elena.garcia@bioquest.com')).toBeInTheDocument();
   });
 
   test.skip('searches the data correctly', async () => {

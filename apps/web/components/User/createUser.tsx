@@ -53,8 +53,8 @@ export default function RenderCreateUser({
         const validationCheck = customPasswordCheck(values.password) && formRef.current!.instance().validate().isValid
         if (validationCheck) {
             const response = await createUser(values);
-            if (!response.error) {
-                const tempData = [...tableData, response];
+            if (response.status === 200) {
+                const tempData = [...tableData, response.data];
                 formRef.current!.instance().reset();
                 setPassword('');
                 setTableData(tempData);
@@ -65,6 +65,9 @@ export default function RenderCreateUser({
                 toast.remove(toastId);
             }
         }
+        else {
+            formRef.current!.instance().validate()
+        }
     };
 
     const handleGeneratePassword = () => {
@@ -74,6 +77,10 @@ export default function RenderCreateUser({
     };
 
     const handleCopyPassword = () => {
+        if (password === "") {
+            toast.error("Password cannot be empty");
+            return;
+        }
         navigator.clipboard.writeText(password)
             .then(() => toast.success("Password copied to clipboard"))
             .catch(() => toast.error("Failed to copy password"));
@@ -154,9 +161,11 @@ export default function RenderCreateUser({
                 displayExpr: "name",
                 valueExpr: "id",
                 value: roleType === 'admin' ? "" : organizationData[0].id,
+                disabled: roleType !== 'admin',
             }}
         >
             <Label text="Select an Organisation" />
+            <RequiredRule message="Organisation is required" />
         </SimpleItem>
     ), [organizationData, roleType]);
     return (

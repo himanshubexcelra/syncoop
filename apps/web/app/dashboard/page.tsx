@@ -1,6 +1,6 @@
 import styles from "./page.module.css";
 import Image from "next/image";
-import { BreadCrumbsObj } from "@/lib/definition";
+import { BreadCrumbsObj, HeadingObj } from "@/lib/definition";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import Layout from "@/components/layout";
 import UsersTable from "@/components/User/UsersTable";
@@ -12,14 +12,18 @@ import { OrganizationDataFields } from "@/lib/definition";
 import Heading from "@/components/Heading/Heading";
 import { getOrganization } from "@/components/Organization/service";
 import Tabs from "@/ui/Tab/Tabs";
-import { countCardsDetails, dataSource, featuresLeft, featuresRight, filterOrganizationList, filterUsersByOrgId, stats } from "@/utils/helpers";
+import { countCardsDetails, dataSource, features, filterOrganizationList, filterUsersByOrgId, stats } from "@/utils/helpers";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
+import { redirect } from "next/navigation";
 
 export default async function Dashboard() {
 
   const userData = await getUserData();
+  if (!userData) {
+    redirect('/');
+  }
   const { type: roleType, priority: currentUserPriority } = userData.user_role[0].role;
   const { orgUser } = userData;
   let organizations: OrganizationDataFields[] = [orgUser];
@@ -40,23 +44,15 @@ export default async function Dashboard() {
       href: "/",
     },
     {
-      label: `Admin: ${orgUser?.name}`,
+      label: `Admin:  ${orgUser?.name}`,
       svgPath: "/icons/admin-inactive-icon.svg",
       svgWidth: 16,
       svgHeight: 16,
       href: "/",
     },
-    {
-      label: "Dashboard",
-      svgPath: "",
-      svgWidth: 16,
-      svgHeight: 16,
-      href: "/",
-      isActive: true,
-    },
   ];
 
-  const heading: BreadCrumbsObj[] = [
+  const heading: HeadingObj[] = [
     {
       svgPath: "/icons/admin-icon-lg.svg",
       label: `${orgUser?.name}`,
@@ -92,7 +88,7 @@ export default async function Dashboard() {
     {
       title: "Modules",
       Component: Module,
-      props: { featuresLeft, featuresRight },
+      props: { features, roleType },
     }
   ];
 
@@ -122,12 +118,12 @@ export default async function Dashboard() {
 
   return (
     <Layout>
-      <Breadcrumb breadcrumbs={breadcrumbs} />
-      <Heading {...{ heading }} />
-      <Tabs tabsDetails={tabsStatus} />
       <div className={styles.page}>
         <main className={styles.main}>
-          {roleType === 'admin' && <div className='py-5'>
+          <Breadcrumb breadcrumbs={breadcrumbs} />
+          <Heading {...{ heading }} />
+          <Tabs tabsDetails={tabsStatus} />
+          {roleType === 'admin' && <div className='p-5'>
             <Tabs tabsDetails={tabsInfo({
               roles: filteredRoles,
               roleType,
@@ -139,7 +135,7 @@ export default async function Dashboard() {
             })} />
           </div>
           }
-          {roleType === 'admin' && <div>
+          {roleType === 'admin' && <div className='p-5'>
             <div className={styles.imageContainer}>
               <Image
 
@@ -155,8 +151,8 @@ export default async function Dashboard() {
             </div>
           </div>
           }
-          {roleType === 'org_admin' && <div>
-            <div className={styles.imageContainer}>
+          {roleType === 'org_admin' && <div className='p-5'>
+            <div className={`${styles.imageContainer} pt-5 pb-2.5`}>
               <Image
                 src="/icons/Users-icon-lg.svg"
                 width={40}

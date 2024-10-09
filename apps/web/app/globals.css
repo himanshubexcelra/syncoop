@@ -5,25 +5,42 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --black: #000;
+  --white: #fff;
 
 
   --themeGreyColor: #8B8B9C;
   --themeBlueColor: #0F69AF;
+  --themeSecondayBlue: #085897;
   --themeYellowColor: #A5CD50;
   --themelightGreyColor: #ECECF4;
   --themeDarkGreyColor: #838393;
   --themeSilverGreyColor: #F8F8FC;
+  --themeSecondaryGreyColor: #C7C7D1;
+  --themeTertiaryBlueColor: #DDFCFF;
+  --themeSuccessBgColor: #C6F4CD;
+  --themeSuccessColor: #01884C;
+  --themeErrorBgColor: #FFDADC;
+  --themeErrorColor: #AC153B;
+  --themeLightBlueColor: #ECF5FC;
+  --themeGreyBorder: #E1E1EA;
+  --themeDarkBlueColor: #0A3B61;
+  --themeDarkBlueBorderColor: #50A0dE;
   --themeBorderGrey: #D1D5DB;
   --themeErrorText: #AC153B;
+  --themeLabelGrey: #777788;
+  --themeGreyShadow: #DCDCE8;
+  --themeGreyHeaderColor: #0F1A2E;
+  --themeGreyBorderSecondaryColor: #e0e0e0;
   --tableRoleGrey: #616170;
   --editTitleBlue: #0a3b61;
   --borderLightBlue: #50a0de;
-  --buttonBgWhiteBlue: #ecf5fc ;
+  --buttonBgWhiteBlue: #ecf5fc;
   --themeDotGreenColor: #01884C;
   --themeDotGreyColor: #C7C7D1;
   --themeDotRedColor: #E61E50;
   --themeDotBlueColor: #2DBECD;
-  --themeStatsBlueColor:#DDFCFF;
+  --themeStatsBlueColor: #DDFCFF;
   --themeStatsGreenColor: #C6F4CD;
   --themeStatsRedColor: #FFDADC;
   --themeHeadingBlue: #0A3B61;
@@ -49,6 +66,54 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+.main {
+  display: inline-flex;
+  padding: 0px 0px 10px 20px;
+  align-items: center;
+  gap: 17px;
+  color: var(--themeDarkBlueColor);
+  text-align: center;
+  font-family: Lato;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 42px;
+}
+
+.content-wrapper {
+  padding: 20px;
+  background: #F8F8FC;
+}
+
+.btn-primary.dx-button {
+  border: 2px solid var(--themeBlueColor);
+  background-color: var(--themeBlueColor);
+  color: #fff;
+
+  .dx-button-text {
+    color: #fff;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    text-transform: unset;
+  }
+}
+
+.btn-secondary.dx-button {
+  border: 2px solid var(--themeBlueColor);
+  color: var(--themeBlueColor);
+
+  .dx-button-text {
+    color: var(--themeBlueColor);
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    text-transform: unset;
   }
 }
 

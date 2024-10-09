@@ -14,36 +14,29 @@ import { Popup } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import "./table.css";
+import './form.css';
 import styles from "./table.module.css";
 import { OrganizationDataFields, UserData, UserRoleType } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
-import { getUsers } from "../User/service";
-import { formatDate } from "@/utils/dateFormat";
 import { FormRef } from "devextreme-react/cjs/form";
 import { getOrganization } from "@/components/Organization/service";
+import { formatDate } from "@/utils/helpers";
 
 export default function ListOrganization({ userData }: { userData: UserData }) {
   const [editPopup, showEditPopup] = useState(false);
   const [editField, setEditField] = useState({ name: '', email: '' });
   const [createPopupVisible, setCreatePopupVisibility] = useState(false);
   const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
-  const [users, setUsers] = useState([]);
   const [loader, setLoader] = useState(true);
 
   const { role } = userData.user_role[0] as UserRoleType;
   const { type: roleType, id: roleId } = role;
 
-  const fetchUsers = async () => {
-    const user = await getUsers();
-    setUsers(user);
-  }
-
   const fetchOrganizations = async () => {
-    const organization = await getOrganization();
+    const organization = await getOrganization(['orgUser', 'user_role']);
     setTableData(organization);
     setLoader(false);
-    fetchUsers();
   }
 
   useEffect(() => {
@@ -94,8 +87,8 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
             dataField="projects"
             width={90}
             alignment="center"
-            cellRender={() => (
-              <span>0</span>
+            cellRender={({ data }: any) => (
+              <span>{data.projects?.length}</span>
             )}
           />
           <Column
@@ -107,11 +100,11 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
             )}
           />
           <Column
-            dataField="users"
+            dataField="orgUser"
             width={70}
             alignment="center"
-            cellRender={() => (
-              <span>0</span>
+            cellRender={({ data }: any) => (
+              <span>{data.orgUser?.length}</span>
             )}
           />
           <Column dataField="status" alignment="center" caption="Organization Status" />
@@ -212,9 +205,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
                     formRef={formRef}
                     organizationData={editField}
                     showEditPopup={showEditPopup}
-                    users={users}
-                    setTableData={setTableData}
-                    tableData={tableData}
+                    fetchOrganizations={fetchOrganizations}
                   />
                 )}
                 width={400}

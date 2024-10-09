@@ -22,7 +22,7 @@ export default function PopupContent({ onClose }: { onClose: () => void }) {
                 <div className='gap-4'>
                     <div className={`${styles.subHeading}`}>Forgot Password?</div>
                     <div className={`${styles.message}`}>
-                        {Messages.forgotPassword}
+                        {Messages.FORGOT_PASSWORD_MESSAGE}
                     </div>
                 </div>
 

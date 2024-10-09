@@ -61,7 +61,7 @@ describe('Auth API', () => {
 
             await expect(response).resolves.toEqual({
                 success: false,
-                errorMessage: MESSAGES.USER_NOT_EXISTS
+                errorMessage: MESSAGES.INVALID_LOGIN_CREDENTIALS
             })
         });
 

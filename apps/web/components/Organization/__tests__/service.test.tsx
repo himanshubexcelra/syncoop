@@ -43,10 +43,15 @@ describe('Organization API Functions', () => {
             })
         ) as jest.Mock;
 
-        const result = await getOrganization();
+        const withRelation = ['orgUser', 'user_role'];
+        const result = await getOrganization(withRelation);
+        const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+        if (withRelation.length) {
+            url.searchParams.append('with', JSON.stringify(withRelation));
+        }
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/organization`, {
+        expect(fetch).toHaveBeenCalledWith(url, {
             mode: "no-cors",
             method: "GET",
             headers: {

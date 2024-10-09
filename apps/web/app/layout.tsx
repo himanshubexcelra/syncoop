@@ -12,6 +12,11 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+const openSans = localFont({
+  src: "./fonts/OpenSans-Regular.ttf",
+  variable: "--font-open-sans",
+  weight: "400",
+});
 
 export const metadata: Metadata = {
   title: "Millipore App",
@@ -28,7 +33,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} antialiased`}>
         {children}
         <Toaster position="bottom-center" reverseOrder={false} />
       </body>

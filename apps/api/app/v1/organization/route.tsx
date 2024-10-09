@@ -2,23 +2,112 @@ import prisma from "@/lib/prisma";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 
 const { ORGANIZATION_ALREADY_EXISTS, USER_BELONGS_TO_ANOTHER_ORG } = MESSAGES;
-const { SUCCESS, CONFLICT, BAD_REQUEST, INTERNAL_SERVER_ERROR } = STATUS_TYPE;
+const { SUCCESS, CONFLICT, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const organizations = await prisma.organization.findMany({
-      relationLoadStrategy: "join",
-      include: {
-        user: true,
-      },
-    } as any);
-    return new Response(JSON.stringify(organizations), {
-      headers: { "Content-Type": "application/json" },
-      status: SUCCESS,
-    });
+    const url = new URL(request.url);
+    const searchParams = new URLSearchParams(url.searchParams);
+    const orgId = searchParams.get('id'); // Get the organization ID from query parameters
+    const joins = searchParams.get('with');
+    const query: any = {};
+
+    if (joins && joins.length) {
+      query.include = {};
+      if (joins.includes('orgUser') && !joins.includes('user_role')) {
+        query.include = {
+          ...query.include,
+          user: true,
+          orgUser: {
+            select: {
+              id: true,
+              projectPermissions: true,
+              orgAdmin: true,
+              orgUser: true,
+            },
+          }
+        }
+      }
+      else if (joins.includes('user_role')) {
+        query.include = {
+          ...query.include,
+          user: true,
+          orgUser: { // Include users related to this organization
+            include: {
+              projectPermissions: true,
+              orgAdmin: true,
+              orgUser: true,
+              user_role: {
+                orderBy: {
+                  role: {
+                    priority: 'asc',
+                  },
+                },
+                select: {
+                  role: {
+                    select: {
+                      type: true,
+                    }
+                  }
+                },
+                take: 1
+              },
+            }
+          },
+        }
+      }
+      if (joins.includes('projects')) {
+        query.include = {
+          ...query.include,
+          projects: {
+            include: {
+              sharedUsers: true, // Include shared users for each project
+              owner: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+              updatedBy: { // Include the user who updated the project
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          }
+        }
+      }
+    }
+    if (orgId) {
+      // If an ID is present, fetch the specific organization with users and projects
+      query.where = { id: Number(orgId) }; // Add the where condition to the query
+      const organization = await prisma.organization.findUnique(query);
+
+      if (!organization) {
+        return new Response(JSON.stringify({ error: 'Organization not found' }), {
+          headers: { "Content-Type": "application/json" },
+          status: NOT_FOUND,
+        });
+      }
+
+      return new Response(JSON.stringify(organization), {
+        headers: { "Content-Type": "application/json" },
+        status: SUCCESS, // success status code
+      });
+    } else {
+      // If no ID is present, fetch all organizations, users, and projects
+      const organizations = await prisma.organization.findMany(query);
+
+      return new Response(JSON.stringify(organizations), {
+        headers: { "Content-Type": "application/json" },
+        status: SUCCESS, // success status code
+      });
+    }
   } catch (error: any) {
-    return new Response(`Webhook error: ${error.message}`, {
-      status: BAD_REQUEST,
+    return new Response(`Error: ${error.message}`, {
+      headers: { "Content-Type": "application/json" },
+      status: BAD_REQUEST, // bad request
     });
   }
 }

@@ -98,7 +98,7 @@ docker logs aidd_syncoop_pg
 To execute postgres database server, run below command
 
 ```
-docker exec -it itv_pg psql -U postgres
+docker exec -it aidd_syncoop_pg psql -U postgres
 ```
 
 Create new database `aidd_syncoop` and connect to database as mentioned below
@@ -180,6 +180,3 @@ To push your schema changes to database, run below command
 ```
 npx prisma db push
 ```
-
-
-

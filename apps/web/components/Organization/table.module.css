@@ -2,10 +2,10 @@
   padding: 8px;
   justify-content: flex-end;
   align-items: center;
-  border: 1px solid var(--Full-Color-Set-RichBlue-400, #50a0de);
+  border: 1px solid var(--themeDarkBlueBorderColor);
   border-radius: 0;
-  background: #ecf5fc !important;
-  color: #0a3b61 !important;
+  background: var(--themeLightBlueColor) !important;
+  color: var(--themeDarkBlueColor) !important;
   font-family: Lato;
   font-size: 14px;
   font-style: normal;
@@ -20,7 +20,7 @@
 }
 
 .edit_title {
-  color: #0a3b61;
+  color: var(--themeDarkBlueColor);
   font-family: Lato;
   font-size: 1.75rem;
   font-style: normal;
@@ -33,7 +33,7 @@
 }
 
 .functional_assay {
-  color: #0a3b61;
+  color: var(--themeDarkBlueColor);
   font-family: Lato;
   font-size: 28px;
   font-style: normal;

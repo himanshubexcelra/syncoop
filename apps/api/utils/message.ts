@@ -1,7 +1,8 @@
 export const MESSAGES = {
     ORGANIZATION_ALREADY_EXISTS: 'Organization name is already taken.',
     USER_BELONGS_TO_ANOTHER_ORG: 'User is already associated with another organization',
-    USER_NOT_EXISTS: 'User does not exist',
+    INVALID_LOGIN_CREDENTIALS: 'Invalid credentials',
+    PROJECT_EXISTS: 'Project name is already taken.',
     EMAIL_ALREADY_EXIST: `Email already exists`,
 }
 

@@ -1,14 +1,25 @@
-import { isAuthenticated } from "@/utils/auth";
+"use client";
 import Image from "next/image";
 import LoginForm from "@/components/LoginForm/LoginForm";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Messages } from "@/utils/message";
+import { DELAY } from "@/utils/constants";
+import { delay } from "@/utils/helpers";
+import { UserData } from "@/lib/definition";
 
-export default async function Login() {
+export default function Login() {
 
-  if (await isAuthenticated()) {
-    revalidatePath('/dashboard');
-    redirect("/dashboard")
+  const router = useRouter();
+
+  async function onSuccess(data: UserData) {
+    router.replace('/dashboard');
+    setTimeout(async () => {
+      const toastId = toast.success(
+        Messages.userLoggedIn(data.firstName, data.lastName));
+      await delay(DELAY);
+      toast.remove(toastId);
+    }, DELAY);
   }
 
   return (
@@ -24,7 +35,7 @@ export default async function Login() {
             className='w-full h-full object-contain'
           />
         </div>
-        <LoginForm />
+        <LoginForm onSuccess={(data: UserData) => onSuccess(data)} />
       </div>
     </div>
   )

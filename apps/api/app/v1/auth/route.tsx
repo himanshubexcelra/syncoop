@@ -10,6 +10,8 @@ export async function POST(request: Request) {
                 firstName: true,
                 lastName: true,
                 email: true,
+                organizationId: true,
+                id: true,
                 user_role: {
                     orderBy: {
                         role: {
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
         } else {
             return new Response(JSON.stringify({
                 success: false,
-                errorMessage: MESSAGES.USER_NOT_EXISTS
+                errorMessage: MESSAGES.INVALID_LOGIN_CREDENTIALS
             }), {
                 status: STATUS_TYPE.NOT_FOUND,
             });

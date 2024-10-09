@@ -1,9 +1,9 @@
 import React from 'react';
-import { BreadCrumbsObj } from '@/lib/definition';
+import { HeadingObj } from '@/lib/definition';
 import Image from 'next/image';
 import styles from "./Heading.module.css"
 interface HeadingProps {
-    heading: BreadCrumbsObj[];
+    heading: HeadingObj[];
 }
 
 const Heading: React.FC<HeadingProps> = ({ heading }) => {
@@ -19,6 +19,7 @@ const Heading: React.FC<HeadingProps> = ({ heading }) => {
                     />
                     {item.label && <div>
                         <span className={styles.roleType}>{item.type}</span>
+                        &nbsp;
                         <span className={styles.company}>{item.label}</span>
                     </div>}
                 </React.Fragment>

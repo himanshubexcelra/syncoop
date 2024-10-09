@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { DropDownItem, UserData } from '@/lib/definition';
 import { PopupBox } from '@/ui/popupBox';
@@ -29,9 +29,7 @@ export default function Header({ userData }: HeaderProps) {
         }
 
         if (item.value === 'Logout') {
-            if (await clearSession()) {
-                router.push('/')
-            }
+            await clearSession();
         }
         setDropdownOpen(false)
     }

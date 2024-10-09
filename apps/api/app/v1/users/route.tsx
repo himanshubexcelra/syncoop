@@ -19,6 +19,7 @@ export async function GET(request: Request) {
                     orgUser: {
                         select: {
                             id: true,
+                            name: true,
                         },
                     }
                 }
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
         });
 
         if (existingUser) {
-            return new Response(JSON.stringify(EMAIL_ALREADY_EXIST), {
+            return new Response(JSON.stringify({ error: EMAIL_ALREADY_EXIST }), {
                 headers: { "Content-Type": "application/json" },
                 status: CONFLICT,
             });

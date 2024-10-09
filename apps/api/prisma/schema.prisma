@@ -21,6 +21,9 @@ model user {
   organizationId Int?
   orgUser        organization? @relation("organizationUser", fields: [organizationId], references: [id])
   orgAdmin       organization? @relation("organizationAdmin")
+  ownedProjects       project[]              @relation("ProjectOwner") // Projects owned by the user
+  updatedProjects     project[]              @relation("ProjectUpdater") // Projects updated by the user
+  projectPermissions   ProjectPermission[]    // Permissions for projects
 }
 
 model user_role {
@@ -55,6 +58,7 @@ model organization {
   updatedAt  DateTime     @default(now()) @db.Timestamp(6)
   metadata   Json?        @db.Json
   orgUser    user[]       @relation("organizationUser")
+  projects  project[]    @relation("OrganizationProjects") // Multiple projects
 }
 
 model module {
@@ -91,9 +95,50 @@ model module_action_role_permission {
   role          role          @relation(fields: [roleId], references: [id])
 }
 
+model project {
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar
+  target        String?
+  type          project_type
+  description   String?
+  organizationId Int
+  organization   organization           @relation("OrganizationProjects", fields: [organizationId], references: [id]) // Organization of the project
+  createdAt      DateTime               @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime               @default(now()) @db.Timestamp(6)
+  ownerId        Int                    // Foreign key to the user who owns the project
+  owner           user                   @relation("ProjectOwner", fields: [ownerId], references: [id]) // User who owns the project
+  updatedById     Int                    // Foreign key to the user who last updated the project
+  updatedBy       user                   @relation("ProjectUpdater", fields: [updatedById], references: [id]) // User who last updated the project
+  sharedUsers       ProjectPermission[]    @relation("SharedProjectPermissions") // Users with admin or editor access for the project
+}
+
+
 enum status_type {
   Disabled @map("0")
   Enabled  @map("1")
+}
+
+enum project_type {
+  Retrosynthesis @map("0")
+  Optimization   @map("1")
+  Combinatorial  @map("2")
+}
+
+enum permission {
+  View  @map("0")
+  Edit  @map("1")
+  Admin @map("2")
+}
+
+model ProjectPermission {
+  id                Int                  @id @default(autoincrement())
+  userId            Int                  // ID of the user
+  projectId         Int                  // ID of the project
+  role              permission               // Role or permission type (e.g., "admin", "editor")
+  firstName         String?              // Optional field for user's first name
+
+  user              user                 @relation(fields: [userId], references: [id]) // Reference to the user
+  project           project              @relation(fields: [projectId], references: [id], name: "SharedProjectPermissions") // Reference to the project with the same name as in Project
 }
 
 enum organization_type {

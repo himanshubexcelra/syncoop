@@ -18,7 +18,8 @@ import styles from "./table.module.css";
 import RenderCreateUser from "./createUser";
 import { UserTableProps } from "@/lib/definition";
 
-export default function UsersTable({ data, organizationData, roles, roleType }: UserTableProps) {
+export default function UsersTable({ data, organizationData, roles, roleType, }: UserTableProps) {
+
     const [editPopup, showEditPopup] = useState(false);
     const [editField, setEditField] = useState({});
     const [deletePopup, showDeletePopup] = useState(-1);
@@ -91,6 +92,7 @@ export default function UsersTable({ data, organizationData, roles, roleType }: 
                 <Sorting mode="single" />
                 <Column
                     dataField="email"
+                    caption="Email Address"
                     width={350}
                 />
                 <Column
@@ -140,7 +142,7 @@ export default function UsersTable({ data, organizationData, roles, roleType }: 
                 <GridToolbar>
                     <Item location="after">
                         <Btn
-                            text="Create User"
+                            text="Add New User"
                             icon="plus"
                             className={`${styles.button_primary_toolbar} mr-[20px]`}
                             render={(buttonData: any) => (
@@ -157,7 +159,7 @@ export default function UsersTable({ data, organizationData, roles, roleType }: 
                             onClick={() => setCreatePopupVisibility(true)}
                         />
                         <MainPopup
-                            title="Create User"
+                            title="New User"
                             visible={createPopupVisible}
                             contentRender={() => (
                                 <RenderCreateUser

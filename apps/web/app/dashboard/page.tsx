@@ -12,11 +12,12 @@ import { OrganizationDataFields } from "@/lib/definition";
 import Heading from "@/components/Heading/Heading";
 import { getOrganization } from "@/components/Organization/service";
 import Tabs from "@/ui/Tab/Tabs";
-import { countCardsDetails, dataSource, features, filterOrganizationList, filterUsersByOrgId, stats } from "@/utils/helpers";
+import { filterOrganizationList, filterUsersByOrgId } from "@/utils/helpers";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
 import { redirect } from "next/navigation";
+import { countCardsDetails, dataSource, features, stats } from "@/utils/constants";
 
 export default async function Dashboard() {
 

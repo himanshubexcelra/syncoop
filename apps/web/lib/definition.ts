@@ -1,5 +1,4 @@
 
-import { FormRef } from "devextreme-react/cjs/form";
 import { z } from "zod";
 
 export const LoginFormSchema = z.object({
@@ -78,9 +77,9 @@ export interface OrganizationDataFields {
   name?: string;
   email?: string;
   status?: string;
-  orgUser: User[];
+  orgUser?: User[];
   metadata?: metaDataType;
-  projects: ProjectDataFields[];
+  projects?: ProjectDataFields[];
   orgAdminId?: number;
 }
 
@@ -88,37 +87,45 @@ export interface OrganizationTableProps {
   data: OrganizationDataFields;
 }
 
-type SetTableDataType = (value: OrganizationDataFields[]) => void;
-
 export type ShowEditPopupType = (value: boolean) => void;
 
 export type fetchDataType = () => void;
 
 export interface OrganizationCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
-  setTableData: SetTableDataType,
-  formRef: FormRef,
+  formRef: any,
   fetchOrganizations: fetchDataType,
-  tableData: ProjectDataFields,
-  projectData: ProjectDataFields,
+  projectData?: ProjectDataFields,
+  users?: User[],
+  organizationData?: OrganizationDataFields[],
+  roleType?: string,
+  edit?: boolean,
+  role: number,
+  data?: UserData,
+}
+
+export interface ProjectCreateFields {
+  setCreatePopupVisibility: ShowEditPopupType,
+  formRef: any,
+  fetchOrganizations: fetchDataType,
+  projectData?: ProjectDataFields,
   users: User[],
-  organizationData: OrganizationDataFields[],
-  roleType: string,
-  edit: boolean,
+  organizationData: OrganizationDataFields | OrganizationDataFields[],
+  roleType?: string,
+  edit?: boolean,
+  role: number,
+  data: UserData,
 }
 
 export type FetchUserType = (value: boolean) => void;
 export interface OrganizationEditField {
   organizationData: OrganizationDataFields,
   showEditPopup: ShowEditPopupType,
-  users: userType[],
-  setTableData: SetTableDataType,
-  formRef: FormRef,
+  formRef: any,
   fetchOrganizations: fetchDataType,
-  tableData: ProjectDataFields[],
-  projectData: ProjectDataFields,
-  roleType: string,
-  edit: boolean,
+  projectData?: ProjectDataFields,
+  roleType?: string,
+  edit?: boolean,
 }
 export interface ProjectDataFields {
   name: string;
@@ -159,11 +166,16 @@ export interface User {
   organization: Organization;
   user_role: UserRoleType[];
   role?: string,
-  permission: string,
+  permission?: string,
 }
 
 export interface UserRoleType {
   role: UserRole
+}
+
+export interface OwnerType {
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface UserData {
@@ -175,6 +187,7 @@ export interface UserData {
   organizationId: number;
   orgUser: User;
   id?: number;
+  owner?: OwnerType;
 }
 export interface projectType {
   id: number,
@@ -202,7 +215,7 @@ export interface ModuleTableProps {
 }
 
 export interface Status {
-  text: string;
+  text: StatusCode;
   number: string;
   background: string;
   dotColorStyle: string[];
@@ -222,10 +235,12 @@ export interface StatusComponentProps {
 }
 
 export type UserTableProps = {
-  data: User[];
-  organizationData?: OrganizationDataFields[];
+  orgUser?: OrgUser;
   roles: UserRole[];
   roleType: string;
+  type?: string;
+  setExternalCount?: any,
+  setInternalCount?: any,
 }
 
 export interface TabDetail {
@@ -238,3 +253,11 @@ export interface OrgUser {
   id: number;
   name: string;
 };
+
+export enum StatusCode {
+  READY = 'Ready',
+  NEW = 'New',
+  FAILED = 'Failed',
+  INPROGRESS = 'In Progress',
+  DONE = 'Done',
+}

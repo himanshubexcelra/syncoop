@@ -67,12 +67,12 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
   };
 
   const handleContactChange = (contact: any) => {
-    const user = formData.orgUser.filter((val: userType) => val.id === contact.value)?.[0];
+    const user = formData.orgUser?.filter((val: userType) => val.id === contact.value)?.[0];
     setFormData((prevData: OrganizationDataFields) => ({
       ...prevData,
       user
     }));
-    setPrimaryContactId(user.id)
+    setPrimaryContactId(user?.id)
   };
 
   const primaryContact = {
@@ -112,6 +112,7 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
       >
         <Label text="Primary Contact" />
       </SimpleItem>
+      <GroupItem caption="Functional Assay" cssClass="groupItem group-search" colCount={1}></GroupItem>
       <SimpleItem dataField="functionalAssay1" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay1 }}>
         <Label text="Functional Assay 1" />
       </SimpleItem>

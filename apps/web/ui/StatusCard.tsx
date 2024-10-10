@@ -1,4 +1,5 @@
-import { Status, } from "@/lib/definition"
+import { Status } from "@/lib/definition"
+import StatusMark from "./StatusMark"
 
 export default function StatusCards({ stats }: { stats: Status[] }) {
     return (
@@ -9,7 +10,7 @@ export default function StatusCards({ stats }: { stats: Status[] }) {
                     <div className='flex items-center gap-[3px]'>
                         <div className="font-lato text-xs font-normal leading-normal">{stat.text}</div>
                         <div className="flex gap-[3px]">
-                            {stat.dotColorStyle.map((color, index) => <div key={index} className={`w-2.5 h-2.5 ${color} rounded-full`} />)}
+                            <StatusMark status={stat.text}></StatusMark>
                         </div>
                     </div>
                 </div>))}

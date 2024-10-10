@@ -5,7 +5,7 @@
   }
 
   .dx-field-item-label-text {
-    color: #000;
+    color: var(--black);
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -23,9 +23,9 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background-color: #fff;
-  border: 1px solid #c7c7d1;
-  color: #c7c7d1;
+  background-color: var(--white);
+  border: 1px solid var(--themeSecondaryGreyColor);
+  color: var(--themeSecondaryGreyColor);
   font-family: Lato;
   font-size: 14px;
   font-style: normal;
@@ -89,7 +89,7 @@
   align-items: center;
 
   .dx-datagrid-text-content {
-    color: #0f69af;
+    color: var(--themeBlueColor);
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -105,8 +105,8 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
-    border: 1px solid #0f69af;
-    background: #0f69af;
+    border: 1px solid var(--themeBlueColor);;
+    background: var(--themeBlueColor);
     border-radius: 0;
     height: 37px;
     padding: 8px;
@@ -115,11 +115,11 @@
   }
 
   .dx-state-disabled {
-    border: 1px solid #c7c7d1;
+    border: 1px solid var(--themeSecondaryGreyColor);
   }
 
   .dx-button-text {
-    color: #fff;
+    color: var(--white);
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -132,8 +132,8 @@
 .button_form_seconday {
 
   .dx-button {
-    background: #ecf5fc;
-    color: #50a0de;
+    background: var(--themeLightBlueColor);
+    color: var(--themeDarkBlueBorderColor);
     border-radius: 0;
     height: 37px;
   }
@@ -149,7 +149,7 @@
 }
 
 .btn_secondary {
-  background: #ecf5fc;
+  background: var(--themeLightBlueColor);
   width: 100%;
 
   .dx-button {
@@ -159,9 +159,9 @@
     align-items: flex-end;
     height: 37px;
     gap: 10px;
-    background-color: #50A0DE;
+    background-color: var(--themeLightBlueColor);
     border-radius: 0;
-    background-color: #ecf5fc;
+    background-color: var(--themeLightBlueColor);
   }
 
   .dx-button-content {
@@ -169,7 +169,7 @@
   }
 
   .dx-button-text {
-    color: #0A3B61;
+    color: var(--themeDarkBlueColor);
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -188,12 +188,12 @@
 }
 
 .dx-state-disabled {
-  border: 1px solid #c7c7d1;
-  background-color: #fff;
+  border: 1px solid var(--themeSecondaryGreyColor);
+  background-color: var(--white);
   border-radius: 0;
 
   .dx-button-text {
-    color: #e1e1ea;
+    color: var(--themeGreyBorder);
     font-weight: 400;
   }
 }
@@ -210,30 +210,6 @@
   }
 }
 
-.create-popup {
-  .dx-popup-normal {
-    background: #ECECF4;
-    box-shadow: -18px 0px 18px 0px rgba(0, 0, 0, 0.25);
-  }
-
-  .dx-popup-title {
-    border-bottom: 0;
-  }
-
-  .dx-field-item:not(.dx-field-item-has-group):not(.dx-field-item-has-tabs):not(.dx-first-row):not(.dx-label-v-align) {
-    padding-top: 10px;
-  }
-
-  .dx-toolbar-item-content {
-    color: #0a3b61;
-    text-align: center;
-    font-family: Lato;
-    font-size: 28px;
-    font-style: normal;
-    font-weight: 700;
-    line-height: 42px;
-  }
-}
 
 .delete-popup {
   .dx-popup-content {
@@ -265,7 +241,7 @@
   }
 
   .title {
-    color: #000;
+    color: var(--black);
     font-size: 20px;
     font-style: normal;
     font-weight: 400;
@@ -279,7 +255,7 @@
 
   p,
   .dx-texteditor-input {
-    color: #000;
+    color: var(--black);
     font-size: 16px;
     font-style: normal;
     font-weight: 400;
@@ -310,7 +286,7 @@
 .dx-icon-edit {
   width: 24px;
   height: 24px;
-  color: #0f69af;
+  color: var(--themeBlueColor);
 }
 
 .dx-button-mode-contained {
@@ -358,7 +334,7 @@
 
 .editForm {
   label {
-    color: #000;
+    color: var(--black);
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -376,11 +352,11 @@
 .dx-pager .dx-page-sizes .dx-selection,
 .dx-pager .dx-pages .dx-selection,
 .dx-radiobutton-icon-checked .dx-radiobutton-icon-dot {
-  background-color: #0f69af;
+  background-color: var(--themeBlueColor);
 }
 
 .dx-radiobutton-icon-checked {
-  border-color: #0f69af;
+  border-color: var(--themeBlueColor);
 }
 
 .dx-toolbar-after .dx-toolbar-item {

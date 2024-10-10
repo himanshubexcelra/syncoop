@@ -4,20 +4,18 @@ import { BreadCrumbsObj, HeadingObj } from "@/lib/definition";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import Layout from "@/components/layout";
 import UsersTable from "@/components/User/UsersTable";
-import { getUsers } from "@/components/User/service";
 import { getLowPriorityRole } from "@/components/Role/service";
 import ListOrganization from "@/components/Organization/ListOrganization";
 import { getUserData } from "@/utils/auth";
-import { OrganizationDataFields } from "@/lib/definition";
 import Heading from "@/components/Heading/Heading";
-import { getOrganization } from "@/components/Organization/service";
 import Tabs from "@/ui/Tab/Tabs";
-import { filterOrganizationList, filterUsersByOrgId } from "@/utils/helpers";
+import { redirect } from "next/navigation";
+import { countCardsDetails, dataSource, features, stats } from "@/utils/constants";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
-import { redirect } from "next/navigation";
-import { countCardsDetails, dataSource, features, stats } from "@/utils/constants";
+import TabUsersTable from "@/components/Organization/TabUsersTable";
+import { TabDetail } from "@/lib/definition";
 
 export default async function Dashboard() {
 
@@ -27,13 +25,8 @@ export default async function Dashboard() {
   }
   const { type: roleType, priority: currentUserPriority } = userData.user_role[0].role;
   const { orgUser } = userData;
-  let organizations: OrganizationDataFields[] = [orgUser];
 
-  if (roleType === 'admin') {
-    organizations = await getOrganization();
-  }
 
-  const usersList = await getUsers(['orgUser', 'user_role']);
   const filteredRoles = await getLowPriorityRole(currentUserPriority);
 
   const breadcrumbs: BreadCrumbsObj[] = [
@@ -71,11 +64,8 @@ export default async function Dashboard() {
     }
   ];
 
-  const { id, name } = orgUser;
-  const { internalUsers, externalUsers } = filterUsersByOrgId(usersList, id);
-  const { orgInternal, clients } = filterOrganizationList(organizations, name)
 
-  const tabsStatus = [
+  const tabsStatus: TabDetail[] = [
     {
       title: "Overview",
       Component: StatusComponent,
@@ -93,30 +83,6 @@ export default async function Dashboard() {
     }
   ];
 
-  function tabsInfo(obj: any): any {
-    const {
-      roleType,
-      name,
-      internalUsers,
-      externalUsers,
-      orgInternal,
-      clients,
-      roles
-    } = obj;
-    return [
-      {
-        title: `${name} Users (${internalUsers?.length})`,
-        Component: UsersTable,
-        props: { roles, roleType, data: internalUsers, organizationData: orgInternal }
-      },
-      {
-        title: `Client Users (${externalUsers?.length})`,
-        Component: UsersTable,
-        props: { roles, roleType, data: externalUsers, organizationData: clients }
-      },
-    ]
-  }
-
   return (
     <Layout>
       <div className={styles.page}>
@@ -124,33 +90,24 @@ export default async function Dashboard() {
           <Breadcrumb breadcrumbs={breadcrumbs} />
           <Heading {...{ heading }} />
           <Tabs tabsDetails={tabsStatus} />
-          {roleType === 'admin' && <div className='p-5'>
-            <Tabs tabsDetails={tabsInfo({
-              roles: filteredRoles,
-              roleType,
-              name,
-              internalUsers,
-              externalUsers,
-              orgInternal,
-              clients
-            })} />
-          </div>
-          }
-          {roleType === 'admin' && <div className='p-5'>
-            <div className={styles.imageContainer}>
-              <Image
-
-                src="/icons/organization.svg"
-                width={33}
-                height={30}
-                alt="organization"
-              />
-              <span>Customer Organizations</span>
-            </div>
-            <div className={styles.table}>
-              <ListOrganization userData={userData} />
-            </div>
-          </div>
+          {roleType === 'admin' &&
+            <>
+              <TabUsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} />
+              <div>
+                <div className={styles.imageContainer}>
+                  <Image
+                    src="/icons/organization.svg"
+                    width={33}
+                    height={30}
+                    alt="organization"
+                  />
+                  <span>Customer Organizations</span>
+                </div>
+                <div className={styles.table}>
+                  <ListOrganization userData={userData} />
+                </div>
+              </div>
+            </>
           }
           {roleType === 'org_admin' && <div className='p-5'>
             <div className={`${styles.imageContainer} pt-5 pb-2.5`}>
@@ -163,7 +120,7 @@ export default async function Dashboard() {
               <span>Users</span>
             </div>
             <div className={styles.table}>
-              <UsersTable data={usersList} organizationData={organizations} roles={filteredRoles} roleType={roleType} />
+              <UsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} />
             </div>
           </div>
           }

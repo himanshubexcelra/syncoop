@@ -345,3 +345,31 @@
 .dx-toolbar-after .dx-toolbar-item {
   padding: 0;
 }
+
+.groupItem {
+  color: var(--Core-Colors-Blue_Active, #0A3B61);
+  font-family: Lato;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+
+  .dx-texteditor-container {
+    height: 48px;
+  }
+
+  .search-input {
+    padding: 0;
+    width: 260px;
+    border: none;
+  }
+
+  .dx-form-group-with-caption>.dx-form-group-content {
+    padding-top: 0;
+    border-top: 0;
+    margin-top: 0;
+    padding-bottom: 0;
+    max-height: 230px;
+    overflow-y: scroll;
+  }
+}

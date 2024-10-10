@@ -2,4 +2,5 @@
 .box {
     width: 100%;
     box-shadow: 0px 8px 12px 0px var(--tabBoxShadow), 0px 0px 4px 0px var(--tabBoxShadow);
+    padding: 10px;
 }

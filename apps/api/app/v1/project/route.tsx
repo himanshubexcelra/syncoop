@@ -1,39 +1,8 @@
 import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
-const { PROJECT_EXISTS, BAD_REQUEST } = MESSAGES;
-const { SUCCESS, INTERNAL_SERVER_ERROR } = STATUS_TYPE;
-
-export async function GET() {
-    try {
-        const projects = await prisma.project.findMany({
-
-            include: {
-                user: {
-                    select: {
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-                updatedBy: { // Include the user who updated the project
-                    select: {
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-                organization: true, // include organization data
-            },
-        });
-        return new Response(JSON.stringify(projects), {
-            headers: { "Content-Type": "application/json" },
-            status: SUCCESS,
-        });
-    } catch (error: any) {
-        return new Response(`Webhook error: ${error.message}`, {
-            status: BAD_REQUEST,
-        });
-    }
-}
+const { PROJECT_EXISTS } = MESSAGES;
+const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST } = STATUS_TYPE;
 
 export async function POST(request: Request) {
     const req = await request.json();

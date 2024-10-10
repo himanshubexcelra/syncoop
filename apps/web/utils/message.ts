@@ -4,4 +4,13 @@ export const Messages = {
         return `${firstName} ${lastName} logged in successfully`;
     },
     SOMETHING_WENT_WRONG: `Something went wrong`,
+    ROLE_REQUIRED: 'At least one role is required',
+    EMAIL_INVALID: 'Invalid Email Address',
+    requiredMessage(field: string) {
+        return (`${field} is required`)
+    },
+    PASSWORD_COPY_FAIL: 'Failed to copy password',
+    PASSWORD_COPY: 'Password copied to clipboard',
+    PASSWORD_EMPTY: 'Password cannot be empty',
+    PASSWORD_CRITERIA: "Password should be at least 8 characters long and contain at least one lowercase letter, one capital letter, one number, and one special character.",
 }

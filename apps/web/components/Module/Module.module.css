@@ -17,3 +17,7 @@
     border-bottom: 1px solid var(--themeDotGreyColor);
     background: var(--background)
 }
+
+.checboxEdge {
+    accent-color: var(--themeBlueColor);
+}

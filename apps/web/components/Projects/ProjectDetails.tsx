@@ -62,7 +62,7 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                 item.target?.toLowerCase().includes(value.toLowerCase()) ||
                 item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
                 item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
-        else filteredValue = organization.projects;
+        else filteredValue = organization.projects || [];
 
         setFilteredData(filteredValue);
     }
@@ -154,20 +154,11 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                                 )}
                             />
                             <Button
-                                text="Sort by recent"
-                                icon="filter"
+                                text="Sort"
                                 elementAttr={{ class: "button_primary_toolbar mr-[20px]" }}
                                 onClick={sortData}
                                 render={() => (
-                                    <>
-                                        <Image
-                                            src="/icons/sort.svg"
-                                            width={24}
-                                            height={24}
-                                            alt="Filter"
-                                        />
-                                        <span>Sort by recent</span>
-                                    </>
+                                    <>Sort</>
                                 )}
                             />
                             <div className="search-box">

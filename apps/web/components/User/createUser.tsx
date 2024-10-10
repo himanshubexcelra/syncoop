@@ -13,13 +13,15 @@ import "./table.css";
 import styles from './createUser.module.css'
 import { Button, TextBox, Tooltip, Validator } from "devextreme-react";
 import { Button as TextBoxButton } from 'devextreme-react/text-box';
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";
 import { ButtonTypes } from "devextreme-react/cjs/button";
 import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
 import { LoginFormSchema } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
+import { getOrganization } from "../Organization/service";
+import { Messages } from "@/utils/message";
 
 const customPasswordCheck = (password: any) => LoginFormSchema.shape.password.safeParse(password).success
 
@@ -32,10 +34,14 @@ export default function RenderCreateUser({
     setPassword,
     roles,
     organizationData,
-    roleType
+    roleType,
+    type,
+    fetchAndFilterData
 }: any) {
     const passwordLabel = { 'aria-label': 'Password' };
     const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
+    const [organization, setOrganization] = useState(organizationData);
+
     const passwordButton = useMemo<ButtonTypes.Properties>(
         () => ({
             icon: passwordMode === "text" ? "eyeclose" : "eyeopen",
@@ -59,6 +65,7 @@ export default function RenderCreateUser({
                 setPassword('');
                 setTableData(tempData);
                 setCreatePopupVisibility(false);
+                fetchAndFilterData()
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);
@@ -76,14 +83,16 @@ export default function RenderCreateUser({
         formRef.current!.instance().updateData("password", generatedPassword);
     };
 
-    const handleCopyPassword = () => {
+    const handleCopyPassword = async () => {
         if (password === "") {
-            toast.error("Password cannot be empty");
+            const toastId = toast.error(Messages.PASSWORD_EMPTY)
+            await delay(3000);
+            toast.remove(toastId);
             return;
         }
         navigator.clipboard.writeText(password)
-            .then(() => toast.success("Password copied to clipboard"))
-            .catch(() => toast.error("Failed to copy password"));
+            .then(() => toast.success(Messages.PASSWORD_COPY))
+            .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
     const handleCancel = () => {
         setPassword('');
@@ -110,10 +119,10 @@ export default function RenderCreateUser({
                         options={passwordButton}
                     />
                     <Validator>
-                        <RequiredRule message="Confirm Password is required" />
+                        <RequiredRule message={Messages.requiredMessage('Password')} />
                         <CustomRule
                             validationCallback={(options: any) => customPasswordCheck(options.value)}
-                            message="Password should be at least 8 characters long and contain at least one lowercase letter, one capital letter, one number, and one special character."
+                            message={Messages.PASSWORD_CRITERIA}
                         />
                     </Validator>
                 </TextBox>
@@ -152,22 +161,33 @@ export default function RenderCreateUser({
             </div>
         );
     };
+    const fetchOrganisation = async () => {
+        if (type) {
+            const organizationDropdown = await getOrganization([], type);
+            setOrganization(organizationDropdown);
+        }
+    };
+    useEffect(() => {
+        fetchOrganisation();
+    }, [type]);
     const OrganizationSelectBox = useMemo(() => (
         <SimpleItem
             dataField="organization"
             editorType="dxSelectBox"
             editorOptions={{
-                items: organizationData,
+                items: organization,
                 displayExpr: "name",
                 valueExpr: "id",
-                value: roleType === 'admin' ? "" : organizationData[0].id,
-                disabled: roleType !== 'admin',
+                value: roleType === 'admin'
+                    ? (type === 'External' ? "" : organization && organization[0].id)
+                    : organization[0].id,
+                disabled: roleType !== 'admin' || type === "Internal",
             }}
         >
             <Label text="Select an Organisation" />
-            <RequiredRule message="Organisation is required" />
+            <RequiredRule message={Messages.requiredMessage('Organisation')} />
         </SimpleItem>
-    ), [organizationData, roleType]);
+    ), [organization, roleType]);
     return (
         <CreateForm ref={formRef}>
             {OrganizationSelectBox}
@@ -176,22 +196,22 @@ export default function RenderCreateUser({
                 editorOptions={{ placeholder: "User Email Address" }}
             >
                 <Label text="User Email Address" />
-                <RequiredRule message="User Email Address is required" />
-                <EmailRule message="Invalid Email Address" />
+                <RequiredRule message={Messages.requiredMessage('User Email Address')} />
+                <EmailRule message={Messages.EMAIL_INVALID} />
             </SimpleItem>
             <SimpleItem
                 dataField="firstName"
                 editorOptions={{ placeholder: "First Name" }}
             >
                 <Label text="First Name" />
-                <RequiredRule message="First Name is required" />
+                <RequiredRule message={Messages.requiredMessage('First Name')} />
             </SimpleItem>
             <SimpleItem
                 dataField="lastName"
                 editorOptions={{ placeholder: "Last Name" }}
             >
                 <Label text="Last Name" />
-                <RequiredRule message="Last Name is required" />
+                <RequiredRule message={Messages.requiredMessage('Last Name')} />
             </SimpleItem>
             <SimpleItem
                 dataField="roles"
@@ -207,13 +227,13 @@ export default function RenderCreateUser({
                 }}
             >
                 <Label text="Roles" />
-                <RequiredRule message="At least one role is required" />
+                <RequiredRule message={Messages.ROLE_REQUIRED} />
             </SimpleItem>
             <SimpleItem
                 dataField="password"
                 render={passwordEditorRender}
             >
-                <RequiredRule message="Password is required" />
+                <RequiredRule message={Messages.requiredMessage('Password')} />
             </SimpleItem>
             <SimpleItem>
                 <div className="flex justify-start gap-2 mt-5">

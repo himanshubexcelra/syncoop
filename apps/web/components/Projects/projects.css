@@ -257,6 +257,10 @@
     height: 40px;
 }
 
+.button_primary_toolbar span {
+    margin-left: 8px;
+}
+
 .dx-state-disabled {
     border: 1px solid var(--themeSecondaryGreyColor);
     color: var(--white);
@@ -345,6 +349,10 @@
 
     .dx-texteditor-container {
         height: 48px;
+    }
+
+    .dx-row {
+        height: 48.5px;
     }
 
     .search-input {

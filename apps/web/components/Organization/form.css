@@ -24,6 +24,10 @@
 }
 
 .dx-form {
+    .dx-item {
+        font-size: 14px;
+    }
+
     .dx-field-item-label {
         padding: 0;
         font-family: Lato;

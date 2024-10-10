@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const searchParams = new URLSearchParams(url.searchParams);
     const orgId = searchParams.get('id'); // Get the organization ID from query parameters
+    const type = searchParams.get("type");
     const joins = searchParams.get('with');
     const query: any = {};
 
@@ -95,7 +96,24 @@ export async function GET(request: Request) {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS, // success status code
       });
-    } else {
+    }
+    else if (type) {
+      query.where = { type: type }; // Add the where condition to the query
+      const organization = await prisma.organization.findMany(query);
+
+      if (!organization) {
+        return new Response(JSON.stringify({ error: 'Organization not found' }), {
+          headers: { "Content-Type": "application/json" },
+          status: NOT_FOUND,
+        });
+      }
+
+      return new Response(JSON.stringify(organization), {
+        headers: { "Content-Type": "application/json" },
+        status: SUCCESS, // success status code
+      });
+    }
+    else {
       // If no ID is present, fetch all organizations, users, and projects
       const organizations = await prisma.organization.findMany(query);
 

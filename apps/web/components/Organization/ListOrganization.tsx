@@ -19,7 +19,6 @@ import styles from "./table.module.css";
 import { OrganizationDataFields, UserData, UserRoleType } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
-import { FormRef } from "devextreme-react/cjs/form";
 import { getOrganization } from "@/components/Organization/service";
 import { formatDate } from "@/utils/helpers";
 
@@ -44,7 +43,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
   }, []);
 
   const grid = useRef<DataGridRef>(null);
-  const formRef = useRef<FormRef>(null);
+  const formRef = useRef<any>(null);
 
   const renderTitleField = () => {
     return <p className={styles.edit_title}>{`Edit ${editField?.name}`}</p>;
@@ -101,6 +100,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
           />
           <Column
             dataField="orgUser"
+            caption="Users"
             width={70}
             alignment="center"
             cellRender={({ data }: any) => (

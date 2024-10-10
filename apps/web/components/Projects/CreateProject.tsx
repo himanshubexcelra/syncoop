@@ -15,7 +15,7 @@ import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
 import { delay } from "@/utils/helpers";
 import { createProjectApi, editProject } from "./projectService";
 import "./projects.css";
-import { OrganizationCreateFields, OrganizationDataFields, User } from "@/lib/definition";
+import { ProjectCreateFields, OrganizationDataFields, User } from "@/lib/definition";
 import { DELAY, PERMISSIONS, PROJECT_TYPES } from "@/utils/constants";
 import DataGrid, { Column, Sorting, DataGridRef } from "devextreme-react/data-grid";
 import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
@@ -32,7 +32,7 @@ export default function CreateProject({
   organizationData,
   roleType,
   edit
-}: OrganizationCreateFields) {
+}: ProjectCreateFields) {
   const [filteredData, setFilteredData] = useState<User[]>(users);
   const [userList, setUsers] = useState<User[]>([]);
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
@@ -42,7 +42,7 @@ export default function CreateProject({
 
   const projectTypeEditorOptions = { items: PROJECT_TYPES, searchEnabled: true, disabled: edit };
 
-  const filterUsers = (filteredUsers: User[]) => {
+  const filterUsers = (filteredUsers: User[] = []) => {
     if (edit) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.ownerId)
       const updatedAllUsers = filteredUser.map(user => {
@@ -134,13 +134,15 @@ export default function CreateProject({
     }
   };
 
-  const fetchUserList = (e) => {
+  const fetchUserList = (e: any) => {
     const { value } = e;
-    let filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === value)[0]?.orgUser;
-    filteredUsers = filteredUsers?.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id);
-    setUsers(filteredUsers);
-    setOrganizationId(value);
-    filterUsers(filteredUsers);
+    if (Array.isArray(organizationData)) {
+      let filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
+      filteredUsers = filteredUsers.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id);
+      setUsers(filteredUsers);
+      setOrganizationId(value);
+      filterUsers(filteredUsers);
+    }
   }
 
   const sortByPermission = () => {

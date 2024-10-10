@@ -1,3 +1,4 @@
+import { StatusCode } from "@/lib/definition";
 export const status = ["Enabled", "Disabled"];
 
 export const tableFields = {
@@ -84,31 +85,31 @@ export const PERMISSIONS = ['Admin', 'Edit', 'View'];
 
 export const stats = [
   {
-    text: "New",
+    text: StatusCode.NEW,
     number: "29",
     background: "bg-white",
     dotColorStyle: ["bg-themeDotGreyColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
   },
   {
-    text: "Ready",
+    text: StatusCode.READY,
     number: "56",
     background: "bg-white",
     dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
   },
   {
-    text: "In Progress",
+    text: StatusCode.INPROGRESS,
     number: "94",
     background: "bg-themeStatsBlueColor",
     dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotBlueColor", "bg-themeDotGreyColor"]
   },
   {
-    text: "Failed",
+    text: StatusCode.FAILED,
     number: "13",
     background: "bg-themeStatsRedColor",
     dotColorStyle: ["bg-themeDotRedColor", "bg-themeDotRedColor", "bg-themeDotRedColor"]
   },
   {
-    text: "Done",
+    text: StatusCode.DONE,
     number: "359",
     background: "bg-themeStatsGreenColor",
     dotColorStyle: ["bg-themeDotGreenColor", "bg-themeDotGreenColor", "bg-themeDotGreenColor"]

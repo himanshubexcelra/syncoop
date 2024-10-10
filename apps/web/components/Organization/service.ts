@@ -1,9 +1,13 @@
 "use server";
 
-export async function getOrganization(withRelation: string[] = []) {
+export async function getOrganization(withRelation: string[] = [], type: string = '') {
   const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));
+  }
+  if (type) {
+    url.searchParams.append('type', type);
+
   }
   const response = await fetch(url, {
     mode: "no-cors",
@@ -32,7 +36,7 @@ export async function getOrganizationById(withRelation: string[] = [], id: numbe
   return data;
 }
 
-export async function editOrganization(formData: FormData) {
+export async function editOrganization(formData: any) {
   try {
     const response = await fetch(
       `${process.env.API_HOST_URL}/v1/organization/`,

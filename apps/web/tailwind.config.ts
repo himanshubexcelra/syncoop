@@ -34,7 +34,8 @@ const config: Config = {
         themeHeadingBlue: "var(--themeHeadingBlue)",
         moduleCheckBoxBg: "var(--moduleCheckBoxBg)",
         assayBorder: "var(--assayBorder)",
-        tabBoxShadow: "var(--tabBoxShadow)"
+        tabBoxShadow: "var(--tabBoxShadow)",
+        tableBackground: "var(--tableBackground)",
       },
     },
   },

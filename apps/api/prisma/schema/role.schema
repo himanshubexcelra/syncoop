@@ -1,8 +1,0 @@
-model role {
-  id        Int          @id @default(autoincrement())
-  type      String
-  user      user_role[]
-  status    status_type?
-  createdAt DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt DateTime     @default(now()) @db.Timestamp(6)
-}

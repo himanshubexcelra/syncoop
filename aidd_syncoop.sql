@@ -34,6 +34,44 @@ COMMENT ON SCHEMA public IS '';
 
 
 --
+-- Name: organization_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.organization_type AS ENUM (
+    '0',
+    '1'
+);
+
+
+ALTER TYPE public.organization_type OWNER TO postgres;
+
+--
+-- Name: permission; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.permission AS ENUM (
+    '0',
+    '1',
+    '2'
+);
+
+
+ALTER TYPE public.permission OWNER TO postgres;
+
+--
+-- Name: project_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.project_type AS ENUM (
+    '0',
+    '1',
+    '2'
+);
+
+
+ALTER TYPE public.project_type OWNER TO postgres;
+
+--
 -- Name: status_type; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -48,6 +86,43 @@ ALTER TYPE public.status_type OWNER TO postgres;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: ProjectPermission; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."ProjectPermission" (
+    id integer NOT NULL,
+    "userId" integer NOT NULL,
+    "projectId" integer NOT NULL,
+    role public.permission NOT NULL,
+    "firstName" text
+);
+
+
+ALTER TABLE public."ProjectPermission" OWNER TO postgres;
+
+--
+-- Name: ProjectPermission_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public."ProjectPermission_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public."ProjectPermission_id_seq" OWNER TO postgres;
+
+--
+-- Name: ProjectPermission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public."ProjectPermission_id_seq" OWNED BY public."ProjectPermission".id;
+
 
 --
 -- Name: _prisma_migrations; Type: TABLE; Schema: public; Owner: postgres
@@ -220,7 +295,8 @@ CREATE TABLE public.organization (
     status public.status_type,
     "createdAt" timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updatedAt" timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    metadata json
+    metadata json,
+    type public.organization_type
 );
 
 
@@ -246,6 +322,48 @@ ALTER SEQUENCE public.organization_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.organization_id_seq OWNED BY public.organization.id;
+
+
+--
+-- Name: project; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.project (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    target text,
+    type public.project_type NOT NULL,
+    description text,
+    "organizationId" integer NOT NULL,
+    "createdAt" timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updatedAt" timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "ownerId" integer NOT NULL,
+    "updatedById" integer NOT NULL
+);
+
+
+ALTER TABLE public.project OWNER TO postgres;
+
+--
+-- Name: project_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.project_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.project_id_seq OWNER TO postgres;
+
+--
+-- Name: project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.project_id_seq OWNED BY public.project.id;
 
 
 --
@@ -364,6 +482,13 @@ ALTER SEQUENCE public.user_role_id_seq OWNED BY public.user_role.id;
 
 
 --
+-- Name: ProjectPermission id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."ProjectPermission" ALTER COLUMN id SET DEFAULT nextval('public."ProjectPermission_id_seq"'::regclass);
+
+
+--
 -- Name: module id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -399,6 +524,13 @@ ALTER TABLE ONLY public.organization ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- Name: project id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project ALTER COLUMN id SET DEFAULT nextval('public.project_id_seq'::regclass);
+
+
+--
 -- Name: role id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -417,6 +549,14 @@ ALTER TABLE ONLY public."user" ALTER COLUMN id SET DEFAULT nextval('public.user_
 --
 
 ALTER TABLE ONLY public.user_role ALTER COLUMN id SET DEFAULT nextval('public.user_role_id_seq'::regclass);
+
+
+--
+-- Data for Name: ProjectPermission; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."ProjectPermission" (id, "userId", "projectId", role, "firstName") FROM stdin;
+\.
 
 
 --
@@ -480,8 +620,9 @@ COPY public.module_permission (id, "moduleId", "roleId") FROM stdin;
 1	1	2
 2	2	2
 3	3	2
-4	2	3
-5	3	3
+8	1	3
+11	2	3
+12	3	3
 \.
 
 
@@ -489,14 +630,23 @@ COPY public.module_permission (id, "moduleId", "roleId") FROM stdin;
 -- Data for Name: organization; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.organization (id, name, "orgAdminId", status, "createdAt", "updatedAt", metadata) FROM stdin;
-1	Fauxbio	2	1	2024-10-05 10:43:59.518279	2024-10-05 10:43:59.518279	\N
-3	Synergene	3	1	2024-10-05 10:43:59.523715	2024-10-05 10:43:59.523715	\N
-5	AstraVantage	4	1	2024-10-05 10:43:59.525488	2024-10-05 10:43:59.525488	\N
-6	VitaSphere	5	1	2024-10-05 10:51:02.209616	2024-10-05 10:51:02.209616	\N
-7	ChronosPath	6	1	2024-10-05 10:51:22.815353	2024-10-05 10:51:22.815353	{"functionalAssay1":"test1","functionalAssay2":"test2","functionalAssay3":"test3","functionalAssay4":"test4"}
-8	New org	8	1	2024-10-05 16:22:42.449	2024-10-05 16:22:42.449	\N
-9	EMD DD	1	1	2024-10-07 01:09:46.962776	2024-10-07 01:09:46.962776	\N
+COPY public.organization (id, name, "orgAdminId", status, "createdAt", "updatedAt", metadata, type) FROM stdin;
+9	EMD DD	1	1	2024-10-07 01:09:46.962776	2024-10-07 01:09:46.962776	\N	0
+1	Fauxbio	2	1	2024-10-05 10:43:59.518279	2024-10-05 10:43:59.518279	\N	1
+3	Synergene	3	1	2024-10-05 10:43:59.523715	2024-10-05 10:43:59.523715	\N	1
+5	AstraVantage	4	1	2024-10-05 10:43:59.525488	2024-10-05 10:43:59.525488	\N	1
+6	VitaSphere	5	1	2024-10-05 10:51:02.209616	2024-10-05 10:51:02.209616	\N	1
+7	ChronosPath	6	1	2024-10-05 10:51:22.815353	2024-10-05 10:51:22.815353	{"functionalAssay1":"test1","functionalAssay2":"test2","functionalAssay3":"test3","functionalAssay4":"test4"}	1
+8	New org	8	1	2024-10-05 16:22:42.449	2024-10-05 16:22:42.449	\N	1
+\.
+
+
+--
+-- Data for Name: project; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.project (id, name, target, type, description, "organizationId", "createdAt", "updatedAt", "ownerId", "updatedById") FROM stdin;
+1	Test Project	Test Target	1	Test Description	1	2024-10-08 17:01:02.677	2024-10-08 17:01:02.677	1	1
 \.
 
 
@@ -549,6 +699,13 @@ COPY public.user_role (id, "userId", "roleId") FROM stdin;
 
 
 --
+-- Name: ProjectPermission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."ProjectPermission_id_seq"', 1, false);
+
+
+--
 -- Name: module_action_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -573,7 +730,7 @@ SELECT pg_catalog.setval('public.module_id_seq', 5, true);
 -- Name: module_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.module_permission_id_seq', 5, true);
+SELECT pg_catalog.setval('public.module_permission_id_seq', 12, true);
 
 
 --
@@ -581,6 +738,13 @@ SELECT pg_catalog.setval('public.module_permission_id_seq', 5, true);
 --
 
 SELECT pg_catalog.setval('public.organization_id_seq', 9, true);
+
+
+--
+-- Name: project_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_id_seq', 1, true);
 
 
 --
@@ -602,6 +766,14 @@ SELECT pg_catalog.setval('public.user_id_seq', 9, true);
 --
 
 SELECT pg_catalog.setval('public.user_role_id_seq', 10, true);
+
+
+--
+-- Name: ProjectPermission ProjectPermission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."ProjectPermission"
+    ADD CONSTRAINT "ProjectPermission_pkey" PRIMARY KEY (id);
 
 
 --
@@ -653,6 +825,14 @@ ALTER TABLE ONLY public.organization
 
 
 --
+-- Name: project project_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project
+    ADD CONSTRAINT project_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: role role_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -688,6 +868,22 @@ CREATE UNIQUE INDEX "organization_orgAdminId_key" ON public.organization USING b
 --
 
 CREATE UNIQUE INDEX user_email_key ON public."user" USING btree (email);
+
+
+--
+-- Name: ProjectPermission ProjectPermission_projectId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."ProjectPermission"
+    ADD CONSTRAINT "ProjectPermission_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES public.project(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: ProjectPermission ProjectPermission_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."ProjectPermission"
+    ADD CONSTRAINT "ProjectPermission_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."user"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
@@ -736,6 +932,30 @@ ALTER TABLE ONLY public.module_permission
 
 ALTER TABLE ONLY public.organization
     ADD CONSTRAINT "organization_orgAdminId_fkey" FOREIGN KEY ("orgAdminId") REFERENCES public."user"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: project project_organizationId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project
+    ADD CONSTRAINT "project_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES public.organization(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: project project_ownerId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project
+    ADD CONSTRAINT "project_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES public."user"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: project project_updatedById_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project
+    ADD CONSTRAINT "project_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES public."user"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --

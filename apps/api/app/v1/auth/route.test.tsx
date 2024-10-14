@@ -1,7 +1,8 @@
 import { prismaMock } from "@/singleton"
 import { POST } from "./route"
 import { MESSAGES, STATUS_TYPE } from "@/utils/message"
-
+import bcrypt from "bcrypt";
+const saltRounds = 10;
 describe('Auth API', () => {
 
     describe('POST', () => {
@@ -12,7 +13,7 @@ describe('Auth API', () => {
                 firstName: 'Test',
                 lastName: 'User',
                 email: 'testuser@prisma.io',
-                password: '123456',
+                password: await bcrypt.hash('123456', saltRounds),
                 user_role: [
                     {
                         role: {

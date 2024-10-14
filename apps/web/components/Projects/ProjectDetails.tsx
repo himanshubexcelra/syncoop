@@ -186,8 +186,7 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                             data={filteredData}
                             fetchOrganizations={fetchOrganizations}
                             users={users}
-                            organizationData={organization}
-                            roleType={data?.user_role?.[0]?.role.type} />
+                            organizationData={organization} />
                     </div>
                 </div>
             }

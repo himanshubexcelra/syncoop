@@ -11,7 +11,6 @@ import {
   Label,
   GroupItem,
 } from "devextreme-react/form";
-import { TextBoxTypes } from 'devextreme-react/text-box';
 import RadioGroup from "devextreme-react/radio-group";
 import { editOrganization } from "./service";
 import { delay } from "@/utils/helpers";
@@ -84,16 +83,20 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
     onValueChanged: handleContactChange,
   };
 
-  const setMetaDataValue = (value: TextBoxTypes.ValueChangedEvent) => {
-    const field = value.event?.target;
-    const enteredText = field?.value;
-    const data = { ...metaData };
-    data[field.name] = enteredText;
-    setFormData((prevData: OrganizationDataFields) => ({
-      ...prevData,
-      metadata: data
-    }));
-    setMetaData(data);
+  const setMetaDataValue = (event: React.ChangeEvent) => {
+    const field = event?.target;
+    if (field) {
+      const { value, name } = field as any;
+      const data = {
+        ...metaData,
+        ...{ [name]: value }
+      };
+      setFormData((prevData: OrganizationDataFields) => ({
+        ...prevData,
+        metadata: data
+      }));
+      setMetaData(data);
+    }
   }
 
   return (

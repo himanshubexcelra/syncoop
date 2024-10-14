@@ -14,7 +14,7 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
     useEffect(() => {
         setSelectedItems([data[0]]);
     }, [data.length]);
-
+    
     const selectionChanged = useCallback((e: AccordionTypes.SelectionChangedEvent) => {
         let newItems = [...selectedItems];
         e.removedItems.forEach((item) => {
@@ -28,10 +28,15 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
         }
         setSelectedItems(newItems);
         if (dataCreate?.user_role?.[0]?.role.type === "admin") {
-            const filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === newItems[0].organizationId)[0]?.orgUser;
-            setUsers(filteredUsers?.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== dataCreate.id));
+            if (Array.isArray(organizationData)) {
+                const filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === newItems[0].organizationId)[0]?.orgUser;
+                
+                if (filteredUsers) {
+                    setUsers(filteredUsers?.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== dataCreate.id));
+                }
+            }
         }
-    }, [selectedItems, setSelectedItems]);
+        }, [selectedItems, setSelectedItems]);
 
     return (
         <div className='content'>

@@ -94,7 +94,7 @@ export type fetchDataType = () => void;
 export interface OrganizationCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
   formRef: any,
-  fetchOrganizations: fetchDataType,
+  fetchOrganizations: FetchUserType,
   projectData?: ProjectDataFields,
   users?: User[],
   organizationData?: OrganizationDataFields[],
@@ -107,17 +107,17 @@ export interface OrganizationCreateFields {
 export interface ProjectCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
   formRef: any,
-  fetchOrganizations: fetchDataType,
+  fetchOrganizations: FetchUserType,
   projectData?: ProjectDataFields,
   users: User[],
   organizationData: OrganizationDataFields | OrganizationDataFields[],
   roleType?: string,
   edit?: boolean,
-  role: number,
+  /* role: number, */
   data: UserData,
 }
 
-export type FetchUserType = (value: boolean) => void;
+export type FetchUserType = (value?: boolean) => void;
 export interface OrganizationEditField {
   organizationData: OrganizationDataFields,
   showEditPopup: ShowEditPopupType,

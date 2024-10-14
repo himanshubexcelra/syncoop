@@ -43,7 +43,7 @@ export default function CreateProject({
   const projectTypeEditorOptions = { items: PROJECT_TYPES, searchEnabled: true, disabled: edit };
 
   const filterUsers = (filteredUsers: User[] = []) => {
-    if (edit) {
+    if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.ownerId)
       const updatedAllUsers = filteredUser.map(user => {
         const updatedUser = projectData.sharedUsers.find(u => u.userId === user.id);

@@ -9,18 +9,18 @@ import { ProjectDataFields, User, FetchUserType, OrganizationDataFields, UserDat
 import { libraries, DELAY } from "@/utils/constants";
 import CreateProject from "./CreateProject";
 
-export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: { data: ProjectDataFields, users: User[], fetchOrganizations: FetchUserType, organizationData: OrganizationDataFields, dataCreate: UserData, roleType: string }) {
+export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: { data: ProjectDataFields, users: User[], fetchOrganizations: FetchUserType, organizationData: OrganizationDataFields | OrganizationDataFields[], dataCreate: UserData, roleType: string | undefined}) {
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<FormRef>(null);
-    const [editEnabled, setEditStatus] = useState(false);
+    const [editEnabled, setEditStatus] = useState<boolean>(false);
 
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === dataCreate.id);
         const owner = data.ownerId === dataCreate.id;
         const sysAdmin = roleType === "admin";
 
-        setEditStatus(sharedUser || owner || sysAdmin)
+        setEditStatus(!!sharedUser || owner || sysAdmin)
     }, [data])
 
     useEffect(() => {

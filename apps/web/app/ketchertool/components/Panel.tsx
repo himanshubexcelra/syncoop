@@ -7,7 +7,6 @@ import { Highlighting } from './Highlighting';
 import { ButtonsSelect } from './ButtonsSelect';
 import { FileInputForm } from './FileInputForm';
 import { ControlsCard } from './ControlsCard';
-import axios from 'axios';
 
 const FlexBox = styled('div')`
   display: flex;
@@ -59,10 +58,9 @@ export const Panel = ({
     });
 
     const url = process.env.REACT_APP_API_PATH!;
-    const response = await axios.post(url + '/indigo/aromatize', {
-      struct: 'C1=CC=CC=C1',
-      output_format: 'chemical/x-daylight-smiles'
-
+    const response = await fetch(url + '/indigo/aromatize', {
+      method: "POST",
+      body: JSON.stringify({struct: 'C1=CC=CC=C1',output_format: 'chemical/x-daylight-smiles'}),
     });
     console.log(response.data);
     return response.data;

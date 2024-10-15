@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         user_role: {
           orderBy: {
             role: {
-              priority: "asc",
+              priority: 'asc',
             },
           },
           select: {
@@ -27,63 +27,52 @@ export async function POST(request: Request) {
                 priority: true,
                 module_permission: {
                   select: {
-                    module: true,
-                  },
+                    module: true
+                  }
                 },
                 module_action_role_permission: {
                   select: {
-                    module_action: true,
-                  },
-                },
-              },
-            },
+                    module_action: true
+                  }
+                }
+              }
+            }
           },
           take: 1,
         },
         orgUser: {
           select: {
             id: true,
-            name: true,
-          },
-        },
+            name: true
+          }
+        }
       },
       where: {
         email: req.email,
-        // password: req.password
       },
     });
     const isMatch = await bcrypt.compare(req.password, `${user?.password}`);
-
     if (user && isMatch) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: user,
-        }),
-        {
-          status: STATUS_TYPE.SUCCESS,
-        }
-      );
+      return new Response(JSON.stringify({
+        success: true,
+        data: user
+      }), {
+        status: STATUS_TYPE.SUCCESS,
+      });
     } else {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          errorMessage: MESSAGES.INVALID_LOGIN_CREDENTIALS,
-        }),
-        {
-          status: STATUS_TYPE.NOT_FOUND,
-        }
-      );
+      return new Response(JSON.stringify({
+        success: false,
+        errorMessage: MESSAGES.INVALID_LOGIN_CREDENTIALS
+      }), {
+        status: STATUS_TYPE.NOT_FOUND,
+      });
     }
   } catch (error: any) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        errorMessage: `Webhook error: ${error}`,
-      }),
-      {
-        status: STATUS_TYPE.BAD_REQUEST,
-      }
-    );
+    return new Response(JSON.stringify({
+      success: false,
+      errorMessage: `Webhook error: ${error}`
+    }), {
+      status: STATUS_TYPE.BAD_REQUEST,
+    })
   }
 }

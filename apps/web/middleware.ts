@@ -16,8 +16,8 @@ export function middleware(request: NextRequest) {
                     (permission: any) => permission.module.route);
                 if (routes.includes(request.nextUrl.pathname)) {
                     return NextResponse.next(/* { headers } */);
-                } else if (request.nextUrl.pathname === '/') { 
-                    return NextResponse.redirect(new URL('/dashboard', process.env.UI_APP_HOST_URL));
+                } else if (request.nextUrl.pathname === '/') {
+                    return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_UI_APP_HOST_URL));
                 } else {
                     return NextResponse.error();
                 }
@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
                 return NextResponse.error();
             }
         } else if (request.nextUrl.pathname === '/') {
-            return NextResponse.redirect(new URL('/dashboard', process.env.UI_APP_HOST_URL));
+            return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_UI_APP_HOST_URL));
         }
         return NextResponse.next();
     }
@@ -33,7 +33,7 @@ export function middleware(request: NextRequest) {
         if (request.nextUrl.pathname === '/') {
             return NextResponse.next();
         } else {
-            return NextResponse.redirect(new URL('/', process.env.UI_APP_HOST_URL));
+            return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_UI_APP_HOST_URL));
         }
     }
 }

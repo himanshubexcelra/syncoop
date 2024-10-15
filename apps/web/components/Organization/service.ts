@@ -1,9 +1,12 @@
 "use server";
 
-export async function getOrganization(withRelation: string[] = [], type: string = '') {
+export async function getOrganization({ withRelation = [], withCount = [], type = '' }: { withRelation?: string[], withCount?: string[], type?: string }) {
   const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));
+  }
+  if (withCount.length) {
+    url.searchParams.append('withCount', JSON.stringify(withCount));
   }
   if (type) {
     url.searchParams.append('type', type);
@@ -20,7 +23,7 @@ export async function getOrganization(withRelation: string[] = [], type: string 
   return data;
 }
 
-export async function getOrganizationById(withRelation: string[] = [], id: number) {
+export async function getOrganizationById({ withRelation = [], id }: { withRelation?: string[], id?: number }) {
   const url = new URL(`${process.env.API_HOST_URL}/v1/organization?id=${id}`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));

@@ -38,6 +38,8 @@ export type OrganizationEditFieldType = {
   type?: string;
   items?: string[];
   required?: string;
+  roleType?: string;
+  loggedInUser: number;
 };
 
 export interface OrganizationTableFields {
@@ -143,6 +145,7 @@ export interface ProjectDataFields {
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
+  createdAt: Date,
 }
 
 export interface UserRole {
@@ -260,4 +263,12 @@ export enum StatusCode {
   FAILED = 'Failed',
   INPROGRESS = 'In Progress',
   DONE = 'Done',
+}
+
+export interface ProjectListProps {
+  data: ProjectDataFields[],
+  users: User[],
+  fetchOrganizations: FetchUserType,
+  organizationData: OrganizationDataFields[],
+  dataCreate: UserData
 }

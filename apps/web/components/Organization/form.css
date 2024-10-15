@@ -46,6 +46,19 @@
         .dx-field-item-label-text {
             color: var(--themeGreyBorder);
         }
+
+        .dx-state-disabled {
+            border: none;
+            background: transparent;
+        }
+
+        .dx-radiobutton-icon-checked {
+            border-color: var(--themeGreyBorder);
+        }
+
+        .dx-radiobutton-icon-checked .dx-radiobutton-icon-dot {
+            background-color: var(--themeGreyColor)
+        }
     }
 
     .dx-texteditor-container {
@@ -76,4 +89,19 @@
         width: 194px;
         height: 40px;
     }
+
+    .textarea-field .dx-texteditor-input-container {
+        height: 90px;
+    }
+}
+
+.dx-pager .dx-page-sizes .dx-selection,
+.dx-pager .dx-pages .dx-selection,
+.dx-radiobutton-icon-checked .dx-radiobutton-icon-dot,
+.dx-checkbox-checked .dx-checkbox-icon {
+    background-color: var(--themeBlueColor);
+}
+
+.dx-radiobutton-icon-checked {
+    border-color: var(--themeBlueColor);
 }

@@ -109,7 +109,7 @@ model project {
   owner           user                   @relation("ProjectOwner", fields: [ownerId], references: [id]) // User who owns the project
   updatedById     Int                    // Foreign key to the user who last updated the project
   updatedBy       user                   @relation("ProjectUpdater", fields: [updatedById], references: [id]) // User who last updated the project
-  sharedUsers       ProjectPermission[]    @relation("SharedProjectPermissions") // Users with admin or editor access for the project
+  sharedUsers     ProjectPermission[]    @relation("SharedProjectPermissions") // Users with admin or editor access for the project
 }
 
 
@@ -139,6 +139,7 @@ model ProjectPermission {
 
   user              user                 @relation(fields: [userId], references: [id]) // Reference to the user
   project           project              @relation(fields: [projectId], references: [id], name: "SharedProjectPermissions") // Reference to the project with the same name as in Project
+  @@unique([userId, projectId]) // Composite unique constraint
 }
 
 enum organization_type {

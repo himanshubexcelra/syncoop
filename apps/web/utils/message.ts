@@ -13,4 +13,8 @@ export const Messages = {
     PASSWORD_COPY: 'Password copied to clipboard',
     PASSWORD_EMPTY: 'Password cannot be empty',
     PASSWORD_CRITERIA: "Password should be at least 8 characters long and contain at least one lowercase letter, one capital letter, one number, and one special character.",
+    urlCopied(type: string, name: string) {
+        return `url for ${type} ${name} copied to clipboard`;
+    },
+    URL_COPY_ERROR: 'failed to copy url',
 }

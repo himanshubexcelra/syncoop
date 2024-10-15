@@ -44,11 +44,11 @@ export const libraries = [{
   name: 'EGFR-v1',
   description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
   status: [
-    { name: 'new', count: 2, type: 'info' },
-    { name: 'ready', count: 3, type: 'info' },
-    { name: 'progressing', count: 12, type: 'info' },
-    { name: 'done', count: 4, type: 'success' },
-    { name: 'failed', count: 0, type: 'error' },
+    { name: 'New', count: 2, type: 'info' },
+    { name: 'Ready', count: 3, type: 'info' },
+    { name: 'Progressing', count: 12, type: 'info' },
+    { name: 'Done', count: 4, type: 'success' },
+    { name: 'Failed', count: 0, type: 'error' },
   ]
 },
 {
@@ -56,22 +56,22 @@ export const libraries = [{
   name: 'EGFR-v1',
   description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
   status: [
-    { name: 'new', count: 2, type: 'info' },
-    { name: 'ready', count: 3, type: 'info' },
-    { name: 'progressing', count: 12, type: 'info' },
-    { name: 'done', count: 4, type: 'success' },
-    { name: 'failed', count: 0, type: 'error' },
+    { name: 'New', count: 2, type: 'info' },
+    { name: 'Ready', count: 3, type: 'info' },
+    { name: 'Progressing', count: 12, type: 'info' },
+    { name: 'Done', count: 4, type: 'success' },
+    { name: 'Failed', count: 0, type: 'error' },
   ],
 }, {
   id: 3,
   name: 'EGFR-v1',
   description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
   status: [
-    { name: 'new', count: 2, type: 'info' },
-    { name: 'ready', count: 3, type: 'info' },
-    { name: 'progressing', count: 12, type: 'info' },
-    { name: 'done', count: 4, type: 'success' },
-    { name: 'failed', count: 0, type: 'error' },
+    { name: 'New', count: 2, type: 'info' },
+    { name: 'Ready', count: 3, type: 'info' },
+    { name: 'Progressing', count: 12, type: 'info' },
+    { name: 'Done', count: 4, type: 'success' },
+    { name: 'Failed', count: 0, type: 'error' },
   ]
 }];
 

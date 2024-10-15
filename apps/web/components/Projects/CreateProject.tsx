@@ -43,7 +43,7 @@ export default function CreateProject({
   const projectTypeEditorOptions = { items: PROJECT_TYPES, searchEnabled: true, disabled: edit };
 
   const filterUsers = (filteredUsers: User[] = []) => {
-    if (edit) {
+    if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.ownerId)
       const updatedAllUsers = filteredUser.map(user => {
         const updatedUser = projectData.sharedUsers.find(u => u.userId === user.id);
@@ -83,7 +83,7 @@ export default function CreateProject({
     setFilteredData(filteredValue);
   }
 
-  const onValueChanged = (args: CheckBoxTypes.ValueChangedEvent) => {
+  const onFilterChange = (args: CheckBoxTypes.ValueChangedEvent) => {
     const { value } = args;
     setFilters((prevState) => ({ ...prevState, filter: value }));
     if (value) {
@@ -228,6 +228,7 @@ export default function CreateProject({
       <SimpleItem
         dataField="description"
         editorType="dxTextArea"
+        cssClass='textarea-field'
         editorOptions={{
           maxLength: 500,
           height: "90px",
@@ -239,7 +240,7 @@ export default function CreateProject({
       </SimpleItem>
 
       <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}>
-        <div className="search-box">
+        <div className="">
           <Textbox
             placeholder="Search"
             className="search-input"
@@ -252,13 +253,13 @@ export default function CreateProject({
         <div className="flex gap-[8px] filter">
           <CheckBox
             elementAttr={{ 'aria-label': 'Hide view only' }}
-            onValueChanged={onValueChanged}
+            onValueChanged={onFilterChange}
           />
           <div>Hide view only</div>
         </div>
       </GroupItem>
       {filteredData.length === 0 ? (
-        <GroupItem caption=" " cssClass="groupItem group-data" colCount={1}>
+        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}>
           <div className="nodata">No data</div>
         </GroupItem>
       ) : (

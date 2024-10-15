@@ -33,7 +33,8 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
   const { type: roleType, id: roleId } = role;
 
   const fetchOrganizations = async () => {
-    const organization = await getOrganization(['orgUser', 'user_role']);
+    const organization = await getOrganization({ withRelation: ['orgUser', 'user_role'], withCount: ['projects'] });
+
     setTableData(organization);
     setLoader(false);
   }
@@ -83,11 +84,12 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
           <Sorting mode="single" />
           <Column dataField="name" caption="Organization Name" />
           <Column
-            dataField="projects"
+            dataField="_count.projects"
             width={90}
             alignment="center"
+            caption="Projects"
             cellRender={({ data }: any) => (
-              <span>{data.projects?.length}</span>
+              <span>{data._count?.projects}</span>
             )}
           />
           <Column
@@ -104,7 +106,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
             width={70}
             alignment="center"
             cellRender={({ data }: any) => (
-              <span>{data.orgUser?.length}</span>
+              <span>{data?.orgUser?.length}</span>
             )}
           />
           <Column dataField="status" alignment="center" caption="Organization Status" />
@@ -183,7 +185,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
                     role={roleId}
                   />
                 )}
-                width={400}
+                width={477}
                 hideOnOutsideClick={true}
                 height="100%"
                 position={popupPosition}
@@ -206,9 +208,11 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
                     organizationData={editField}
                     showEditPopup={showEditPopup}
                     fetchOrganizations={fetchOrganizations}
+                    roleType={roleType}
+                    loggedInUser={userData.id}
                   />
                 )}
-                width={400}
+                width={477}
                 height="100%"
                 position={popupPosition}
                 onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}

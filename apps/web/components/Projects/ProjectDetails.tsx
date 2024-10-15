@@ -21,6 +21,8 @@ export default function ProjectDescription({ data }: { data: UserData }) {
     const [users, setUsers] = useState([]);
     const formRef = useRef<FormRef>(null);
     const [loader, setLoader] = useState(true);
+    const [sort, setSort] = useState(false);
+    const [orgProj, setOrgProjects] = useState([]);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -35,12 +37,15 @@ export default function ProjectDescription({ data }: { data: UserData }) {
     const fetchOrganizations = async () => {
         let organization;
         if (data?.user_role?.[0]?.role.type === "admin") {
-            organization = await getOrganization(['orgUser', 'user_role', 'projects']);
-            setFilteredData(organization.map((org: OrganizationDataFields) => org.projects).flat());
+            organization = await getOrganization({ withRelation: ['orgUser', 'user_role', 'projects'] });
+            const projectList = organization.map((org: OrganizationDataFields) => org.projects).flat() || [];
+            setFilteredData(projectList);
+            setOrgProjects(projectList);
             setUsers([]);
         } else {
-            organization = await getOrganizationById(['orgUser', 'user_role', 'projects'], data?.organizationId);
+            organization = await getOrganizationById({ withRelation: ['orgUser', 'user_role', 'projects'], id: data?.organizationId });
             setFilteredData(organization?.projects);
+            setOrgProjects(organization?.projects);
             setUsers(organization?.orgUser?.filter((user: UserData) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id));
         }
         setLoader(false);
@@ -62,34 +67,40 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                 item.target?.toLowerCase().includes(value.toLowerCase()) ||
                 item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
                 item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
-        else filteredValue = organization.projects || [];
+        else filteredValue = orgProj || [];
 
         setFilteredData(filteredValue);
     }
 
     const sortData = () => {
-        const tempData = [...filteredData];
-        tempData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-        setFilteredData(tempData);
+        if (!sort) {
+            const tempData = [...filteredData];
+            tempData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+            setFilteredData(tempData);
+            setSort(true);
+        } else {
+            setFilteredData(orgProj || []);
+            setSort(false);
+        }
     }
 
 
     return (
-        <div className='p-[20px]'>
+        <div className='p-[20px] projects'>
             <LoadIndicator
                 visible={loader}
             />
             {!loader &&
                 <div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between projects">
                         <main className="main main-title">
                             <Image
-                                src="/icons/home-icon.svg"
+                                src="/icons/project-logo.svg"
                                 width={33}
                                 height={30}
                                 alt="organization"
                             />
-                            <span>{`Home: ${data.orgUser?.name}`}</span>
+                            <span>{`Projects: ${data?.orgUser?.name}`}</span>
                         </main>
                         <div className='flex'>
                             <Button
@@ -171,7 +182,7 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                                 />
                                 <Textbox
                                     placeholder="Search"
-                                    className="search-input"
+                                    className="search-input-project"
                                     inputAttr={{
                                         style: { paddingRight: '30px' }
                                     }}
@@ -182,12 +193,11 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                     </div>
                     <div className="content-wrapper">
                         <ListProjects
-                            dataCreate={{ ...data, owner: { firstName: data.firstName, lastName: data.lastName } }}
+                            dataCreate={{ ...data, owner: { firstName: data?.firstName, lastName: data?.lastName } }}
                             data={filteredData}
                             fetchOrganizations={fetchOrganizations}
                             users={users}
-                            organizationData={organization}
-                            roleType={data?.user_role?.[0]?.role.type} />
+                            organizationData={organization} />
                     </div>
                 </div>
             }

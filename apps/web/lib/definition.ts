@@ -38,6 +38,8 @@ export type OrganizationEditFieldType = {
   type?: string;
   items?: string[];
   required?: string;
+  roleType?: string;
+  loggedInUser: number;
 };
 
 export interface OrganizationTableFields {
@@ -94,7 +96,7 @@ export type fetchDataType = () => void;
 export interface OrganizationCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
   formRef: any,
-  fetchOrganizations: fetchDataType,
+  fetchOrganizations: FetchUserType,
   projectData?: ProjectDataFields,
   users?: User[],
   organizationData?: OrganizationDataFields[],
@@ -107,17 +109,17 @@ export interface OrganizationCreateFields {
 export interface ProjectCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
   formRef: any,
-  fetchOrganizations: fetchDataType,
+  fetchOrganizations: FetchUserType,
   projectData?: ProjectDataFields,
   users: User[],
   organizationData: OrganizationDataFields | OrganizationDataFields[],
   roleType?: string,
   edit?: boolean,
-  role: number,
+  /* role: number, */
   data: UserData,
 }
 
-export type FetchUserType = (value: boolean) => void;
+export type FetchUserType = (value?: boolean) => void;
 export interface OrganizationEditField {
   organizationData: OrganizationDataFields,
   showEditPopup: ShowEditPopupType,
@@ -143,6 +145,7 @@ export interface ProjectDataFields {
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
+  createdAt: Date,
 }
 
 export interface UserRole {
@@ -260,4 +263,12 @@ export enum StatusCode {
   FAILED = 'Failed',
   INPROGRESS = 'In Progress',
   DONE = 'Done',
+}
+
+export interface ProjectListProps {
+  data: ProjectDataFields[],
+  users: User[],
+  fetchOrganizations: FetchUserType,
+  organizationData: OrganizationDataFields[],
+  dataCreate: UserData
 }

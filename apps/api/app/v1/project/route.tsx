@@ -4,6 +4,39 @@ import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 const { PROJECT_EXISTS } = MESSAGES;
 const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST } = STATUS_TYPE;
 
+export async function GET(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const condition = searchParams.get('condition');
+        const orgId = searchParams.get('orgId');
+        const query: any = {};
+
+        if (condition === "count") {
+            const count = orgId
+                ? await prisma.project.count({ where: { organizationId: Number(orgId) } })
+                : await prisma.project.count();
+            return new Response(JSON.stringify(count), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
+        }
+        if (orgId) {
+            query.where = { organizationId: Number(orgId) };
+        }
+
+        const projects = await prisma.project.findMany(query);
+        return new Response(JSON.stringify(projects), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST,
+        });
+    }
+}
 export async function POST(request: Request) {
     const req = await request.json();
     const { name, type, target, description, organizationId, userId, sharedUsers } = req;
@@ -64,13 +97,13 @@ export async function POST(request: Request) {
                         connect: { id: userId }, // Associate the user who created/updated the project
                     },
                     sharedUsers: {
-                        create: sharedUsers?.map(({ id, permission, firstName }: { id: number, permission: string, firstName: string }) => ({
+                        create: sharedUsers?.map(({ id: userId, permission, firstName }: { id: number, permission: string, firstName: string }) => ({
                             user: {
-                                connect: { id: id }, // Connect the user by ID
+                                connect: { id: userId }, // Connect the user by ID
                             },
                             role: permission,
                             firstName,
-                        })) || []
+                        })) || [] // If sharedUsers is undefined, default to an empty array
                     }
                 },
             });
@@ -120,7 +153,7 @@ export async function PUT(request: Request) {
         });
 
         // Check if an project with the same name already exists (case insensitive)
-        const existingProject = organization?.projects.filter(project => project.name?.toLowerCase() === name.toLowerCase() && project.id !== id)[0];
+        let existingProject = organization?.projects.filter(project => project.name?.toLowerCase() === name.toLowerCase() && project.id !== id)[0];
 
         if (existingProject) {
             return new Response(JSON.stringify(PROJECT_EXISTS), {
@@ -128,6 +161,17 @@ export async function PUT(request: Request) {
                 status: INTERNAL_SERVER_ERROR,
             });
         }
+
+        existingProject = organization?.projects.filter(project => project.id === id)[0];
+
+        // Step 3: Create a set of user IDs from the incoming shared users
+        const incomingUserIds = new Set(sharedUsers?.map(({ id }) => id));
+
+        // Step 4: Determine which users need to be removed
+        const usersToRemove = existingProject?.sharedUsers
+            .filter(user => !incomingUserIds.has(user.userId))
+            .map(user => user.id); // Collect the IDs of shared users to remove
+
 
         const updatedProject = await prisma.project.update({
             where: { id },
@@ -140,12 +184,22 @@ export async function PUT(request: Request) {
                     connect: { id: userId }, // Associate the user who created/updated the project
                 },
                 sharedUsers: {
-                    create: sharedUsers?.map(({ id, permission, firstName }: { id: number, permission: string, firstName: string }) => ({
-                        user: {
-                            connect: { id: id }, // Connect the user by ID
+                    deleteMany: {
+                        id: { in: usersToRemove }, // Remove users not in the request
+                    },
+                    upsert: sharedUsers?.map(({ id: userId, permission, firstName }: { id: number, permission: string, firstName: string }) => ({
+                        where: { userId_projectId: { userId, projectId: id } }, // Ensure you have a unique constraint on userId and projectId
+                        update: {
+                            role: permission,
+                            firstName,
                         },
-                        role: permission,
-                        firstName,
+                        create: {
+                            user: {
+                                connect: { id: userId }, // Connect the user by ID
+                            },
+                            role: permission,
+                            firstName,
+                        },
                     })) || []
                 }
             },

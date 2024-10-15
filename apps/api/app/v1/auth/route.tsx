@@ -23,12 +23,32 @@ export async function POST(request: Request) {
             role: {
               select: {
                 id: true,
-                type: true,
-                priority: true,
-                module_permission: {
-                  select: {
-                    module: true
-                  }
+                user_role: {
+                    orderBy: {
+                        role: {
+                            priority: 'asc',
+                        },
+                    },
+                    select: {
+                        role: {
+                            select: {
+                                id: true,
+                                type: true,
+                                priority: true,
+                                module_permission: {
+                                    select: {
+                                        module: true
+                                    }
+                                },
+                                /* module_action_role_permission: {
+                                    select: {
+                                        module_action: true
+                                    }
+                                } */
+                            }
+                        }
+                    },
+                    take: 1,
                 },
                 module_action_role_permission: {
                   select: {

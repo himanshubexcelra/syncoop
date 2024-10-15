@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 
 import "devextreme/dist/css/dx.material.blue.light.css";
 import { Toaster } from "react-hot-toast";
+import LicenseCheckComponent from "@/components/LicenseCheckComponent";
 
 export default async function RootLayout({
   children,
@@ -34,6 +35,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} antialiased`}>
+        <LicenseCheckComponent />
         {children}
         <Toaster position="bottom-center" reverseOrder={false} />
       </body>

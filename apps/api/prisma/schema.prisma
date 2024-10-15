@@ -9,29 +9,29 @@ datasource db {
 }
 
 model user {
-  id                 Int                 @id @default(autoincrement())
-  firstName          String?             @db.VarChar
-  email              String?             @unique @db.VarChar
-  password           String?             @db.VarChar
-  status             status_type?
-  createdAt          DateTime            @default(now()) @db.Timestamp(6)
-  updatedAt          DateTime            @default(now()) @db.Timestamp(6)
-  lastName           String?             @db.VarChar
-  organizationId     Int?
-  projectPermissions ProjectPermission[]
-  orgAdmin           organization?       @relation("organizationAdmin")
-  ownedProjects      project[]           @relation("ProjectOwner")
-  updatedProjects    project[]           @relation("ProjectUpdater")
-  orgUser            organization?       @relation("organizationUser", fields: [organizationId], references: [id])
-  user_role          user_role[]
+  id             Int           @id @default(autoincrement())
+  firstName      String?       @db.VarChar
+  email          String?       @unique @db.VarChar
+  password       String?       @db.VarChar
+  status         status_type?
+  createdAt      DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime      @default(now()) @db.Timestamp(6)
+  lastName       String?       @db.VarChar
+  user_role      user_role[]
+  organizationId Int?
+  orgUser        organization? @relation("organizationUser", fields: [organizationId], references: [id])
+  orgAdmin       organization? @relation("organizationAdmin")
+  ownedProjects       project[]              @relation("ProjectOwner") // Projects owned by the user
+  updatedProjects     project[]              @relation("ProjectUpdater") // Projects updated by the user
+  projectPermissions   ProjectPermission[]    // Permissions for projects
 }
 
 model user_role {
   id     Int  @id @default(autoincrement())
   userId Int
+  user   user @relation(fields: [userId], references: [id])
   roleId Int
   role   role @relation(fields: [roleId], references: [id])
-  user   user @relation(fields: [userId], references: [id])
 }
 
 model role {
@@ -42,23 +42,23 @@ model role {
   priority                      Int
   createdAt                     DateTime                        @default(now()) @db.Timestamp(6)
   updatedAt                     DateTime                        @default(now()) @db.Timestamp(6)
+  user_role                     user_role[]
   module_action_role_permission module_action_role_permission[]
   module_permission             module_permission[]
-  user_role                     user_role[]
 }
 
 model organization {
-  id         Int                @id @default(autoincrement())
+  id         Int          @id @default(autoincrement())
   name       String
-  orgAdminId Int                @unique
+  orgAdminId Int          @unique
+  user       user         @relation("organizationAdmin", fields: [orgAdminId], references: [id])
   status     status_type?
-  createdAt  DateTime           @default(now()) @db.Timestamp(6)
-  updatedAt  DateTime           @default(now()) @db.Timestamp(6)
-  metadata   Json?              @db.Json
   type       organization_type?
-  user       user               @relation("organizationAdmin", fields: [orgAdminId], references: [id])
-  projects   project[]          @relation("OrganizationProjects")
-  orgUser    user[]             @relation("organizationUser")
+  createdAt  DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime     @default(now()) @db.Timestamp(6)
+  metadata   Json?        @db.Json
+  orgUser    user[]       @relation("organizationUser")
+  projects  project[]    @relation("OrganizationProjects") // Multiple projects
 }
 
 model module {
@@ -73,8 +73,8 @@ model module {
 model module_permission {
   id       Int    @id @default(autoincrement())
   moduleId Int
-  roleId   Int
   module   module @relation(fields: [moduleId], references: [id])
+  roleId   Int
   role     role   @relation(fields: [roleId], references: [id])
 }
 
@@ -90,17 +90,17 @@ model module_action {
 model module_action_role_permission {
   id            Int           @id @default(autoincrement())
   actionId      Int
-  roleId        Int
   module_action module_action @relation(fields: [actionId], references: [id])
+  roleId        Int
   role          role          @relation(fields: [roleId], references: [id])
 }
 
 model project {
-  id             Int                 @id @default(autoincrement())
-  name           String              @db.VarChar
-  target         String?
-  type           project_type
-  description    String?
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar
+  target        String?
+  type          project_type
+  description   String?
   organizationId Int
   organization   organization           @relation("OrganizationProjects", fields: [organizationId], references: [id]) // Organization of the project
   createdAt      DateTime               @default(now()) @db.Timestamp(6)
@@ -112,15 +112,6 @@ model project {
   sharedUsers     ProjectPermission[]    @relation("SharedProjectPermissions") // Users with admin or editor access for the project
 }
 
-model ProjectPermission {
-  id        Int        @id @default(autoincrement())
-  userId    Int
-  projectId Int
-  role      permission
-  firstName String?
-  project   project    @relation("SharedProjectPermissions", fields: [projectId], references: [id])
-  user      user       @relation(fields: [userId], references: [id])
-}
 
 enum status_type {
   Disabled @map("0")
@@ -153,5 +144,5 @@ model ProjectPermission {
 
 enum organization_type {
   Internal @map("0")
-  External @map("1")
+  External  @map("1")
 }

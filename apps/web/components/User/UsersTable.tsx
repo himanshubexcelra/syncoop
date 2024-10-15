@@ -20,6 +20,8 @@ import { getUsers } from "./service";
 import { User } from "@/lib/definition";
 import { filterUsersByOrgId } from "@/utils/helpers";
 import { LoadIndicator } from "devextreme-react";
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
 
 export default function UsersTable({ orgUser, roles, roleType, type, setInternalCount, setExternalCount }: UserTableProps) {
     const [editPopup, showEditPopup] = useState(false);
@@ -30,19 +32,25 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<PopupRef>(null);
     const [popupPosition, setPopupPosition] = useState({} as any);
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
 
     const fetchAndFilterData = async () => {
         setLoader(true);
-
         try {
             const usersList = await getUsers(['orgUser', 'user_role']);
             const { internalUsers, externalUsers } = filterUsersByOrgId(usersList, orgUser?.id);
 
             if (roleType === "admin") {
                 type === "Internal" ? setTableData(internalUsers) : setTableData(externalUsers);
-
                 setInternalCount(internalUsers.length);
                 setExternalCount(externalUsers.length);
+                context?.addToState({
+                    ...appContext, userCount: {
+                        externalUsers: externalUsers.length,
+                        internalUsers: internalUsers.length
+                    }
+                })
             }
             else {
                 setTableData(internalUsers);

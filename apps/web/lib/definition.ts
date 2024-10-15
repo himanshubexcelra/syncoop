@@ -261,3 +261,11 @@ export enum StatusCode {
   INPROGRESS = 'In Progress',
   DONE = 'Done',
 }
+
+export interface UserCountModel {
+  internalUsers: number;
+  externalUsers: number;
+}
+export interface AppContextModel {
+  userCount: UserCountModel;
+}

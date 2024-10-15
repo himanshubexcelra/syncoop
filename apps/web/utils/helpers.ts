@@ -57,3 +57,27 @@ export function formatDate(date: Date) {
 
   return `${month}/${day}/${year}`;
 }
+
+export function getCountCardsDetails(projectCount: number) {
+  return [
+    {
+      name: "Libraries",
+      svgPath: "/icons/library-icon.svg",
+      innerGap: "gap-5",
+      count: "12"
+    },
+    {
+      name: "Projects",
+      svgPath: "/icons/project-icon.svg",
+      innerGap: "gap-2",
+      count: String(projectCount),
+      href: "./projects"
+    },
+    {
+      name: "Molecules",
+      svgPath: "/icons/molecule-icon.svg",
+      innerGap: "gap-2",
+      count: "551"
+    }
+  ];
+}

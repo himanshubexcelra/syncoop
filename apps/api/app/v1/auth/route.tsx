@@ -29,11 +29,11 @@ export async function POST(request: Request) {
                                         module: true
                                     }
                                 },
-                                module_action_role_permission: {
+                                /* module_action_role_permission: {
                                     select: {
                                         module_action: true
                                     }
-                                }
+                                } */
                             }
                         }
                     },

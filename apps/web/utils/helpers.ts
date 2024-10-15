@@ -81,3 +81,19 @@ export function getCountCardsDetails(projectCount: number) {
     }
   ];
 }
+
+export function formatDetailedDate(date: Date) {
+  const today = new Date(date);
+  const year = today.getFullYear();
+  const day = today.getDate();
+
+  // Create an array of month names
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const month = monthNames[today.getMonth()]; // Get month name
+
+  return `${day} ${month} ${year}`;
+}

@@ -24,10 +24,11 @@ const functionalAssay = {
   functionalAssay4: '',
 };
 
-export default function EditOrganization({ organizationData, showEditPopup, fetchOrganizations, formRef }: OrganizationEditField) {
+export default function EditOrganization({ organizationData, showEditPopup, fetchOrganizations, formRef, roleType, loggedInUser }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.orgAdminId);
   const [metaData, setMetaData] = useState(organizationData.metadata ? organizationData.metadata : functionalAssay);
+
 
   // Update local state when organizationData changes
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
   };
 
   const handleContactChange = (contact: any) => {
-    const user = formData.orgUser?.filter((val: userType) => val.id === contact.value)?.[0];
+    const user = formData?.orgUser?.filter((val: userType) => val.id === contact.value)?.[0];
     setFormData((prevData: OrganizationDataFields) => ({
       ...prevData,
       user
@@ -99,6 +100,8 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
     }
   }
 
+  const disableAllowed = roleType === 'admin' && organizationData.orgAdminId !== loggedInUser;
+
   return (
     <Form ref={formRef} formData={formData}>
       <SimpleItem dataField="name" editorOptions={{ disabled: true }} cssClass="disabled-field">
@@ -106,8 +109,8 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
         <RequiredRule message="Organization name is required" />
       </SimpleItem>
 
-      <SimpleItem dataField="status">
-        <RadioGroup items={status} defaultValue={formData.status} onValueChange={handleValueChange} />
+      <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }} cssClass={!disableAllowed ? "disabled-field" : ""}>
+        <RadioGroup items={status} disabled={!disableAllowed} className={!disableAllowed ? "disabled-field" : ""} defaultValue={formData.status} onValueChange={handleValueChange} />
       </SimpleItem>
       <SimpleItem
         editorType="dxSelectBox"
@@ -116,16 +119,16 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
         <Label text="Primary Contact" />
       </SimpleItem>
       <GroupItem caption="Functional Assay" cssClass="groupItem group-search" colCount={1}></GroupItem>
-      <SimpleItem dataField="functionalAssay1" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay1 }}>
+      <SimpleItem dataField="functionalAssay1" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay1 }}>
         <Label text="Functional Assay 1" />
       </SimpleItem>
-      <SimpleItem dataField="functionalAssay2" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay2 }}>
+      <SimpleItem dataField="functionalAssay2" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay2 }}>
         <Label text="Functional Assay 2" />
       </SimpleItem>
-      <SimpleItem dataField="functionalAssay3" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay3 }}>
+      <SimpleItem dataField="functionalAssay3" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay3 }}>
         <Label text="Functional Assay 3" />
       </SimpleItem>
-      <SimpleItem dataField="functionalAssay4" editorOptions={{ placeholder: "First name", onChange: setMetaDataValue, value: metaData.functionalAssay4 }}>
+      <SimpleItem dataField="functionalAssay4" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay4 }}>
         <Label text="Functional Assay 4" />
       </SimpleItem>
       <GroupItem cssClass="buttons-group" colCount={2}>

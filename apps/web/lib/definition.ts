@@ -38,6 +38,8 @@ export type OrganizationEditFieldType = {
   type?: string;
   items?: string[];
   required?: string;
+  roleType?: string;
+  loggedInUser: number;
 };
 
 export interface OrganizationTableFields {
@@ -143,6 +145,7 @@ export interface ProjectDataFields {
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
+  createdAt: Date,
 }
 
 export interface UserRole {
@@ -266,6 +269,15 @@ export interface UserCountModel {
   internalUsers: number;
   externalUsers: number;
 }
+
 export interface AppContextModel {
   userCount: UserCountModel;
+}
+
+export interface ProjectListProps {
+  data: ProjectDataFields[],
+  users: User[],
+  fetchOrganizations: FetchUserType,
+  organizationData: OrganizationDataFields[],
+  dataCreate: UserData
 }

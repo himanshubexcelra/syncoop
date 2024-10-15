@@ -1,7 +1,17 @@
 "use server";
 
-export async function getProjects() {
-    const response = await fetch(`${process.env.API_HOST_URL}/v1/project`, {
+export async function getProjects({ withRelation = [], organizationId, withCount = [] }: { withRelation: string[], organizationId: number, withCount: string[] }) {
+    const url = new URL(`${process.env.API_HOST_URL}/v1/project`);
+    if (withRelation.length) {
+        url.searchParams.append('with', JSON.stringify(withRelation));
+    }
+    if (withCount.length) {
+        url.searchParams.append('withCount', JSON.stringify(withCount));
+    }
+    if (organizationId) {
+        url.searchParams.append('organizationId', organizationId.toString());
+    }
+    const response = await fetch(url, {
         mode: "no-cors",
         method: "GET",
         headers: {

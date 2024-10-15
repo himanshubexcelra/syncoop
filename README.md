@@ -36,6 +36,7 @@ This Turborepo has some additional tools already setup for you:
 Create a new .env file in web folder and below lines
 
 AUTH_SECRET=[AUTH_SECRET]
+
 API_HOST_URL=http://localhost:3001
 
 To generage AUTH SECRET you can run below command
@@ -169,6 +170,7 @@ cd apps\api
 npx prisma migrate dev
 ```
 
+### Prisma commands to pull and push schema from database
 To pull database update from your postgres DB, run below command
 
 ```

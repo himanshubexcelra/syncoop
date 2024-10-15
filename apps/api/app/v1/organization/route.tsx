@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const orgId = searchParams.get('id'); // Get the organization ID from query parameters
     const type = searchParams.get("type");
     const joins = searchParams.get('with');
+    const count = searchParams.get('withCount') || [];
     const query: any = {};
 
     if (joins && joins.length) {
@@ -78,6 +79,16 @@ export async function GET(request: Request) {
             },
           }
         }
+      }
+    }
+    if (count.includes('projects')) {
+      query.include = {
+        ...query.include,
+        _count: {
+          select: {
+            projects: true, // Count of projects in each organization
+          },
+        },
       }
     }
     if (orgId) {
@@ -174,6 +185,7 @@ export async function POST(request: Request) {
         data: {
           name,
           status: 'Enabled',
+          type: "External",
           orgAdminId: adminUser.id, // Link the user as the org admin
         },
       });

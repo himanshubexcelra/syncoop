@@ -2,25 +2,29 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from 'devextreme-react/button';
 import Image from "next/image";
-import notify from 'devextreme/ui/notify';
+import toast from "react-hot-toast";
 import { Popup } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
 import { ProjectDataFields, User, FetchUserType, OrganizationDataFields, UserData } from '@/lib/definition';
-import { libraries, DELAY } from "@/utils/constants";
+import { libraries } from "@/utils/constants";
+import { formatDetailedDate } from "@/utils/helpers";
 import CreateProject from "./CreateProject";
+import { Messages } from "@/utils/message";
 
-export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: { data: ProjectDataFields, users: User[], fetchOrganizations: FetchUserType, organizationData: OrganizationDataFields, dataCreate: UserData, roleType: string }) {
+const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
+
+export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: { data: ProjectDataFields, users: User[], fetchOrganizations: FetchUserType, organizationData: OrganizationDataFields | OrganizationDataFields[], dataCreate: UserData, roleType: string | undefined }) {
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<FormRef>(null);
-    const [editEnabled, setEditStatus] = useState(false);
+    const [editEnabled, setEditStatus] = useState<boolean>(false);
 
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === dataCreate.id);
         const owner = data.ownerId === dataCreate.id;
         const sysAdmin = roleType === "admin";
 
-        setEditStatus(sharedUser || owner || sysAdmin)
+        setEditStatus(!!sharedUser || owner || sysAdmin)
     }, [data])
 
     useEffect(() => {
@@ -33,27 +37,11 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
         }
     }, []);
 
-    const copyToClipboard = () => {
-        const url = `/project/${data.id}`;
+    const copyToClipboard = (type: string, name: string) => {
+        const url = `${urlHost}/project/${data.id}`;
         navigator.clipboard.writeText(url)
-            .then(() => {
-                notify(
-                    {
-                        message: "url copied to clipboard!",
-                        width: 230,
-                        position: {
-                            at: "top",
-                            my: "top",
-                            of: "#url"
-                        },
-                        type: "warning",
-                        duration: DELAY,
-                    },
-                );
-            })
-            .catch((error) => {
-                console.error(`Could not copy text: ${error}`);
-            });
+            .then(() => toast.success(Messages.urlCopied(type, name)))
+            .catch(() => toast.error(Messages.URL_COPY_ERROR));
     }
 
     return (
@@ -61,14 +49,23 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
             <div className='flex justify-between'>
                 <div>
                     <div className='project-target flex'>
-                        Target: <span>{data.target}</span>
+                        Target: <span className='pl-[5px]'>{data.target}</span>
                     </div>
                     <div className='project-title mt-[21px] mb-[21px]'>{data.name}</div>
                 </div>
                 <div className='flex gap-[8px]'>
                     <Button className='btn-primary accordion-button' disabled={true}>Open</Button>
-                    <Button className='btn-secondary accordion-button' disabled={!editEnabled} onClick={() => setCreatePopupVisibility(true)}>Edit</Button>
-                    <Button className='btn-secondary accordion-button' onClick={copyToClipboard}>URL</Button>
+                    <Button
+                        className='btn-secondary accordion-button'
+                        disabled={!editEnabled}
+                        onClick={() => setCreatePopupVisibility(true)}>
+                        Edit
+                    </Button>
+                    <Button
+                        className='btn-secondary accordion-button'
+                        onClick={() => copyToClipboard('project', data.name)}>
+                        URL
+                    </Button>
                 </div>
             </div>
             <div className='flex'>
@@ -125,20 +122,34 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
             </div>
             <div className='row-details'>
                 <div>
-                    <Image
-                        src="/icons/users.svg"
-                        alt="molecule"
-                        width={15}
-                        height={15}
-                    />
-                    Shared: {data.sharedUsers?.map((val, idx) => {
-                        const length = data.sharedUsers.length;
-                        if (length - 1 !== idx && idx < 2)
-                            return <span key={val.id}>{val.firstName},</span>
-                        if (length - 1 === idx || idx < 2)
-                            return <span key={val.id}>{val.firstName}</span>
-                        return <span key={val.id}>+ {length - idx - 1}</span>
-                    })}
+                    <div className='flex-evenly'>
+                        <Image
+                            src="/icons/users.svg"
+                            alt="molecule"
+                            width={15}
+                            height={15}
+                        />
+                        Shared: {data.sharedUsers?.map((val, idx) => {
+                            const length = data.sharedUsers.length;
+                            if (idx >= 4) return;
+                            if (length - 1 !== idx && idx < 3)
+                                return <span key={val.id}>{val.firstName},</span>
+                            if (length - 1 === idx || idx < 3)
+                                return <span key={val.id}>{val.firstName}</span>
+                            return <span key={val.id}>and {length - idx} +</span>
+                        })}
+                    </div>
+                    <div className='flex-evenly'>
+                        <div>
+                            <Image
+                                src="/icons/create.svg"
+                                alt="molecule"
+                                width={15}
+                                height={15}
+                            />
+                            Created on: <span>{formatDetailedDate(data.createdAt)}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className='row-details'>

@@ -57,3 +57,43 @@ export function formatDate(date: Date) {
 
   return `${month}/${day}/${year}`;
 }
+
+export function getCountCardsDetails(projectCount: number) {
+  return [
+    {
+      name: "Libraries",
+      svgPath: "/icons/library-icon.svg",
+      innerGap: "gap-5",
+      count: "12"
+    },
+    {
+      name: "Projects",
+      svgPath: "/icons/project-icon.svg",
+      innerGap: "gap-2",
+      count: String(projectCount),
+      href: "./projects"
+    },
+    {
+      name: "Molecules",
+      svgPath: "/icons/molecule-icon.svg",
+      innerGap: "gap-2",
+      count: "551"
+    }
+  ];
+}
+
+export function formatDetailedDate(date: Date) {
+  const today = new Date(date);
+  const year = today.getFullYear();
+  const day = today.getDate();
+
+  // Create an array of month names
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const month = monthNames[today.getMonth()]; // Get month name
+
+  return `${day} ${month} ${year}`;
+}

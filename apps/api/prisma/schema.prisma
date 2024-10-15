@@ -102,14 +102,14 @@ model project {
   type           project_type
   description    String?
   organizationId Int
-  createdAt      DateTime            @default(now()) @db.Timestamp(6)
-  updatedAt      DateTime            @default(now()) @db.Timestamp(6)
-  ownerId        Int
-  updatedById    Int
-  sharedUsers    ProjectPermission[] @relation("SharedProjectPermissions")
-  organization   organization        @relation("OrganizationProjects", fields: [organizationId], references: [id])
-  owner          user                @relation("ProjectOwner", fields: [ownerId], references: [id])
-  updatedBy      user                @relation("ProjectUpdater", fields: [updatedById], references: [id])
+  organization   organization           @relation("OrganizationProjects", fields: [organizationId], references: [id]) // Organization of the project
+  createdAt      DateTime               @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime               @default(now()) @db.Timestamp(6)
+  ownerId        Int                    // Foreign key to the user who owns the project
+  owner           user                   @relation("ProjectOwner", fields: [ownerId], references: [id]) // User who owns the project
+  updatedById     Int                    // Foreign key to the user who last updated the project
+  updatedBy       user                   @relation("ProjectUpdater", fields: [updatedById], references: [id]) // User who last updated the project
+  sharedUsers     ProjectPermission[]    @relation("SharedProjectPermissions") // Users with admin or editor access for the project
 }
 
 model ProjectPermission {
@@ -137,6 +137,18 @@ enum permission {
   View  @map("0")
   Edit  @map("1")
   Admin @map("2")
+}
+
+model ProjectPermission {
+  id                Int                  @id @default(autoincrement())
+  userId            Int                  // ID of the user
+  projectId         Int                  // ID of the project
+  role              permission               // Role or permission type (e.g., "admin", "editor")
+  firstName         String?              // Optional field for user's first name
+
+  user              user                 @relation(fields: [userId], references: [id]) // Reference to the user
+  project           project              @relation(fields: [projectId], references: [id], name: "SharedProjectPermissions") // Reference to the project with the same name as in Project
+  @@unique([userId, projectId]) // Composite unique constraint
 }
 
 enum organization_type {

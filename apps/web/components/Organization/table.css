@@ -332,16 +332,6 @@
   gap: 7.5px;
 }
 
-.dx-pager .dx-page-sizes .dx-selection,
-.dx-pager .dx-pages .dx-selection,
-.dx-radiobutton-icon-checked .dx-radiobutton-icon-dot {
-  background-color: var(--themeBlueColor);
-}
-
-.dx-radiobutton-icon-checked {
-  border-color: var(--themeBlueColor);
-}
-
 .dx-toolbar-after .dx-toolbar-item {
   padding: 0;
 }

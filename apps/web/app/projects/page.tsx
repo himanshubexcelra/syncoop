@@ -3,6 +3,7 @@ import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import ProjectDetails from "@/components/Projects/ProjectDetails";
 import { getUserData } from "@/utils/auth";
 import Layout from "@/components/layout";
+import { redirect } from "next/navigation";
 
 export default async function Projects() {
 
@@ -23,15 +24,18 @@ export default async function Projects() {
             href: "/",
         },
         {
-            label: "Dashboard",
+            label: "Projects",
             svgPath: "",
             svgWidth: 16,
             svgHeight: 16,
-            href: "/dashboard",
+            href: "/projects",
         },
     ];
 
     const userData: any = await getUserData();
+    if (!userData) {
+        redirect('/');
+    }
 
     return (
         <Layout>

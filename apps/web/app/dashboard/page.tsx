@@ -10,12 +10,14 @@ import { getUserData } from "@/utils/auth";
 import Heading from "@/components/Heading/Heading";
 import Tabs from "@/ui/Tab/Tabs";
 import { redirect } from "next/navigation";
-import { countCardsDetails, dataSource, features, stats } from "@/utils/constants";
+import { dataSource, features, stats } from "@/utils/constants";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
 import TabUsersTable from "@/components/Organization/TabUsersTable";
 import { TabDetail } from "@/lib/definition";
+import { getProjectsCountById } from "@/components/Projects/projectService";
+import { getCountCardsDetails } from "@/utils/helpers";
 
 export default async function Dashboard() {
 
@@ -26,7 +28,7 @@ export default async function Dashboard() {
   const { type: roleType, priority: currentUserPriority } = userData.user_role[0].role;
   const { orgUser } = userData;
 
-
+  const projectCount = roleType === 'admin' ? await getProjectsCountById() : await getProjectsCountById(orgUser?.id)
   const filteredRoles = await getLowPriorityRole(currentUserPriority);
 
   const breadcrumbs: BreadCrumbsObj[] = [
@@ -69,7 +71,7 @@ export default async function Dashboard() {
     {
       title: "Overview",
       Component: StatusComponent,
-      props: { stats, countCardsDetails }
+      props: { stats, countCardsDetails: getCountCardsDetails(projectCount) }
     },
     {
       title: "Assays",

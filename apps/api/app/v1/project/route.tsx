@@ -4,6 +4,39 @@ import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 const { PROJECT_EXISTS } = MESSAGES;
 const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST } = STATUS_TYPE;
 
+export async function GET(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const condition = searchParams.get('condition');
+        const orgId = searchParams.get('orgId');
+        const query: any = {};
+
+        if (condition === "count") {
+            const count = orgId
+                ? await prisma.project.count({ where: { organizationId: Number(orgId) } })
+                : await prisma.project.count();
+            return new Response(JSON.stringify(count), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
+        }
+        if (orgId) {
+            query.where = { organizationId: Number(orgId) };
+        }
+
+        const projects = await prisma.project.findMany(query);
+        return new Response(JSON.stringify(projects), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST,
+        });
+    }
+}
 export async function POST(request: Request) {
     const req = await request.json();
     const { name, type, target, description, organizationId, userId, sharedUsers } = req;

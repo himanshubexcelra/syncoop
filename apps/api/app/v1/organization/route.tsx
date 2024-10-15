@@ -174,6 +174,7 @@ export async function POST(request: Request) {
         data: {
           name,
           status: 'Enabled',
+          type: "External",
           orgAdminId: adminUser.id, // Link the user as the org admin
         },
       });

@@ -13,7 +13,7 @@ import "./table.css";
 import styles from './createUser.module.css'
 import { Button, TextBox, Tooltip, Validator } from "devextreme-react";
 import { Button as TextBoxButton } from 'devextreme-react/text-box';
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";
 import { ButtonTypes } from "devextreme-react/cjs/button";
@@ -86,7 +86,7 @@ export default function RenderCreateUser({
     const handleCopyPassword = async () => {
         if (password === "") {
             const toastId = toast.error(Messages.PASSWORD_EMPTY)
-            await delay(3000);
+            await delay(DELAY);
             toast.remove(toastId);
             return;
         }
@@ -161,15 +161,7 @@ export default function RenderCreateUser({
             </div>
         );
     };
-    const fetchOrganisation = async () => {
-        if (type) {
-            const organizationDropdown = await getOrganization([], type);
-            setOrganization(organizationDropdown);
-        }
-    };
-    useEffect(() => {
-        fetchOrganisation();
-    }, [type]);
+
     const OrganizationSelectBox = useMemo(() => (
         <SimpleItem
             dataField="organization"
@@ -182,12 +174,18 @@ export default function RenderCreateUser({
                     ? (type === 'External' ? "" : organization && organization[0].id)
                     : organization[0].id,
                 disabled: roleType !== 'admin' || type === "Internal",
+                onOpened: async () => {
+                    if (type) {
+                        const organizationDropdown = await getOrganization([], type);
+                        setOrganization(organizationDropdown);
+                    }
+                },
             }}
         >
             <Label text="Select an Organisation" />
             <RequiredRule message={Messages.requiredMessage('Organisation')} />
         </SimpleItem>
-    ), [organization, roleType]);
+    ), [organization, roleType, type]);
     return (
         <CreateForm ref={formRef}>
             {OrganizationSelectBox}
@@ -241,6 +239,7 @@ export default function RenderCreateUser({
                         text="Create User"
                         onClick={handleSubmit}
                         useSubmitBehavior={true}
+                        hoverStateEnabled={false}
                         className={styles.primaryButton}
                     />
                     <Button

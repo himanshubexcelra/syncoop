@@ -1,29 +1,6 @@
 import { useState } from 'react';
-import styled from '@emotion/styled';
-
-import { PanelButton } from './shared/Buttons';
 import { Button } from '@mui/material';
-
-const Form = styled('form')`
-  margin-top: 10px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-
-  & label,
-  button {
-    font-size: 12px;
-    text-transform: none;
-  }
-`;
-
-const FileNameBox = styled('div')`
-  margin-top: 5px;
-  min-height: 18px;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 13px;
-  text-align: left;
-`;
+import styles from "../page.module.css";
 
 const parseFile = (file: any): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -71,7 +48,7 @@ export const FileInputForm = ({ printToTerminal }: FileInputProps) => {
 
   return (
     <>
-      <Form onSubmit={submitHandler}>
+      <div className={styles.formClass} onSubmit={submitHandler}>
         <Button
           component="label"
           size="small"
@@ -87,7 +64,7 @@ export const FileInputForm = ({ printToTerminal }: FileInputProps) => {
             onChange={chooseFileHandler}
           />
         </Button>
-        <PanelButton
+        <Button style={{ display: 'block', marginTop: '10px', lineHeight: '1.3', textTransform: 'none' }}
           type="submit"
           variant="contained"
           size="small"
@@ -95,11 +72,11 @@ export const FileInputForm = ({ printToTerminal }: FileInputProps) => {
           fullWidth
         >
           Render file
-        </PanelButton>
-      </Form>
-      <FileNameBox>
+        </Button>
+      </div>
+      <div className={styles.fileNameBox}>
         <span>{chosenFile}</span>
-      </FileNameBox>
+      </div>
     </>
   );
 };

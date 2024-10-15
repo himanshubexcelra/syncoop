@@ -1,82 +1,77 @@
-import styled from '@emotion/styled'
-import { useState } from 'react'
+import { useState } from "react";
+import styles from "../page.module.css";
+import { Button } from "@mui/material";
 
-import { PanelButton } from './shared/Buttons'
-
-type HighlightingProps = { printToTerminal: (arg: string) => void }
-
-const HighlightsBox = styled('div')`
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-`
-
-const ButtonWithColorBox = styled('div')`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`
-
-const ColorInput = styled('input')`
-  padding: 0;
-  border: none;
-  height: 25px;
-  width: 25px;
-  margin-left: 5px;
-  margin-top: 10px;
-  background: none;
-`
+type HighlightingProps = { printToTerminal: (arg: string) => void };
 
 export const Highlighting = ({ printToTerminal }: HighlightingProps) => {
-  const [color, setColor] = useState('#FF7F50')
+  const [color, setColor] = useState("#FF7F50");
 
   const colorHandler = (event: any) => {
-    setColor(event.target.value)
-  }
+    setColor(event.target.value);
+  };
 
   const getAndPrintHighlights = () => {
-    const highlights = KetcherFunctions.getAllHighlights()
-    printToTerminal(JSON.stringify(highlights, null, 2))
-  }
+    const highlights = KetcherFunctions.getAllHighlights();
+    printToTerminal(JSON.stringify(highlights, null, 2));
+  };
 
   const createHighlight = () => {
     const { lastHighlightID, lastHighlight } =
-      KetcherFunctions.highlightSelection(color)
+      KetcherFunctions.highlightSelection(color);
 
     if (!lastHighlight) {
-      return
+      return;
     }
 
     const message =
-      'New highlight ID: ' +
+      "New highlight ID: " +
       lastHighlightID +
-      ', content: \n' +
-      JSON.stringify(lastHighlight, null, 2)
-    printToTerminal(message)
-  }
+      ", content: \n" +
+      JSON.stringify(lastHighlight, null, 2);
+    printToTerminal(message);
+  };
 
   return (
-    <HighlightsBox>
-      <ButtonWithColorBox>
-        <ColorInput type="color" value={color} onChange={colorHandler} />
-        <PanelButton variant="contained" size="small" onClick={createHighlight}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <input
+          type="color"
+          value={color}
+          onChange={colorHandler}
+          className={styles.colorInput}
+        />
+        <Button variant="contained" size="small" onClick={createHighlight}>
           Highlight Selection
-        </PanelButton>
-        <PanelButton
+        </Button>
+        <Button
           variant="outlined"
           size="small"
           onClick={() => KetcherFunctions.clearHighlights()}
         >
           Clear
-        </PanelButton>
-      </ButtonWithColorBox>
-      <PanelButton
+        </Button>
+      </div>
+      <Button
+        style={{ display: 'block', marginTop: '10px', }}
         variant="contained"
         size="small"
         onClick={getAndPrintHighlights}
       >
         Get all Highlights
-      </PanelButton>
-    </HighlightsBox>
-  )
-}
+      </Button>
+    </div>
+  );
+};

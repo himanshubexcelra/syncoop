@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from "react";
 import {
   Select,
   FormControl,
@@ -6,56 +6,54 @@ import {
   ListItemText,
   Checkbox,
   SelectChangeEvent,
-  TextField
-} from '@mui/material'
-
-import { PanelButton as Button } from './shared/Buttons'
-import { allButtons, buttonLabelMap } from '../constants/buttons'
-import styled from '@emotion/styled'
-
-const ButtonsBox = styled('div')`
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-`
+  TextField,
+} from "@mui/material";
+import { Button } from "@mui/material";
+import { allButtons, buttonLabelMap } from "../constants/buttons";
 
 type ButtonSelectProps = {
-  hiddenButtons: string[]
-  setHiddenButtons: (arg: string[]) => void
-}
+  hiddenButtons: string[];
+  setHiddenButtons: (arg: string[]) => void;
+};
 
 export const ButtonsSelect = ({
   hiddenButtons,
-  setHiddenButtons
+  setHiddenButtons,
 }: ButtonSelectProps) => {
-  const [smileValue, setSmileValue] = useState('');
+  const [smileValue, setSmileValue] = useState("");
   const handleChange = useCallback(
     (event: SelectChangeEvent<string[]>) => {
-      const value = event.target.value
+      const value = event.target.value;
       const selectedButtons =
-        typeof value === 'string' ? value.split(',') : value
-      const hiddenButtons = getHiddenButtons(selectedButtons)
-      setHiddenButtons(hiddenButtons)
+        typeof value === "string" ? value.split(",") : value;
+      const hiddenButtons = getHiddenButtons(selectedButtons);
+      setHiddenButtons(hiddenButtons);
     },
     [setHiddenButtons]
-  )
+  );
 
   const hideAllButtons = useCallback(() => {
-    setHiddenButtons(allButtons)
-  }, [setHiddenButtons])
+    setHiddenButtons(allButtons);
+  }, [setHiddenButtons]);
 
   const showAllButtons = useCallback(() => {
-    setHiddenButtons([])
-  }, [setHiddenButtons])
-
-  const handleSmile = useCallback(($event: any) => {
-    setSmileValue($event.target.value);
+    setHiddenButtons([]);
   }, [setHiddenButtons]);
 
-  const renderSmile = useCallback((smileValue: any) => {
-    console.log(smileValue);
-    KetcherFunctions.renderFromCtab(smileValue);
-  }, [setHiddenButtons]);
+  const handleSmile = useCallback(
+    ($event: any) => {
+      setSmileValue($event.target.value);
+    },
+    [setHiddenButtons]
+  );
+
+  const renderSmile = useCallback(
+    (smileValue: any) => {
+      console.log(smileValue);
+      KetcherFunctions.renderFromCtab(smileValue);
+    },
+    [setHiddenButtons]
+  );
 
   return (
     <FormControl>
@@ -77,10 +75,10 @@ export const ButtonsSelect = ({
         multiple
         displayEmpty
         value={getVisibleButtons(hiddenButtons)}
-        renderValue={() => 'Choose Buttons to Show/Hide'}
+        renderValue={() => "Choose Buttons to Show/Hide"}
         onChange={handleChange}
         size="small"
-        sx={{ marginTop: '10px', fontSize: '13px' }}
+        sx={{ marginTop: "10px", fontSize: "13px" }}
       >
         {allButtons.map((buttonKey: any) => (
           <MenuItem key={buttonKey} value={buttonKey}>
@@ -89,7 +87,13 @@ export const ButtonsSelect = ({
           </MenuItem>
         ))}
       </Select>
-      <ButtonsBox>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "10px",
+        }}
+      >
         <Button
           size="small"
           variant="outlined"
@@ -106,21 +110,21 @@ export const ButtonsSelect = ({
         >
           Show All
         </Button>
-      </ButtonsBox>
+      </div>
     </FormControl>
-  )
-}
+  );
+};
 
 function getVisibleButtons(hiddenButtons: string[]) {
   const visibleButtons = allButtons.filter(
     (button) => !hiddenButtons.includes(button)
-  )
-  return visibleButtons
+  );
+  return visibleButtons;
 }
 
 function getHiddenButtons(visibleButtons: string[]) {
   const hiddenButtons = allButtons.filter(
     (button) => !visibleButtons.includes(button)
-  )
-  return hiddenButtons
+  );
+  return hiddenButtons;
 }

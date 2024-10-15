@@ -1,59 +1,27 @@
-'use client';
-import styled from '@emotion/styled'
-import { ThemeProvider, createTheme } from '@mui/material'
-import { useCallback, useState } from 'react'
-import { ButtonsConfig, Editor } from 'ketcher-react'
-import { Ketcher } from 'ketcher-core'
-import { StandaloneStructServiceProvider } from 'ketcher-standalone'
-import 'ketcher-react/dist/index.css'
+"use client"; // Add this at the very top of the file
+import { ThemeProvider, createTheme } from "@mui/material";
+import { useCallback, useState } from "react";
+import { ButtonsConfig, Editor } from "ketcher-react";
+import { Ketcher } from "ketcher-core";
+import { StandaloneStructServiceProvider } from "ketcher-standalone";
+import "ketcher-react/dist/index.css";
+import styles from "./page.module.css";
 
-import { Panel } from './components/Panel'
-import { OutputArea } from './components/OutputArea'
-import { initiallyHidden } from './constants/buttons'
-import { defaultTheme } from './constants/defaultTheme'
-import { KetcherAPI } from '../../utils/ketcherFunctions'
+import { Panel } from "./components/Panel";
+import { OutputArea } from "./components/OutputArea";
+import { initiallyHidden } from "./constants/buttons";
+import { defaultTheme } from "./constants/defaultTheme";
+import { KetcherAPI } from "../../utils/ketcherFunctions";
 
-const GridWrapper = styled('div')`
-    height: 100vh;
-    width: 100vw;
-    max-height: 100vh;
-    max-width: 100vw;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 1fr 270px 320px;
-    grid-template-rows: 1fr;
-    gap: 0px 0px;
-    grid-template-areas: 'Ketcher Panel Output';
-    & > div {
-      border: 1px solid grey;
-    }
-  `
-
-const KetcherBox = styled('div')`
-    grid-area: Ketcher;
-    height: 100vh;
-  `
-
-const OutputBox = styled('div')`
-    grid-area: Output;
-  `
-
-const PanelBox = styled('div')`
-    grid-area: Panel;
-    overflow: auto;
-    padding-right: 8px;
-    padding-left: 8px;
-  `
-
-const theme = createTheme(defaultTheme)
+const theme = createTheme(defaultTheme);
 
 const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
   return btnArr.reduce((acc: any, button: any) => {
-    if (button) acc[button] = { hidden: true }
+    if (button) acc[button] = { hidden: true };
 
-    return acc
-  }, {})
-}
+    return acc;
+  }, {});
+};
 
 /* const structServiceProvider = new RemoteStructServiceProvider(
 process.env.REACT_APP_API_PATH!,
@@ -62,35 +30,33 @@ process.env.REACT_APP_API_PATH!,
 }
 ) */
 
-const structServiceProvider = new StandaloneStructServiceProvider()
+const structServiceProvider = new StandaloneStructServiceProvider();
 
 const getUniqueKey = (() => {
-  let count = 0
+  let count = 0;
   return () => {
-    count += 1
-    return `editor-key-${count}`
-  }
-})()
+    count += 1;
+    return `editor-key-${count}`;
+  };
+})();
 
 export default function Ketchertool() {
+  const [outputValue, setOutputValue] = useState("");
+  const [hiddenButtons, setHiddenButtons] = useState(initiallyHidden);
+  const [editorKey, setEditorKey] = useState("first-editor-key");
 
-    const [outputValue, setOutputValue] = useState('')
-    const [hiddenButtons, setHiddenButtons] = useState(initiallyHidden)
-    const [editorKey, setEditorKey] = useState('first-editor-key')
-  
-    const updateHiddenButtons = useCallback(
-      (buttonsToHide: string[]) => {
-        setHiddenButtons(buttonsToHide)
-        setEditorKey(getUniqueKey())
-      },
-      [setHiddenButtons, setEditorKey]
-    )
-    // const sigmaStyle = { height: "500px", width: "500px" };
+  const updateHiddenButtons = useCallback(
+    (buttonsToHide: string[]) => {
+      setHiddenButtons(buttonsToHide);
+      setEditorKey(getUniqueKey());
+    },
+    [setHiddenButtons, setEditorKey]
+  );
 
   return (
     <ThemeProvider theme={theme}>
-      <GridWrapper>
-        <KetcherBox>
+      <div className={styles.GridWrapper}>
+        <div className={styles.KetcherBox}>
           <Editor
             key={editorKey}
             staticResourcesUrl={process.env.PUBLIC_URL}
@@ -98,26 +64,27 @@ export default function Ketchertool() {
             structServiceProvider={structServiceProvider}
             errorHandler={(err) => console.log(err)}
             onInit={(ketcher: Ketcher) => {
-              ; (global as any).ketcher = ketcher
-                ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
+              (global as any).ketcher = ketcher;
+              (global as any).KetcherFunctions = KetcherAPI(
+                (global as any).ketcher
+              );
             }}
           />
-        </KetcherBox>
-        <PanelBox>
+        </div>
+        <div className={styles.PanelBox}>
           <Panel
             printToTerminal={setOutputValue}
             hiddenButtons={hiddenButtons}
             buttonsHideHandler={updateHiddenButtons}
           />
-        </PanelBox>
-        <OutputBox>
+        </div>
+        <div className={styles.PanelBox}>
           <OutputArea
             outputValue={outputValue}
             setOutputValue={setOutputValue}
           />
-        </OutputBox>
-      </GridWrapper>
+        </div>
+      </div>
     </ThemeProvider>
   );
-
 }

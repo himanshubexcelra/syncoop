@@ -17,6 +17,7 @@ export async function authorize(formData: FormData) {
             },
             body
         });
+        console.log(response);
         if (response.status === 200) {
             const output = await response.json();
             const sessionData = JSON.stringify(output.data);

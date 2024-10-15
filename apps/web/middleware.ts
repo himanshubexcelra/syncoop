@@ -14,13 +14,16 @@ export function middleware(request: NextRequest) {
             if (routePermissions && routePermissions.length) {
                 const routes = routePermissions.map(
                     (permission: any) => permission.module.route);
-                if (routes.includes(request.nextUrl.pathname)) {
+                const isRouteFound = routes.some((route: string) =>
+                    request.nextUrl.pathname.includes(route));
+                if (isRouteFound) {
                     return NextResponse.next(/* { headers } */);
-                } else if (request.nextUrl.pathname === '/') {
+                } /* else if (request.nextUrl.pathname === '/') {
                     return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_UI_APP_HOST_URL));
                 } else {
                     return NextResponse.error();
-                }
+                } */
+                return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_UI_APP_HOST_URL));
             } else {
                 return NextResponse.error();
             }

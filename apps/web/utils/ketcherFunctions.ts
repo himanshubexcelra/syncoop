@@ -35,7 +35,7 @@ export const KetcherAPI = (ketcherInstance: any) => {
       return atoms;
     },
 
-    // Accepts color as a string
+    // Accept color as a string
     highlightSelection: function (color: any) {
       const selection = ketcherInstance.editor.selection() || {};
       const { atoms, bonds } = selection;

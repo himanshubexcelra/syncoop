@@ -1,14 +1,30 @@
-import { ReactNode } from "react";
+import { ReactNode } from 'react'
+import styled from '@emotion/styled'
+import { Typography } from '@mui/material'
+
+const ControlsBox = styled('div')`
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: 255px;
+`
+
+const PanelHeader = styled(Typography)`
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: bold;
+  margin-top: 20px;
+`
+
 interface ControlsCardProps {
-  cardName: string;
-  children: ReactNode;
+  cardName: string
+  children: ReactNode
 }
 
 export const ControlsCard = ({ cardName, children }: ControlsCardProps) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', width: '255px' }}>
-      <div style={{ fontWeight: 'bold', marginTop: '20px', color: 'rgb(0,0,0,0.6)' }}>{cardName}</div>
+    <ControlsBox>
+      <PanelHeader variant="body1">{cardName}</PanelHeader>
       {children}
-    </div>
-  );
-};
+    </ControlsBox>
+  )
+}

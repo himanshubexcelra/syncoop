@@ -21,6 +21,8 @@ import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
 import { getOrganization } from "@/components/Organization/service";
 import { formatDate } from "@/utils/helpers";
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
 
 export default function ListOrganization({ userData }: { userData: UserData }) {
   const [editPopup, showEditPopup] = useState(false);
@@ -31,6 +33,8 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
 
   const { role } = userData.user_role[0] as UserRoleType;
   const { type: roleType, id: roleId } = role;
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
 
   const fetchOrganizations = async () => {
     const organization = await getOrganization({ withRelation: ['orgUser', 'user_role'], withCount: ['projects'] });
@@ -41,7 +45,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
 
   useEffect(() => {
     fetchOrganizations();
-  }, []);
+  }, [appContext?.userCount]);
 
   const grid = useRef<DataGridRef>(null);
   const formRef = useRef<any>(null);
@@ -58,6 +62,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
   const [popupPosition, setPopupPosition] = useState({} as any);
 
   useEffect(() => {
+    fetchOrganizations();
     // This runs only in the browser
     if (typeof window !== 'undefined') {
       setPopupPosition({

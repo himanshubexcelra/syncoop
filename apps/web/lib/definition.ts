@@ -265,6 +265,15 @@ export enum StatusCode {
   DONE = 'Done',
 }
 
+export interface UserCountModel {
+  internalUsers: number;
+  externalUsers: number;
+}
+
+export interface AppContextModel {
+  userCount: UserCountModel;
+}
+
 export interface ProjectListProps {
   data: ProjectDataFields[],
   users: User[],

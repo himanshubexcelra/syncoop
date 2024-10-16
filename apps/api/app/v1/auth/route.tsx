@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
-import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 import bcrypt from "bcrypt";
+import { MESSAGES, STATUS_TYPE } from "@/utils/message";
+
 export async function POST(request: Request) {
   try {
     const req = await request.json();
@@ -23,38 +24,18 @@ export async function POST(request: Request) {
             role: {
               select: {
                 id: true,
-                user_role: {
-                    orderBy: {
-                        role: {
-                            priority: 'asc',
-                        },
-                    },
-                    select: {
-                        role: {
-                            select: {
-                                id: true,
-                                type: true,
-                                priority: true,
-                                module_permission: {
-                                    select: {
-                                        module: true
-                                    }
-                                },
-                                /* module_action_role_permission: {
-                                    select: {
-                                        module_action: true
-                                    }
-                                } */
-                            }
-                        }
-                    },
-                    take: 1,
-                },
-                module_action_role_permission: {
+                type: true,
+                priority: true,
+                module_permission: {
                   select: {
-                    module_action: true
+                    module: true
                   }
-                }
+                },
+                /* module_action_role_permission: {
+                    select: {
+                        module_action: true
+                    }
+                } */
               }
             }
           },
@@ -71,14 +52,24 @@ export async function POST(request: Request) {
         email: req.email,
       },
     });
-    const isMatch = await bcrypt.compare(req.password, `${user?.password}`);
-    if (user && isMatch) {
-      return new Response(JSON.stringify({
-        success: true,
-        data: user
-      }), {
-        status: STATUS_TYPE.SUCCESS,
-      });
+
+    if (user) {
+      const isMatch = await bcrypt.compare(req.password, `${user.password}`);
+      if (isMatch) {
+        return new Response(JSON.stringify({
+          success: true,
+          data: user
+        }), {
+          status: STATUS_TYPE.SUCCESS,
+        });
+      } else {
+        return new Response(JSON.stringify({
+          success: false,
+          errorMessage: MESSAGES.INVALID_LOGIN_CREDENTIALS
+        }), {
+          status: STATUS_TYPE.NOT_FOUND,
+        });
+      }
     } else {
       return new Response(JSON.stringify({
         success: false,

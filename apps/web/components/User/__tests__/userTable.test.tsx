@@ -102,7 +102,8 @@ describe("UsersTable Component", () => {
     // wait for table to rendered
     await waitFor(() => {
       // get all the rows
-      const rows: any = screen.getAllByRole("row");
+      const rows: HTMLElement[] = screen.getAllByRole("row");
+      // ensure rows have been rendered greater than 0
       expect(rows?.length).toBeGreaterThan(0);
     });
   });

@@ -7,12 +7,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useCart } from '../../app/Provider/CartProvider';
 
 type HeaderProps = {
     userData: UserData
 }
 
 export default function Header({ userData }: HeaderProps) {
+    const { cart } = useCart();
+    console.log(cart, "CARTCART")
+    const cartLength = (cart && cart.length > 0) ? cart.length : (localStorage.getItem('cart')) ? JSON.parse(localStorage.getItem('cart') ?? '[]').length : 0;
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
 
@@ -100,7 +104,7 @@ export default function Header({ userData }: HeaderProps) {
                             width={33}
                             height={22} />
                         <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                            <span className="text-black text-sm">12</span>
+                            <span className="text-black text-sm">{cartLength}</span>
                         </div>
                     </div>
                 </Link>

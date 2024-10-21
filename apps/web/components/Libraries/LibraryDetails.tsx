@@ -61,7 +61,7 @@ export default function LibraryDetails() {
     useEffect(() => {
         fetchLibraries();
     }, []);
-
+    
     const onCheckBoxesModeChanged = useCallback(({ value }: any) => {
         setCheckBoxesMode(value);
     }, []);
@@ -74,9 +74,7 @@ export default function LibraryDetails() {
     }
 
     const onSelectionChanged = (e: any) => {
-        console.log(e,'E');
         updateCart(true);
-
         setSelectedRowKeys(e.selectedRowKeys);
         const checkedMolecule = e.selectedRowsData;
         // If the check box is unchecked

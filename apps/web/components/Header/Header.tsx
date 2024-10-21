@@ -15,6 +15,8 @@ type HeaderProps = {
 
 export default function Header({ userData }: HeaderProps) {
     const { cart } = useCart();
+    console.log(cart,"CART");
+    
     const cartLength = (cart && cart.length > 0) ? cart.length : (localStorage.getItem('cart')) ? JSON.parse(localStorage.getItem('cart') ?? '[]').length : 0;
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);

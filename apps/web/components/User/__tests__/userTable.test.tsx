@@ -10,7 +10,6 @@ import UsersTable from "../UsersTable";
 import { getUsers } from "@/components/User/service";
 import { filterUsersByOrgId } from "@/utils/helpers";
 import { AppContext } from "../../../app/AppState";
-import DataGrid, { Column } from "devextreme-react/cjs/data-grid";
 
 jest.mock("@/components/User/service");
 jest.mock("@/utils/helpers");
@@ -105,68 +104,6 @@ describe("UsersTable Component", () => {
       // get all the rows
       const rows: any = screen.getAllByRole("row");
       expect(rows?.length).toBeGreaterThan(0);
-    });
-  });
-
-  test.skip("fetches users and updates the context with user counts", async () => {
-    renderComponent();
-
-    await waitFor(() => {
-      expect(getUsers).toHaveBeenCalledWith(["orgUser", "user_role"]);
-    });
-
-    await waitFor(() => {
-      expect(filterUsersByOrgId).toHaveBeenCalledWith(
-        mockUsersList,
-        orgUser.id
-      );
-      expect(setInternalCount).toHaveBeenCalledWith(mockInternalUsers.length);
-      expect(setExternalCount).toHaveBeenCalledWith(mockExternalUsers.length);
-    });
-
-    await waitFor(() => {
-      expect(mockContext.addToState).toHaveBeenCalledWith({
-        ...mockContext.state,
-        userCount: {
-          internalUsers: mockInternalUsers.length,
-          externalUsers: mockExternalUsers.length,
-        },
-      });
-    });
-  });
-
-  test.skip("renders the data grid with users", async () => {
-    renderComponent();
-
-    await waitFor(() => {
-      expect(screen.getByText("email")).toBeInTheDocument();
-      expect(screen.getByText("firstName")).toBeInTheDocument();
-      expect(screen.getByText("lastName")).toBeInTheDocument();
-    });
-  });
-
-  test.skip('displays the create popup when "Add New User" button is clicked', async () => {
-    renderComponent();
-
-    const addButton = screen.getByText("Add New User");
-    fireEvent.click(addButton);
-
-    expect(screen.getByRole("dialog", { name: /New User/i })).toBeVisible();
-  });
-
-  test.skip("shows and hides the edit popup on action", async () => {
-    renderComponent();
-
-    const editIcons = screen.getAllByAltText("Edit");
-    fireEvent.click(editIcons[0]);
-
-    expect(screen.getByRole("dialog", { name: /Edit/i })).toBeVisible();
-
-    const closeButton = screen.getByRole("button", { name: /Close/i });
-    fireEvent.click(closeButton);
-
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: /Edit/i })).not.toBeVisible();
     });
   });
 });

@@ -1,0 +1,28 @@
+:host {
+  display: block;
+
+  /**
+   * @prop --background: Background color of the component
+   * @prop --primary-color: Primary color of the component
+   * @prop --honeycomb-border-color: Color of the honeycomb border
+   * @prop --honeycomb-color: Color of the honeycomb
+   * @prop --reaction-name-color: Color of the reaction name
+   * @prop --reaction-condition-color: Color of the reaction condition
+   * @prop --reaction-doi-color: Color of the reaction DOI
+   * @prop --score-text-color: Color of the score text
+   * @prop --badge-outline-color: Color of the badge outline
+   * @prop --badge-color: Color of the badge
+   * @prop --badge-text-color: Color of the badge text
+   */
+  --background-color: #fafafa;
+  --primary-color: #503291;
+  --honeycomb-border-color: var(--primary-color);
+  --honeycomb-color: var(--background-color);
+  --reaction-name-color: #0f1a2e;
+  --reaction-condition-color: #5e5e72;
+  --reaction-doi-color: #5e5e72;
+  --score-text-color: #eb3c96;
+  --badge-outline-color: var(--background-color);
+  --badge-color: var(--primary-color);
+  --badge-text-color: #ffffff;
+}

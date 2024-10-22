@@ -335,3 +335,18 @@ export interface ProjectAccordionType {
   dataCreate: UserData,
   roleType: string | undefined,
 }
+
+export interface LibraryDataNode{
+  id: string;
+  type?: string;
+  smiles?: string;
+  parentId?: string;
+  score?: number | null;
+  name?: string;
+  condition?: string;
+  reactionCount?: number;
+  doi?: string;
+  isRegulated?: boolean;
+  isProtected?: boolean;
+  isInInventory?: boolean;
+}

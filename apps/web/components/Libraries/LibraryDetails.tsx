@@ -38,6 +38,7 @@ import { Messages } from "@/utils/message";
 import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
 import TextWithToggle from '@/ui/TextWithToggle';
 import CreateLibrary from './CreateLibrary';
+import { useCart } from '../../app/Provider/CartProvider';
 
 const selectAllFieldLabel = { 'aria-label': 'Select All Mode' };
 const showCheckboxesFieldLabel = { 'aria-label': 'Show Checkboxes Mode' };
@@ -67,6 +68,15 @@ const initialProjectData: ProjectDataFields = {
     libraries: [] as unknown as LibraryFields[], // Initialize as an array if multiple libraries are expected
 };
 
+type ProductModel = {
+    id: number;
+    moleculeId: number;
+    molecularWeight: number;
+};
+interface CartItem {
+    id: number;
+};
+
 export default function LibraryDetails({ userData }: { userData: UserData }) {
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
@@ -90,6 +100,13 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
+    const cartDetails = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart') ?? '[]') : [];
+    const preselectedValue: number[] = cartDetails.length > 0 ? cartDetails.map((item: CartItem) => item.id) : [];
+    const { addToCart, clearCart } = useCart();
+    const [moleculeData, setMoleculeData] = useState<ProductModel[]>([]);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>(preselectedValue); // Store selected item IDs
+
+    const [isCartUpdate, updateCart] = useState(false)
 
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
@@ -237,6 +254,32 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
         const { role } = userData.user_role[0];
         const sysAdmin = role.type === "admin";
         return !(owner || sysAdmin);
+    }
+
+    const onSelectionChanged = (e: any) => {
+        updateCart(true);
+        setSelectedRowKeys(e.selectedRowKeys);
+        const checkedMolecule = e.selectedRowsData;
+        // If the check box is unchecked
+        if (e.currentDeselectedRowKeys.length > 0) {
+            const newmoleculeData: ProductModel[] = checkedMolecule.filter((item) => item.id !== e.currentDeselectedRowKeys[0].id);
+            setMoleculeData(newmoleculeData);
+        }
+        else {
+            const newItem: ProductModel[] = checkedMolecule.map((data: ProductModel) => {
+                return { id: data.id, moleculeId: data.moleculeId, molecularWeight: data.molecularWeight }
+                    ;
+            }
+            );
+            setMoleculeData(newItem);
+        }
+    };
+
+    const addProductToCart = () => {
+        clearCart();
+        moleculeData.forEach((product) => addToCart(product));
+        localStorage.setItem("cart", JSON.stringify(moleculeData))
+        toast.success('Molecule is updated in your cart.');
     }
 
     return (
@@ -591,6 +634,9 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
                                 dataSource={tableData}
                                 showBorders={true}
                                 ref={grid}
+                                keyExpr="id"
+                                selectedRowKeys={selectedRowKeys}
+                                onSelectionChanged={onSelectionChanged}
                             >
                                 <Selection
                                     mode="multiple"
@@ -781,7 +827,8 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
                                     </ToolbarItem>
                                     <ToolbarItem location="after">
                                         <Button
-                                            disabled={true}
+                                            onClick={addProductToCart}
+                                            disabled={!isCartUpdate}
                                             render={() => (
                                                 <>
                                                     <span>Add to cart</span>
@@ -819,3 +866,4 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
         </div >
     )
 }
+

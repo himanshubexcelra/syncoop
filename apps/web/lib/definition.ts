@@ -307,35 +307,7 @@ export interface ProjectListProps {
   dataCreate: UserData
 }
 
-export type ToggleExpandType = (value: number, text: string) => void;
-
-export interface ExpandTextType {
-  id: number,
-  text: string,
-  isExpanded: boolean,
-  toggleExpanded: ToggleExpandType,
-  heading?: string,
-  clamp: number,
-  component: string,
-}
-
-export interface LibraryCreateFields {
-  setCreatePopupVisibility: ShowEditPopupType,
-  formRef: any,
-  fetchLibraries: FetchUserType,
-  projectData: ProjectDataFields,
-  userData: UserData,
-  libraryIdx?: number,
-}
-export interface ProjectAccordionType {
-  data: ProjectDataFields,
-  users: User[],
-  fetchOrganizations: FetchUserType,
-  organizationData: OrganizationDataFields[],
-  dataCreate: UserData,
-  roleType: string | undefined,
-}
-export interface LibraryDataNode {
+export interface LibraryDataNode{
   id: string;
   type?: string;
   smiles?: string;

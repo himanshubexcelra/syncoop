@@ -16,6 +16,7 @@ import { editOrganization } from "./service";
 import { delay } from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
 import { OrganizationEditField, userType, OrganizationDataFields } from "@/lib/definition";
+import { TextBoxTypes } from 'devextreme-react/text-box';
 
 const functionalAssay = {
   functionalAssay1: '',
@@ -84,8 +85,8 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
     onValueChanged: handleContactChange,
   };
 
-  const setMetaDataValue = (event: React.ChangeEvent) => {
-    const field = event?.target;
+  const setMetaDataValue = (e: TextBoxTypes.ValueChangedEvent) => {
+    const field = e?.event?.currentTarget;
     if (field) {
       const { value, name } = field as any;
       const data = {
@@ -109,16 +110,21 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
         <RequiredRule message="Organization name is required" />
       </SimpleItem>
 
-      <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }} cssClass={!disableAllowed ? "disabled-field" : ""}>
-        <RadioGroup items={status} disabled={!disableAllowed} className={!disableAllowed ? "disabled-field" : ""} defaultValue={formData.status} onValueChange={handleValueChange} />
-      </SimpleItem>
+      <GroupItem colCount={2} cssClass="delete-button-group">
+        <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }} cssClass={!disableAllowed ? "disabled-field" : ""}>
+          <RadioGroup items={status} disabled={!disableAllowed} className={!disableAllowed ? "disabled-field" : ""} defaultValue={formData.status} onValueChange={handleValueChange} />
+        </SimpleItem>
+        <ButtonItem cssClass="delete-button">
+          <ButtonOptions stylingMode="text" text={`Delete ${formData.name}`} disabled={true} elementAttr={{ class: 'lowercase' }} />
+        </ButtonItem>
+      </GroupItem>
       <SimpleItem
         editorType="dxSelectBox"
         editorOptions={primaryContact}
       >
         <Label text="Primary Contact" />
       </SimpleItem>
-      <GroupItem caption="Functional Assay" cssClass="groupItem group-search" colCount={1}></GroupItem>
+      <GroupItem caption="Functional Assay" cssClass="groupItem" colCount={1}></GroupItem>
       <SimpleItem dataField="functionalAssay1" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay1 }}>
         <Label text="Functional Assay 1" />
       </SimpleItem>
@@ -135,7 +141,7 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
         <GroupItem cssClass="buttons-group" colCount={2}>
           <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
             <ButtonOptions
-              text="Save"
+              text="Update"
               useSubmitBehavior={true}
               onClick={handleSubmit}
             />
@@ -144,9 +150,6 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
             <ButtonOptions text="Cancel" onClick={() => showEditPopup(false)} />
           </ButtonItem>
         </GroupItem>
-        <ButtonItem horizontalAlignment="right" cssClass="btn_primary">
-          <ButtonOptions text={`Delete`} disabled={true} />
-        </ButtonItem>
       </GroupItem>
     </Form>
   );

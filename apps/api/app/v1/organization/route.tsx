@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const orgId = searchParams.get('id'); // Get the organization ID from query parameters
     const type = searchParams.get("type");
     const joins = searchParams.get('with');
-    const count = searchParams.get('withCount') || [];
+    const count = searchParams.get('withCount');
     const query: any = {};
 
     if (joins && joins.length) {
@@ -64,6 +64,7 @@ export async function GET(request: Request) {
           projects: {
             include: {
               sharedUsers: true, // Include shared users for each project
+              libraries: true,
               owner: {
                 select: {
                   firstName: true,
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
         }
       }
     }
-    if (count.includes('projects')) {
+    if (count && count.includes('projects')) {
       query.include = {
         ...query.include,
         _count: {

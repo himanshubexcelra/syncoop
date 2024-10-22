@@ -14,7 +14,7 @@
   }
 }
 
-.dx-datagrid-header-panel {
+.no-padding-header .dx-datagrid-header-panel {
   padding: 0;
 }
 
@@ -105,7 +105,8 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
-    border: 1px solid var(--themeBlueColor);;
+    border: 1px solid var(--themeBlueColor);
+    ;
     background: var(--themeBlueColor);
     border-radius: 0;
     height: 37px;
@@ -114,7 +115,7 @@
     gap: 10px;
   }
 
-  .dx-state-disabled {
+  .dx-button-mode-contained.dx-state-disabled {
     border: 1px solid var(--themeSecondaryGreyColor);
   }
 
@@ -187,13 +188,12 @@
   height: 40px;
 }
 
-.dx-state-disabled {
+.dx-button-mode-contained.dx-state-disabled {
   border: 1px solid var(--themeSecondaryGreyColor);
   background-color: var(--white);
   border-radius: 0;
 
   .dx-button-text {
-    color: var(--themeGreyBorder);
     font-weight: 400;
   }
 }
@@ -274,12 +274,6 @@
     border-bottom: none;
     padding: 0 34px;
     min-height: 0;
-  }
-}
-
-.textarea-custom {
-  .dx-texteditor-input {
-    overflow: hidden;
   }
 }
 

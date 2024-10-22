@@ -3,8 +3,10 @@ export const MESSAGES = {
     USER_BELONGS_TO_ANOTHER_ORG: 'User is already associated with another organization',
     INVALID_LOGIN_CREDENTIALS: 'Invalid credentials',
     PROJECT_EXISTS: 'Project name is already taken.',
+    LIBRARY_EXISTS: 'Library name is already taken.',
     ORGANIZATION_ID_NEEDED: 'Organization id is required',
     EMAIL_ALREADY_EXIST: `Email already exists`,
+    USER_NOT_FOUND: 'User does not exist'
 }
 
 export const STATUS_TYPE = {

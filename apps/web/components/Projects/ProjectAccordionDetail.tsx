@@ -3,21 +3,27 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from 'devextreme-react/button';
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { Popup } from "devextreme-react/popup";
+import { Popup, Position } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
-import { ProjectDataFields, User, FetchUserType, OrganizationDataFields, UserData } from '@/lib/definition';
-import { libraries } from "@/utils/constants";
-import { formatDetailedDate } from "@/utils/helpers";
+import { useRouter } from 'next/navigation';
+import { formatDetailedDate, popupPositionValue } from "@/utils/helpers";
+import { ProjectAccordionType } from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { Messages } from "@/utils/message";
+import { MOLECULESTATUS } from '@/utils/constants';
+import TextWithToggle from '@/ui/TextWithToggle';
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
-export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: { data: ProjectDataFields, users: User[], fetchOrganizations: FetchUserType, organizationData: OrganizationDataFields | OrganizationDataFields[], dataCreate: UserData, roleType: string | undefined }) {
+export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: ProjectAccordionType) {
+    const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<FormRef>(null);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
+    const [expandMenu, setExpandedMenu] = useState(-1);
+    const [isExpanded, setIsExpanded] = useState<number[]>([]);
+    const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
 
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === dataCreate.id);
@@ -28,20 +34,22 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
     }, [data])
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setPopupPosition({
-                my: 'top right',
-                at: 'top right',
-                of: window,
-            });
-        }
+        setPopupPosition(popupPositionValue());
     }, []);
 
-    const copyToClipboard = (type: string, name: string) => {
-        const url = `${urlHost}/project/${data.id}`;
+    const copyUrl = (url: string, type: string, name: string) => {
         navigator.clipboard.writeText(url)
             .then(() => toast.success(Messages.urlCopied(type, name)))
             .catch(() => toast.error(Messages.URL_COPY_ERROR));
+    }
+
+    const toggleExpanded = (id: number, type: string) => {
+        let expandedDescription = type === 'library' ? [...isExpanded] : [...isProjectExpanded];
+        if (expandedDescription.includes(id)) {
+            expandedDescription = expandedDescription.filter(descriptionId => descriptionId !== id);
+        } else expandedDescription.push(id);
+        if (type === 'library') setIsExpanded(expandedDescription);
+        else setProjectExpanded(expandedDescription);
     }
 
     return (
@@ -54,7 +62,12 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                     <div className='project-title mt-[21px] mb-[21px]'>{data.name}</div>
                 </div>
                 <div className='flex gap-[8px]'>
-                    <Button className='btn-primary accordion-button' disabled={true}>Open</Button>
+                    <Button
+                        className='btn-primary accordion-button'
+                        onClick={() => router.push(`/projects/${data.id}`)}
+                    >
+                        Open
+                    </Button>
                     <Button
                         className='btn-secondary accordion-button'
                         disabled={!editEnabled}
@@ -63,11 +76,12 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                     </Button>
                     <Button
                         className='btn-secondary accordion-button'
-                        onClick={() => copyToClipboard('project', data.name)}>
+                        onClick={() => copyUrl(`${urlHost}/projects/${data.id}`, 'project', data.name)}
+                    >
                         URL
                     </Button>
-                </div>
-            </div>
+                </div >
+            </div >
             <div className='flex'>
                 <Image
                     src="/icons/project-logo.svg"
@@ -77,7 +91,18 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                 />
                 <div className='pl-[10px] project-type'>{data.type}</div>
             </div>
-            <div className='description'>{data.description}</div>
+            <div className='description'>
+                {data.description &&
+                    <TextWithToggle
+                        text={data.description}
+                        isExpanded={isProjectExpanded.includes(data.id)}
+                        toggleExpanded={toggleExpanded}
+                        id={data.id}
+                        component="project"
+                        clamp={12}
+                    />
+                }
+            </div>
             <div className='row-details'>
                 <div className='flex justify-between'>
                     <div>
@@ -116,7 +141,7 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                             width={15}
                             height={15}
                         />
-                        Libraries: <span>3</span>
+                        Libraries: <span>{data.libraries?.length}</span>
                     </div>
                 </div>
             </div>
@@ -165,17 +190,72 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
             </div>
             <div className='libraries'>
                 <div className="flex-container">
-                    {libraries.map(item => (
+                    {data.libraries.map(item => (
                         <div key={item.id} className='box-item library'>
-                            <div className='library-name'>Library: <span>{item.name}</span></div>
-                            <div className='library-name'>Description: <span>{item.description}</span></div>
+                            <div className='flex library-name justify-between'>
+                                <div>Library: <span>{item.name}</span></div>
+                                <Image
+                                    src="/icons/more.svg"
+                                    alt="molecule"
+                                    width={5}
+                                    height={3}
+                                    className='cursor-pointer'
+                                    id={`image${item.id}`}
+                                    onClick={() => setExpandedMenu(item.id)}
+                                />
+                            </div>
+                            <Popup
+                                visible={expandMenu === item.id}
+                                onHiding={() => setExpandedMenu(-1)}
+                                dragEnabled={false}
+                                hideOnOutsideClick={true}
+                                showCloseButton={false}
+                                showTitle={false}
+                                width={80}
+                                height={110}
+                            >
+                                <Position at="left bottom" my="right top" of={`#image${item.id}`} collision="fit" />
+                                <p
+                                    className='mb-[20px] cursor-pointer'
+                                    onClick={() => router.push(`/projects/${data.id}?libraryId=${item.id}`)}
+                                >
+                                    Open
+                                </p>
+                                <p
+                                    className='cursor-pointer'
+                                    onClick={() => {
+                                        copyUrl(`${urlHost}/projects/${data.id}?libraryId=${item.id}`, 'library', item.name)
+                                    }}
+                                >
+                                    URL
+                                </p>
+                            </Popup>
+                            <div className='library-name'>
+                                {item.description ?
+                                    <TextWithToggle
+                                        text={item.description}
+                                        isExpanded={isExpanded.includes(item.id)}
+                                        toggleExpanded={toggleExpanded}
+                                        id={item.id}
+                                        heading='Description:'
+                                        clamp={3}
+                                        component="library"
+                                    /> :
+                                    <>Description: </>
+                                }
+                            </div>
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {item.status.map(val => (
+                                {MOLECULESTATUS?.map(val => (
                                     <span key={val.name} className={`badge ${val.type}`}>{val.count} {val.name}</span>
                                 ))}
                             </div>
                         </div>
                     ))}
+                    {data.libraries.length == 0 && (
+                        <div className='flex justify-center items-center p-[40px] h-[70px] nodata'>
+                            Your library list is empty, add a library to import molecules
+                        </div>
+                    )}
                 </div>
             </div>
             {createPopupVisible && (
@@ -207,6 +287,6 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                     wrapperAttr={{ class: "create-popup mr-[15px]" }}
                 />
             )}
-        </div>
+        </div >
     );
 }

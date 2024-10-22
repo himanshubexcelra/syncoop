@@ -23,6 +23,89 @@
     }
 }
 
+.search-box {
+    position: relative;
+    display: inline-block;
+
+    .dx-texteditor-container {
+        border: none;
+        background-color: transparent;
+    }
+}
+
+.search-input {
+    display: flex;
+    width: 194px;
+    height: 40px;
+    padding: 8px;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    border: 1px solid var(--themeSecondaryGreyColor);
+    border-radius: 0;
+    color: var(--themeGreyColor);
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    background-color: transparent !important;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 40%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 13px;
+    height: 13px;
+}
+
+.library-search {
+    top: 55%;
+}
+
+.selected-accordion {
+    border-left: 4px solid var(--themeSecondayBlue);
+}
+
+.accordion-title {
+    color: var(--black);
+    font-family: Lato;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.dx-texteditor.dx-editor-filled::after,
+.dx-texteditor.dx-editor-filled.dx-state-hovered::after,
+.dx-texteditor.dx-state-focused::before {
+    border-bottom: none;
+}
+
+.dx-texteditor.dx-editor-filled .dx-placeholder:before,
+.dx-texteditor.dx-editor-filled .dx-texteditor-input {
+    padding: 0 10px 0 30px;
+}
+
+.dx-editor-filled .dx-placeholder:before,
+.dx-editor-filled .dx-texteditor-input,
+.dx-editor-outlined .dx-placeholder:before,
+.dx-editor-outlined .dx-texteditor-input,
+.dx-placeholder::before {
+    -webkit-padding-start: 0;
+    padding-inline-start: 0;
+    padding: 5px 0 5px 45px;
+}
+
+.dx-editor-filled .dx-icon-search,
+.dx-editor-outlined .dx-icon-search {
+    width: 24px;
+    height: 24px;
+}
+
 .dx-form {
     .dx-item {
         font-size: 14px;
@@ -90,6 +173,106 @@
         height: 40px;
     }
 
+    .dx-textarea .dx-texteditor-input-container {
+        width: 100%;
+        height: 100%;
+    }
+    .custom-tag {
+        .dx-texteditor-input-container {
+            width: 194px;
+            height: auto;
+          }
+    }
+
+}
+
+.libraries {
+    background: var(--themeLightBlueColor);
+    border-top: 1px solid var(--themeSecondaryGreyColor);
+    margin: 0 -10px;
+
+    .bg-transparent {
+        background-color: transparent !important;
+    }
+
+    .library-select input,
+    .select-header,
+    .sort-list {
+        padding: 0 5px !important;
+        color: var(--themeSecondayBlue);
+        font-family: Lato;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+    }
+
+    .select-header {
+        color: var(--black);
+        padding: 0 !important;
+    }
+
+    .library-select::after {
+        border-bottom: 0;
+    }
+}
+
+.library {
+    background: var(--white);
+    box-shadow: 0px 0px 1px 0px rgba(15, 26, 46, 0.15), 0px 1px 4px 0px rgba(15, 26, 46, 0.15);
+}
+
+.library-name {
+    font-family: Lato;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    border-bottom: 1px solid var(--themeGreyBorder);
+    padding: 8px 0;
+
+    span {
+        font-weight: 400;
+        margin-left: 8px;
+    }
+}
+
+.no-border {
+    border: none;
+}
+
+.box-item {
+    flex: 0 1 calc(50% - 16px);
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.badge {
+    font-family: Lato;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    padding: 4px 8px;
+    gap: 10px;
+    border-radius: 21px;
+}
+
+
+.success {
+    color: var(--themeSuccessColor);
+    background: var(--themeSuccessBgColor);
+}
+
+.info {
+    color: var(--themeSecondayBlue);
+    background: var(--themeTertiaryBlueColor);
+}
+
+.error {
+    color: var(--themeErrorColor);
+    background: var(--themeErrorBgColor);
+
     .textarea-field .dx-texteditor-input-container {
         height: 90px;
     }
@@ -104,4 +287,145 @@
 
 .dx-radiobutton-icon-checked {
     border-color: var(--themeBlueColor);
+}
+
+.dx-button-mode-text.dx-button-default {
+    color: var(--themeBlueColor);
+}
+
+.nodata {
+    color: var(--themeGreyColor);
+    font-family: Lato;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    margin-top: 45px;
+    display: flex;
+    justify-content: center;
+
+    img {
+        width: 16.44px;
+        height: 16.44px;
+        margin-right: 8px;
+    }
+
+    div {
+        display: flex;
+        align-items: center;
+    }
+}
+
+.nodata-project {
+    margin-top: 0;
+}
+
+.clamp-data,
+.clamp-data-2,
+.clamp-data-3,
+.clamp-data-12 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: none;
+    line-height: 1.4em;
+}
+
+.clamp-data-2 {
+    -webkit-line-clamp: 2;
+}
+
+.clamp-data-3 {
+    -webkit-line-clamp: 3;
+}
+
+.clamp-data-5 {
+    -webkit-line-clamp: 5;
+}
+
+.clamp-data-12 {
+    -webkit-line-clamp: 12;
+}
+
+.buttons-group {
+    .dx-item {
+        flex: none !important;
+    }
+
+    .dx-item-content {
+        display: inline;
+    }
+
+    .dx-field-item-content {
+        width: 100%;
+    }
+
+    .dx-layout-manager .dx-field-item:not(.dx-last-col) {
+        padding-inline-end: 0;
+    }
+}
+
+.form_btn_primary {
+    .dx-button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--themeBlueColor);
+        background: var(--themeBlueColor);
+        border-radius: 0;
+        height: 37px;
+        padding: 8px;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dx-button-mode-contained.dx-state-disabled {
+        border: 1px solid var(--themeSecondaryGreyColor);
+    }
+
+    .dx-button-text {
+        color: var(--white);
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+        text-transform: unset;
+    }
+}
+
+.form_btn_secondary {
+    background: transparent;
+    width: 100%;
+
+    .dx-button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: flex-end;
+        height: 37px;
+        gap: 10px;
+        background-color: var(--themeDarkBlueBorderColor);
+        border-radius: 0;
+        background-color: var(--themeLightBlueColor);
+    }
+
+    .dx-button-content {
+        padding: 0;
+    }
+
+    .dx-button-text {
+        color: var(--themeDarkBlueColor);
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+        text-transform: unset;
+    }
+}
+
+.textarea-custom {
+    .dx-texteditor-input {
+        overflow: hidden;
+    }
 }

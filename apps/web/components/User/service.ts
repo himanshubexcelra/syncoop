@@ -39,3 +39,27 @@ export async function createUser(formData: FormData) {
         return error;
     }
 }
+
+export async function editUser(formData: any) {
+    try {
+        const response = await fetch(
+            `${process.env.API_HOST_URL}/v1/users`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            }
+        );
+        const data = await response.json();
+        if (response.ok) {
+            return { status: response.status, data };
+        } else {
+            return { status: response.status, error: data.error || 'An error occurred' };
+        }
+    } catch (error: any) {
+        console.error('error', error)
+        return error;
+    }
+}

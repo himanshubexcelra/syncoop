@@ -31,6 +31,7 @@ const config: Config = {
         themeStatsRedColor: "var(--themeStatsRedColor)",
         themeStatsBlueColor: "var(--themeStatsBlueColor)",
         themeStatsGreenColor: "var(--themeStatsGreenColor)",
+        themeStatsYellowColor: "var(--themeStatsYellowColor)",
         themeHeadingBlue: "var(--themeHeadingBlue)",
         moduleCheckBoxBg: "var(--moduleCheckBoxBg)",
         assayBorder: "var(--assayBorder)",

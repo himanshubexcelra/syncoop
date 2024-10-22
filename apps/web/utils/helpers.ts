@@ -58,13 +58,13 @@ export function formatDate(date: Date) {
   return `${month}/${day}/${year}`;
 }
 
-export function getCountCardsDetails(projectCount: number) {
+export function getCountCardsDetails(projectCount: number, libraryCount: number) {
   return [
     {
       name: "Libraries",
       svgPath: "/icons/library-icon.svg",
       innerGap: "gap-5",
-      count: "12"
+      count: String(libraryCount),
     },
     {
       name: "Projects",
@@ -95,5 +95,48 @@ export function formatDetailedDate(date: Date) {
 
   const month = monthNames[today.getMonth()]; // Get month name
 
-  return `${day} ${month} ${year}`;
+  return `${day} ${month}, ${year}`;
+}
+
+export function formatDatetime(date: Date) {
+  const optionsDate: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  };
+
+  const optionsTime: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
+  const dateStr = new Date(date);
+  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)}, ${dateStr.toLocaleTimeString('en-GB', optionsTime)}`;
+  return formattedDate;
+}
+
+export function popupPositionValue() {
+  if (typeof window !== 'undefined') {
+    return ({
+      my: 'top right',
+      at: 'top right',
+      of: window,
+    });
+  }
+}
+
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  return function (this: any, ...args: Parameters<T>): void {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func.apply(this, args); // Use the correct this context
+    }, delay);
+  };
 }

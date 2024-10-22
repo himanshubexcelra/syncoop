@@ -112,7 +112,7 @@ export interface ProjectCreateFields {
   fetchOrganizations: FetchUserType,
   projectData?: ProjectDataFields,
   users: User[],
-  organizationData: OrganizationDataFields | OrganizationDataFields[],
+  organizationData: OrganizationDataFields[],
   roleType?: string,
   edit?: boolean,
   /* role: number, */
@@ -128,6 +128,28 @@ export interface OrganizationEditField {
   projectData?: ProjectDataFields,
   roleType?: string,
   edit?: boolean,
+  loggedInUser: number,
+}
+
+export interface Molecule {
+  name: string;
+  count: string;
+  type: string;
+}
+
+export interface LibraryFields {
+  name: string;
+  id: number;
+  description?: string;
+  projectId?: number;
+  project: ProjectDataFields,
+  target?: string;
+  updatedBy?: userType;
+  updatedAt?: Date;
+  owner: User;
+  ownerId: number;
+  createdAt: Date;
+  status?: Molecule[];
 }
 export interface ProjectDataFields {
   name: string;
@@ -145,6 +167,7 @@ export interface ProjectDataFields {
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
+  libraries: LibraryFields[];
   createdAt: Date,
 }
 
@@ -174,6 +197,7 @@ export interface User {
 
 export interface UserRoleType {
   role: UserRole
+  roleId: number
 }
 
 export interface OwnerType {
@@ -189,8 +213,9 @@ export interface UserData {
   organization?: object;
   organizationId: number;
   orgUser: User;
-  id?: number;
+  id: number;
   owner?: OwnerType;
+  status?: string;
 }
 export interface projectType {
   id: number,
@@ -297,4 +322,33 @@ export interface ProjectListProps {
   fetchOrganizations: FetchUserType,
   organizationData: OrganizationDataFields[],
   dataCreate: UserData
+}
+
+export type ToggleExpandType = (value: number, text: string) => void;
+
+export interface ExpandTextType {
+  id: number,
+  text: string,
+  isExpanded: boolean,
+  toggleExpanded: ToggleExpandType,
+  heading?: string,
+  clamp: number,
+  component: string,
+}
+
+export interface LibraryCreateFields {
+  setCreatePopupVisibility: ShowEditPopupType,
+  formRef: any,
+  fetchLibraries: FetchUserType,
+  projectData: ProjectDataFields,
+  userData: UserData,
+  libraryIdx?: number,
+}
+export interface ProjectAccordionType {
+  data: ProjectDataFields,
+  users: User[],
+  fetchOrganizations: FetchUserType,
+  organizationData: OrganizationDataFields[],
+  dataCreate: UserData,
+  roleType: string | undefined,
 }

@@ -165,7 +165,7 @@ export async function PUT(request: Request) {
         existingProject = organization?.projects.filter(project => project.id === id)[0];
 
         // Step 3: Create a set of user IDs from the incoming shared users
-        const incomingUserIds = new Set(sharedUsers?.map(({ id }) => id));
+        const incomingUserIds = new Set(sharedUsers?.map(({ id }: { id: number }) => id));
 
         // Step 4: Determine which users need to be removed
         const usersToRemove = existingProject?.sharedUsers

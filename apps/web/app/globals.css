@@ -43,6 +43,7 @@
   --themeStatsBlueColor: #DDFCFF;
   --themeStatsGreenColor: #C6F4CD;
   --themeStatsRedColor: #FFDADC;
+  --themeStatsYellowColor: #FFF3D9;
   --themeHeadingBlue: #0A3B61;
   --moduleCheckBoxBg: #ECF5FC;
   --assayBorder: #ccc;
@@ -101,6 +102,10 @@ body {
     font-style: normal;
     font-weight: 700;
     text-transform: unset;
+  }
+
+  .dx-button-mode-contained.dx-state-disabled {
+    border: 1px solid var(--themeSecondaryGreyColor);
   }
 }
 

@@ -12,12 +12,13 @@ import { UserData, OrganizationDataFields, ProjectDataFields } from '@/lib/defin
 import CreateProject from "./CreateProject";
 import { getOrganizationById, getOrganization } from "@/components/Organization/service";
 import '../Organization/form.css';
+import { debounce } from '@/utils/helpers';
 
 export default function ProjectDescription({ data }: { data: UserData }) {
     const [filteredData, setFilteredData] = useState<ProjectDataFields[]>([]);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
-    const [organization, setOrganization] = useState<OrganizationDataFields>({});
+    const [organization, setOrganization] = useState<OrganizationDataFields[]>([]);
     const [users, setUsers] = useState([]);
     const formRef = useRef<FormRef>(null);
     const [loader, setLoader] = useState(true);
@@ -42,22 +43,24 @@ export default function ProjectDescription({ data }: { data: UserData }) {
             setFilteredData(projectList);
             setOrgProjects(projectList);
             setUsers([]);
+            setOrganization(organization);
         } else {
+            const tempOrganization = [];
             organization = await getOrganizationById({ withRelation: ['orgUser', 'user_role', 'projects'], id: data?.organizationId });
             setFilteredData(organization?.projects);
             setOrgProjects(organization?.projects);
             setUsers(organization?.orgUser?.filter((user: UserData) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id));
+            tempOrganization.push(organization);
+            setOrganization(tempOrganization);
         }
         setLoader(false);
-        setOrganization(organization);
     };
 
     useEffect(() => {
         fetchOrganizations();
     }, []);
 
-    const searchData = (e: TextBoxTypes.ValueChangedEvent) => {
-        const { value } = e;
+    const handleSearch = debounce((value: string) => {
         let filteredValue;
         if (value)
             filteredValue = filteredData?.filter((item) =>
@@ -70,6 +73,11 @@ export default function ProjectDescription({ data }: { data: UserData }) {
         else filteredValue = orgProj || [];
 
         setFilteredData(filteredValue);
+    }, 500);
+
+    const searchData = (e: TextBoxTypes.ValueChangedEvent) => {
+        const { value } = e;
+        handleSearch(value);
     }
 
     const sortData = () => {
@@ -186,6 +194,7 @@ export default function ProjectDescription({ data }: { data: UserData }) {
                                     inputAttr={{
                                         style: { paddingRight: '30px' }
                                     }}
+                                    valueChangeEvent="keyup"
                                     onValueChanged={searchData}
                                 />
                             </div>

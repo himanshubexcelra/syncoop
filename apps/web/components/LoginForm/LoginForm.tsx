@@ -11,6 +11,7 @@ import PopupContent from "../ForgotPopUp/ForgotContent";
 import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
 import { UserData } from "@/lib/definition";
+import { LoadIndicator } from "devextreme-react";
 
 export type ErrorType = {
     email: string,
@@ -28,31 +29,44 @@ type LoginFormProps = {
 export default function LoginForm({ onSuccess }: LoginFormProps) {
     const [visible, setVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
+    const [buttonText, setButtonText] = useState('Login');
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setLoadIndicatorVisible(true);
+        setButtonText('');
         const formData = new FormData(event.currentTarget);
         const response = await authorize(formData);
         if (response) {
             if (response.success) {
-                const { data } = response;
+                const { data } = response;                
+                setLoadIndicatorVisible(false);
+                setButtonText('Login');
                 await onSuccess(data);
             } else if (response.errorMessage) {
                 const toastId = toast.error(`${response?.errorMessage}`);
                 await delay(DELAY);
                 toast.remove(toastId);
+                setLoadIndicatorVisible(false);
+                setButtonText('Login');
             }
         } else {
             const toastId = toast.error(Messages.SOMETHING_WENT_WRONG);
             await delay(DELAY);
             toast.remove(toastId);
+            setLoadIndicatorVisible(false);
+            setButtonText('Login');
         }
         return false;
     }
+    const hidePopup = () => {
+        setVisible(false);
+    };
 
     return (
         <>
-            <DialogPopUp {...{ visible, setVisible, dialogProperties, Content: PopupContent, }} />
+            <DialogPopUp {...{ visible, dialogProperties, Content: PopupContent, hidePopup }} />
             <form onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
                 <div className="mb-6 flex flex-col gap-2">
                     <Image
@@ -114,7 +128,10 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                         <span className="text-foreground text-sm font-bold leading-tight cursor-pointer" onClick={() => setVisible(true)}>Forgot password?</span>
                     </div>
                 </div>
-                <button type="submit" className="w-24 h-10 p-3 bg-themeBlueColor rounded justify-center items-center inline-flex text-background text-base font-bold font-['Lato'] leading-tight">Login</button>
+
+                <button type="submit" className="w-24 h-10 p-3 bg-themeBlueColor rounded justify-center items-center inline-flex text-background text-base font-bold font-['Lato'] leading-tight">
+                    <LoadIndicator className={`button-indicator ${styles.white}`} visible={loadIndicatorVisible} height={20} width={20} />
+                    {buttonText}</button>
 
             </form>
         </>

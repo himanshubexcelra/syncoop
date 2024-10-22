@@ -2,6 +2,7 @@ import { Popup } from 'devextreme-react/popup';
 
 interface ContentProps {
     onClose: () => void;
+    email?: string;
 }
 interface DialogProperties {
     width?: number;
@@ -9,16 +10,16 @@ interface DialogProperties {
 }
 interface MyPopupProps {
     visible: boolean;
-    setVisible: React.Dispatch<React.SetStateAction<boolean>>;
     dialogProperties: DialogProperties;
     Content: React.ComponentType<ContentProps>;
+    hidePopup: () => void;
+    onSubmit?: () => void;
+    contentProps?: ContentProps;
 }
 
-export default function DialogPopUp({ visible, setVisible, dialogProperties, Content }: MyPopupProps) {
+export default function DialogPopUp({ visible, dialogProperties, Content, hidePopup, contentProps }: MyPopupProps) {
     const { width, height } = dialogProperties;
-    const hidePopup = () => {
-        setVisible(false);
-    };
+
     return (
         <>
             <Popup
@@ -29,7 +30,7 @@ export default function DialogPopUp({ visible, setVisible, dialogProperties, Con
                 showCloseButton={true}
                 width={width}
                 height={height}
-                contentRender={() => <Content onClose={hidePopup} />}
+                contentRender={() => <Content onClose={hidePopup} {...contentProps} />}
             />
         </>
     );

@@ -10,7 +10,7 @@ import DataGrid, {
     Sorting,
 } from "devextreme-react/data-grid";
 import Image from "next/image";
-import { Popup as MainPopup, PopupRef } from "devextreme-react/popup";
+import { Popup as MainPopup, } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import "./table.css";
 import styles from "./table.module.css";
@@ -20,21 +20,46 @@ import { getUsers } from "./service";
 import { User } from "@/lib/definition";
 import { filterUsersByOrgId } from "@/utils/helpers";
 import { LoadIndicator } from "devextreme-react";
+import DialogPopUp from "@/ui/DialogPopUp";
+import ResetPassword from "../Profile/ResetPassword";
+import RenderEditUser from "./editUserDetails";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 
+const resetDialogProperties = {
+    width: 480,
+    height: 260,
+}
 export default function UsersTable({ orgUser, roles, roleType, type, setInternalCount, setExternalCount }: UserTableProps) {
-    const [editPopup, showEditPopup] = useState(false);
+    const [editPopup, setEditPopup] = useState(false);
+    const [editRow, setEditRow] = useState<User>();
+    const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [tableData, setTableData] = useState<User[]>([]);
     const [password, setPassword] = useState('');
     const [loader, setLoader] = useState(true);
     const grid = useRef<DataGridRef>(null);
-    const formRef = useRef<PopupRef>(null);
+    const formRef = useRef<any>(null);
+    const formRefEdit = useRef<any>(null);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const context: any = useContext(AppContext);
     const appContext = context.state;
 
+    const hidePasswordPopup = () => {
+        setPasswordPopupVisible(false)
+    };
+    const showEditPopup = (data: any) => {
+        setEditRow(data)
+        setEditPopup(true)
+    }
+    const showPasswordPopup = (data: any) => {
+        setEditRow(data)
+        setPasswordPopupVisible(true)
+    }
+    const contentProps = {
+        onClose: hidePasswordPopup,
+        email: editRow?.email
+    }
     const fetchAndFilterData = async () => {
         setLoader(true);
         try {
@@ -85,6 +110,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                     showBorders={true}
                     ref={grid}
                     elementAttr={{ cssClass: styles.table }}
+                    className="no-padding-header"
                 >
                     <Paging defaultPageSize={5} defaultPageIndex={0} />
                     <Sorting mode="single" />
@@ -92,6 +118,17 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                         dataField="email"
                         caption="Email Address"
                         width={350}
+                        cellRender={(data: any) => {
+                            const userId = data?.data?.id;
+                            return (
+                                <a
+                                    href={`/profile/${userId}`}
+                                    className="text-themeBlueColor underline"
+                                >
+                                    {data.value}
+                                </a>
+                            );
+                        }}
                     />
                     <Column
                         dataField="firstName"
@@ -125,18 +162,19 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                     <Column
                         width={80}
                         cellRender={({ data }: any) => (
-                            <div className="flex gap-0.5">
+                            <div className="flex gap-2 cursor-pointer">
                                 <Image
                                     src="/icons/pen-edit-icon.svg"
                                     width={24}
                                     height={24}
-                                    onClick={() => console.log(`edit clicked ${data}`)}
+                                    onClick={() => showEditPopup(data)}
                                     alt="Edit" />
                                 <Image
-                                    src="/icons/refresh-icon.svg"
-                                    width={24}
-                                    height={24}
-                                    alt="Edit" />
+                                    src="/icons/lock-password-icon.svg"
+                                    width={16}
+                                    height={18}
+                                    onClick={() => showPasswordPopup(data)}
+                                    alt="Reset" />
 
                             </div>
                         )}
@@ -186,24 +224,43 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                                 onHiding={() => {
                                     setPassword('')
                                     setCreatePopupVisibility(false);
+                                    formRef.current?.instance().reset();
                                 }}
                                 showCloseButton={true}
                                 wrapperAttr={{ class: "create-popup mr-[15px]" }}
                             />
                             <MainPopup
-                                showTitle={true}
+                                title="Edit User"
                                 visible={editPopup}
                                 showCloseButton={true}
                                 hideOnOutsideClick={true}
                                 contentRender={() => (
-                                    <div>Edit</div>
+                                    <RenderEditUser tableData={editRow}
+                                        formRef={formRefEdit}
+                                        setCreatePopupVisibility={setEditPopup}
+                                        roles={[]}
+                                        roleType={roleType}
+                                        type={type}
+                                        fetchData={fetchAndFilterData}
+                                        isMyProfile={false}
+                                    />
                                 )}
                                 width={400}
                                 height="100%"
                                 position={popupPosition}
-                                onHiding={() => showEditPopup(false)}
+                                onHiding={() => {
+                                    formRefEdit.current?.instance().reset();
+                                    setEditPopup(false)
+                                }}
                                 wrapperAttr={{ class: "create-popup" }}
                             />
+                            <DialogPopUp {...{
+                                visible: passwordPopupVisible,
+                                dialogProperties: resetDialogProperties,
+                                Content: ResetPassword,
+                                hidePopup: hidePasswordPopup,
+                                contentProps
+                            }} />
                         </Item>
                         <Item location="after">
                             <Btn

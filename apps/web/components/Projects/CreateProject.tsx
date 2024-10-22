@@ -136,13 +136,11 @@ export default function CreateProject({
 
   const fetchUserList = (e: any) => {
     const { value } = e;
-    if (Array.isArray(organizationData)) {
-      let filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
-      filteredUsers = filteredUsers.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id);
-      setUsers(filteredUsers);
-      setOrganizationId(value);
-      filterUsers(filteredUsers);
-    }
+    let filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
+    filteredUsers = filteredUsers.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id);
+    setUsers(filteredUsers);
+    setOrganizationId(value);
+    filterUsers(filteredUsers);
   }
 
   const sortByPermission = () => {
@@ -174,7 +172,7 @@ export default function CreateProject({
       dataField="organization"
       editorType="dxSelectBox"
       editorOptions={{
-        items: organizationData,
+        items: organizationData.filter((organization: OrganizationDataFields) => organization.name !== 'EMD DD'),
         displayExpr: "name",
         placeholder: "Organization name",
         valueExpr: "id",
@@ -230,7 +228,6 @@ export default function CreateProject({
         editorType="dxTextArea"
         cssClass='textarea-field'
         editorOptions={{
-          maxLength: 500,
           height: "90px",
           placeholder: "Description"
         }}
@@ -260,7 +257,7 @@ export default function CreateProject({
       </GroupItem>
       {filteredData.length === 0 ? (
         <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}>
-          <div className="nodata">No data</div>
+          <div className="nodata nodata-project">No data</div>
         </GroupItem>
       ) : (
         <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}>
@@ -301,14 +298,14 @@ export default function CreateProject({
         </GroupItem>
       )}
       <GroupItem cssClass="buttons-group" colCount={2}>
-        <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
+        <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
           <ButtonOptions
             text={edit ? 'Update' : "Create Project"}
             useSubmitBehavior={true}
             onClick={handleSubmit}
           />
         </ButtonItem>
-        <ButtonItem horizontalAlignment="left" cssClass="btn_secondary">
+        <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
           <ButtonOptions text="Discard" onClick={() => setCreatePopupVisibility(false)} />
         </ButtonItem>
       </GroupItem>

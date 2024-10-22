@@ -39,41 +39,108 @@ export const tableFields = {
 
 export const DELAY = 2000;
 
-export const libraries = [{
-  id: 1,
-  name: 'EGFR-v1',
-  description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
-  status: [
-    { name: 'New', count: 2, type: 'info' },
-    { name: 'Ready', count: 3, type: 'info' },
-    { name: 'Progressing', count: 12, type: 'info' },
-    { name: 'Done', count: 4, type: 'success' },
-    { name: 'Failed', count: 0, type: 'error' },
-  ]
-},
-{
-  id: 2,
-  name: 'EGFR-v1',
-  description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
-  status: [
-    { name: 'New', count: 2, type: 'info' },
-    { name: 'Ready', count: 3, type: 'info' },
-    { name: 'Progressing', count: 12, type: 'info' },
-    { name: 'Done', count: 4, type: 'success' },
-    { name: 'Failed', count: 0, type: 'error' },
-  ],
-}, {
-  id: 3,
-  name: 'EGFR-v1',
-  description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
-  status: [
-    { name: 'New', count: 2, type: 'info' },
-    { name: 'Ready', count: 3, type: 'info' },
-    { name: 'Progressing', count: 12, type: 'info' },
-    { name: 'Done', count: 4, type: 'success' },
-    { name: 'Failed', count: 0, type: 'error' },
-  ]
-}];
+export const MOLECULESTATUS = [
+  { name: 'New', count: 2, type: 'info' },
+  { name: 'Ready', count: 3, type: 'info' },
+  { name: 'Progressing', count: 12, type: 'info' },
+  { name: 'Done', count: 4, type: 'success' },
+  { name: 'Failed', count: 0, type: 'error' },
+];
+
+export const MOLECULES = [
+  {
+    id: 1,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'new',
+    analyse: '',
+    herg: '',
+    caco2: '',
+    clint: '',
+    hepg2cytox: '',
+    solubility: ''
+  }, {
+    id: 2,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'In Progress',
+    analyse: '',
+    herg: '',
+    caco2: '',
+    clint: '',
+    hepg2cytox: '',
+    solubility: ''
+  }, {
+    id: 3,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'ready',
+    analyse: '',
+    herg: '',
+    caco2: '',
+    clint: '',
+    hepg2cytox: '',
+    solubility: ''
+  }, {
+    id: 4,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'done',
+    analyse: '',
+    herg: 0.12,
+    caco2: 1.23,
+    clint: 0.92,
+    hepg2cytox: 0.02,
+    solubility: 1.23
+  }, {
+    id: 5,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'done',
+    analyse: '',
+    herg: 1.1,
+    caco2: 0.3,
+    clint: 0.7,
+    hepg2cytox: 1.23,
+    solubility: 0.3,
+  }, {
+    id: 6,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'failed',
+    analyse: '',
+    herg: '',
+    caco2: '',
+    clint: '',
+    hepg2cytox: '',
+    solubility: ''
+  }, {
+    id: 7,
+    bookamrk: false,
+    structure: '/icon/libraies.svg',
+    moleculeId: 5,
+    molecularWeight: 500,
+    status: 'new',
+    analyse: '',
+    herg: '',
+    caco2: '',
+    clint: '',
+    hepg2cytox: '',
+    solubility: ''
+  }
+];
 
 export const PROJECT_TYPES = [
   'Retrosynthesis',
@@ -115,6 +182,17 @@ export const stats = [
     dotColorStyle: ["bg-themeDotGreenColor", "bg-themeDotGreenColor", "bg-themeDotGreenColor"]
   },
 ];
+
+export const StatusCodeBg = {
+  ready: 'bg-white',
+  new: 'bg-white',
+  failed: 'bg-themeStatsRedColor',
+  inprogress: 'bg-themeStatsBlueColor',
+  done: 'bg-themeStatsGreenColor',
+  info: 'bg-themeStatsYellowColor'
+}
+
+export type StatusCodeType = keyof typeof StatusCodeBg;
 
 export const countCardsDetails = [
   {

@@ -335,3 +335,20 @@ export interface ProjectAccordionType {
   dataCreate: UserData,
   roleType: string | undefined,
 }
+
+export interface ProductModel {
+  id: number;
+  moleculeId: number;
+  molecularWeight: number;
+}
+
+// export interface CartModel {
+//   product: ProductModel;
+// }
+
+export interface CartContextModel {
+  cart: ProductModel[];
+  addToCart: (product: ProductModel) => void;
+  removeFromCart: (productId: number) => void;
+  clearCart: () => void;
+}

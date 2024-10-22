@@ -1,6 +1,7 @@
 import { BreadCrumbsObj } from "@/lib/definition";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import LibraryDetails from "@/components/Libraries/LibraryDetails";
+import { getUserData } from "@/utils/auth";
 import Layout from "@/components/layout";
 
 export default async function Projects() {
@@ -30,11 +31,12 @@ export default async function Projects() {
         },
     ];
 
+    const userData: any = await getUserData();
 
     return (
         <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
-            <LibraryDetails />
+            <LibraryDetails userData={userData} />
         </Layout>
     );
 }

@@ -22,7 +22,6 @@ import { LoginFormSchema } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { Messages } from "@/utils/message";
-
 const customPasswordCheck = (password: any) => LoginFormSchema.shape.password.safeParse(password).success
 
 export default function RenderCreateUser({
@@ -176,7 +175,7 @@ export default function RenderCreateUser({
                 disabled: roleType !== 'admin' || type === "Internal",
                 onOpened: async () => {
                     if (type) {
-                        const organizationDropdown = await getOrganization([], type);
+                        const organizationDropdown = await getOrganization({ type: type });
                         setOrganization(organizationDropdown);
                     }
                 },
@@ -235,18 +234,12 @@ export default function RenderCreateUser({
             </SimpleItem>
             <SimpleItem>
                 <div className="flex justify-start gap-2 mt-5">
-                    <Button
-                        text="Create User"
-                        onClick={handleSubmit}
-                        useSubmitBehavior={true}
-                        hoverStateEnabled={false}
-                        className={styles.primaryButton}
-                    />
-                    <Button
-                        text="Cancel"
-                        onClick={handleCancel}
-                        className={styles.secondaryButton}
-                    />
+                    <button onClick={handleSubmit} className={styles.primaryButton}>
+                        Create User
+                    </button >
+                    <button onClick={handleCancel} className={styles.secondaryButton}>
+                        Cancel
+                    </button>
                 </div>
             </SimpleItem>
         </CreateForm>

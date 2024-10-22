@@ -84,6 +84,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
           showBorders={true}
           ref={grid}
           elementAttr={{ cssClass: styles.table }}
+          className="no-padding-header"
         >
           <Paging defaultPageSize={5} defaultPageIndex={0} />
           <Sorting mode="single" />

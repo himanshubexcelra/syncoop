@@ -14,8 +14,7 @@
     "react": "^18.3.1",
     "prettier": "^3.2.5",
     "turbo": "^2.1.2",
-    "typescript": "^5.4.5",
-    "@types/bcrypt": "^5.0.2"
+    "typescript": "^5.4.5"
   },
   "packageManager": "pnpm@8.15.6",
   "engines": {
@@ -23,7 +22,6 @@
   },
   "dependencies": {
     "husky": "^9.1.6",
-    "pnpm": "^9.10.0",
-    "bcrypt": "^5.1.1"
+    "pnpm": "^9.10.0"
   }
 }

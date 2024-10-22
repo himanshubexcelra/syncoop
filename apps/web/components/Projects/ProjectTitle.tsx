@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ProjectDataFields } from '@/lib/definition';
 
 export default function ProjectTitle(data: ProjectDataFields) {
+    const libraryCount = data.libraries?.length || 0;
     return (
         <div>
             <div className='flex'>
@@ -31,7 +32,7 @@ export default function ProjectTitle(data: ProjectDataFields) {
                         height={30}
                         alt="organization"
                     />
-                    <span>3 Libraries</span>
+                    <span>{libraryCount} {libraryCount !== 1 ? 'Libraries' : 'Library'}</span>
                 </div>
             </div>
         </div>

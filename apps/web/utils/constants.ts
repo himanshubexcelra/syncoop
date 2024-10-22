@@ -39,48 +39,20 @@ export const tableFields = {
 
 export const DELAY = 2000;
 
-export const libraries = [{
-  id: 1,
-  name: 'EGFR-v1',
-  description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
-  status: [
-    { name: 'New', count: 2, type: 'info' },
-    { name: 'Ready', count: 3, type: 'info' },
-    { name: 'Progressing', count: 12, type: 'info' },
-    { name: 'Done', count: 4, type: 'success' },
-    { name: 'Failed', count: 0, type: 'error' },
-  ]
-},
-{
-  id: 2,
-  name: 'EGFR-v1',
-  description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
-  status: [
-    { name: 'New', count: 2, type: 'info' },
-    { name: 'Ready', count: 3, type: 'info' },
-    { name: 'Progressing', count: 12, type: 'info' },
-    { name: 'Done', count: 4, type: 'success' },
-    { name: 'Failed', count: 0, type: 'error' },
-  ],
-}, {
-  id: 3,
-  name: 'EGFR-v1',
-  description: 'The aim of the study is to investigate if M5049 intervention at a critical point in the course of Covid-19 disease may prevent or ameliorate the hyper',
-  status: [
-    { name: 'New', count: 2, type: 'info' },
-    { name: 'Ready', count: 3, type: 'info' },
-    { name: 'Progressing', count: 12, type: 'info' },
-    { name: 'Done', count: 4, type: 'success' },
-    { name: 'Failed', count: 0, type: 'error' },
-  ]
-}];
+export const MOLECULESTATUS = [
+  { name: 'New', count: 2, type: 'info' },
+  { name: 'Ready', count: 3, type: 'info' },
+  { name: 'Progressing', count: 12, type: 'info' },
+  { name: 'Done', count: 4, type: 'success' },
+  { name: 'Failed', count: 0, type: 'error' },
+];
 
 export const MOLECULES = [
   {
     id: 1,
     bookamrk: false,
     structure: '/icon/libraies.svg',
-    moleculeId: 1,
+    moleculeId: 5,
     molecularWeight: 500,
     status: 'new',
     analyse: '',
@@ -93,7 +65,7 @@ export const MOLECULES = [
     id: 2,
     bookamrk: false,
     structure: '/icon/libraies.svg',
-    moleculeId: 2,
+    moleculeId: 5,
     molecularWeight: 500,
     status: 'In Progress',
     analyse: '',
@@ -106,7 +78,7 @@ export const MOLECULES = [
     id: 3,
     bookamrk: false,
     structure: '/icon/libraies.svg',
-    moleculeId: 3,
+    moleculeId: 5,
     molecularWeight: 500,
     status: 'ready',
     analyse: '',
@@ -119,7 +91,7 @@ export const MOLECULES = [
     id: 4,
     bookamrk: false,
     structure: '/icon/libraies.svg',
-    moleculeId: 4,
+    moleculeId: 5,
     molecularWeight: 500,
     status: 'done',
     analyse: '',
@@ -145,7 +117,7 @@ export const MOLECULES = [
     id: 6,
     bookamrk: false,
     structure: '/icon/libraies.svg',
-    moleculeId: 6,
+    moleculeId: 5,
     molecularWeight: 500,
     status: 'failed',
     analyse: '',
@@ -158,7 +130,7 @@ export const MOLECULES = [
     id: 7,
     bookamrk: false,
     structure: '/icon/libraies.svg',
-    moleculeId: 7,
+    moleculeId: 5,
     molecularWeight: 500,
     status: 'new',
     analyse: '',
@@ -212,13 +184,15 @@ export const stats = [
 ];
 
 export const StatusCodeBg = {
-  'ready': 'bg-white',
-  'new': 'bg-white',
-  'failed': 'bg-themeStatsRedColor',
-  'inprogress': 'bg-themeStatsBlueColor',
-  'done': 'bg-themeStatsGreenColor',
-  'info': 'bg-themeStatsYellowColor'
+  ready: 'bg-white',
+  new: 'bg-white',
+  failed: 'bg-themeStatsRedColor',
+  inprogress: 'bg-themeStatsBlueColor',
+  done: 'bg-themeStatsGreenColor',
+  info: 'bg-themeStatsYellowColor'
 }
+
+export type StatusCodeType = keyof typeof StatusCodeBg;
 
 export const countCardsDetails = [
   {

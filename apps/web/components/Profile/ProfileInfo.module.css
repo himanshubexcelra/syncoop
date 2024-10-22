@@ -1,0 +1,87 @@
+.main {
+    padding: 20px;
+}
+.box {
+    height: 230px;
+    background: var(--white);
+    box-shadow: 0px 8px 12px 0px var(--tabBoxShadow), 0px 0px 4px 0px var(--tabBoxShadow);
+    padding-left: 21px;
+    padding-right: 30px;
+    padding-top: 19px;
+}
+
+.title {
+    color: var(--editTitleBlue);
+    font-family: Lato;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.type {
+    color: var(--themeGreyColor);
+    font-family: Lato;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 35.2px
+}
+
+.output {
+    color: var(--black);
+    font-family: Lato;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 35.2px;
+}
+.primaryButton {
+    height: 32px;
+    padding: 8px 10px;
+    justify-content: center;
+    align-items: center;
+    color: var(--background);
+    text-align: center;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16.8px;
+    border-radius: 4px;
+    background: var(--themeBlueColor);
+}
+
+.secondaryButton {
+    display: inline-flex;
+    height: 32px;
+    padding: 8px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    border: 2px solid var(--themeBlueColor);
+    color: var(--themeBlueColor);
+    text-align: center;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16.8px 
+}
+.grid {
+    display: grid;
+    grid-template-columns: 30% 70%;
+}
+
+.subHeading {
+    color: var(--foreground);
+    text-align: center;
+    font-family: Lato;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 30.8px;
+}

@@ -25,8 +25,6 @@ const CartContext = createContext<CartContextModel>(defaultCartContext);
 // cart context hooks use
 export const useCart = (): CartContextModel => {
   const context = useContext(CartContext);
-  console.log(CartContext,"CartContext");
-  
   if (!context) {
     throw new Error("Error");
   }

@@ -72,6 +72,8 @@ type ProductModel = {
     id: number;
     moleculeId: number;
     molecularWeight: number;
+    projectId:number;
+    projectName:string;
 };
 interface CartItem {
     id: number;
@@ -101,10 +103,11 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
     const cartDetails = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart') ?? '[]') : [];
-    const preselectedValue: number[] = cartDetails.length > 0 ? cartDetails.map((item: CartItem) => item.id) : [];
+    const preselectedValue: number[] = cartDetails.length > 0 ? cartDetails.filter((item) => item.projectId === parseInt(params.id)).map((item: CartItem) => item.id) : [];
     const { addToCart, clearCart } = useCart();
     const [moleculeData, setMoleculeData] = useState<ProductModel[]>([]);
     const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>(preselectedValue); // Store selected item IDs
+    const [preselectedCart,setPreSelectedCart] = useState(localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart') ?? '[]') : []);
 
     const [isCartUpdate, updateCart] = useState(false)
 
@@ -258,20 +261,28 @@ export default function LibraryDetails({ userData }: { userData: UserData }) {
 
     const onSelectionChanged = (e: any) => {
         updateCart(true);
+        // Check if the data exists in storage
         setSelectedRowKeys(e.selectedRowKeys);
         const checkedMolecule = e.selectedRowsData;
         // If the check box is unchecked
         if (e.currentDeselectedRowKeys.length > 0) {
-            const newmoleculeData: ProductModel[] = checkedMolecule.filter((item) => item.id !== e.currentDeselectedRowKeys[0].id);
+            const newmoleculeData: ProductModel[] = checkedMolecule.filter((item) => item.id !== e.currentDeselectedRowKeys[0].id && item.projectId !== projects.id);
             setMoleculeData(newmoleculeData);
+            setPreSelectedCart();
         }
         else {
             const newItem: ProductModel[] = checkedMolecule.map((data: ProductModel) => {
-                return { id: data.id, moleculeId: data.moleculeId, molecularWeight: data.molecularWeight }
+                return { id: data.id, moleculeId: data.moleculeId, molecularWeight: data.molecularWeight,projectId:projects.id,projectName:projects.name }
                     ;
             }
             );
-            setMoleculeData(newItem);
+            const result: any[] = [...newItem,...preselectedCart];
+            //remove duplicate from result
+            const cartResponse = Array.from(
+                new Map(result.map(item => [`${item.id}-${item.projectId}`, item])).values()
+            );
+              
+            setMoleculeData(cartResponse);
         }
     };
 

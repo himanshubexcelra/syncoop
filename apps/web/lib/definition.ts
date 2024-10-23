@@ -340,6 +340,8 @@ export interface ProductModel {
   id: number;
   moleculeId: number;
   molecularWeight: number;
+  projectId:number;
+  projectName:string;
 }
 
 // export interface CartModel {

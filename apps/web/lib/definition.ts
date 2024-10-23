@@ -258,8 +258,8 @@ export interface CountCard {
 }
 
 export interface StatusComponentProps {
-  countCardsDetails: CountCard[];
-  stats: Status[];
+  roleType: string;
+  orgUser: OrgUser;
 }
 
 export type UserTableProps = {
@@ -269,6 +269,7 @@ export type UserTableProps = {
   type?: string;
   setExternalCount?: any,
   setInternalCount?: any,
+  userId: number,
 }
 
 export interface TabDetail {

@@ -24,7 +24,7 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1', // Adjust based on your project structure
   },
-  testPathIgnorePatterns: ['<rootDir>/packages/'],
+  testPathIgnorePatterns: ['<rootDir>/packages/']
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

@@ -10,15 +10,12 @@ import { getUserData } from "@/utils/auth";
 import Heading from "@/components/Heading/Heading";
 import Tabs from "@/ui/Tab/Tabs";
 import { redirect } from "next/navigation";
-import { dataSource, features, stats } from "@/utils/constants";
+import { dataSource, features, } from "@/utils/constants";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
 import TabUsersTable from "@/components/Organization/TabUsersTable";
 import { TabDetail } from "@/lib/definition";
-import { getProjectsCountById } from "@/components/Projects/projectService";
-import { getCountCardsDetails } from "@/utils/helpers";
-import { getLibraryCountById } from "@/components/Libraries/libraryService";
 
 export default async function Dashboard() {
 
@@ -27,10 +24,8 @@ export default async function Dashboard() {
     redirect('/');
   }
   const { type: roleType, priority: currentUserPriority } = userData.user_role[0].role;
-  const { orgUser } = userData;
+  const { orgUser, id } = userData;
 
-  const projectCount = roleType === 'admin' ? await getProjectsCountById() : await getProjectsCountById(orgUser?.id)
-  const libraryCount = roleType === 'admin' ? await getLibraryCountById() : await getLibraryCountById(orgUser?.id)
   const filteredRoles = await getLowPriorityRole(currentUserPriority);
 
   const breadcrumbs: BreadCrumbsObj[] = [
@@ -73,7 +68,7 @@ export default async function Dashboard() {
     {
       title: "Overview",
       Component: StatusComponent,
-      props: { stats, countCardsDetails: getCountCardsDetails(projectCount, libraryCount) }
+      props: { roleType, orgUser }
     },
     {
       title: "Assays",
@@ -96,7 +91,7 @@ export default async function Dashboard() {
           <Tabs tabsDetails={tabsStatus} />
           {roleType === 'admin' &&
             <>
-              <TabUsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} />
+              <TabUsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} userId={id} />
               <div>
                 <div className={styles.imageContainer}>
                   <Image
@@ -124,7 +119,7 @@ export default async function Dashboard() {
               <span>Users</span>
             </div>
             <div className={styles.table}>
-              <UsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} />
+              <UsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} userId={id} />
             </div>
           </div>
           }

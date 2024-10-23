@@ -109,6 +109,7 @@ export default function Header({ userData }: HeaderProps) {
                     <PopupBox
                         isOpen={dropdownOpen}
                         onItemSelected={(item: DropDownItem) => onItemSelected(item)}
+                        onClose={toggleDropdown}
                         items={dropDownItems} />
                 </div>
             </div>

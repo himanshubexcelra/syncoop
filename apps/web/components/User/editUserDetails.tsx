@@ -13,6 +13,7 @@ import { delay } from "@/utils/helpers";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { getLowPriorityRole } from "../Role/service";
+import { Button } from "devextreme-react";
 
 
 export default function RenderEditUser({
@@ -150,13 +151,19 @@ export default function RenderEditUser({
                 <RequiredRule message={Messages.ROLE_REQUIRED} />
             </SimpleItem>
             <SimpleItem>
-                <div className="flex justify-start gap-2 mt-5">
-                    <button onClick={handleSubmit} className={styles.primaryButton}>
-                        Update
-                    </button >
-                    <button onClick={handleCancel} className={styles.secondaryButton}>
-                        Cancel
-                    </button>
+                <div className="flex justify-start gap-2 mt-5 ">
+                    <Button
+                        text="Create User"
+                        onClick={handleSubmit}
+                        useSubmitBehavior={true}
+                        hoverStateEnabled={false}
+                        elementAttr={{ class: "btn_primary_user" }}
+                    />
+                    <Button
+                        text="Cancel"
+                        onClick={handleCancel}
+                        className={styles.secondaryButton}
+                    />
                 </div>
             </SimpleItem>
         </CreateForm>

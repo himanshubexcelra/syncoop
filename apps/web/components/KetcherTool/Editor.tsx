@@ -87,7 +87,7 @@ export default function EditorBox() {
             <KetcherBox>
                 <Editor
                     key={editorKey}
-                    staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_URL || ''}
+                    staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
                     buttons={getHiddenButtonsConfig(hiddenButtons)}
                     structServiceProvider={structServiceProvider}
                     errorHandler={(err) => console.log(err)}

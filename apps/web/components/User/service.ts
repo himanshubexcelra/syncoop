@@ -1,9 +1,18 @@
 "use server";
 
-export async function getUsers(withRelation: string[] = []) {
+export async function getUsers(withRelation: string[] = [], orgType: string = '', loggedInUser?: number, orgId?: number) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/users`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
+    }
+    if (orgType) {
+        url.searchParams.append('orgType', orgType);
+    }
+    if (orgId) {
+        url.searchParams.append('orgId', String(orgId));
+    }
+    if (loggedInUser) {
+        url.searchParams.append('loggedInUser', String(loggedInUser))
     }
     const response = await fetch(url, {
         mode: "no-cors",

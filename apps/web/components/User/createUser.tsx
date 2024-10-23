@@ -22,6 +22,7 @@ import { LoginFormSchema } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { Messages } from "@/utils/message";
+
 const customPasswordCheck = (password: any) => LoginFormSchema.shape.password.safeParse(password).success
 
 export default function RenderCreateUser({
@@ -79,6 +80,9 @@ export default function RenderCreateUser({
     const handleGeneratePassword = () => {
         const generatedPassword = generatePassword();
         setPassword(generatedPassword);
+        navigator.clipboard.writeText(generatedPassword)
+            .then(() => toast.success(Messages.PASSWORD_COPY))
+            .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
         formRef.current!.instance().updateData("password", generatedPassword);
     };
 
@@ -175,7 +179,7 @@ export default function RenderCreateUser({
                 disabled: roleType !== 'admin' || type === "Internal",
                 onOpened: async () => {
                     if (type) {
-                        const organizationDropdown = await getOrganization({ type: type });
+                        const organizationDropdown = await getOrganization({ type });
                         setOrganization(organizationDropdown);
                     }
                 },
@@ -233,13 +237,19 @@ export default function RenderCreateUser({
                 <RequiredRule message={Messages.requiredMessage('Password')} />
             </SimpleItem>
             <SimpleItem>
-                <div className="flex justify-start gap-2 mt-5">
-                    <button onClick={handleSubmit} className={styles.primaryButton}>
-                        Create User
-                    </button >
-                    <button onClick={handleCancel} className={styles.secondaryButton}>
-                        Cancel
-                    </button>
+                <div className="flex justify-start gap-2 mt-5 ">
+                    <Button
+                        text="Create User"
+                        onClick={handleSubmit}
+                        useSubmitBehavior={true}
+                        hoverStateEnabled={false}
+                        elementAttr={{ class: "btn_primary_user" }}
+                    />
+                    <Button
+                        text="Cancel"
+                        onClick={handleCancel}
+                        className={styles.secondaryButton}
+                    />
                 </div>
             </SimpleItem>
         </CreateForm>

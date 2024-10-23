@@ -24,9 +24,12 @@ jest.mock("@/components/layout", () => ({
 }));
 
 describe("Profile Page", () => {
-    const mockUserData = {
-        id: 1,
-        user_role: [{ role: { type: "admin" } }],
+    const mockSessionData = {
+        userData: {
+            id: 1,
+            user_role: [{ role: { type: "admin" } }],
+            myRoles: ['admin']
+        }
     };
     const breadcrumbMock = [
         {
@@ -50,7 +53,7 @@ describe("Profile Page", () => {
     });
 
     it("should render breadcrumb, layout, and profile info when user data is available", async () => {
-        (getUserData as jest.Mock).mockResolvedValue(mockUserData);
+        (getUserData as jest.Mock).mockResolvedValue(mockSessionData.userData);
 
         const { container } = render(await Profile());
 
@@ -60,15 +63,15 @@ describe("Profile Page", () => {
         expect(container.firstChild).toMatchSnapshot();
     });
 
-    it("should pass props to ProfileInfo ", async () => {
-        (getUserData as jest.Mock).mockResolvedValue(mockUserData);
+    fit("should pass props to ProfileInfo ", async () => {
+        (getUserData as jest.Mock).mockResolvedValue(mockSessionData);
 
         render(await Profile());
 
         expect(ProfileInfo).toHaveBeenCalledWith(
             {
-                id: mockUserData.id,
-                roleType: mockUserData.user_role[0].role.type,
+                id: mockSessionData.userData.id,
+                myRoles: ['admin'],
                 isMyProfile: true,
             },
             {}
@@ -76,7 +79,7 @@ describe("Profile Page", () => {
     });
 
     it("should pass breadcrumbs configuration", async () => {
-        (getUserData as jest.Mock).mockResolvedValue(mockUserData);
+        (getUserData as jest.Mock).mockResolvedValue(mockSessionData.userData);
 
         render(await Profile());
 

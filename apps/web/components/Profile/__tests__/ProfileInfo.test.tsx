@@ -15,8 +15,9 @@ jest.mock('@/ui/DialogPopUp', () => ({
 describe('ProfileInfo Component', () => {
     const defaultProps = {
         id: 1,
-        roleType: 'admin',
+        myRoles: ['admin'],
         isMyProfile: true,
+        actionsEnabled: ['edit_user']
     };
 
     const mockUserData = [

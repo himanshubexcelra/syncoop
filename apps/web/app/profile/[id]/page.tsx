@@ -7,28 +7,40 @@ import { redirect } from "next/navigation";
 
 export default async function Profile({ params }: { params: { id: string } }) {
     const { id } = params
-    const userData = await getUserData();
-    if (!userData) {
+    const sessionData = await getUserData();
+    if (!sessionData) {
         redirect('/');
     }
-
-    const { orgUser } = userData;
-    const { type: roleType, } = userData?.user_role[0]?.role;
+    const { userData, actionsEnabled } = sessionData;
+    const { orgUser, myRoles } = userData;
     const breadcrumbs: BreadCrumbsObj[] = [
-        { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/dashboard' },
         {
-            label: `Admin:  ${orgUser?.name}`,
+            label: 'Home',
+            svgPath: '/icons/home-icon.svg',
+            svgWidth: 16,
+            svgHeight: 16,
+            href: '/dashboard'
+        },
+        {
+            label: `${['admin', 'org_admin'].some((role) => myRoles.includes(role)) ? 'Admin:' : ''} ${orgUser?.name}`,
             svgPath: "/icons/admin-inactive-icon.svg",
             svgWidth: 16,
             svgHeight: 16,
             href: "/dashboard",
         },
-        { label: 'Profile', svgPath: '/icons/profile-icon-sm-active.svg', svgWidth: 16, svgHeight: 16, href: '/profile', isActive: true }
+        {
+            label: 'Profile',
+            svgPath: '/icons/profile-icon-sm-active.svg',
+            svgWidth: 16,
+            svgHeight: 16,
+            href: '/profile',
+            isActive: true
+        }
     ]
     return (
         <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
-            <ProfileInfo id={Number(id)} roleType={roleType} isMyProfile={false} />
+            <ProfileInfo id={Number(id)} myRoles={myRoles} isMyProfile={false} actionsEnabled={actionsEnabled} />
         </Layout>
     );
 }

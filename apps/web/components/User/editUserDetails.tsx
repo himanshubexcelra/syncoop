@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import { delay } from "@/utils/helpers";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
-import { getLowPriorityRole } from "../Role/service";
+import { getFilteredRoles } from "../Role/service";
 import { Button } from "devextreme-react";
 
 
@@ -22,7 +22,7 @@ export default function RenderEditUser({
     tableData,
     fetchData,
     type,
-    roleType,
+    myRoles,
     isMyProfile,
 }: any) {
 
@@ -30,17 +30,19 @@ export default function RenderEditUser({
     const [rolesSelect, setRolesSelect] = useState([])
     const [organizationSelect, setOrganizationSelect] = useState([])
     useEffect(() => {
-        const fetchRoles = async () => {
+        const fetchDropdown = async () => {
             try {
-                const rolesDropdown = await getLowPriorityRole(1);
+                const rolesDropdown = await getFilteredRoles();
+                const organizationDropdown = type ? await getOrganization({ type: type }) : await getOrganization({});
+                setOrganizationSelect(organizationDropdown);
                 setRolesSelect(rolesDropdown);
             } catch (error) {
-                console.log(Messages.ROLE_FETCH_ERROR, error);
+                console.log(Messages.FETCH_ERROR, error);
             }
         };
 
-        fetchRoles();
-    }, []);
+        fetchDropdown();
+    }, [type]);
 
     useEffect(() => {
         const formValue = {
@@ -95,13 +97,7 @@ export default function RenderEditUser({
                     displayExpr: "name",
                     valueExpr: "id",
                     value: tableData.orgUser.id,
-                    disabled: isMyProfile || roleType !== "admin" || type === "Internal",
-                    onOpened: async () => {
-                        if (organizationSelect.length === 0) {
-                            const organizationDropdown = type ? await getOrganization({ type: type }) : await getOrganization({});
-                            setOrganizationSelect(organizationDropdown);
-                        }
-                    },
+                    disabled: isMyProfile || !myRoles.includes('admin') || type === "Internal",
                 }}
             >
                 <Label text="Organization" />
@@ -142,7 +138,7 @@ export default function RenderEditUser({
                     showSelectionControls: true,
                     applyValueMode: "useButtons",
                     maxDisplayedTags: 5,
-                    disabled: isMyProfile || !["admin", "org_admin"].includes(roleType),
+                    disabled: isMyProfile || !myRoles.some((roleType: string) => ["admin", "org_admin"].includes(roleType)),
                     value: tableData.user_role?.map((item: any) => item.roleId),
 
                 }}
@@ -153,7 +149,7 @@ export default function RenderEditUser({
             <SimpleItem>
                 <div className="flex justify-start gap-2 mt-5 ">
                     <Button
-                        text="Create User"
+                        text="Update"
                         onClick={handleSubmit}
                         useSubmitBehavior={true}
                         hoverStateEnabled={false}

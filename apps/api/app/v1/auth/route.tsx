@@ -15,36 +15,35 @@ export async function POST(request: Request) {
         id: true,
         password: true,
         user_role: {
-          orderBy: {
-            role: {
-              priority: 'asc',
-            },
-          },
           select: {
             role: {
               select: {
                 id: true,
                 type: true,
-                priority: true,
-                module_permission: {
-                  select: {
-                    module: true
-                  }
-                },
-                /* module_action_role_permission: {
-                    select: {
-                        module_action: true
-                    }
-                } */
+                /* priority: true, */
               }
             }
           },
-          take: 1,
         },
         orgUser: {
           select: {
             id: true,
-            name: true
+            name: true,
+            /* org_module: {
+              include: {
+                module: {
+                  include: {
+                    module_action: {
+                      include: {
+                        module_action_role_permission: {
+                          where: { roleId:  16}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } */
           }
         }
       },

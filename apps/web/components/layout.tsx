@@ -4,7 +4,8 @@ import { AppContextProvider } from '../app/AppState';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
 
-  const userData: any = await getUserData();
+  const sessionData: any = await getUserData();
+  const { userData } = sessionData;
 
   return (
     <AppContextProvider>

@@ -26,17 +26,17 @@ export default function CreateProject({
   setCreatePopupVisibility,
   fetchOrganizations,
   formRef,
-  data,
+  userData,
   projectData,
   users,
   organizationData,
-  roleType,
+  myRoles,
   edit
 }: ProjectCreateFields) {
   const [filteredData, setFilteredData] = useState<User[]>(users);
   const [userList, setUsers] = useState<User[]>([]);
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
-  const [organizationId, setOrganizationId] = useState(data?.orgUser?.id);
+  const [organizationId, setOrganizationId] = useState(userData?.orgUser?.id);
   const [showIcon, setShowIcon] = useState('arrow-both');
   const dataGridRef = useRef<DataGridRef>(null);
 
@@ -120,8 +120,8 @@ export default function CreateProject({
     if (formRef.current!.instance().validate().isValid) {
       const sharedUsers = filteredData.filter(val => val.permission !== 'View');
       let response;
-      if (edit) response = await editProject({ ...values, sharedUsers, organizationId, userId: data.id })
-      else response = await createProjectApi({ ...values, sharedUsers, organizationId, userId: data.id });
+      if (edit) response = await editProject({ ...values, sharedUsers, organizationId, userId: userData.id })
+      else response = await createProjectApi({ ...values, sharedUsers, organizationId, userId: userData.id });
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();
@@ -137,7 +137,7 @@ export default function CreateProject({
   const fetchUserList = (e: any) => {
     const { value } = e;
     let filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
-    filteredUsers = filteredUsers.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== data.id);
+    filteredUsers = filteredUsers.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== userData.id);
     setUsers(filteredUsers);
     setOrganizationId(value);
     filterUsers(filteredUsers);
@@ -172,7 +172,7 @@ export default function CreateProject({
       dataField="organization"
       editorType="dxSelectBox"
       editorOptions={{
-        items: organizationData.filter((organization: OrganizationDataFields) => organization.name !== 'EMD DD'),
+        items: organizationData.filter((organization: OrganizationDataFields) => organization.type !== 'Internal'),
         displayExpr: "name",
         placeholder: "Organization name",
         valueExpr: "id",
@@ -182,39 +182,41 @@ export default function CreateProject({
     >
       <Label text="Select an Organisation" />
     </SimpleItem>
-  ), [organizationData, roleType]);
+  ), [organizationData, myRoles]);
+
+  const cancelSave = () => {
+    formRef?.current!.instance().reset();
+    setCreatePopupVisibility(false);
+  }
 
   return (
     <Form ref={formRef} showValidationSummary={true} formData={projectData}>
-      {roleType === 'admin' && !edit ? OrganizationSelectBox :
+      {myRoles?.includes('admin') && !edit ? OrganizationSelectBox :
         <SimpleItem
           dataField="organization"
-          editorOptions={{ placeholder: "Organization name", disabled: true, value: data?.orgUser?.name }}
-          cssClass='disabled-field'
+          editorOptions={{ placeholder: "Organization name", disabled: true, value: userData?.orgUser?.name }}
         >
-          <Label text="Organization Name" />
+          <Label text="Organization Name*" />
         </SimpleItem>}
       <SimpleItem
         dataField="owner"
-        editorOptions={{ placeholder: "Project Owner", disabled: true, value: `${data.owner?.firstName} ${data.owner?.lastName}` }}
-        cssClass='disabled-field'
+        editorOptions={{ placeholder: "Project Owner", disabled: true, value: `${userData.owner?.firstName} ${userData.owner?.lastName}` }}
       >
-        <Label text="Project Owner" />
+        <Label text="Project Owner*" />
       </SimpleItem>
       <SimpleItem
         editorType="dxSelectBox"
         dataField="type"
         editorOptions={projectTypeEditorOptions}
-        cssClass={edit ? 'disabled-field' : ''}
       >
-        <Label text="Project Type" />
+        <Label text="Project Type*" />
         <RequiredRule message="Project type is required" />
       </SimpleItem>
       <SimpleItem
         dataField="name"
         editorOptions={{ placeholder: "New Project" }}
       >
-        <Label text="Project name" />
+        <Label text="Project Name*" />
         <RequiredRule message="Project name is required" />
       </SimpleItem>
       <SimpleItem
@@ -306,7 +308,7 @@ export default function CreateProject({
           />
         </ButtonItem>
         <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
-          <ButtonOptions text="Discard" onClick={() => setCreatePopupVisibility(false)} />
+          <ButtonOptions text="Discard" onClick={cancelSave} />
         </ButtonItem>
       </GroupItem>
     </Form>

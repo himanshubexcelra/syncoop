@@ -53,7 +53,6 @@ export const ButtonsSelect = ({
   }, [setHiddenButtons]);
 
   const renderSmile = useCallback((smileValue: any) => {
-    console.log(smileValue);
     KetcherFunctions.renderFromCtab(smileValue);
   }, [setHiddenButtons]);
 

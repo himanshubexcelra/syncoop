@@ -29,7 +29,7 @@ const resetDialogProperties = {
     width: 480,
     height: 260,
 }
-export default function UsersTable({ orgUser, roles, roleType, type, setInternalCount, setExternalCount, userId }: UserTableProps) {
+export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setInternalCount, setExternalCount, userId, actionsEnabled }: UserTableProps) {
     const [editPopup, setEditPopup] = useState(false);
     const [internalUsers, setInternalUsers] = useState<User[]>([]);
     const [externalUsers, setExternalUsers] = useState<User[]>([]);
@@ -65,7 +65,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
         setLoader(true);
         try {
 
-            if (roleType === "admin") {
+            if (myRoles.includes("admin")) {
                 const [internal, external] = await Promise.all([
                     getUsers(['orgUser', 'user_role'], "Internal", userId),
                     getUsers(['orgUser', 'user_role'], "External", userId)
@@ -103,7 +103,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
     }, []);
     useEffect(() => {
         fetchAndFilterData();
-    }, [roleType, type, orgUser]);
+    }, [myRoles, type, orgUser]);
 
     return (
         <>
@@ -167,7 +167,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                             })}</div>;
                         }}
                     />
-                    <Column
+                    {(actionsEnabled.includes('edit_user') || myRoles.includes('admin')) && <Column
                         width={80}
                         cellRender={({ data }: any) => (
                             <div className="flex gap-2 cursor-pointer">
@@ -187,13 +187,14 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                             </div>
                         )}
                         caption="Actions"
-                    />
+                    />}
                     <GridToolbar>
                         <Item location="after">
                             <Btn
                                 text="Add New User"
                                 icon="plus"
                                 className={`${styles.button_primary_toolbar} mr-[20px]`}
+                                visible={actionsEnabled.includes('create_user') || myRoles.includes('admin')}
                                 render={(buttonData: any) => (
                                     <>
                                         <Image
@@ -219,8 +220,8 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                                         password={password}
                                         setPassword={setPassword}
                                         organizationData={[orgUser]}
-                                        roles={roles}
-                                        roleType={roleType}
+                                        roles={filteredRoles}
+                                        myRoles={myRoles}
                                         type={type}
                                         fetchAndFilterData={fetchAndFilterData}
                                     />
@@ -247,7 +248,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                                         formRef={formRefEdit}
                                         setCreatePopupVisibility={setEditPopup}
                                         roles={[]}
-                                        roleType={roleType}
+                                        myRoles={myRoles}
                                         type={type}
                                         fetchData={fetchAndFilterData}
                                         isMyProfile={false}

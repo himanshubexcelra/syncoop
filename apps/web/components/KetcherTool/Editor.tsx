@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useCallback, useState } from 'react'
 import { ButtonsConfig, Editor } from 'ketcher-react'
 import { Ketcher, RemoteStructServiceProvider } from 'ketcher-core'
-// import {StandaloneStructServiceProvider}  from 'ketcher-standalone'
+/* import { StandaloneStructServiceProvider } from 'ketcher-standalone' */
 import 'ketcher-react/dist/index.css'
 
 import { Panel } from '../../components/KetcherTool/Panel'
@@ -12,11 +12,9 @@ import { initiallyHidden } from '../../components/KetcherTool/constants/buttons'
 import { KetcherAPI } from '../../utils/ketcherFunctions'
 
 const GridWrapper = styled('div')`
-    height: 80vh;
+    height: 85vh;
     width: 90vw;
-    max-height: 100vh;
-    max-width: 100vw;
-    overflow: hidden;
+    overflow: visible;
     display: grid;
     grid-template-columns: 1fr 270px 320px;
     grid-template-rows: 1fr;
@@ -29,7 +27,7 @@ const GridWrapper = styled('div')`
 
 const KetcherBox = styled('div')`
     grid-area: Ketcher;
-    height: 100vh;
+    
   `
 
 const OutputBox = styled('div')`

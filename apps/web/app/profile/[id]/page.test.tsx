@@ -24,10 +24,13 @@ jest.mock("@/components/layout", () => ({
 }));
 
 describe("Profile Page (with Params)", () => {
-    const mockUserData = {
-        id: 1,
-        orgUser: { name: "Admin Name" },
-        user_role: [{ role: { type: "admin" } }],
+    const mockSessionData = {
+        userData: {
+            id: 1,
+            orgUser: { name: "Admin Name" },
+            user_role: [{ role: { type: "admin" } }],
+            myRoles: ['admin']
+        }
     };
     const breadcrumbMock = [
         {
@@ -38,7 +41,7 @@ describe("Profile Page (with Params)", () => {
             href: '/dashboard'
         },
         {
-            label: `Admin:  ${mockUserData.orgUser.name}`,
+            label: `Admin: ${mockSessionData.userData.orgUser.name}`,
             svgPath: "/icons/admin-inactive-icon.svg",
             svgWidth: 16,
             svgHeight: 16,
@@ -59,7 +62,7 @@ describe("Profile Page (with Params)", () => {
     });
 
     it("should render breadcrumb, layout, and profile info when user data is available", async () => {
-        (getUserData as jest.Mock).mockResolvedValue(mockUserData);
+        (getUserData as jest.Mock).mockResolvedValue(mockSessionData);
 
         const { container } = render(await Profile({ params }));
 
@@ -70,14 +73,14 @@ describe("Profile Page (with Params)", () => {
     });
 
     it("should pass correct props to ProfileInfo component", async () => {
-        (getUserData as jest.Mock).mockResolvedValue(mockUserData);
+        (getUserData as jest.Mock).mockResolvedValue(mockSessionData);
 
         render(await Profile({ params }));
 
         expect(ProfileInfo).toHaveBeenCalledWith(
             {
                 id: Number(params.id),
-                roleType: mockUserData.user_role[0].role.type,
+                myRoles: ['admin'],
                 isMyProfile: false,
             },
             {}
@@ -85,7 +88,7 @@ describe("Profile Page (with Params)", () => {
     });
 
     it("should pass correct breadcrumbs configuration", async () => {
-        (getUserData as jest.Mock).mockResolvedValue(mockUserData);
+        (getUserData as jest.Mock).mockResolvedValue(mockSessionData);
 
         render(await Profile({ params }));
 

@@ -7,14 +7,14 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const condition = searchParams.get('condition');
-        const priority = searchParams.get('priority');
+        const roleType = searchParams.get('type');
         let query = {};
-        if (priority && condition === 'gt') {
+        if (roleType && condition === 'not') {
             query = {
                 ...query,
                 where: {
-                    priority: {
-                        gt: Number(priority)
+                    type: {
+                        not: roleType
                     }
                 }
             }

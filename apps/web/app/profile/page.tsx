@@ -7,23 +7,37 @@ import ProfileInfo from "@/components/Profile/ProfileInfo";
 
 
 export default async function Profile() {
-    const userData = await getUserData();
-    if (!userData) {
+    const sessionData = await getUserData();
+
+    if (!sessionData) {
         redirect('/');
     }
 
-    const { id } = userData;
-    const { type: roleType, } = userData?.user_role[0]?.role;
+    const { userData, actionsEnabled } = sessionData;
+    const { id, myRoles } = userData;
     const breadcrumbs: BreadCrumbsObj[] = [
-        { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/dashboard' },
-        { label: 'Profile', svgPath: '/icons/profile-icon-sm-active.svg', svgWidth: 16, svgHeight: 16, href: '/profile', isActive: true }
+        {
+            label: 'Home',
+            svgPath: '/icons/home-icon.svg',
+            svgWidth: 16,
+            svgHeight: 16,
+            href: '/dashboard'
+        },
+        {
+            label: 'Profile',
+            svgPath: '/icons/profile-icon-sm-active.svg',
+            svgWidth: 16,
+            svgHeight: 16,
+            href: '/profile',
+            isActive: true
+        }
     ]
 
 
     return (
         <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
-            <ProfileInfo id={id} roleType={roleType} isMyProfile={true} />
+            <ProfileInfo id={id} myRoles={myRoles} isMyProfile={true} actionsEnabled={actionsEnabled} />
         </Layout>
     );
 }

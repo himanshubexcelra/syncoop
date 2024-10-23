@@ -34,7 +34,7 @@ export default function RenderCreateUser({
     setPassword,
     roles,
     organizationData,
-    roleType,
+    myRoles,
     type,
     fetchAndFilterData
 }: any) {
@@ -173,10 +173,10 @@ export default function RenderCreateUser({
                 items: organization,
                 displayExpr: "name",
                 valueExpr: "id",
-                value: roleType === 'admin'
+                value: myRoles.includes('admin')
                     ? (type === 'External' ? "" : organization && organization[0].id)
                     : organization[0].id,
-                disabled: roleType !== 'admin' || type === "Internal",
+                disabled: !myRoles.includes('admin') || type === "Internal",
                 onOpened: async () => {
                     if (type) {
                         const organizationDropdown = await getOrganization({ type });
@@ -188,7 +188,7 @@ export default function RenderCreateUser({
             <Label text="Select an Organisation" />
             <RequiredRule message={Messages.requiredMessage('Organisation')} />
         </SimpleItem>
-    ), [organization, roleType, type]);
+    ), [organization, myRoles, type]);
     return (
         <CreateForm ref={formRef}>
             {OrganizationSelectBox}

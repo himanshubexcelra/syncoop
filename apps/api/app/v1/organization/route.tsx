@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const type = searchParams.get("type");
     const joins = searchParams.get('with');
     const count = searchParams.get('withCount');
+    const roleIds = searchParams.get('roleIds');
     const query: any = {};
 
     if (joins && joins.length) {
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
           }
         }
       }
-      else if (joins.includes('user_role')) {
+      if (joins.includes('user_role')) {
         query.include = {
           ...query.include,
           user: true,
@@ -56,6 +57,28 @@ export async function GET(request: Request) {
               },
             }
           },
+        }
+      }
+      if (joins.includes('org_module') && joins.includes('module_action_role_permission') && roleIds) {
+        query.include = {
+          ...query.include,
+          org_module: {
+            include: {
+              module: {
+                include: {
+                  module_action: {
+                    where: {
+                      module_action_role_permission: {
+                        some: {
+                          roleId: { in: JSON.parse(roleIds) }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
       if (joins.includes('projects')) {
@@ -145,7 +168,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 
   const req = await request.json();
-  const { name, firstName, lastName, email, roleId } = req;
+  const { name, firstName, lastName, email, roleId, createdBy } = req;
 
   // Check if an organization with the same name already exists (case insensitive)
   try {
@@ -181,6 +204,8 @@ export async function POST(request: Request) {
         },
       });
 
+
+
       // Step 2: Create the organization and link the admin user
       const organization = await prisma.organization.create({
         data: {
@@ -188,6 +213,20 @@ export async function POST(request: Request) {
           status: 'Enabled',
           type: "External",
           orgAdminId: adminUser.id, // Link the user as the org admin
+          createdBy,
+          org_module: {
+            create: [
+              {
+                moduleId: 1
+              },
+              {
+                moduleId: 2
+              },
+              {
+                moduleId: 3
+              }
+            ]
+          }
         },
       });
 
@@ -217,7 +256,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, name, user: { id: orgAdminId }, status, metadata } = req;
+    const { id, name, orgAdminId: oldAdmin, user: { id: orgAdminId }, status, metadata, orgAdminRole } = req;
 
     // Check if user is associated with another organization
     const existingUser = await prisma.organization.findFirst({
@@ -250,17 +289,35 @@ export async function PUT(request: Request) {
           include: {
             user_role: {
               include: {
-                role: true, // Include role details if needed
+                role: true,
               },
             },
           },
         },
       },
     });
+
+    if (orgAdminId !== oldAdmin) {
+      // Assign admin role to the new user
+      await prisma.user_role.create({
+        data: {
+          user: {
+            connect: { id: orgAdminId },
+          },
+          role: {
+            connect: { id: orgAdminRole }, // Connect the admin role
+          },
+        },
+      });
+    }
+
     return new Response(JSON.stringify(updatedOrganization), {
       headers: { "Content-Type": "application/json" },
       status: SUCCESS,
     });
+
+
+
   } catch (error: any) {
     console.error(error);
     return new Response(JSON.stringify({ error: error.message }), {

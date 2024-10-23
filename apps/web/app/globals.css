@@ -105,8 +105,9 @@ body {
     text-transform: unset;
   }
 
-  .dx-button-mode-contained.dx-state-disabled {
+  .btn-primary.dx-button.dx-button-mode-contained.dx-state-disabled {
     border: 1px solid var(--themeSecondaryGreyColor);
+    color: var(--black);
   }
 }
 

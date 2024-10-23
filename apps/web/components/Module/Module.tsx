@@ -4,7 +4,7 @@ import { useState } from 'react';
 import styles from './Module.module.css';
 import { ModuleTableProps } from '@/lib/definition';
 
-export default function Module({ features, roleType }: ModuleTableProps) {
+export default function Module({ features, myRoles }: ModuleTableProps) {
 
     const [featureStates, setFeatureStates] = useState(features);
 
@@ -24,8 +24,8 @@ export default function Module({ features, roleType }: ModuleTableProps) {
                             type="checkbox"
                             className={`form-checkbox w-4 h-4 ${styles.checboxEdge}`}
                             checked={feature.checked}
-                            onChange={roleType === 'admin' ? () => toggleCheckbox(index) : undefined}
-                            disabled={roleType !== 'admin'}
+                            onChange={myRoles?.includes('admin') ? () => toggleCheckbox(index) : undefined}
+                            disabled={!myRoles?.includes('admin')}
                         />
                     </div>
                     <span className={`p-4 col-span-11 ${styles.text}`}>{feature.name}</span>

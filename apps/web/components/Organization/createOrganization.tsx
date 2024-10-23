@@ -9,7 +9,7 @@ import {
   Label,
 } from "devextreme-react/form";
 import { delay } from "@/utils/helpers";
-import { createOrganizationApi } from "./service";
+import { createOrganization } from "./service";
 import "./table.css";
 import { OrganizationCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
@@ -18,12 +18,13 @@ export default function RenderCreateOrganization({
   setCreatePopupVisibility,
   formRef,
   fetchOrganizations,
-  role,
+  roleId,
+  createdBy
 }: OrganizationCreateFields) {
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
-      const response = await createOrganizationApi(values, role);
+      const response = await createOrganization({ ...values, createdBy }, roleId);
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();

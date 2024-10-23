@@ -10,12 +10,11 @@ import { formatDetailedDate, popupPositionValue } from "@/utils/helpers";
 import { ProjectAccordionType } from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { Messages } from "@/utils/message";
-import { MOLECULESTATUS } from '@/utils/constants';
 import TextWithToggle from '@/ui/TextWithToggle';
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
-export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, roleType, dataCreate }: ProjectAccordionType) {
+export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, myRoles, userData }: ProjectAccordionType) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
@@ -26,11 +25,11 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
     const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
 
     useEffect(() => {
-        const sharedUser = data.sharedUsers.find(u => u.userId === dataCreate.id);
-        const owner = data.ownerId === dataCreate.id;
-        const sysAdmin = roleType === "admin";
+        const sharedUser = data.sharedUsers.find(u => u.userId === userData.id);
+        const owner = data.ownerId === userData.id;
+        const admin = !!myRoles?.includes("admin") || !!myRoles?.includes("org_admin");
 
-        setEditStatus(!!sharedUser || owner || sysAdmin)
+        setEditStatus(!!sharedUser || owner || admin)
     }, [data])
 
     useEffect(() => {
@@ -69,7 +68,7 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                         Open
                     </Button>
                     <Button
-                        className='btn-secondary accordion-button'
+                        className='btn-primary accordion-button'
                         disabled={!editEnabled}
                         onClick={() => setCreatePopupVisibility(true)}>
                         Edit
@@ -112,14 +111,7 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                             width={15}
                             height={15}
                         />
-                        22 <span>Molecules</span>
-                    </div>
-                    <div>
-                        <span className="badge info">2 New</span>
-                        <span className="badge info">3 Ready</span>
-                        <span className="badge info">12 Progressing</span>
-                        <span className="badge success">3 Done</span>
-                        <span className="badge error">1 Failed</span>
+                        0 <span>Molecules</span>
                     </div>
                 </div>
             </div>
@@ -230,7 +222,7 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                                     URL
                                 </p>
                             </Popup>
-                            <div className='library-name'>
+                            <div className='library-name lib-description'>
                                 {item.description ?
                                     <TextWithToggle
                                         text={item.description}
@@ -243,11 +235,6 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                                     /> :
                                     <>Description: </>
                                 }
-                            </div>
-                            <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {MOLECULESTATUS?.map(val => (
-                                    <span key={val.name} className={`badge ${val.type}`}>{val.count} {val.name}</span>
-                                ))}
                             </div>
                         </div>
                     ))}
@@ -267,11 +254,11 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                             formRef={formRef}
                             setCreatePopupVisibility={setCreatePopupVisibility}
                             fetchOrganizations={fetchOrganizations}
-                            data={dataCreate}
+                            userData={userData}
                             projectData={data}
                             users={users}
                             organizationData={organizationData}
-                            roleType={roleType}
+                            myRoles={myRoles}
                             edit={true}
                         />
                     )}

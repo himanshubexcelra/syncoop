@@ -72,3 +72,29 @@ export async function editUser(formData: any) {
         return error;
     }
 }
+
+export async function getUserModulePermissions(userData: any) {
+    const { organizationId, roles } = userData;
+    try {
+        const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+        url.searchParams.append('with', JSON.stringify(['org_module', 'module_action_role_permission']));
+        url.searchParams.append('id', organizationId);
+        // roles.push({id: 4, type: 'sd'});
+        url.searchParams.append('roleIds', JSON.stringify(roles.map((role: any) => role.id)));
+        const response: any = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (response.ok) {
+            return { status: response.status, data };
+        } else {
+            return { status: response.status, error: data.error || 'An error occurred' };
+        }
+    } catch (error: any) {
+        console.error('error', error)
+        return error;
+    }
+}

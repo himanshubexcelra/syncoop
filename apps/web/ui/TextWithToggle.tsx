@@ -24,7 +24,7 @@ export default function TextWithToggle({ id, text, isExpanded, toggleExpanded, h
                 ref={textRef}
                 className={customClass}
             >
-                {heading} :
+                {heading ? `${heading}` : ''}
                 <span>
                     {text}
                 </span>

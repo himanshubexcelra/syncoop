@@ -1,6 +1,6 @@
-'use cleint'
+'use client'
 import { useEffect } from "react";
-import { defineCustomElements } from "@/packages/chemuix/dist/esm/loader";
+// import { defineCustomElements } from "@/packages/chemuix/dist/esm/loader";
 import { LibraryDataNode } from "@/lib/definition";
 
 const nodes1: LibraryDataNode[] = [
@@ -60,10 +60,11 @@ const nodes1: LibraryDataNode[] = [
     },
 ];
 const nodes: { nodes: LibraryDataNode[] } = { nodes: [] }
+
 export default function PathwayImage() {
 
     useEffect(() => {
-        defineCustomElements(window);
+        // defineCustomElements(window);
     }, []);
 
     useEffect(() => {

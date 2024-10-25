@@ -85,8 +85,34 @@ export async function editLibrary(formData: FormData) {
             return { status: response.status, error };
         }
     } catch (error: any) {
-        console.error('error', error)
         return error;
     }
 }
+
+export async function addMoleculeToCart(moleculeData:[]) {
+    try {
+        const response: any = await fetch(
+            `${process.env.API_HOST_URL}/v1/molecule`,
+            {
+                mode: "no-cors",
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(moleculeData),
+            }
+        );
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else if (response.status === 500) {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
+
 

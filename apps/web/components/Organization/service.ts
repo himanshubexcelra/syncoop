@@ -65,7 +65,7 @@ export async function editOrganization(formData: any) {
   }
 }
 
-export async function createOrganizationApi(formData: FormData, role: number) {
+export async function createOrganization(formData: FormData, roleId: number) {
   try {
     const response: any = await fetch(
       `${process.env.API_HOST_URL}/v1/organization`,
@@ -75,7 +75,7 @@ export async function createOrganizationApi(formData: FormData, role: number) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...formData, roleId: role }),
+        body: JSON.stringify({ ...formData, roleId: roleId }),
       }
     );
 

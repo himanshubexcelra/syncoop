@@ -58,7 +58,6 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             setLoadIndicatorVisible(false);
             setButtonText('Login');
         }
-        return false;
     }
     const hidePopup = () => {
         setVisible(false);

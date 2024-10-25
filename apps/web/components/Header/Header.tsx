@@ -7,17 +7,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useCart } from '../../app/Provider/CartProvider';
 import CartDetails from '../Libraries/CartDetails';
 import { Popup as CartPopup, } from "devextreme-react/popup";
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
 
 type HeaderProps = {
     userData: UserData
 }
 
 export default function Header({ userData }: HeaderProps) {
-    const { cart } = useCart();
-    const cartLength = (cart && cart.length > 0) ? cart.length : (typeof localStorage !== 'undefined' && localStorage.getItem('cart')) ? JSON.parse(localStorage.getItem('cart') ?? '[]').length : 0;
+    const context: any = useContext(AppContext);
+    console.log(context,'CART');
+    
+    const cartLength = context.state.cartDetail?context.state.cartDetail.length:0
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
@@ -142,6 +145,7 @@ export default function Header({ userData }: HeaderProps) {
                     <PopupBox
                         isOpen={dropdownOpen}
                         onItemSelected={(item: DropDownItem) => onItemSelected(item)}
+                        onClose={toggleDropdown}
                         items={dropDownItems} />
                 </div>
             </div>

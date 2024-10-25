@@ -16,23 +16,28 @@ import { LoadIndicator } from 'devextreme-react/load-indicator';
 import "./table.css";
 import './form.css';
 import styles from "./table.module.css";
-import { OrganizationDataFields, UserData, UserRoleType } from "@/lib/definition";
+import { OrganizationDataFields, UserData, UserRole } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
 import { getOrganization } from "@/components/Organization/service";
 import { formatDate } from "@/utils/helpers";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
+import { getFilteredRoles } from "../Role/service";
 
-export default function ListOrganization({ userData }: { userData: UserData }) {
+type ListOrganizationProps = {
+  userData: UserData, actionsEnabled: string[]
+}
+
+export default function ListOrganization({ userData, actionsEnabled }: ListOrganizationProps) {
   const [editPopup, showEditPopup] = useState(false);
   const [editField, setEditField] = useState({ name: '', email: '' });
   const [createPopupVisible, setCreatePopupVisibility] = useState(false);
   const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
   const [loader, setLoader] = useState(true);
+  const [orgAdminRole, setRole] = useState(-1);
 
-  const { role } = userData.user_role[0] as UserRoleType;
-  const { type: roleType, id: roleId } = role;
+  const { myRoles } = userData;
   const context: any = useContext(AppContext);
   const appContext = context.state;
 
@@ -46,6 +51,15 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
   useEffect(() => {
     fetchOrganizations();
   }, [appContext?.userCount]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const roles = await getFilteredRoles();
+      setRole(roles.filter((role: UserRole) => role.type === 'org_admin')[0].id)
+    };
+
+    fetchRoles();
+  }, []);
 
   const grid = useRef<DataGridRef>(null);
   const formRef = useRef<any>(null);
@@ -138,18 +152,19 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
               <span>{formatDate(data.updatedAt)}</span>
             )}
           />
-          {roleType !== 'library_manager' && (
+          {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
             <Column
               width={80}
               cellRender={({ data }: any) => (
                 <Btn
+                  visible={actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')}
                   render={() => (
                     <>
                       <Image
                         src="/icons/edit.svg"
                         width={24}
                         height={24}
-                        alt="Create"
+                        alt="Edit Organization"
                       />
                     </>
                   )}
@@ -161,7 +176,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
           )}
           <GridToolbar>
             <Item location="after">
-              {roleType === 'admin' && (
+              {myRoles?.includes('admin') && (
                 <Btn
                   text="Create Organization"
                   icon="plus"
@@ -172,7 +187,7 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
                         src="/icons/plus.svg"
                         width={24}
                         height={24}
-                        alt="Create"
+                        alt="Create Organization"
                       />
                       <span>{buttonData.text}</span>
                     </>
@@ -188,7 +203,8 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
                     formRef={formRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     fetchOrganizations={fetchOrganizations}
-                    role={roleId}
+                    roleId={orgAdminRole}
+                    createdBy={userData.id}
                   />
                 )}
                 width={477}
@@ -214,8 +230,9 @@ export default function ListOrganization({ userData }: { userData: UserData }) {
                     organizationData={editField}
                     showEditPopup={showEditPopup}
                     fetchOrganizations={fetchOrganizations}
-                    roleType={roleType}
+                    myRoles={myRoles}
                     loggedInUser={userData.id}
+                    orgAdminRole={orgAdminRole}
                   />
                 )}
                 width={477}

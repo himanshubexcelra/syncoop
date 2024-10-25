@@ -18,7 +18,6 @@ import RenderCreateUser from "./createUser";
 import { UserTableProps } from "@/lib/definition";
 import { getUsers } from "./service";
 import { User } from "@/lib/definition";
-import { filterUsersByOrgId } from "@/utils/helpers";
 import { LoadIndicator } from "devextreme-react";
 import DialogPopUp from "@/ui/DialogPopUp";
 import ResetPassword from "../Profile/ResetPassword";
@@ -30,8 +29,10 @@ const resetDialogProperties = {
     width: 480,
     height: 260,
 }
-export default function UsersTable({ orgUser, roles, roleType, type, setInternalCount, setExternalCount }: UserTableProps) {
+export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setInternalCount, setExternalCount, userId, actionsEnabled }: UserTableProps) {
     const [editPopup, setEditPopup] = useState(false);
+    const [internalUsers, setInternalUsers] = useState<User[]>([]);
+    const [externalUsers, setExternalUsers] = useState<User[]>([]);
     const [editRow, setEditRow] = useState<User>();
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -63,13 +64,17 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
     const fetchAndFilterData = async () => {
         setLoader(true);
         try {
-            const usersList = await getUsers(['orgUser', 'user_role']);
-            const { internalUsers, externalUsers } = filterUsersByOrgId(usersList, orgUser?.id);
 
-            if (roleType === "admin") {
-                type === "Internal" ? setTableData(internalUsers) : setTableData(externalUsers);
-                setInternalCount(internalUsers.length);
-                setExternalCount(externalUsers.length);
+            if (myRoles.includes("admin")) {
+                const [internal, external] = await Promise.all([
+                    getUsers(['orgUser', 'user_role'], "Internal", userId),
+                    getUsers(['orgUser', 'user_role'], "External", userId)
+                ])
+                setInternalUsers(internal)
+                setExternalUsers(external)
+                setInternalCount(internal.length);
+                setExternalCount(external.length);
+                type === "Internal" ? setTableData(internal) : setTableData(external);
                 context?.addToState({
                     ...appContext, userCount: {
                         externalUsers: externalUsers.length,
@@ -78,7 +83,8 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                 })
             }
             else {
-                setTableData(internalUsers);
+                const users = await getUsers(['orgUser', 'user_role'], "", userId, orgUser?.id);
+                setTableData(users);
             }
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -97,7 +103,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
     }, []);
     useEffect(() => {
         fetchAndFilterData();
-    }, [roleType, type, orgUser]);
+    }, [myRoles, type, orgUser]);
 
     return (
         <>
@@ -135,6 +141,8 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                         caption="First Name"
                         width={130}
                         alignment="left"
+                        defaultSortIndex={0}
+                        defaultSortOrder="asc"
                     />
                     <Column
                         dataField="lastName"
@@ -159,12 +167,12 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                             })}</div>;
                         }}
                     />
-                    <Column
+                    {(actionsEnabled.includes('edit_user') || myRoles.includes('admin')) && <Column
                         width={80}
                         cellRender={({ data }: any) => (
                             <div className="flex gap-2 cursor-pointer">
                                 <Image
-                                    src="/icons/pen-edit-icon.svg"
+                                    src="/icons/edit.svg"
                                     width={24}
                                     height={24}
                                     onClick={() => showEditPopup(data)}
@@ -179,13 +187,14 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                             </div>
                         )}
                         caption="Actions"
-                    />
+                    />}
                     <GridToolbar>
                         <Item location="after">
                             <Btn
                                 text="Add New User"
                                 icon="plus"
                                 className={`${styles.button_primary_toolbar} mr-[20px]`}
+                                visible={actionsEnabled.includes('create_user') || myRoles.includes('admin')}
                                 render={(buttonData: any) => (
                                     <>
                                         <Image
@@ -211,8 +220,8 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                                         password={password}
                                         setPassword={setPassword}
                                         organizationData={[orgUser]}
-                                        roles={roles}
-                                        roleType={roleType}
+                                        roles={filteredRoles}
+                                        myRoles={myRoles}
                                         type={type}
                                         fetchAndFilterData={fetchAndFilterData}
                                     />
@@ -239,7 +248,7 @@ export default function UsersTable({ orgUser, roles, roleType, type, setInternal
                                         formRef={formRefEdit}
                                         setCreatePopupVisibility={setEditPopup}
                                         roles={[]}
-                                        roleType={roleType}
+                                        myRoles={myRoles}
                                         type={type}
                                         fetchData={fetchAndFilterData}
                                         isMyProfile={false}

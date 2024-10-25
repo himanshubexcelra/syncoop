@@ -83,6 +83,7 @@ export interface OrganizationDataFields {
   metadata?: metaDataType;
   projects?: ProjectDataFields[];
   orgAdminId?: number;
+  type?: string;
 }
 
 export interface OrganizationTableProps {
@@ -102,8 +103,9 @@ export interface OrganizationCreateFields {
   organizationData?: OrganizationDataFields[],
   roleType?: string,
   edit?: boolean,
-  role: number,
+  roleId: number,
   data?: UserData,
+  createdBy: number
 }
 
 export interface ProjectCreateFields {
@@ -113,10 +115,10 @@ export interface ProjectCreateFields {
   projectData?: ProjectDataFields,
   users: User[],
   organizationData: OrganizationDataFields[],
-  roleType?: string,
+  myRoles?: string[],
   edit?: boolean,
   /* role: number, */
-  data: UserData,
+  userData: UserData,
 }
 
 export type FetchUserType = (value?: boolean) => void;
@@ -126,9 +128,10 @@ export interface OrganizationEditField {
   formRef: any,
   fetchOrganizations: fetchDataType,
   projectData?: ProjectDataFields,
-  roleType?: string,
+  myRoles?: string[],
   edit?: boolean,
   loggedInUser: number,
+  orgAdminRole?: number,
 }
 
 export interface Molecule {
@@ -216,6 +219,7 @@ export interface UserData {
   id: number;
   owner?: OwnerType;
   status?: string;
+  myRoles?: string[]
 }
 export interface projectType {
   id: number,
@@ -239,7 +243,7 @@ export interface ModuleFeature {
 
 export interface ModuleTableProps {
   features: ModuleFeature[];
-  roleType?: string;
+  myRoles?: string[];
 }
 
 export interface Status {
@@ -258,17 +262,19 @@ export interface CountCard {
 }
 
 export interface StatusComponentProps {
-  countCardsDetails: CountCard[];
-  stats: Status[];
+  myRoles: string[];
+  orgUser: OrgUser;
 }
 
 export type UserTableProps = {
   orgUser?: OrgUser;
-  roles: UserRole[];
-  roleType: string;
+  filteredRoles: UserRole[];
+  myRoles: string[];
   type?: string;
   setExternalCount?: any,
   setInternalCount?: any,
+  userId: number,
+  actionsEnabled: string[]
 }
 
 export interface TabDetail {
@@ -304,7 +310,7 @@ export interface ProjectListProps {
   users: User[],
   fetchOrganizations: FetchUserType,
   organizationData: OrganizationDataFields[],
-  dataCreate: UserData
+  userData: UserData
 }
 
 export type ToggleExpandType = (value: number, text: string) => void;
@@ -344,13 +350,41 @@ export interface ProductModel {
   projectName:string;
 }
 
-// export interface CartModel {
-//   product: ProductModel;
-// }
+export interface ProductContextModel {
+  cartDetail: ProductModel[];
+}
 
 export interface CartContextModel {
   cart: ProductModel[];
   addToCart: (product: ProductModel) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
+  userData: UserData,
+  myRoles?: string[],
+}
+
+export interface DashboardPageType {
+  userData: UserData,
+  breadcrumbs: BreadCrumbsObj[],
+  tabsStatus: TabDetail[],
+  filteredRoles: UserRole[],
+  myRoles: string[],
+  orgUser: OrgUser,
+  heading: HeadingObj[],
+  actionsEnabled: string[],
+}
+
+export interface LibraryDataNode {
+  id: string;
+  type?: string;
+  smiles?: string;
+  parentId?: string;
+  score?: number | null;
+  name?: string;
+  condition?: string;
+  reactionCount?: number;
+  doi?: string;
+  isRegulated?: boolean;
+  isProtected?: boolean;
+  isInInventory?: boolean;
 }

@@ -1,37 +1,26 @@
 import styles from "./page.module.css";
-import Image from "next/image";
 import { BreadCrumbsObj, HeadingObj } from "@/lib/definition";
-import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import Layout from "@/components/layout";
-import UsersTable from "@/components/User/UsersTable";
-import { getLowPriorityRole } from "@/components/Role/service";
-import ListOrganization from "@/components/Organization/ListOrganization";
 import { getUserData } from "@/utils/auth";
-import Heading from "@/components/Heading/Heading";
-import Tabs from "@/ui/Tab/Tabs";
 import { redirect } from "next/navigation";
-import { dataSource, features, stats } from "@/utils/constants";
+import { dataSource, features, } from "@/utils/constants";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
-import TabUsersTable from "@/components/Organization/TabUsersTable";
 import { TabDetail } from "@/lib/definition";
-import { getProjectsCountById } from "@/components/Projects/projectService";
-import { getCountCardsDetails } from "@/utils/helpers";
-import { getLibraryCountById } from "@/components/Libraries/libraryService";
+import { getFilteredRoles } from "@/components/Role/service";
+import LandingPage from "@/components/Dashboard/LandingPage";
 
 export default async function Dashboard() {
 
-  const userData = await getUserData();
-  if (!userData) {
+  const sessionData = await getUserData();
+  if (!sessionData) {
     redirect('/');
   }
-  const { type: roleType, priority: currentUserPriority } = userData.user_role[0].role;
-  const { orgUser } = userData;
 
-  const projectCount = roleType === 'admin' ? await getProjectsCountById() : await getProjectsCountById(orgUser?.id)
-  const libraryCount = roleType === 'admin' ? await getLibraryCountById() : await getLibraryCountById(orgUser?.id)
-  const filteredRoles = await getLowPriorityRole(currentUserPriority);
+  const { userData, actionsEnabled } = sessionData;
+  const { myRoles, orgUser } = userData;
+  const filteredRoles = await getFilteredRoles();
 
   const breadcrumbs: BreadCrumbsObj[] = [
     {
@@ -42,7 +31,7 @@ export default async function Dashboard() {
       href: "/",
     },
     {
-      label: `Admin:  ${orgUser?.name}`,
+      label: `Admin: EMD DD`,
       svgPath: "/icons/admin-inactive-icon.svg",
       svgWidth: 16,
       svgHeight: 16,
@@ -50,21 +39,24 @@ export default async function Dashboard() {
     },
   ];
 
+  if (!myRoles.includes('admin')) {
+    breadcrumbs.push({
+      label: `${orgUser?.name}`,
+      svgPath: "/icons/organization.svg",
+      svgWidth: 16,
+      svgHeight: 16,
+      href: "/",
+    })
+  }
+
   const heading: HeadingObj[] = [
     {
-      svgPath: "/icons/admin-icon-lg.svg",
+      svgPath: myRoles.includes('admin') ? "/icons/admin-icon-lg.svg" : "/icons/organization.svg",
       label: `${orgUser?.name}`,
       svgWidth: 28,
       svgHeight: 28,
       href: "",
-      type: "Admin:"
-    },
-    {
-      svgPath: "/icons/box-arrow-icon-lg.svg",
-      label: "",
-      svgWidth: 25,
-      svgHeight: 22,
-      href: ""
+      type: myRoles.includes('admin') ? "Admin:" : "Customer Organization:"
     }
   ];
 
@@ -73,7 +65,7 @@ export default async function Dashboard() {
     {
       title: "Overview",
       Component: StatusComponent,
-      props: { stats, countCardsDetails: getCountCardsDetails(projectCount, libraryCount) }
+      props: { myRoles, orgUser }
     },
     {
       title: "Assays",
@@ -83,7 +75,7 @@ export default async function Dashboard() {
     {
       title: "Modules",
       Component: Module,
-      props: { features, roleType },
+      props: { features, myRoles },
     }
   ];
 
@@ -91,43 +83,16 @@ export default async function Dashboard() {
     <Layout>
       <div className={styles.page}>
         <main className={styles.main}>
-          <Breadcrumb breadcrumbs={breadcrumbs} />
-          <Heading {...{ heading }} />
-          <Tabs tabsDetails={tabsStatus} />
-          {roleType === 'admin' &&
-            <>
-              <TabUsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} />
-              <div>
-                <div className={styles.imageContainer}>
-                  <Image
-                    src="/icons/organization.svg"
-                    width={33}
-                    height={30}
-                    alt="organization"
-                  />
-                  <span>Customer Organizations</span>
-                </div>
-                <div className={styles.table}>
-                  <ListOrganization userData={userData} />
-                </div>
-              </div>
-            </>
-          }
-          {roleType === 'org_admin' && <div className='p-5'>
-            <div className={`${styles.imageContainer} pt-5 pb-2.5`}>
-              <Image
-                src="/icons/Users-icon-lg.svg"
-                width={40}
-                height={32}
-                alt="organization"
-              />
-              <span>Users</span>
-            </div>
-            <div className={styles.table}>
-              <UsersTable orgUser={orgUser} roles={filteredRoles} roleType={roleType} />
-            </div>
-          </div>
-          }
+          <LandingPage
+            userData={userData}
+            tabsStatus={tabsStatus}
+            heading={heading}
+            breadcrumbs={breadcrumbs}
+            filteredRoles={filteredRoles}
+            myRoles={myRoles}
+            orgUser={orgUser}
+            actionsEnabled={actionsEnabled}
+          />
         </main>
       </div>
     </Layout>

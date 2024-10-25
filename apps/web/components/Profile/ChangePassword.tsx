@@ -15,6 +15,7 @@ import { ButtonTypes } from "devextreme-react/cjs/button";
 import { Form, SimpleItem } from "devextreme-react/form";
 import { editUser } from "../User/service";
 import { DELAY } from "@/utils/constants";
+import './form.css'
 
 interface ChangePasswordProps {
     onClose: () => void;
@@ -96,6 +97,9 @@ export default function ChangePassword({ onClose, email }: ChangePasswordProps) 
     const handleGeneratePassword = () => {
         const generatedPassword = generatePassword();
         setNewPassword(generatedPassword);
+        navigator.clipboard.writeText(generatedPassword)
+            .then(() => toast.success(Messages.PASSWORD_COPY))
+            .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
 
     const oldPasswordRender = (data: any) => {
@@ -216,13 +220,13 @@ export default function ChangePassword({ onClose, email }: ChangePasswordProps) 
                     render={newPasswordRender}
                 />
                 <SimpleItem>
-                    <div className="flex justify-start gap-2 mt-5">
+                    <div className="flex justify-start gap-2 mt-5 ">
                         <Button
                             text="Update"
                             onClick={handleSubmit}
                             useSubmitBehavior={true}
                             hoverStateEnabled={false}
-                            className={styles.primaryButton}
+                            elementAttr={{ class: "btn_primary_user" }}
                         />
                         <Button
                             text="Cancel"

@@ -1,9 +1,9 @@
 "use server";
 
-export async function getLowPriorityRole(priority: number) {
+export async function getFilteredRoles() {
     const url = new URL(`${process.env.API_HOST_URL}/v1/roles`);
-    url.searchParams.append('priority', String(priority));
-    url.searchParams.append('condition', 'gt');
+    url.searchParams.append('type', 'admin');
+    url.searchParams.append('condition', 'not');
     const response = await fetch(url, {
         mode: "no-cors",
         method: "GET",

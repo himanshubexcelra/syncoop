@@ -1,9 +1,18 @@
 "use server";
 
-export async function getUsers(withRelation: string[] = []) {
+export async function getUsers(withRelation: string[] = [], orgType: string = '', loggedInUser?: number, orgId?: number) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/users`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
+    }
+    if (orgType) {
+        url.searchParams.append('orgType', orgType);
+    }
+    if (orgId) {
+        url.searchParams.append('orgId', String(orgId));
+    }
+    if (loggedInUser) {
+        url.searchParams.append('loggedInUser', String(loggedInUser))
     }
     const response = await fetch(url, {
         mode: "no-cors",
@@ -52,6 +61,32 @@ export async function editUser(formData: any) {
                 body: JSON.stringify(formData),
             }
         );
+        const data = await response.json();
+        if (response.ok) {
+            return { status: response.status, data };
+        } else {
+            return { status: response.status, error: data.error || 'An error occurred' };
+        }
+    } catch (error: any) {
+        console.error('error', error)
+        return error;
+    }
+}
+
+export async function getUserModulePermissions(userData: any) {
+    const { organizationId, roles } = userData;
+    try {
+        const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+        url.searchParams.append('with', JSON.stringify(['org_module', 'module_action_role_permission']));
+        url.searchParams.append('id', organizationId);
+        // roles.push({id: 4, type: 'sd'});
+        url.searchParams.append('roleIds', JSON.stringify(roles.map((role: any) => role.id)));
+        const response: any = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
         const data = await response.json();
         if (response.ok) {
             return { status: response.status, data };

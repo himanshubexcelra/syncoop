@@ -25,11 +25,18 @@ const functionalAssay = {
   functionalAssay4: '',
 };
 
-export default function EditOrganization({ organizationData, showEditPopup, fetchOrganizations, formRef, roleType, loggedInUser }: OrganizationEditField) {
+export default function EditOrganization({
+  organizationData,
+  showEditPopup,
+  fetchOrganizations,
+  formRef,
+  myRoles,
+  loggedInUser,
+  orgAdminRole
+}: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.orgAdminId);
   const [metaData, setMetaData] = useState(organizationData.metadata ? organizationData.metadata : functionalAssay);
-
 
   // Update local state when organizationData changes
   useEffect(() => {
@@ -46,7 +53,7 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
   const handleSubmit = async () => {
     if (formRef.current!.instance().validate().isValid) {
       const metadata = metaData;
-      const finalData = { ...formData, metadata: metadata };
+      const finalData = { ...formData, metadata: metadata, orgAdminRole };
       const response = await editOrganization(finalData);
       if (!response.error) {
         formRef.current!.instance().reset();
@@ -83,6 +90,7 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
     valueExpr: "id",
     value: primaryContactId, // Bind the value to state
     onValueChanged: handleContactChange,
+    disabled: true
   };
 
   const setMetaDataValue = (e: TextBoxTypes.ValueChangedEvent) => {
@@ -101,17 +109,22 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
     }
   }
 
-  const disableAllowed = roleType === 'admin' && organizationData.orgAdminId !== loggedInUser;
+  const disableAllowed = myRoles?.includes('admin') && organizationData.orgAdminId !== loggedInUser;
+
+  const cancelSave = () => {
+    formRef?.current!.instance().reset();
+    showEditPopup(false);
+  }
 
   return (
     <Form ref={formRef} formData={formData}>
-      <SimpleItem dataField="name" editorOptions={{ disabled: true }} cssClass="disabled-field">
+      <SimpleItem dataField="name" editorOptions={{ disabled: true }}>
         <Label text="Organization Name" />
         <RequiredRule message="Organization name is required" />
       </SimpleItem>
 
       <GroupItem colCount={2} cssClass="delete-button-group">
-        <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }} cssClass={!disableAllowed ? "disabled-field" : ""}>
+        <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }}>
           <RadioGroup items={status} disabled={!disableAllowed} className={!disableAllowed ? "disabled-field" : ""} defaultValue={formData.status} onValueChange={handleValueChange} />
         </SimpleItem>
         <ButtonItem cssClass="delete-button">
@@ -147,7 +160,7 @@ export default function EditOrganization({ organizationData, showEditPopup, fetc
             />
           </ButtonItem>
           <ButtonItem horizontalAlignment="left" cssClass="btn_secondary">
-            <ButtonOptions text="Cancel" onClick={() => showEditPopup(false)} />
+            <ButtonOptions text="Cancel" onClick={cancelSave} />
           </ButtonItem>
         </GroupItem>
       </GroupItem>

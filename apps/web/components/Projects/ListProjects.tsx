@@ -7,9 +7,10 @@ import ProjectAccordionDetail from './ProjectAccordionDetail';
 import './projects.css';
 import { ProjectDataFields, User, ProjectListProps, OrganizationDataFields } from '@/lib/definition';
 
-export default function ListProjects({ data, users, fetchOrganizations, organizationData, dataCreate }: ProjectListProps) {
+export default function ListProjects({ data, users, fetchOrganizations, organizationData, userData }: ProjectListProps) {
     const [selectedItems, setSelectedItems] = useState<ProjectDataFields[]>([]);
     const [userList, setUsers] = useState<User[]>(users);
+    const { myRoles } = userData;
 
     useEffect(() => {
         setSelectedItems([data[0]]);
@@ -27,12 +28,12 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
             newItems = [...newItems, ...e.addedItems];
         }
         setSelectedItems(newItems);
-        if (dataCreate?.user_role?.[0]?.role.type === "admin") {
+        if (myRoles?.includes("admin")) {
             if (Array.isArray(organizationData)) {
                 const filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === newItems[0].organizationId)[0]?.orgUser;
 
                 if (filteredUsers) {
-                    setUsers(filteredUsers?.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== dataCreate.id));
+                    setUsers(filteredUsers?.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== userData.id));
                 }
             }
         }
@@ -43,7 +44,7 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
             {data.length > 0 ? (
 
                 <div className='flex'>
-                    <div className="accordion">
+                    <div className="accordion projects">
                         <Accordion
                             dataSource={data}
                             collapsible={false}
@@ -60,8 +61,8 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
                             users={userList}
                             fetchOrganizations={fetchOrganizations}
                             organizationData={organizationData}
-                            dataCreate={dataCreate}
-                            roleType={dataCreate?.user_role?.[0]?.role.type} />
+                            userData={userData}
+                            myRoles={myRoles} />
                     )}
                 </div>
             ) : <div className="accordion-no-data">No Data found</div>}

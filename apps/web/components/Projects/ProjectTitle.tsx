@@ -23,7 +23,7 @@ export default function ProjectTitle(data: ProjectDataFields) {
                         height={30}
                         alt="organization"
                     />
-                    <span>22 Molecules</span>
+                    <span>0 Molecules</span>
                 </div>
                 <div>
                     <Image

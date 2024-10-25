@@ -1,6 +1,12 @@
 import { StatusCode } from "@/lib/definition";
 export const status = ["Enabled", "Disabled"];
 
+export const defaultRoutesEnabled = [
+  '/profile',
+  '/pathways',
+  'ketchertool'
+];
+
 export const tableFields = {
   columns: [
     "name",

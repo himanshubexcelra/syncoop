@@ -214,7 +214,7 @@
 
 .dx-button-mode-contained.dx-state-disabled {
     border: 1px solid var(--themeSecondaryGreyColor);
-    color: var(--white);
+    color: var(--black);
 }
 
 .dx-searchbox {

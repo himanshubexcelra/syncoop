@@ -170,7 +170,7 @@
 
 .dx-button-mode-contained.dx-state-disabled {
   border: 1px solid var(--themeSecondaryGreyColor);
-  background-color: var(--white);
+  background-color: var(--black);
   border-radius: 0;
 
   .dx-button-text {

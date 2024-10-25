@@ -37,7 +37,6 @@ export const Panel = ({
   const exportHandler = () => {
     KetcherFunctions.exportCtab().then((str) => {
       const message = 'Export content:' + str;
-      console.log(message);
       printToTerminal(message);
     });
   };

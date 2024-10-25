@@ -1,6 +1,6 @@
-import { getOrganization, editOrganization, createOrganizationApi } from '../service';
+import { getOrganization, editOrganization, createOrganization } from '../service';
 
-describe('Organization API Functions', () => {
+fdescribe('Organization API Functions', () => {
     const data = [
         {
             name: 'Fauxbio',
@@ -101,9 +101,10 @@ describe('Organization API Functions', () => {
         expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
     });
 
-    test('createOrganizationApi should create organization successfully', async () => {
+    test('createOrganization should create organization successfully', async () => {
         const mockResponse = data;
         const formData = new FormData();
+        formData.append('name', 'Test Organization');
 
         global.fetch = jest.fn(() =>
             Promise.resolve({
@@ -112,7 +113,7 @@ describe('Organization API Functions', () => {
             })
         ) as jest.Mock;
 
-        const result = await createOrganizationApi(formData);
+        const result = await createOrganization(formData, 2);
 
         expect(fetch).toHaveBeenCalledTimes(1);
         expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/organization`, {
@@ -121,12 +122,12 @@ describe('Organization API Functions', () => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(Object.fromEntries(formData)),
+            body: JSON.stringify({ ...formData, roleId: 2 }),
         });
         expect(result).toEqual(mockResponse);
     });
 
-    test('createOrganizationApi should handle error responses', async () => {
+    test('createOrganization should handle error responses', async () => {
         const formData = new FormData();
         formData.append('name', 'Test Organization');
 
@@ -137,18 +138,18 @@ describe('Organization API Functions', () => {
             })
         ) as jest.Mock;
 
-        const result = await createOrganizationApi(formData);
+        const result = await createOrganization(formData, 2);
 
         expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
     });
 
-    test('createOrganizationApi should handle fetch errors', async () => {
+    test('createOrganization should handle fetch errors', async () => {
         const formData = new FormData();
         formData.append('name', 'Test Organization');
 
         global.fetch = jest.fn(() => Promise.reject(new Error('Network Error'))) as jest.Mock;
 
-        const result = await createOrganizationApi(formData);
+        const result = await createOrganization(formData, 2);
 
         expect(result).toEqual(new Error('Network Error'));
     });

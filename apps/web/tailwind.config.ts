@@ -37,6 +37,7 @@ const config: Config = {
         assayBorder: "var(--assayBorder)",
         tabBoxShadow: "var(--tabBoxShadow)",
         tableBackground: "var(--tableBackground)",
+        greyHover: "var(--greyHover)"
       },
     },
   },

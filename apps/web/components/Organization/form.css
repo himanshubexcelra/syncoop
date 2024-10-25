@@ -177,11 +177,12 @@
         width: 100%;
         height: 100%;
     }
+
     .custom-tag {
         .dx-texteditor-input-container {
             width: 194px;
             height: auto;
-          }
+        }
     }
 
 }
@@ -235,6 +236,10 @@
         font-weight: 400;
         margin-left: 8px;
     }
+}
+
+.library-name.lib-description {
+    border-bottom: 0;
 }
 
 .no-border {
@@ -428,4 +433,14 @@
     .dx-texteditor-input {
         overflow: hidden;
     }
+}
+
+.projects {
+    .dx-accordion-wrapper {
+        width: 100%;
+    }
+}
+
+.dx-button.dx-state-disabled .dx-button-text {
+    color: var(--black);
 }

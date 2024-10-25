@@ -12,12 +12,6 @@ import Heading from '../Heading/Heading';
 import RenderEditUser from '../User/editUserDetails';
 import { Messages } from '@/utils/message';
 
-interface ProfileInfoProps {
-    id: number;
-    roleType: string;
-    isMyProfile: boolean;
-}
-
 const changeDialogProperties = {
     width: 480,
     height: 338,
@@ -26,7 +20,15 @@ const resetDialogProperties = {
     width: 480,
     height: 260,
 }
-export default function ProfileInfo({ id, roleType, isMyProfile }: ProfileInfoProps) {
+
+type ProfileInfoProps = {
+    id: number;
+    myRoles: string[];
+    isMyProfile: boolean;
+    actionsEnabled: string[]
+}
+
+export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled }: ProfileInfoProps) {
     const [data, setData] = useState<UserData[]>([]);
     const [formVisible, setFormVisible] = useState(false);
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
@@ -60,6 +62,7 @@ export default function ProfileInfo({ id, roleType, isMyProfile }: ProfileInfoPr
     useEffect(() => {
         fetchData();
     }, [id]);
+    
     const heading: HeadingObj[] = [
         {
             svgPath: "/icons/profile-icon-lg-active.svg",
@@ -71,19 +74,21 @@ export default function ProfileInfo({ id, roleType, isMyProfile }: ProfileInfoPr
         },
     ];
     return (
-        <> <Heading heading={heading} />
+        <>
+            <Heading heading={heading} myRoles={myRoles} />
             <main className={styles.main}>
                 <div className={styles.box}>
                     <div className="flex justify-between items-center mb-4">
                         <div className={styles.title}>My Profile</div>
-                        <div className="space-x-2">
-                            <button className={styles.primaryButton} onClick={() => setPasswordPopupVisible(true)}>
-                                {isMyProfile ? "Change Password" : "Reset Password"}
-                            </button>
-                            <button className={styles.secondaryButton} onClick={() => setFormVisible(true)}>
-                                Edit
-                            </button>
-                        </div>
+                        {(isMyProfile || actionsEnabled.includes('edit_user') || myRoles.includes('admin')) &&
+                            <div className="space-x-2">
+                                <button className={styles.primaryButton} onClick={() => setPasswordPopupVisible(true)}>
+                                    {isMyProfile ? "Change Password" : "Reset Password"}
+                                </button>
+                                <button className={styles.secondaryButton} onClick={() => setFormVisible(true)}>
+                                    Edit
+                                </button>
+                            </div>}
                     </div>
                     <div className={`${styles.grid} gap-y-5`}>
                         <div>
@@ -122,7 +127,7 @@ export default function ProfileInfo({ id, roleType, isMyProfile }: ProfileInfoPr
                             roles={[]}
                             isMyProfile={isMyProfile}
                             fetchData={fetchData}
-                            roleType={roleType} />
+                            myRoles={myRoles} />
                     )}
                     width={470}
                     hideOnOutsideClick={true}

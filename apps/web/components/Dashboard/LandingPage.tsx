@@ -13,6 +13,7 @@ import { popupPositionValue } from "@/utils/helpers";
 import styles from "./page.module.css";
 import { getOrganizationById } from "@/components/Organization/service";
 import EditOrganization from "../Organization/editOrganization";
+import Script from 'next/script';
 
 export default function LandingPage({ userData,
     breadcrumbs,
@@ -35,6 +36,16 @@ export default function LandingPage({ userData,
     };
 
     useEffect(() => {
+        if (!window?.RDKit) {
+            window
+                .initRDKitModule()
+                .then((RDKit: any) => {
+                    window.RDKit = RDKit;
+                })
+                .catch(() => {
+                    window.RDKit = undefined;
+                });
+        }
         if (myRoles.includes('org_admin')) fetchOrganizationData();
     }, []);
 
@@ -50,6 +61,7 @@ export default function LandingPage({ userData,
 
     return (
         <>
+            <Script src="https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js" strategy="beforeInteractive" />
             <Breadcrumb breadcrumbs={breadcrumbs} />
             <Heading {...{ heading }} myRoles={myRoles} showEditPopup={showEditPopup} />
             <Tabs tabsDetails={tabsStatus} />

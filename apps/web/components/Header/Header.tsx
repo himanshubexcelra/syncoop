@@ -6,11 +6,15 @@ import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+
 import CartDetails from '../Libraries/CartDetails';
 import { Popup as CartPopup, } from "devextreme-react/popup";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
+import { getMoleculeCart } from '../Libraries/libraryService';
+
 
 type HeaderProps = {
     userData: UserData
@@ -18,14 +22,23 @@ type HeaderProps = {
 
 export default function Header({ userData }: HeaderProps) {
     const context: any = useContext(AppContext);
-    console.log(context,'CART');
-    
-    const cartLength = context.state.cartDetail?context.state.cartDetail.length:0
+    const searchParams = useSearchParams();
+    const libraryId = searchParams.get('libraryId');
+    const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
-
+    const [cartLength,setCartLength] = useState(0)
+    useEffect(() => {
+        const fetchCartData = async () => {
+            const cartData: any = libraryId ? await getMoleculeCart(Number(libraryId)) : [];
+            setCartLength(cartData.length);
+        };
+    
+        fetchCartData();
+    }, [libraryId, cartDetail]);
+    
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
 

@@ -1,5 +1,7 @@
 "use server";
 
+import { log } from "console";
+
 export async function getLibraries(withRelation: string[] = [], projectId: string) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/project/${projectId}`);
     if (withRelation.length) {
@@ -89,7 +91,7 @@ export async function editLibrary(formData: FormData) {
     }
 }
 
-export async function addMoleculeToCart(moleculeData:[]) {
+export async function addMoleculeToCart(moleculeData: []) {
     try {
         const response: any = await fetch(
             `${process.env.API_HOST_URL}/v1/molecule`,
@@ -115,4 +117,22 @@ export async function addMoleculeToCart(moleculeData:[]) {
     }
 }
 
+export async function getMoleculeCart(libraryId?: number) {
+    try {
+        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule/?libraryId=${libraryId}`);
+        const response = await fetch(url, {
+            mode: "no-cors",
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
+        return error;
+    }
+}
 

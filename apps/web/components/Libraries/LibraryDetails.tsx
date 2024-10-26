@@ -34,7 +34,7 @@ import { MOLECULES, StatusCodeBg, StatusCodeType } from '@/utils/constants';
 import { FormRef } from "devextreme-react/cjs/form";
 import StatusMark from '@/ui/StatusMark';
 import { formatDatetime, formatDetailedDate, popupPositionValue, debounce } from '@/utils/helpers';
-import { getLibraries,addMoleculeToCart } from './libraryService';
+import { getLibraries, addMoleculeToCart, getMoleculeCart } from './libraryService';
 import { sortByDate, sortString } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
 import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
@@ -84,11 +84,8 @@ type ProductModel = {
     id: number;
     moleculeId: number;
     molecularWeight: number;
-    projectId:number;
-    projectName:string;
-};
-interface CartItem {
-    id: number;
+    projectId: number;
+    projectName: string;
 };
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -117,13 +114,10 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
     const [editEnabled, setEditStatus] = useState<boolean>(false);
     const [sortBy, setSortBy] = useState('CreationTime');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbs);
-    const cartDetails:[] = [];
-    const preselectedValue: number[] = cartDetails.length > 0 ? cartDetails.filter((item) => item.projectId === parseInt(params.id)).map((item: CartItem) => item.id) : [];
     const context: any = useContext(AppContext);
     const appContext = context.state;
     const [moleculeData, setMoleculeData] = useState<ProductModel[]>([]);
-    const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>(preselectedValue); // Store selected item IDs
-    const [preselectedCart,setPreSelectedCart] = useState(localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart') ?? '[]') : []);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Store selected item IDs
 
     const [isCartUpdate, updateCart] = useState(false)
 
@@ -183,12 +177,22 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
     }
 
     useEffect(() => {
+        const fetchCartData = async () => {
+            const moleculeCart: any = libraryId ? await getMoleculeCart(Number(libraryId)) : [];
+            const moleculeIds = moleculeCart.map(item => item.moleculeId);
+            setSelectedRowKeys(moleculeIds) // For pre selected value containing only moleculeID required for dev-extreme []
+        };
+        fetchCartData();
+    }, [libraryId]);
+
+    useEffect(() => {
         fetchLibraries();
     }, []);
 
     useEffect(() => {
         setPopupPosition(popupPositionValue());
     }, []);
+
 
     const onCheckBoxesModeChanged = useCallback(({ value }: any) => {
         setCheckBoxesMode(value);
@@ -307,7 +311,7 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
         return !(owner || admin);
     }
 
-    const onSelectionChanged = (e: any) => {
+    const onSelectionChanged = async (e: any) => {
         updateCart(true);
         // Check if the data exists in storage
         setSelectedRowKeys(e.selectedRowKeys);
@@ -315,26 +319,21 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
         const selectedProjectMolecule = checkedMolecule.map(item => ({
             ...item,
             libraryId: libraryId,
-            userId:userData.id
+            userId: userData.id
         }));
-        
+        const moleculeCart = libraryId ? await getMoleculeCart(Number(libraryId)) : [];
+        const preselectedIds = moleculeCart.map(item => item.moleculeId);
+        const updatedMoleculeCart = selectedProjectMolecule.filter(item => !preselectedIds.includes(item.moleculeId));
         // If the check box is unchecked
         if (e.currentDeselectedRowKeys.length > 0) {
-            const newmoleculeData: ProductModel[] = checkedMolecule.filter((item:any) => item.id !== e.currentDeselectedRowKeys[0].id && item.projectId !== projects.id);
+            const newmoleculeData: ProductModel[] = checkedMolecule.filter((item: any) => item.id !== e.currentDeselectedRowKeys[0].id && item.projectId !== projects.id);
             setMoleculeData(newmoleculeData);
-            setPreSelectedCart([]);
         }
         else {
-            const result: any[] = [...selectedProjectMolecule,...preselectedCart];
-            //remove duplicate from result
-            const cartResponse = Array.from(
-                new Map(result.map(item => [`${item.id}-${item.projectId}`, item])).values()
-            );
-                  
-            setMoleculeData(cartResponse);
+            setMoleculeData(updatedMoleculeCart);
         }
     };
-   
+
     const addProductToCart = () => {
         context?.addToState({
             ...appContext, cartDetail: [...moleculeData]
@@ -705,7 +704,7 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                     dataSource={tableData}
                                     showBorders={true}
                                     ref={grid}
-                                    keyExpr="id"
+                                    keyExpr="moleculeId"
                                     selectedRowKeys={selectedRowKeys}
                                     onSelectionChanged={onSelectionChanged}
 
@@ -897,15 +896,15 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                             />
                                         </ToolbarItem>
                                         <ToolbarItem location="after">
-                                        <Button
-                                            onClick={addProductToCart}
-                                            disabled={!isCartUpdate}
-                                            render={() => (
-                                                <>
-                                                    <span>Add to cart</span>
-                                                </>
-                                            )}
-                                        />
+                                            <Button
+                                                onClick={addProductToCart}
+                                                disabled={!isCartUpdate}
+                                                render={() => (
+                                                    <>
+                                                        <span>Add to cart</span>
+                                                    </>
+                                                )}
+                                            />
                                         </ToolbarItem>
                                     </GridToolbar>
                                     <div>

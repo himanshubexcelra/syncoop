@@ -44,12 +44,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const appContext = context.state;
 
   const fetchOrganizations = async () => {
-    const organization = await getOrganization(
+    let organization = await getOrganization(
       {
         withRelation: ['orgUser', 'user_role'],
         withCount: ['projects']
       });
-
+    organization = organization.filter
+      ((organization: OrganizationDataFields) => organization.type !== 'Internal');
     setTableData(organization);
     setLoader(false);
   }

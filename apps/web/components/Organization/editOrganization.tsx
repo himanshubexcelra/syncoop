@@ -18,6 +18,7 @@ import { delay } from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
 import { OrganizationEditField, userType, OrganizationDataFields } from "@/lib/definition";
 import { TextBoxTypes } from 'devextreme-react/text-box';
+import { User } from "@/lib/definition";
 
 const functionalAssay = {
   functionalAssay1: '',
@@ -84,15 +85,17 @@ export default function EditOrganization({
     }));
     setPrimaryContactId(user?.id)
   };
+  const orgType = organizationData.type
+  const userList = organizationData?.orgUser?.filter((user: User) =>
+    user.user_role[0]?.role?.type === (orgType === 'Internal' ? 'admin' : 'org_admin'))
 
   const primaryContact = {
     key: "id",
-    dataSource: organizationData.orgUser,
+    dataSource: userList,
     displayExpr: (item: userType) => `${item?.firstName} ${item?.lastName || ''}`,
     valueExpr: "id",
     value: primaryContactId, // Bind the value to state
     onValueChanged: handleContactChange,
-    disabled: true
   };
 
   const setMetaDataValue = (e: TextBoxTypes.ValueChangedEvent) => {

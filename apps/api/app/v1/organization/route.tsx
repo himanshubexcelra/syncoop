@@ -256,7 +256,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, name, orgAdminId: oldAdmin, user: { id: orgAdminId }, status, metadata, orgAdminRole } = req;
+    const { id, name, user: { id: orgAdminId }, status, metadata } = req;
 
     // Check if user is associated with another organization
     const existingUser = await prisma.organization.findFirst({
@@ -296,20 +296,6 @@ export async function PUT(request: Request) {
         },
       },
     });
-
-    if (orgAdminId !== oldAdmin) {
-      // Assign admin role to the new user
-      await prisma.user_role.create({
-        data: {
-          user: {
-            connect: { id: orgAdminId },
-          },
-          role: {
-            connect: { id: orgAdminRole }, // Connect the admin role
-          },
-        },
-      });
-    }
 
     return new Response(JSON.stringify(updatedOrganization), {
       headers: { "Content-Type": "application/json" },

@@ -30,7 +30,7 @@ const Heading: React.FC<HeadingProps> = ({ heading, myRoles, showEditPopup }) =>
                     </React.Fragment>
                 ))}
             </div>
-            {myRoles?.includes('org_admin') && showEditPopup && (
+            {['admin', 'org_admin'].some((role) => myRoles?.includes(role)) && showEditPopup && (
                 <Button
                     className='btn-secondary'
                     onClick={() => showEditPopup(true)}

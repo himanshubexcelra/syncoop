@@ -29,7 +29,7 @@ export default async function Dashboard() {
       svgWidth: 28,
       svgHeight: 28,
       href: "",
-      type: myRoles.includes('admin') ? "Admin:" : "Customer Organization:"
+      type: "Admin:"
     }
   ];
 

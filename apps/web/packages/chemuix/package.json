@@ -45,8 +45,7 @@
     "pino": "^8.15.1",
     "pino-pretty": "^10.2.0",
     "puppeteer": "^20.9.0",
-    "rollup-plugin-string": "^3.0.0",
-    "tsconfig": "workspace:*"
+    "rollup-plugin-string": "^3.0.0"
   },
   "license": "MIT"
 }

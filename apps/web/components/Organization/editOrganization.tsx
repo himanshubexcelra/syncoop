@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
@@ -36,7 +37,8 @@ export default function EditOrganization({
 }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.orgAdminId);
-  const [metaData, setMetaData] = useState(organizationData.metadata ? organizationData.metadata : functionalAssay);
+  const meta = organizationData.metadata ? organizationData.metadata : functionalAssay
+  const [metaData, setMetaData] = useState(meta);
 
   // Update local state when organizationData changes
   useEffect(() => {
@@ -125,10 +127,20 @@ export default function EditOrganization({
 
       <GroupItem colCount={2} cssClass="delete-button-group">
         <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }}>
-          <RadioGroup items={status} disabled={!disableAllowed} className={!disableAllowed ? "disabled-field" : ""} defaultValue={formData.status} onValueChange={handleValueChange} />
+          <RadioGroup
+            items={status}
+            disabled={!disableAllowed}
+            className={!disableAllowed ? "disabled-field" : ""}
+            defaultValue={formData.status}
+            onValueChange={handleValueChange} />
         </SimpleItem>
         <ButtonItem cssClass="delete-button">
-          <ButtonOptions stylingMode="text" text={`Delete ${formData.name}`} disabled={true} elementAttr={{ class: 'lowercase' }} />
+          <ButtonOptions
+            stylingMode="text"
+            text={`Delete 
+          ${formData.name}`}
+            disabled={true}
+            elementAttr={{ class: 'lowercase' }} />
         </ButtonItem>
       </GroupItem>
       <SimpleItem
@@ -138,16 +150,46 @@ export default function EditOrganization({
         <Label text="Primary Contact" />
       </SimpleItem>
       <GroupItem caption="Functional Assay" cssClass="groupItem" colCount={1}></GroupItem>
-      <SimpleItem dataField="functionalAssay1" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay1 }}>
+      <SimpleItem
+        dataField="functionalAssay1"
+        editorOptions={
+          {
+            placeholder: "Functional Assay",
+            onChange: setMetaDataValue,
+            value: metaData.functionalAssay1
+          }
+        }>
         <Label text="Functional Assay 1" />
       </SimpleItem>
-      <SimpleItem dataField="functionalAssay2" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay2 }}>
+      <SimpleItem
+        dataField="functionalAssay2"
+        editorOptions={
+          {
+            placeholder: "Functional Assay",
+            onChange: setMetaDataValue,
+            value: metaData.functionalAssay2
+          }
+        }>
         <Label text="Functional Assay 2" />
       </SimpleItem>
-      <SimpleItem dataField="functionalAssay3" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay3 }}>
+      <SimpleItem dataField="functionalAssay3" editorOptions={
+        {
+          placeholder: "Functional Assay",
+          onChange: setMetaDataValue,
+          value: metaData.functionalAssay3
+        }
+      }>
         <Label text="Functional Assay 3" />
       </SimpleItem>
-      <SimpleItem dataField="functionalAssay4" editorOptions={{ placeholder: "Functional Assay", onChange: setMetaDataValue, value: metaData.functionalAssay4 }}>
+      <SimpleItem
+        dataField="functionalAssay4"
+        editorOptions={
+          {
+            placeholder: "Functional Assay",
+            onChange: setMetaDataValue,
+            value: metaData.functionalAssay4
+          }
+        }>
         <Label text="Functional Assay 4" />
       </SimpleItem>
       <GroupItem cssClass="buttons-group" colCount={2}>

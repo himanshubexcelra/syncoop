@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Button } from 'devextreme-react/button';
@@ -7,14 +8,36 @@ import { Popup, Position } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
 import { useRouter } from 'next/navigation';
 import { formatDetailedDate, popupPositionValue } from "@/utils/helpers";
-import { ProjectAccordionType } from '@/lib/definition';
+import {
+    FetchUserType,
+    OrganizationDataFields,
+    ProjectDataFields,
+    User,
+    UserData
+} from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { Messages } from "@/utils/message";
 import TextWithToggle from '@/ui/TextWithToggle';
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
-export default function ProjectAccordionDetail({ data, fetchOrganizations, users, organizationData, myRoles, userData }: ProjectAccordionType) {
+type ProjectAccordionDetailProps = {
+    data: ProjectDataFields,
+    users: User[],
+    fetchOrganizations: FetchUserType,
+    organizationData: OrganizationDataFields[],
+    userData: UserData,
+    actionsEnabled: string[],
+    myRoles?: string[],
+}
+
+export default function ProjectAccordionDetail({ data,
+    fetchOrganizations, users,
+    organizationData,
+    myRoles,
+    userData,
+    actionsEnabled
+}: ProjectAccordionDetailProps) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
@@ -27,7 +50,8 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === userData.id);
         const owner = data.ownerId === userData.id;
-        const admin = !!myRoles?.includes("admin") || !!myRoles?.includes("org_admin");
+        const admin = ['admin', 'org_admin'].some(
+            (role) => myRoles?.includes(role));
 
         setEditStatus(!!sharedUser || owner || admin)
     }, [data])
@@ -43,9 +67,11 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
     }
 
     const toggleExpanded = (id: number, type: string) => {
-        let expandedDescription = type === 'library' ? [...isExpanded] : [...isProjectExpanded];
+        let expandedDescription = (type === 'library') ?
+            [...isExpanded] : [...isProjectExpanded];
         if (expandedDescription.includes(id)) {
-            expandedDescription = expandedDescription.filter(descriptionId => descriptionId !== id);
+            expandedDescription = expandedDescription.filter(
+                (descriptionId: number) => descriptionId !== id);
         } else expandedDescription.push(id);
         if (type === 'library') setIsExpanded(expandedDescription);
         else setProjectExpanded(expandedDescription);
@@ -58,7 +84,9 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                     <div className='project-target flex'>
                         Target: <span className='pl-[5px]'>{data.target}</span>
                     </div>
-                    <div className='project-title mt-[21px] mb-[21px]'>{data.name}</div>
+                    <div className='project-title mt-[21px] mb-[21px]'>
+                        {data.name}
+                    </div>
                 </div>
                 <div className='flex gap-[8px]'>
                     <Button
@@ -75,7 +103,12 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                     </Button>
                     <Button
                         className='btn-secondary accordion-button'
-                        onClick={() => copyUrl(`${urlHost}/projects/${data.id}`, 'project', data.name)}
+                        onClick={
+                            () => copyUrl(
+                                `${urlHost}/projects/${data.id}`,
+                                'project',
+                                data.name)
+                        }
                     >
                         URL
                     </Button>
@@ -124,7 +157,9 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                             width={15}
                             height={15}
                         />
-                        Owner: <span>{data?.owner?.firstName} {data?.owner?.lastName}</span>
+                        Owner: <span>
+                            {data?.owner?.firstName} {data?.owner?.lastName}
+                        </span>
                     </div>
                     <div className='flex-evenly'>
                         <Image
@@ -150,10 +185,16 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                             const length = data.sharedUsers.length;
                             if (idx >= 4) return;
                             if (length - 1 !== idx && idx < 3)
-                                return <span key={val.id}>{val.firstName},</span>
+                                return <span key={val.id}>
+                                    {val.firstName},
+                                </span>
                             if (length - 1 === idx || idx < 3)
-                                return <span key={val.id}>{val.firstName}</span>
-                            return <span key={val.id}>and {length - idx} +</span>
+                                return <span key={val.id}>
+                                    {val.firstName}
+                                </span>
+                            return <span key={val.id}>
+                                and {length - idx} +
+                            </span>
                         })}
                     </div>
                     <div className='flex-evenly'>
@@ -164,7 +205,9 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                                 width={15}
                                 height={15}
                             />
-                            Created on: <span>{formatDetailedDate(data.createdAt)}</span>
+                            Created on: <span>
+                                {formatDetailedDate(data.createdAt)}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -177,7 +220,9 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                         width={15}
                         height={15}
                     />
-                    Last Updated by: <span>{data.updatedBy?.firstName} {data.updatedBy?.lastName}</span>
+                    Last Updated by: <span>
+                        {data.updatedBy?.firstName} {data.updatedBy?.lastName}
+                    </span>
                 </div>
             </div>
             <div className='libraries'>
@@ -206,17 +251,28 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                                 width={80}
                                 height={110}
                             >
-                                <Position at="left bottom" my="right top" of={`#image${item.id}`} collision="fit" />
+                                <Position
+                                    at="left bottom"
+                                    my="right top"
+                                    of={`#image${item.id}`}
+                                    collision="fit" />
                                 <p
                                     className='mb-[20px] cursor-pointer'
-                                    onClick={() => router.push(`/projects/${data.id}?libraryId=${item.id}`)}
+                                    onClick={
+                                        () => router.push(
+                                            `/projects/${data.id}?libraryId=${item.id}`
+                                        )
+                                    }
                                 >
                                     Open
                                 </p>
                                 <p
                                     className='cursor-pointer'
                                     onClick={() => {
-                                        copyUrl(`${urlHost}/projects/${data.id}?libraryId=${item.id}`, 'library', item.name)
+                                        copyUrl(
+                                            `${urlHost}/projects/${data.id}?libraryId=${item.id}`,
+                                            'library',
+                                            item.name)
                                     }}
                                 >
                                     URL
@@ -226,7 +282,9 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                                 {item.description ?
                                     <TextWithToggle
                                         text={item.description}
-                                        isExpanded={isExpanded.includes(item.id)}
+                                        isExpanded={
+                                            isExpanded.includes(item.id)
+                                        }
                                         toggleExpanded={toggleExpanded}
                                         id={item.id}
                                         heading='Description:'
@@ -245,7 +303,7 @@ export default function ProjectAccordionDetail({ data, fetchOrganizations, users
                     )}
                 </div>
             </div>
-            {createPopupVisible && (
+            {actionsEnabled.includes('edit_project') && createPopupVisible && (
                 <Popup
                     title="Edit Project"
                     visible={createPopupVisible}

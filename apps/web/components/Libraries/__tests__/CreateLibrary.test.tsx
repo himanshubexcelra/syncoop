@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { editLibrary, createLibrary } from '@/components/Libraries/libraryService';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -110,7 +111,8 @@ const userData = {
             type: "admin",
             number: 1,
             name: "admin"
-        }
+        },
+        roleId: 6
     }],
     orgUser: {
         id: 1, name: 'System Admin', firstName: "Forum",
@@ -124,7 +126,8 @@ const userData = {
                 type: "admin",
                 number: 1,
                 name: "admin"
-            }
+            },
+            roleId: 6
         }],
         organization: {
             id: 1,
@@ -142,7 +145,8 @@ const userData = {
                     type: "admin",
                     number: 1,
                     name: "admin"
-                }
+                },
+                roleId: 6
             }]
         }
     }
@@ -189,7 +193,7 @@ describe('Create/ Edit Library should work as expected', () => {
         (fetch as jest.Mock).mockResolvedValueOnce({
             json: jest.fn().mockResolvedValueOnce(data),
         });
-        act(() => {
+        await act(async () => {
             render(
                 <CreateLibrary
                     userData={userData}
@@ -206,12 +210,18 @@ describe('Create/ Edit Library should work as expected', () => {
         act(() => { (createLibrary as jest.Mock).mockResolvedValue(mockResponse) });
         const inputField = screen.getByPlaceholderText('New Library');
         expect(inputField).toBeInTheDocument();
-        fireEvent.change(inputField, { target: { value: 'My New Library' } });
+        await act(async () => {
+            fireEvent.change(inputField, {
+                target: {
+                    value: 'My New Library'
+                }
+            })
+        });
 
         expect(screen.getByText('Create Library')).toBeInTheDocument();
 
         const createButton = screen.getByText('Create Library');
-        fireEvent.click(createButton);
+        await act(async () => { fireEvent.click(createButton) });
     });
 
     test('edit library works as expected with valid data', async () => {
@@ -223,7 +233,7 @@ describe('Create/ Edit Library should work as expected', () => {
         (fetch as jest.Mock).mockResolvedValueOnce({
             json: jest.fn().mockResolvedValueOnce(data),
         });
-        act(() => {
+        await act(async () => {
             render(
                 <CreateLibrary
                     userData={userData}
@@ -239,12 +249,18 @@ describe('Create/ Edit Library should work as expected', () => {
         act(() => { (editLibrary as jest.Mock).mockResolvedValue(mockResponse) });
         const inputField = screen.getByPlaceholderText('New Library');
         expect(inputField).toBeInTheDocument();
-        fireEvent.change(inputField, { target: { value: 'My New Library' } });
+        await act(async () => {
+            fireEvent.change(inputField, {
+                target: {
+                    value: 'My New Library'
+                }
+            });
+        });
 
         expect(screen.getByText('Update')).toBeInTheDocument();
 
         const updateButton = screen.getByText('Update');
-        fireEvent.click(updateButton);
+        await act(async () => { fireEvent.click(updateButton) });
     });
 
     test('edit library works as expected with invalid data', async () => {
@@ -256,7 +272,7 @@ describe('Create/ Edit Library should work as expected', () => {
         (fetch as jest.Mock).mockResolvedValueOnce({
             json: jest.fn().mockResolvedValueOnce(data),
         });
-        act(() => {
+        await act(async () => {
             render(
                 <CreateLibrary
                     userData={userData}
@@ -276,6 +292,6 @@ describe('Create/ Edit Library should work as expected', () => {
         expect(screen.getByText('Update')).toBeInTheDocument();
 
         const updateButton = screen.getByText('Update');
-        fireEvent.click(updateButton);
+        await act(async () => { fireEvent.click(updateButton) });
     });
 });

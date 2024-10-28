@@ -1,8 +1,8 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { render, screen, act, waitFor, fireEvent } from '@testing-library/react';
 import LibraryDetails from '../LibraryDetails';
 import { getLibraries } from '@/components/Libraries/libraryService';
-import { useParams, useSearchParams } from 'next/navigation';
-import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 // import CreateLibrary from '../CreateLibrary';
 
 jest.mock("@/components/Breadcrumbs/BreadCrumbs", () => ({
@@ -22,7 +22,7 @@ jest.mock('@/components/Libraries/libraryService', () => ({
     editLibrary: jest.fn(),
 }));
 
-const actionsEnabled = ['create_library'];
+const actionsEnabled = ['create_molecule', 'create_library', 'edit_library'];
 
 const data = {
     id: 1,
@@ -102,7 +102,8 @@ const userData = {
                 type: "admin",
                 number: 1,
                 name: "admin"
-            }
+            },
+            roleId: 1
         }],
         organization: {
             id: 1,
@@ -120,83 +121,45 @@ const userData = {
                     type: "admin",
                     number: 1,
                     name: "admin"
-                }
+                },
+                roleId: 1
             }]
         }
-    }
+    },
+    user_role: [{
+        role: {
+            id: 6,
+            priority: 1,
+            type: "admin",
+            number: 1,
+            name: "admin"
+        },
+        roleId: 1
+    }],
 }
 
-const breadcrumbMock = [
-    {
-        label: "Home",
-        svgPath: "/icons/home-icon.svg",
-        svgWidth: 16,
-        svgHeight: 16,
-        href: "/",
-        isActive: true,
-    },
-    {
-        label: "Admin",
-        svgPath: "/icons/admin-inactive-icon.svg",
-        svgWidth: 16,
-        svgHeight: 16,
-        href: "/",
-    },
-    {
-        label: "Project:",
-        svgPath: "",
-        svgWidth: 16,
-        svgHeight: 16,
-        href: "/library",
-    },
-];
-
 describe('LibraryList should display proper data', () => {
+    let backMock;
+
     beforeEach(() => {
+        backMock = jest.fn();
+        (useRouter as jest.Mock).mockReturnValue({
+            back: backMock,
+        });
+    });
+
+    afterEach(() => {
         jest.clearAllMocks();
-        (fetch as jest.Mock).mockClear();
     });
 
-    test('should pass correct breadcrumbs configuration', () => {
+    test('shows loader initially', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
             get: jest.fn().mockReturnValue('2'),
         });
-        (getLibraries as jest.Mock).mockResolvedValue(data);
-        act(() => {
-            render(
-                <LibraryDetails
-                    userData={userData}
-                    breadcrumbs={breadcrumbMock}
-                    actionsEnabled={actionsEnabled}
-                />
-            );
-        });
-        expect(Breadcrumb).toHaveBeenCalledWith(
-            {
-                breadcrumbs: breadcrumbMock
-            },
-            {}
-        );
-    });
-
-
-    test('shows loader initially', () => {
-        jest.mocked(useParams).mockReturnValue({ id: '1' });
-
-        (useSearchParams as jest.Mock).mockReturnValue({
-            get: jest.fn().mockReturnValue('2'),
-        });
-        (getLibraries as jest.Mock).mockResolvedValue(data);
-        act(() => {
-            render(
-                <LibraryDetails
-                    userData={userData}
-                    breadcrumbs={breadcrumbMock}
-                    actionsEnabled={actionsEnabled}
-                />
-            );
+        await act(async () => {
+            render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
         expect(screen.getByRole('alert')).toBeInTheDocument();
     });
@@ -211,14 +174,8 @@ describe('LibraryList should display proper data', () => {
             json: jest.fn().mockResolvedValueOnce(data),
         });
         (getLibraries as jest.Mock).mockResolvedValue(data);
-        act(() => {
-            render(
-                <LibraryDetails
-                    userData={userData}
-                    breadcrumbs={breadcrumbMock}
-                    actionsEnabled={actionsEnabled}
-                />
-            );
+        await act(async () => {
+            render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
 
         await waitFor(() => {
@@ -230,7 +187,8 @@ describe('LibraryList should display proper data', () => {
         expect(screen.getByAltText('showDetailedView')).toBeInTheDocument();
     });
 
-    test('expand button works correctly and lists the accordion with project and library data', async () => {
+    test(`expand button works correctly and lists
+        the accordion with project and library data`, async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
@@ -240,14 +198,9 @@ describe('LibraryList should display proper data', () => {
             json: jest.fn().mockResolvedValueOnce(data),
         });
         (getLibraries as jest.Mock).mockResolvedValue(data);
-        act(() => {
-            render(
-                <LibraryDetails
-                    userData={userData}
-                    breadcrumbs={breadcrumbMock}
-                    actionsEnabled={actionsEnabled}
-                />
-            );
+
+        await act(async () => {
+            render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
 
         await waitFor(() => {
@@ -263,6 +216,7 @@ describe('LibraryList should display proper data', () => {
     });
 
     test('library accordion loads with proper data', async () => {
+
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
@@ -272,15 +226,10 @@ describe('LibraryList should display proper data', () => {
             json: jest.fn().mockResolvedValueOnce(data),
         });
         (getLibraries as jest.Mock).mockResolvedValue(data);
-        act(() => {
-            render(
-                <LibraryDetails
-                    userData={userData}
-                    breadcrumbs={breadcrumbMock}
-                    actionsEnabled={actionsEnabled}
-                />
-            );
+        await act(async () => {
+            render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
+
 
         await waitFor(() => {
             expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -292,14 +241,14 @@ describe('LibraryList should display proper data', () => {
         await fireEvent.click(expandButton);
 
         const tabs = screen.getAllByRole('tab');
-        fireEvent.click(tabs[tabs.length - 1]);
+        await act(async () => { fireEvent.click(tabs[tabs.length - 1]) });
 
         const addLibraryButton = screen.getByText('Add Library');
         expect(addLibraryButton).toBeInTheDocument();
 
         const moreButton = screen.getAllByAltText('more button');
 
-        moreButton[0].click();
+        await act(async () => { moreButton[0].click() });
         await waitFor(async () => {
             const editLibraryButton = screen.getByText('Edit');
             expect(editLibraryButton).toBeInTheDocument();
@@ -325,15 +274,9 @@ describe('LibraryList should display proper data', () => {
         (fetch as jest.Mock).mockResolvedValueOnce({
             json: jest.fn().mockResolvedValueOnce(data),
         });
-        act(() => { (getLibraries as jest.Mock).mockResolvedValue(data) });
-        act(() => {
-            render(
-                <LibraryDetails
-                    userData={userData}
-                    breadcrumbs={breadcrumbMock}
-                    actionsEnabled={actionsEnabled}
-                />
-            );
+        await act(() => { (getLibraries as jest.Mock).mockResolvedValue(data) });
+        await act(async () => {
+            render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
 
         await waitFor(() => {
@@ -346,7 +289,7 @@ describe('LibraryList should display proper data', () => {
         await fireEvent.click(expandButton);
 
         const tabs = screen.getAllByRole('tab');
-        fireEvent.click(tabs[tabs.length - 1]);
+        await act(async () => { fireEvent.click(tabs[tabs.length - 1]) });
 
         const addLibraryButton = screen.getByText('Add Library');
         expect(addLibraryButton).toBeInTheDocument();
@@ -359,6 +302,6 @@ describe('LibraryList should display proper data', () => {
         });
 
         const editLibraryButton = screen.getByText('Edit'); // It should be present now
-        editLibraryButton.click();
+        await act(async () => { editLibraryButton.click() });
     });
 });

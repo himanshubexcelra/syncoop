@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
 export async function getLibraries(withRelation: string[] = [], projectId: string) {

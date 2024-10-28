@@ -1,6 +1,15 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-export async function getProjects({ withRelation = [], organizationId, withCount = [] }: { withRelation: string[], organizationId: number, withCount: string[] }) {
+type ProjectDBType = {
+    withRelation: string[],
+    organizationId: number,
+    withCount: string[]
+}
+export async function getProjects({
+    withRelation = [],
+    organizationId, withCount = []
+}: ProjectDBType) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/project`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));

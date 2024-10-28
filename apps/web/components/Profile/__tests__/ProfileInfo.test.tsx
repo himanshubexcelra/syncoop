@@ -17,6 +17,7 @@ describe('ProfileInfo Component', () => {
         id: 1,
         myRoles: ['admin'],
         isMyProfile: true,
+        orgDetailLoggedIn: { name: 'FauxBio', id: 1 },
         actionsEnabled: ['edit_user']
     };
 

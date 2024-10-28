@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -12,7 +13,6 @@ import {
     User,
     LibraryFields,
     UserData,
-    BreadCrumbsObj,
 } from '@/lib/definition';
 import DataGrid, {
     Item as ToolbarItem,
@@ -52,6 +52,45 @@ const selectAllModes = ['allPages', 'page'];
 
 const sortByFields = ['Name', 'Owner', 'UpdationTime', 'CreationTime'];
 
+type breadCrumbParams = {
+    projectTitle?: string,
+    projectHref?: string,
+    projectSvg?: string,
+    projectState?: boolean,
+}
+
+const breadcrumbArr = ({
+    projectTitle = '',
+    projectHref = '',
+    projectSvg = '',
+    projectState = false
+}: breadCrumbParams) => {
+    return [
+        {
+            label: "Home",
+            svgPath: "/icons/home-icon.svg",
+            svgWidth: 16,
+            svgHeight: 16,
+            href: "/",
+        },
+        {
+            label: 'Projects',
+            svgPath: '/icons/project-inactive.svg',
+            svgWidth: 16,
+            svgHeight: 16,
+            href: '/projects',
+        },
+        {
+            label: `Project: ${projectTitle}`,
+            svgPath: projectSvg || "/icons/project-icon.svg",
+            svgWidth: 16,
+            svgHeight: 16,
+            href: `/projects${projectHref}`,
+            isActive: projectState
+        },
+    ];
+}
+
 const initialProjectData: ProjectDataFields = {
     name: '',
     id: 0,
@@ -69,18 +108,17 @@ const initialProjectData: ProjectDataFields = {
     ownerId: 0,
     orgUser: undefined,
     createdAt: new Date(),
-    libraries: [] as unknown as LibraryFields[], // Initialize as an array if multiple libraries are expected
+    libraries: [] as unknown as LibraryFields[],
 };
 
 type LibraryDetailsProps = {
     userData: UserData,
     actionsEnabled: string[],
-    breadcrumbs: BreadCrumbsObj[]
 }
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
-export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }: LibraryDetailsProps) {
+export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
@@ -88,12 +126,14 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
     const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
-    const [selectedLibrary, setSelectedLibrary] = useState(libraryId ? parseInt(libraryId, 10) : '');
+    const [selectedLibrary, setSelectedLibrary] =
+        useState(libraryId ? parseInt(libraryId, 10) : '');
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
     const [loader, setLoader] = useState(true);
     const [allMode, setAllMode] = useState<DataGridTypes.SelectAllMode>('allPages');
     const [expanded, setExpanded] = useState(libraryId ? false : true);
-    const [checkBoxesMode, setCheckBoxesMode] = useState<DataGridTypes.SelectionColumnDisplayMode>('always');
+    const [checkBoxesMode, setCheckBoxesMode] =
+        useState<DataGridTypes.SelectionColumnDisplayMode>('always');
     const [searchValue, setSearchValue] = useState('');
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
@@ -104,7 +144,7 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
     const [sortBy, setSortBy] = useState('CreationTime');
-    const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbs);
+    const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
 
     let toastShown = false;
 
@@ -113,39 +153,56 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
 
     const { myRoles } = userData;
 
-    const createEnabled = actionsEnabled.includes('create_library') || myRoles?.includes('admin') || myRoles?.includes('org_admin')
+    const createEnabled = actionsEnabled.includes('create_library');
 
 
     const fetchLibraries = async () => {
         const projectData = await getLibraries(['libraries'], params.id);
-        if (projectData) {
+        let selectedLib = { name: '' };
+        if (libraryId && projectData) {
+            selectedLib = projectData.libraries.find(
+                (library: LibraryFields) => library.id === parseInt(libraryId, 10));
+        }
+        if (projectData && !!selectedLib) {
             setTableData(MOLECULES);
             const sortKey = 'createdAt';
             const sortBy = 'desc';
             const tempLibraries = sortByDate(projectData.libraries, sortKey, sortBy);
             setProjects({ ...projectData, libraries: tempLibraries });
             setInitProjects({ ...projectData, libraries: tempLibraries });
-            const breadcrumbTemp = [...breadcrumbs];
-            breadcrumbTemp[1].label = `Project: ${projectData.name}`;
-            breadcrumbTemp[1].href = `/projects/${params.id}`;
+            let breadcrumbTemp = breadcrumbArr({
+                projectTitle: `${projectData.name}`,
+                projectHref: `/${params.id}`
+            });
             if (libraryId) {
-                const selectedLib = projectData.libraries.filter((library: LibraryFields) => library.id === parseInt(libraryId, 10));
-                const libName = selectedLib[0].name;
+                const libName = selectedLib.name;
                 setSelectedLibraryName(libName);
-                breadcrumbTemp.push({
-                    label: tempLibraries[0]?.name,
-                    svgPath: "/icons/libraries.svg",
-                    svgWidth: 16,
-                    svgHeight: 16,
-                    href: `/projects/${params.id}?libraryId=${libraryId}`,
-                    isActive: true,
-                })
+                setSelectedLibrary(parseInt(libraryId));
+                breadcrumbTemp = breadcrumbArr({
+                    projectTitle: `${projectData.name}`,
+                    projectHref: `/${params.id}`, projectSvg: "/icons/project-inactive.svg"
+                });
+                breadcrumbTemp = [
+                    ...breadcrumbTemp,
+                    {
+                        label: libName,
+                        svgPath: "/icons/library-active.svg",
+                        svgWidth: 16,
+                        svgHeight: 16,
+                        href: `/projects/${params.id}?libraryId=${libraryId}`,
+                        isActive: true,
+                    }];
             } else {
                 const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(tempLibraries[0]?.id);
                 setSortBy('CreationTime');
-                breadcrumbTemp[1].isActive = true;
+                setExpanded(true);
+                breadcrumbTemp = breadcrumbArr({
+                    projectTitle: `${projectData.name}`,
+                    projectHref: `/${params.id}`,
+                    projectSvg: '/icons/project-icon.svg', projectState: true
+                });
             }
             setBreadCrumbs(breadcrumbTemp);
             setLoader(false);
@@ -162,7 +219,7 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
 
     useEffect(() => {
         fetchLibraries();
-    }, []);
+    }, [params.id, libraryId]);
 
     useEffect(() => {
         setPopupPosition(popupPositionValue());
@@ -267,7 +324,8 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
         if (type === 'library') {
             let expandedDescription = [...isExpanded];
             if (expandedDescription.includes(id)) {
-                expandedDescription = expandedDescription.filter(descriptionId => descriptionId !== id);
+                expandedDescription = expandedDescription.filter(
+                    (descriptionId: number) => descriptionId !== id);
             } else expandedDescription.push(id);
             setIsExpanded(expandedDescription);
         } else {
@@ -281,7 +339,7 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
 
     const checkDisabledField = (item: LibraryFields) => {
         const owner = item.ownerId === userData.id;
-        const admin = myRoles?.includes("admin") || myRoles?.includes("org_admin");
+        const admin = ['admin', 'org_admin'].some((role) => myRoles?.includes(role));
         return !(owner || admin);
     }
 
@@ -314,169 +372,201 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                             </main>
                         </div>
                         <div className='flex gap-[20px]'>
-                            {expanded && (
-                                <div className='w-[40vw] projects'>
-                                    <Accordion multiple={true} collapsible={true}>
-                                        {/* Project Details Section */}
-                                        <Item titleRender={() => renderTitle(`Project Details: ${projects.name}`)}>
-                                            <div>
-                                                <div className='library-name no-border flex items-center justify-between'>
-                                                    <div>
-                                                        Project Owner:
-                                                        <span>{projects.owner.firstName} {projects.owner.lastName}</span>
-                                                    </div>
-                                                    <div className='flex'>
-                                                        <Button
-                                                            text="Manage Users"
-                                                            type="normal"
-                                                            stylingMode="contained"
-                                                            elementAttr={{ class: "form_btn_primary mr-[20px]" }}
-                                                            disabled={true}
-                                                        />
-                                                        <Button
-                                                            text="Link"
-                                                            type="normal"
-                                                            stylingMode="contained"
-                                                            elementAttr={{ class: "btn-primary" }}
-                                                            onClick={() => copyUrl('project', projects.name)}
-                                                        />
-                                                    </div>
+                            {expanded && (<div className='w-[40vw] projects'>
+                                <Accordion multiple={true} collapsible={true}>
+                                    {/* Project Details Section */}
+                                    <Item titleRender={
+                                        () => renderTitle(`Project Details: ${projects.name}`)}>
+                                        <div>
+                                            <div className={
+                                                `library-name
+                                                no-border
+                                                flex
+                                                items-center
+                                                justify-between`
+                                            }>
+                                                <div>
+                                                    Project Owner:
+                                                    <span>
+                                                        {projects.owner.firstName}
+                                                        {projects.owner.lastName}
+                                                    </span>
                                                 </div>
-                                                <div className='library-name no-border'>
-                                                    Target: <span>{projects.target}</span>
-                                                </div>
-                                                <div className='library-name no-border'>
-                                                    Last Modified: <span>{formatDetailedDate(projects.updatedAt)}</span>
-                                                </div>
-                                                <div className='library-name no-border'>
-                                                    {projects.description ?
-                                                        <TextWithToggle
-                                                            text={projects.description}
-                                                            isExpanded={isProjectExpanded}
-                                                            toggleExpanded={toggleExpanded}
-                                                            id={projects.id}
-                                                            heading='Description:'
-                                                            component="project"
-                                                            clamp={12}
-                                                        /> :
-                                                        <>Description: </>
-                                                    }
+                                                <div className='flex'>
+                                                    <Button
+                                                        text="Manage Users"
+                                                        type="normal"
+                                                        stylingMode="contained"
+                                                        elementAttr={{
+                                                            class: "form_btn_primary mr-[20px]"
+                                                        }}
+                                                        disabled={true}
+                                                    />
+                                                    <Button
+                                                        text="Link"
+                                                        type="normal"
+                                                        stylingMode="contained"
+                                                        elementAttr={{ class: "btn-primary" }}
+                                                        onClick={
+                                                            () => copyUrl('project', projects.name)
+                                                        }
+                                                    />
                                                 </div>
                                             </div>
-                                        </Item>
+                                            <div className='library-name no-border'>
+                                                Target: <span>{projects.target}</span>
+                                            </div>
+                                            <div className='library-name no-border'>
+                                                Last Modified: <span>
+                                                    {formatDetailedDate(projects.updatedAt)}
+                                                </span>
+                                            </div>
+                                            <div className='library-name no-border'>
+                                                {projects.description ?
+                                                    <TextWithToggle
+                                                        text={projects.description}
+                                                        isExpanded={isProjectExpanded}
+                                                        toggleExpanded={toggleExpanded}
+                                                        id={projects.id}
+                                                        heading='Description:'
+                                                        component="project"
+                                                        clamp={12}
+                                                    /> :
+                                                    <>Description: </>
+                                                }
+                                            </div>
+                                        </div>
+                                    </Item>
 
-                                        {/* Libraries List Section */}
-                                        <Item titleRender={() => renderTitle("Library List")}>
-                                            <div className='libraries'>
-                                                <div className='flex justify-between items-center p-2'>
-                                                    <div className='flex items-center'>
-                                                        <span className='select-header mr-[5px]'>sort by:</span>
-                                                        <SelectBox
-                                                            dataSource={sortByFields}
-                                                            value={sortBy}
-                                                            itemRender={sortItemsRender}
-                                                            className='w-[130px] bg-transparent library-select'
-                                                            onValueChange={(e) => handleSortChange(e)}
-                                                            placeholder=''
-                                                        />
-                                                    </div>
-                                                    <div className='flex'>
-                                                        {createEnabled && <Button
-                                                            text="Add Library"
-                                                            icon="plus"
-                                                            type="default"
-                                                            stylingMode='text'
-                                                            onClick={() => {
-                                                                setEditPopupVisibility(false);
-                                                                setCreatePopupVisibility(true);
-                                                            }}
-                                                            render={() => (
-                                                                <>
-                                                                    <Image
-                                                                        src="/icons/plus.svg"
-                                                                        width={15}
-                                                                        height={13}
-                                                                        alt="Add"
-                                                                    />
-                                                                    <span className='pl-2 pt-[1px]'>Add Library</span>
-                                                                </>
-                                                            )}
-                                                        />
-                                                        }
-                                                        <Button
-                                                            text="Filter"
-                                                            icon="filter"
-                                                            type="normal"
-                                                            stylingMode='text'
-                                                            disabled={true}
-                                                            render={() => (
-                                                                <>
-                                                                    <Image
-                                                                        src="/icons/filter.svg"
-                                                                        width={24}
-                                                                        height={24}
-                                                                        alt="Filter"
-                                                                    />
-                                                                    <span>Filter</span>
-                                                                </>
-                                                            )}
-                                                        />
-                                                        <div className="search-box">
-                                                            <Image
-                                                                src="/icons/search.svg"
-                                                                width={24}
-                                                                height={24}
-                                                                alt="Sort"
-                                                                className='search-icon library-search'
-                                                            />
-                                                            <Textbox
-                                                                placeholder="Search"
-                                                                className="search-input"
-                                                                width={120}
-                                                                inputAttr={{
-                                                                    style: { paddingRight: '30px' }
-                                                                }}
-                                                                value={searchValue}
-                                                                valueChangeEvent="keyup"
-                                                                onValueChanged={searchLibrary}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    {createPopupVisible && (
-                                                        <Popup
-                                                            title="Add Library"
-                                                            visible={createPopupVisible}
-                                                            contentRender={() => (
-                                                                <CreateLibrary
-                                                                    formRef={formRef}
-                                                                    setCreatePopupVisibility={setCreatePopupVisibility}
-                                                                    fetchLibraries={fetchLibraries}
-                                                                    userData={userData}
-                                                                    projectData={projects}
-                                                                    libraryIdx={-1}
-                                                                />
-                                                            )}
-                                                            width={477}
-                                                            hideOnOutsideClick={true}
-                                                            height="100%"
-                                                            position={popupPosition}
-                                                            onHiding={() => {
-                                                                formRef.current?.instance().reset();
-                                                                setCreatePopupVisibility(false);
-                                                            }}
-                                                            showCloseButton={true}
-                                                            wrapperAttr={{ class: "create-popup mr-[15px]" }}
-                                                        />
-                                                    )}
+                                    {/* Libraries List Section */}
+                                    <Item titleRender={() => renderTitle("Library List")}>
+                                        <div className='libraries'>
+                                            <div className={
+                                                `flex 
+                                                    justify-between 
+                                                    items-center 
+                                                    p-2`
+                                            }>
+                                                <div className='flex items-center'>
+                                                    <span className={`select-header mr-[5px]`}>
+                                                        sort by:
+                                                    </span>
+                                                    <SelectBox
+                                                        dataSource={sortByFields}
+                                                        value={sortBy}
+                                                        itemRender={sortItemsRender}
+                                                        className=
+                                                        {`w-[130px] bg-transparent library-select`}
+                                                        onValueChange={(e) => handleSortChange(e)}
+                                                        placeholder=''
+                                                    />
                                                 </div>
-                                                {editPopupVisible && (
+                                                <div className='flex'>
+                                                    {createEnabled && <Button
+                                                        text="Add Library"
+                                                        icon="plus"
+                                                        type="default"
+                                                        stylingMode='text'
+                                                        onClick={() => {
+                                                            setEditPopupVisibility(false);
+                                                            setCreatePopupVisibility(true);
+                                                        }}
+                                                        render={() => (
+                                                            <>
+                                                                <Image
+                                                                    src="/icons/plus.svg"
+                                                                    width={15}
+                                                                    height={13}
+                                                                    alt="Add"
+                                                                />
+                                                                <span className='pl-2 pt-[1px]'>
+                                                                    Add Library
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    />
+                                                    }
+                                                    <Button
+                                                        text="Filter"
+                                                        icon="filter"
+                                                        type="normal"
+                                                        stylingMode='text'
+                                                        disabled={true}
+                                                        render={() => (
+                                                            <>
+                                                                <Image
+                                                                    src="/icons/filter.svg"
+                                                                    width={24}
+                                                                    height={24}
+                                                                    alt="Filter"
+                                                                />
+                                                                <span>Filter</span>
+                                                            </>
+                                                        )}
+                                                    />
+                                                    <div className="search-box">
+                                                        <Image
+                                                            src="/icons/search.svg"
+                                                            width={24}
+                                                            height={24}
+                                                            alt="Sort"
+                                                            className='search-icon library-search'
+                                                        />
+                                                        <Textbox
+                                                            placeholder="Search"
+                                                            className="search-input"
+                                                            width={120}
+                                                            inputAttr={{
+                                                                style: { paddingRight: '30px' }
+                                                            }}
+                                                            value={searchValue}
+                                                            valueChangeEvent="keyup"
+                                                            onValueChanged={searchLibrary}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                {createPopupVisible && (
+                                                    <Popup
+                                                        title="Add Library"
+                                                        visible={createPopupVisible}
+                                                        contentRender={() => (
+                                                            <CreateLibrary
+                                                                formRef={formRef}
+                                                                setCreatePopupVisibility={
+                                                                    setCreatePopupVisibility}
+                                                                fetchLibraries={fetchLibraries}
+                                                                userData={userData}
+                                                                projectData={projects}
+                                                                libraryIdx={-1}
+                                                            />
+                                                        )}
+                                                        width={477}
+                                                        hideOnOutsideClick={true}
+                                                        height="100%"
+                                                        position={popupPosition}
+                                                        onHiding={() => {
+                                                            formRef.current?.instance().reset();
+                                                            setCreatePopupVisibility(false);
+                                                        }}
+                                                        showCloseButton={true}
+                                                        wrapperAttr={
+                                                            {
+                                                                class: "create-popup mr-[15px]"
+                                                            }
+                                                        }
+                                                    />
+                                                )}
+                                            </div>
+                                            {actionsEnabled.includes('edit_library') &&
+                                                editPopupVisible && (
                                                     <Popup
                                                         title="Edit Library"
                                                         visible={editPopupVisible}
                                                         contentRender={() => (
                                                             <CreateLibrary
                                                                 formRef={formRef}
-                                                                setCreatePopupVisibility={setEditPopupVisibility}
+                                                                setCreatePopupVisibility={
+                                                                    setEditPopupVisibility}
                                                                 fetchLibraries={fetchLibraries}
                                                                 userData={userData}
                                                                 projectData={projects}
@@ -493,156 +583,246 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                                             setSelectedLibraryIndex(-1);
                                                         }}
                                                         showCloseButton={true}
-                                                        wrapperAttr={{ class: "create-popup mr-[15px]" }}
+                                                        wrapperAttr={
+                                                            {
+                                                                class: "create-popup mr-[15px]"
+                                                            }
+                                                        }
                                                     />
                                                 )}
-                                                {projects.libraries.map((item, idx) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className={`box-item library mb-[10px] cursor-pointer ${selectedLibrary === item.id ? 'selected-accordion' : ''}`}
-                                                        onClick={() => {
-                                                            setSelectedLibrary(item.id);
-                                                            setSelectedLibraryName(item.name);
-                                                        }}>
-                                                        <div className='library-name flex justify-around no-border'>
-                                                            <div className='flex w-[55%]'><div className="w-[20%] flex justify-end">Library: </div><span>{item.name}</span></div>
-                                                            <div className='flex justify-between w-[45%]'>
-                                                                <div>Created On: <span>{formatDatetime(item.createdAt)}</span></div>
-                                                                <Image
-                                                                    src="/icons/more.svg"
-                                                                    alt="more button"
-                                                                    width={5}
-                                                                    height={3}
-                                                                    className='cursor-pointer'
-                                                                    id={`image${item.id}`}
-                                                                    onClick={() => {
-                                                                        setExpandedMenu(item.id);
-                                                                        checkDisabled(item);
-                                                                    }}
-                                                                />
+                                            {projects.libraries.map((item, idx) => (
+                                                <div
+                                                    key={item.id}
+                                                    className={
+                                                        `box-item
+                                                        library
+                                                        mb-[10px]
+                                                        cursor-pointer
+                                                        ${(selectedLibrary === item.id) ?
+                                                            'selected-accordion' : ''
+                                                        }`
+                                                    }
+                                                    onClick={() => {
+                                                        setSelectedLibrary(item.id);
+                                                        setSelectedLibraryName(item.name);
+                                                    }}>
+                                                    <div className={
+                                                        `library-name
+                                                        flex
+                                                        justify-around
+                                                        no-border`
+                                                    }>
+                                                        <div className='flex w-[55%]'>
+                                                            <div className=
+                                                                {`w-[20%]flex justify-end`}>
+                                                                Library:
                                                             </div>
+                                                            <span>{item.name}</span>
                                                         </div>
-                                                        <Popup
-                                                            visible={expandMenu === item.id}
-                                                            onHiding={() => setExpandedMenu(-1)}
-                                                            dragEnabled={false}
-                                                            hideOnOutsideClick={true}
-                                                            showCloseButton={false}
-                                                            showTitle={false}
-                                                            width={70}
-                                                            height={110}
-                                                        >
-                                                            <Position
-                                                                at="left bottom"
-                                                                my="right top"
-                                                                of={`#image${item.id}`}
-                                                                collision="fit" />
-                                                            <p
-                                                                className={`mb-[20px] ${!editEnabled ? 'cursor-pointer' : ''}`}
-                                                                onClick={() => {
-                                                                    if (!editEnabled) {
-                                                                        setExpandedMenu(-1);
-                                                                        setCreatePopupVisibility(false);
-                                                                        setSelectedLibraryIndex(idx);
-                                                                        setEditPopupVisibility(true);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                Edit
-                                                            </p>
-                                                            <p
+                                                        <div className=
+                                                            {`flex justify-between w-[45%]`}>
+                                                            <div>Created On:
+                                                                <span>{
+                                                                    formatDatetime(item.createdAt)
+                                                                }
+                                                                </span>
+                                                            </div>
+                                                            <Image
+                                                                src="/icons/more.svg"
+                                                                alt="more button"
+                                                                width={5}
+                                                                height={3}
                                                                 className='cursor-pointer'
-                                                                onClick={() => copyUrl('library', item.name, item.id)}
-                                                            >
-                                                                URL
-                                                            </p>
-                                                        </Popup>
-                                                        <div className='library-name flex justify-around no-border'>
-                                                            <div className='flex w-[55%]'>
-                                                                <div className="w-[20%] flex justify-end">Owner:</div>
-                                                                <span>{item.owner.firstName} {item.owner.lastName}</span>
-                                                            </div>
-                                                            <div className='w-[45%] flex justify-start'>
-                                                                {item.updatedBy &&
-                                                                    <>
-                                                                        Last Updated By:
-                                                                        <span>{item.updatedBy.firstName} {item.updatedBy.lastName}</span>
-                                                                    </>
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                        <div className='library-name flex justify-around no-border'>
-                                                            <div className='flex w-[55%]'>
-                                                                <div className="w-[20%] flex justify-end">Target: </div>
-                                                                <span>{item.target}</span></div>
-                                                            <div className='w-[45%]'>
-                                                                {item.updatedAt &&
-                                                                    <>
-                                                                        Last Updated On:
-                                                                        <span>{formatDatetime(item.updatedAt)}</span>
-                                                                    </>
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                        {
-                                                            item.status &&
-                                                            <div
-                                                                className='library-name gap-[10px] flex mt-[8px] flex-wrap justify-around no-border'>
-                                                                <div>Molecules:
-                                                                    {item.status?.map(val => (
-                                                                        <span
-                                                                            key={val.name}
-                                                                            className={`badge ${val.type}`}
-                                                                        >
-                                                                            {val.count} {val.name}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                        < div className='library-name no-border' >
-                                                            {
-                                                                item.description ?
-                                                                    <TextWithToggle
-                                                                        text={item.description}
-                                                                        isExpanded={isExpanded.includes(item.id)}
-                                                                        toggleExpanded={toggleExpanded}
-                                                                        id={item.id}
-                                                                        heading='Description:'
-                                                                        component="library"
-                                                                        clamp={2}
-                                                                    /> :
-                                                                    <>Description: </>
-                                                            }
-                                                        </div>
-                                                        <div className='flex justify-end'>
-                                                            <Button
-                                                                text="Open"
-                                                                type="normal"
-                                                                stylingMode="contained"
-                                                                elementAttr={{ class: "btn-primary mr-[20px]" }}
+                                                                id={`image${item.id}`}
                                                                 onClick={() => {
-                                                                    setSelectedLibrary(idx);
-                                                                    setSelectedLibraryName(item.name);
-                                                                    setExpanded(false);
-                                                                    router.push(`/projects/${params.id}?libraryId=${item.id}`)
+                                                                    setExpandedMenu(item.id);
+                                                                    checkDisabled(item);
                                                                 }}
                                                             />
                                                         </div>
                                                     </div>
-                                                ))}
-                                                {projects.libraries.length == 0 && (
-                                                    <div className='flex justify-center items-center p-[40px] h-[70px] nodata'>
-                                                        Your library list is empty, add a library to import molecules
+                                                    <Popup
+                                                        visible={expandMenu === item.id}
+                                                        onHiding={() => setExpandedMenu(-1)}
+                                                        dragEnabled={false}
+                                                        hideOnOutsideClick={true}
+                                                        showCloseButton={false}
+                                                        showTitle={false}
+                                                        width={70}
+                                                        height={110}
+                                                    >
+                                                        <Position
+                                                            at="left bottom"
+                                                            my="right top"
+                                                            of={`#image${item.id}`}
+                                                            collision="fit" />
+                                                        <p
+                                                            className={
+                                                                `mb-[20px] 
+                                                                ${!editEnabled ?
+                                                                    'cursor-pointer' : ''}`
+                                                            }
+                                                            onClick={() => {
+                                                                if (!editEnabled) {
+                                                                    setExpandedMenu(-1);
+                                                                    setCreatePopupVisibility(false);
+                                                                    setSelectedLibraryIndex(idx);
+                                                                    setEditPopupVisibility(true);
+                                                                }
+                                                            }}
+                                                        >
+                                                            Edit
+                                                        </p>
+                                                        <p
+                                                            className='cursor-pointer'
+                                                            onClick={() =>
+                                                                copyUrl(
+                                                                    'library',
+                                                                    item.name,
+                                                                    item.id)
+                                                            }
+                                                        >
+                                                            URL
+                                                        </p>
+                                                    </Popup>
+                                                    <div className={
+                                                        `library-name
+                                                        flex 
+                                                        justify-around 
+                                                        no-border`
+                                                    }>
+                                                        <div className='flex w-[55%]'>
+                                                            <div className=
+                                                                {`w-[20%] flex justify-end`}>
+                                                                Owner:
+                                                            </div>
+                                                            <span>
+                                                                {item.owner.firstName}
+                                                                {item.owner.lastName}
+                                                            </span>
+                                                        </div>
+                                                        <div className='w-[45%] flex justify-start'>
+                                                            {item.updatedBy &&
+                                                                <>
+                                                                    Last Updated By:
+                                                                    <span>
+                                                                        {item.updatedBy.firstName}
+                                                                        {item.updatedBy.lastName}
+                                                                    </span>
+                                                                </>
+                                                            }
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                        </Item>
-                                    </Accordion>
-                                </div>
+                                                    <div className={
+                                                        `library-name
+                                                        flex
+                                                        justify-around
+                                                        no-border`
+                                                    }>
+                                                        <div className='flex w-[55%]'>
+                                                            <div className=
+                                                                {`w-[20%] flex justify-end`}>
+                                                                Target:
+                                                            </div>
+                                                            <span>{item.target}</span></div>
+                                                        <div className='w-[45%]'>
+                                                            {item.updatedAt &&
+                                                                <>
+                                                                    Last Updated On:
+                                                                    <span>
+                                                                        {formatDatetime(
+                                                                            item.updatedAt)}
+                                                                    </span>
+                                                                </>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    {
+                                                        item.status &&
+                                                        <div
+                                                            className={
+                                                                `library-name
+                                                                gap-[10px]
+                                                                flex mt-[8px]
+                                                                flex-wrap
+                                                                justify-around
+                                                                no-border`
+                                                            }>
+                                                            <div>Molecules:
+                                                                {item.status?.map(val => (
+                                                                    <span
+                                                                        key={val.name}
+                                                                        className={
+                                                                            `badge ${val.type}`
+                                                                        }
+                                                                    >
+                                                                        {val.count} {val.name}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    < div className='library-name no-border' >
+                                                        {
+                                                            item.description ?
+                                                                <TextWithToggle
+                                                                    text={item.description}
+                                                                    isExpanded={
+                                                                        isExpanded.includes(item.id)
+                                                                    }
+                                                                    toggleExpanded={toggleExpanded}
+                                                                    id={item.id}
+                                                                    heading='Description:'
+                                                                    component="library"
+                                                                    clamp={2}
+                                                                /> :
+                                                                <>Description: </>
+                                                        }
+                                                    </div>
+                                                    <div className='flex justify-end'>
+                                                        <Button
+                                                            text="Open"
+                                                            type="normal"
+                                                            stylingMode="contained"
+                                                            elementAttr={
+                                                                {
+                                                                    class: "btn-primary mr-[20px]"
+                                                                }
+                                                            }
+                                                            onClick={() => {
+                                                                const url =
+                                                                    `/projects/${params.id}` +
+                                                                    `?libraryId=${item.id}`;
+                                                                setSelectedLibrary(idx);
+                                                                setSelectedLibraryName(item.name);
+                                                                setExpanded(false);
+                                                                router.push(url);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {projects.libraries.length == 0 && (
+                                                <div className={
+                                                    `flex justify-center 
+                                                    items-center 
+                                                    p-[40px] 
+                                                    h-[70px] 
+                                                    nodata`
+                                                }>
+                                                    {Messages.LIBRARY_LIST_EMPTY}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Item>
+                                </Accordion>
+                            </div>
                             )
                             }
-                            <div className={`border border-solid ${expanded ? 'w-[60vw]' : 'w-100vw'}`}>
+                            <div className={
+                                `border
+                                border-solid
+                                ${expanded ? 'w-[60vw]' : 'w-100vw'}`}>
                                 <DataGrid
                                     dataSource={tableData}
                                     showBorders={true}
@@ -669,7 +849,10 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                             />
                                         }
                                         cellRender={() => (
-                                            <span className='flex justify-center cursor-pointer' onClick={bookMarkItem}>
+                                            <span className={`flex
+                                                justify-center
+                                                cursor-pointer`}
+                                                onClick={bookMarkItem}>
                                                 <Image
                                                     src="/icons/star-filled.svg"
                                                     width={24}
@@ -682,7 +865,8 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                     <Column dataField="Structure"
                                         minWidth={150}
                                         cellRender={() => (
-                                            <span className='flex justify-center gap-[7.5px]' onClick={bookMarkItem}>
+                                            <span className='flex justify-center gap-[7.5px]'
+                                                onClick={bookMarkItem}>
                                                 <Image
                                                     src="/icons/libraries.svg"
                                                     width={24}
@@ -732,7 +916,9 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                             </span>
                                         )} />
                                     <Column dataField="moleculeId" caption="Molecule ID" />
-                                    <Column dataField="molecularWeight" caption="Molecular Weight" />
+                                    <Column
+                                        dataField="molecularWeight"
+                                        caption="Molecular Weight" />
                                     <Column dataField="status" cellRender={({ data }: any) => (
                                         <span className={`flex items-center gap-[5px]`}>
                                             {data.status}
@@ -740,81 +926,143 @@ export default function LibraryDetails({ userData, actionsEnabled, breadcrumbs }
                                         </span>
                                     )} />
                                     <Column dataField="analyse" />
-                                    <Column dataField="herg" caption="HERG" cellRender={({ data }) => {
-                                        let color: StatusCodeType = 'ready';
-                                        if (data.herg <= 0.5) color = 'failed';
-                                        else if (data.herg >= 0.5 && data.herg < 1) color = 'info';
-                                        else if (data.herg >= 1) color = 'done';
-                                        return (
-                                            <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                                                {data.herg}
-                                            </span>
-                                        )
-                                    }} />
-                                    <Column dataField="caco2" caption="CACO-2" cellRender={({ data }) => {
-                                        let color: StatusCodeType = 'ready';
-                                        if (data.caco2 <= 0.5) color = 'failed';
-                                        else if (data.caco2 >= 0.5 && data.caco2 < 1) color = 'info';
-                                        else if (data.caco2 >= 1) color = 'done';
-                                        return (
-                                            <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                                                {data.caco2}
-                                            </span>
-                                        )
-                                    }} />
-                                    <Column dataField="clint" caption="cLint" cellRender={({ data }) => {
-                                        let color: StatusCodeType = 'ready';
-                                        if (data.clint <= 0.5) color = 'failed';
-                                        else if (data.clint >= 0.5 && data.clint < 1) color = 'info';
-                                        else if (data.clint >= 1) color = 'done';
-                                        return (
-                                            <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                                                {data.clint}
-                                            </span>
-                                        )
-                                    }} />
-                                    <Column dataField="hepg2cytox" caption="HepG2-cytox" cellRender={({ data }) => {
-                                        let color: StatusCodeType = 'ready';
-                                        if (data.hepg2cytox <= 0.5) color = 'failed';
-                                        else if (data.hepg2cytox >= 0.5 && data.hepg2cytox < 1) color = 'info';
-                                        else if (data.hepg2cytox >= 1) color = 'done';
-                                        return (
-                                            <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                                                {data.hepg2cytox}
-                                            </span>
-                                        )
-                                    }} />
+                                    <Column
+                                        dataField="herg" caption="HERG" cellRender={
+                                            ({ data }) => {
+                                                let color: StatusCodeType = 'ready';
+                                                if (data.herg <= 0.5) {
+                                                    color = 'failed';
+                                                } else if (data.herg >= 0.5 && data.herg < 1) {
+                                                    color = 'info';
+                                                } else if (data.herg >= 1) {
+                                                    color = 'done';
+                                                }
+                                                return (
+                                                    <span
+                                                        className={
+                                                            `flex 
+                                                            items-center 
+                                                            gap-[5px] 
+                                                            ${StatusCodeBg[color]}`
+                                                        }>
+                                                        {data.herg}
+                                                    </span>
+                                                )
+                                            }} />
+                                    <Column
+                                        dataField="caco2"
+                                        caption="CACO-2"
+                                        cellRender={({ data }) => {
+                                            let color: StatusCodeType = 'ready';
+                                            if (data.caco2 <= 0.5) {
+                                                color = 'failed';
+                                            } else if (data.caco2 >= 0.5 && data.caco2 < 1) {
+                                                color = 'info';
+                                            }
+                                            else if (data.caco2 >= 1) color = 'done';
+                                            return (
+                                                <span className={
+                                                    `flex 
+                                                    items-center 
+                                                    gap-[5px] 
+                                                    ${StatusCodeBg[color]}`
+                                                }>
+                                                    {data.caco2}
+                                                </span>
+                                            )
+                                        }} />
+                                    <Column
+                                        dataField="clint"
+                                        caption="cLint"
+                                        cellRender={
+                                            ({ data }) => {
+                                                let color: StatusCodeType = 'ready';
+                                                if (data.clint <= 0.5) {
+                                                    color = 'failed';
+                                                } else if (data.clint >= 0.5 && data.clint < 1) {
+                                                    color = 'info';
+                                                } else if (data.clint >= 1) {
+                                                    color = 'done';
+                                                }
+                                                return (
+                                                    <span className={
+                                                        `flex 
+                                                        items-center 
+                                                        gap-[5px] 
+                                                        ${StatusCodeBg[color]}`
+                                                    }>
+                                                        {data.clint}
+                                                    </span>
+                                                )
+                                            }} />
+                                    <Column
+                                        dataField="hepg2cytox"
+                                        caption="HepG2-cytox"
+                                        cellRender={
+                                            ({ data }) => {
+                                                let color: StatusCodeType = 'ready';
+                                                if (data.hepg2cytox <= 0.5) {
+                                                    color = 'failed';
+                                                } else if (data.hepg2cytox >= 0.5 &&
+                                                    data.hepg2cytox < 1) {
+                                                    color = 'info';
+                                                } else if (data.hepg2cytox >= 1) {
+                                                    color = 'done';
+                                                }
+                                                return (
+                                                    <span className={
+                                                        `flex 
+                                                        items-center 
+                                                        gap-[5px] 
+                                                        ${StatusCodeBg[color]}`
+                                                    }>
+                                                        {data.hepg2cytox}
+                                                    </span>
+                                                )
+                                            }} />
                                     <Column dataField="solubility" cellRender={({ data }) => {
                                         let color: StatusCodeType = 'ready';
-                                        if (data.solubility <= 0.5) color = 'failed';
-                                        else if (data.solubility >= 0.5 && data.solubility < 1) color = 'info';
-                                        else if (data.solubility >= 1) color = 'done';
+                                        if (data.solubility <= 0.5) {
+                                            color = 'failed';
+                                        } else if (data.solubility >= 0.5 && data.solubility < 1) {
+                                            color = 'info';
+                                        } else if (data.solubility >= 1) {
+                                            color = 'done';
+                                        }
                                         return (
-                                            <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+                                            <span className={
+                                                `flex 
+                                                items-center 
+                                                gap-[5px] 
+                                                ${StatusCodeBg[color]}`
+                                            }>
                                                 {data.solubility}
                                             </span>
                                         )
                                     }} />
 
                                     <GridToolbar>
-                                        <ToolbarItem location="after">
-                                            <Button
-                                                text="Add Molecule"
-                                                icon="plus"
-                                                disabled={true}
-                                                render={(buttonData: any) => (
-                                                    <>
-                                                        <Image
-                                                            src="/icons/plus.svg"
-                                                            width={24}
-                                                            height={24}
-                                                            alt="Create"
-                                                        />
-                                                        <span className='ml-[5px]'>{buttonData.text}</span>
-                                                    </>
-                                                )}
-                                            />
-                                        </ToolbarItem>
+                                        {actionsEnabled.includes('create_molecule') &&
+                                            <ToolbarItem location="after">
+                                                <Button
+                                                    text="Add Molecule"
+                                                    icon="plus"
+                                                    disabled={true}
+                                                    render={(buttonData: any) => (
+                                                        <>
+                                                            <Image
+                                                                src="/icons/plus.svg"
+                                                                width={24}
+                                                                height={24}
+                                                                alt="Create"
+                                                            />
+                                                            <span className='ml-[5px]'>
+                                                                {buttonData.text}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                />
+                                            </ToolbarItem>}
                                         <ToolbarItem location="after">
                                             <Button
                                                 text="Filter"

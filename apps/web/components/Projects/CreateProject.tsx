@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
 import toast from "react-hot-toast";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -120,8 +121,22 @@ export default function CreateProject({
     if (formRef.current!.instance().validate().isValid) {
       const sharedUsers = filteredData.filter(val => val.permission !== 'View');
       let response;
-      if (edit) response = await editProject({ ...values, sharedUsers, organizationId, userId: userData.id })
-      else response = await createProjectApi({ ...values, sharedUsers, organizationId, userId: userData.id });
+      if (edit) {
+        response = await editProject(
+          {
+            ...values,
+            sharedUsers,
+            organizationId,
+            userId: userData.id
+          })
+      }
+      else response = await createProjectApi(
+        {
+          ...values,
+          sharedUsers,
+          organizationId,
+          userId: userData.id
+        });
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();
@@ -136,8 +151,11 @@ export default function CreateProject({
 
   const fetchUserList = (e: any) => {
     const { value } = e;
-    let filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
-    filteredUsers = filteredUsers.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== userData.id);
+    let filteredUsers = organizationData.filter(
+      (org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
+    filteredUsers = filteredUsers.filter(
+      (user: User) => user.user_role[0]?.role?.type === 'library_manager' &&
+        user.id !== userData.id);
     setUsers(filteredUsers);
     setOrganizationId(value);
     filterUsers(filteredUsers);
@@ -172,7 +190,8 @@ export default function CreateProject({
       dataField="organization"
       editorType="dxSelectBox"
       editorOptions={{
-        items: organizationData.filter((organization: OrganizationDataFields) => organization.type !== 'Internal'),
+        items: organizationData.filter(
+          (organization: OrganizationDataFields) => organization.type !== 'Internal'),
         displayExpr: "name",
         placeholder: "Organization name",
         valueExpr: "id",
@@ -194,13 +213,25 @@ export default function CreateProject({
       {myRoles?.includes('admin') && !edit ? OrganizationSelectBox :
         <SimpleItem
           dataField="organization"
-          editorOptions={{ placeholder: "Organization name", disabled: true, value: userData?.orgUser?.name }}
+          editorOptions={
+            {
+              placeholder: "Organization name",
+              disabled: true,
+              value: userData?.orgUser?.name
+            }
+          }
         >
           <Label text="Organization Name*" />
         </SimpleItem>}
       <SimpleItem
         dataField="owner"
-        editorOptions={{ placeholder: "Project Owner", disabled: true, value: `${userData.owner?.firstName} ${userData.owner?.lastName}` }}
+        editorOptions={
+          {
+            placeholder: "Project Owner",
+            disabled: true,
+            value: `${userData.owner?.firstName} ${userData.owner?.lastName}`
+          }
+        }
       >
         <Label text="Project Owner*" />
       </SimpleItem>
@@ -209,14 +240,14 @@ export default function CreateProject({
         dataField="type"
         editorOptions={projectTypeEditorOptions}
       >
-        <Label text="Project Type*" />
+        <Label text="Project Type" />
         <RequiredRule message="Project type is required" />
       </SimpleItem>
       <SimpleItem
         dataField="name"
         editorOptions={{ placeholder: "New Project" }}
       >
-        <Label text="Project Name*" />
+        <Label text="Project Name" />
         <RequiredRule message="Project name is required" />
       </SimpleItem>
       <SimpleItem

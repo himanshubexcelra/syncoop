@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
 import toast from "react-hot-toast";
 import {
@@ -29,8 +30,21 @@ export default function CreateLibrary({
     const values = formRef?.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
       let response;
-      if (libraryIdx !== -1) response = await editLibrary({ ...values, userId: userData.id, projectId: projectData.id })
-      else response = await createLibrary({ ...values, userId: userData.id, projectId: projectData.id });
+      if (libraryIdx !== -1) {
+        response = await editLibrary(
+          {
+            ...values,
+            userId: userData.id,
+            projectId: projectData.id
+          });
+      } else {
+        response = await createLibrary(
+          {
+            ...values,
+            userId: userData.id,
+            projectId: projectData.id
+          });
+      }
       if (!response.error) {
         formRef?.current!.instance().reset();
         fetchLibraries();
@@ -54,16 +68,30 @@ export default function CreateLibrary({
   }
 
   return (
-    <Form ref={formRef} showValidationSummary={true} formData={libraryIdx !== undefined ? projectData.libraries[libraryIdx] : {}}>
+    <Form
+      ref={formRef}
+      showValidationSummary={true}
+      formData={libraryIdx !== undefined ? projectData.libraries[libraryIdx] : {}
+      }>
       <SimpleItem
         dataField="organization"
-        editorOptions={{ placeholder: "Organization name", disabled: true, value: projectData.organization?.name }}
+        editorOptions={
+          {
+            placeholder: "Organization name",
+            disabled: true,
+            value: projectData.organization?.name
+          }}
       >
         <Label text="Organization Name*" />
       </SimpleItem>
       <SimpleItem
         dataField="owner"
-        editorOptions={{ placeholder: "Library Owner", disabled: true, value: `${userData.firstName} ${userData.lastName}` }}
+        editorOptions={
+          {
+            placeholder: "Library Owner",
+            disabled: true, value: `${userData.firstName} ${userData.lastName}`
+          }
+        }
       >
         <Label text="Library Owner*" />
       </SimpleItem>
@@ -73,13 +101,12 @@ export default function CreateLibrary({
         editorOptions={{ placeholder: "New Project", value: projectData.name, disabled: true }}
       >
         <Label text="Project name*" />
-        <RequiredRule message="Project name is required" />
       </SimpleItem>
       <SimpleItem
         dataField="name"
         editorOptions={{ placeholder: "New Library" }}
       >
-        <Label text="Library name*" />
+        <Label text="Library name" />
         <RequiredRule message="Library name is required" />
       </SimpleItem>
       <SimpleItem

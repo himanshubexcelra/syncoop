@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -5,9 +6,30 @@ import Accordion, { AccordionTypes } from 'devextreme-react/accordion';
 import ProjectTitle from './ProjectTitle';
 import ProjectAccordionDetail from './ProjectAccordionDetail';
 import './projects.css';
-import { ProjectDataFields, User, ProjectListProps, OrganizationDataFields } from '@/lib/definition';
+import {
+    ProjectDataFields,
+    User,
+    OrganizationDataFields,
+    FetchUserType,
+    UserData
+} from '@/lib/definition';
 
-export default function ListProjects({ data, users, fetchOrganizations, organizationData, userData }: ProjectListProps) {
+type ProjectListProps = {
+    data: ProjectDataFields[],
+    users: User[],
+    fetchOrganizations: FetchUserType,
+    organizationData: OrganizationDataFields[],
+    userData: UserData,
+    actionsEnabled: string[]
+}
+
+export default function ListProjects({ data,
+    users,
+    fetchOrganizations,
+    organizationData,
+    userData,
+    actionsEnabled
+}: ProjectListProps) {
     const [selectedItems, setSelectedItems] = useState<ProjectDataFields[]>([]);
     const [userList, setUsers] = useState<User[]>(users);
     const { myRoles } = userData;
@@ -30,10 +52,15 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
         setSelectedItems(newItems);
         if (myRoles?.includes("admin")) {
             if (Array.isArray(organizationData)) {
-                const filteredUsers = organizationData.filter((org: OrganizationDataFields) => org.id === newItems[0].organizationId)[0]?.orgUser;
+                const filteredUsers = organizationData.filter(
+                    (org: OrganizationDataFields) =>
+                        org.id === newItems[0].organizationId)[0]?.orgUser;
 
                 if (filteredUsers) {
-                    setUsers(filteredUsers?.filter((user: User) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== userData.id));
+                    setUsers(filteredUsers?.filter(
+                        (user: User) =>
+                            user.user_role[0]?.role?.type === 'library_manager' &&
+                            user.id !== userData.id));
                 }
             }
         }
@@ -62,6 +89,7 @@ export default function ListProjects({ data, users, fetchOrganizations, organiza
                             fetchOrganizations={fetchOrganizations}
                             organizationData={organizationData}
                             userData={userData}
+                            actionsEnabled={actionsEnabled}
                             myRoles={myRoles} />
                     )}
                 </div>

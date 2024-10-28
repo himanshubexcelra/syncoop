@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from 'react';
 import styles from './ProfileInfo.module.css'
-import { HeadingObj, UserData, } from '@/lib/definition';
+import { HeadingObj, OrgUser, UserData, } from '@/lib/definition';
 import { Popup as MainPopup, } from "devextreme-react/popup";
 import './form.css'
 import { getUsersById } from './service';
@@ -11,6 +11,8 @@ import ResetPassword from './ResetPassword';
 import Heading from '../Heading/Heading';
 import RenderEditUser from '../User/editUserDetails';
 import { Messages } from '@/utils/message';
+import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import { getProfileBreadCrumbs } from './breadCrumbs';
 
 const changeDialogProperties = {
     width: 480,
@@ -26,9 +28,10 @@ type ProfileInfoProps = {
     myRoles: string[];
     isMyProfile: boolean;
     actionsEnabled: string[]
+    orgDetailLoggedIn?: OrgUser
 }
 
-export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled }: ProfileInfoProps) {
+export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled, orgDetailLoggedIn }: ProfileInfoProps) {
     const [data, setData] = useState<UserData[]>([]);
     const [formVisible, setFormVisible] = useState(false);
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
@@ -62,7 +65,7 @@ export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled }
     useEffect(() => {
         fetchData();
     }, [id]);
-    
+
     const heading: HeadingObj[] = [
         {
             svgPath: "/icons/profile-icon-lg-active.svg",
@@ -73,8 +76,10 @@ export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled }
             type: "Profile:"
         },
     ];
+    const breadcrumbs = getProfileBreadCrumbs(isMyProfile, myRoles, orgDetailLoggedIn || null)
     return (
         <>
+            <Breadcrumb breadcrumbs={breadcrumbs} />
             <Heading heading={heading} myRoles={myRoles} />
             <main className={styles.main}>
                 <div className={styles.box}>

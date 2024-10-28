@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
 import { useState } from 'react';
@@ -24,7 +25,8 @@ export default function Module({ features, myRoles }: ModuleTableProps) {
                             type="checkbox"
                             className={`form-checkbox w-4 h-4 ${styles.checboxEdge}`}
                             checked={feature.checked}
-                            onChange={myRoles?.includes('admin') ? () => toggleCheckbox(index) : undefined}
+                            onChange={myRoles?.includes('admin') ?
+                                () => toggleCheckbox(index) : undefined}
                             disabled={!myRoles?.includes('admin')}
                         />
                     </div>

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from 'react';
 import { Popup } from "devextreme-react/popup";
-import { DashboardPageType, OrganizationDataFields } from "@/lib/definition";
+import { BreadCrumbsObj, DashboardPageType, OrganizationDataFields } from "@/lib/definition";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import UsersTable from "@/components/User/UsersTable";
 import ListOrganization from "@/components/Organization/ListOrganization";
@@ -13,9 +13,9 @@ import { popupPositionValue } from "@/utils/helpers";
 import styles from "./page.module.css";
 import { getOrganizationById } from "@/components/Organization/service";
 import EditOrganization from "../Organization/editOrganization";
+import { getDashBoardBreadCrumbs } from "./breadCrumbs";
 
 export default function LandingPage({ userData,
-    breadcrumbs,
     tabsStatus,
     filteredRoles,
     myRoles,
@@ -27,7 +27,8 @@ export default function LandingPage({ userData,
     const [editPopup, showEditPopup] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<any>(null);
-    const { id } = userData;
+    const { id, } = userData;
+    const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgUser)
 
     const fetchOrganizationData = async () => {
         const organization = await getOrganizationById({ withRelation: ['orgUser', 'user_role'], id: userData?.organizationId });

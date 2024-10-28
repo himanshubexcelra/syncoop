@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client"
 
 import { authorize } from "@/utils/auth";
@@ -40,7 +41,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         const response = await authorize(formData);
         if (response) {
             if (response.success) {
-                const { data } = response;                
+                const { data } = response;
                 setLoadIndicatorVisible(false);
                 setButtonText('Login');
                 await onSuccess(data);
@@ -66,7 +67,20 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     return (
         <>
             <DialogPopUp {...{ visible, dialogProperties, Content: PopupContent, hidePopup }} />
-            <form onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
+            <form
+                onSubmit={handleSubmit}
+                className={
+                    `flex
+                    flex-col
+                    w-[540px]
+                    h-auto
+                    p-[32px]
+                    gap-[10px]
+                    border-2
+                    border-themelightGreyColor
+                    bg-background
+                    rounded-[8px]`
+                }>
                 <div className="mb-6 flex flex-col gap-2">
                     <Image
                         src="/icons/M-icon.svg"
@@ -87,7 +101,17 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                         type="email"
                         id="email"
                         name="email"
-                        className={`border border-themeBorderGrey rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor ${styles.emailInput}`}
+                        className={
+                            `border 
+                            border-themeBorderGrey 
+                            rounded-[4px] 
+                            w-[476px] 
+                            h-[40px] 
+                            flex-shrink-0 
+                            p-3 
+                            bg-themeSilverGreyColor 
+                            ${styles.emailInput}`
+                        }
                         placeholder="Enter your email"
                         required
                     />
@@ -99,7 +123,17 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                             type={showPassword ? "text" : "password"}
                             id="password"
                             name="password"
-                            className={`border border-themeBorderGrey rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor ${styles.emailInput}`}
+                            className={
+                                `border 
+                                border-themeBorderGrey 
+                                rounded-[4px]
+                                 w-[476px] 
+                                 h-[40px] 
+                                flex-shrink-0 
+                                p-3 
+                                bg-themeSilverGreyColor 
+                                ${styles.emailInput}`
+                            }
                             placeholder="Enter your password"
                             required
                         />
@@ -109,7 +143,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                             onClick={() => setShowPassword(!showPassword)}
                         >
                             <Image
-                                src={showPassword ? "/icons/eye-off-icon.svg" : "/icons/eye-icon.svg"}
+                                src={showPassword ?
+                                    "/icons/eye-off-icon.svg" : "/icons/eye-icon.svg"}
                                 alt={showPassword ? "Hide password" : "Show password"}
                                 width={18}
                                 height={18}
@@ -124,13 +159,43 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                             width={14}
                             height={15}
                         />
-                        <span className="text-foreground text-sm font-bold leading-tight cursor-pointer" onClick={() => setVisible(true)}>Forgot password?</span>
+                        <span className={
+                            `text-foreground
+                            text-sm
+                            font-bold
+                            leading-tight
+                            cursor-pointer"
+                            onClick={() => setVisible(true)}`}>
+                            Forgot password?
+                        </span>
                     </div>
                 </div>
 
-                <button type="submit" className="w-24 h-10 p-3 bg-themeBlueColor rounded justify-center items-center inline-flex text-background text-base font-bold font-['Lato'] leading-tight">
-                    <LoadIndicator className={`button-indicator ${styles.white}`} visible={loadIndicatorVisible} height={20} width={20} />
-                    {buttonText}</button>
+                <button type="submit" className={
+                    `w-24 
+                    h-10 
+                    p-3 
+                    bg-themeBlueColor 
+                    rounded 
+                    justify-center 
+                    items-center 
+                    inline-flex 
+                    text-background 
+                    text-base 
+                    font-bold 
+                    font-['Lato'] 
+                    leading-tight`
+                }>
+                    <LoadIndicator
+                        className={
+                            `button-indicator 
+                        ${styles.white}`
+                        }
+                        visible={loadIndicatorVisible}
+                        height={20}
+                        width={20} />
+                    {buttonText}
+                </button>
 
             </form>
         </>

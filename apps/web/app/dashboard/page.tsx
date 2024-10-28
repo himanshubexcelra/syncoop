@@ -1,5 +1,5 @@
 import styles from "./page.module.css";
-import { BreadCrumbsObj, HeadingObj } from "@/lib/definition";
+import { HeadingObj } from "@/lib/definition";
 import Layout from "@/components/layout";
 import { getUserData } from "@/utils/auth";
 import { redirect } from "next/navigation";
@@ -21,33 +21,6 @@ export default async function Dashboard() {
   const { userData, actionsEnabled } = sessionData;
   const { myRoles, orgUser } = userData;
   const filteredRoles = await getFilteredRoles();
-
-  const breadcrumbs: BreadCrumbsObj[] = [
-    {
-      label: "Home",
-      svgPath: "/icons/home-icon.svg",
-      svgWidth: 16,
-      svgHeight: 16,
-      href: "/",
-    },
-    {
-      label: `Admin: EMD DD`,
-      svgPath: "/icons/admin-inactive-icon.svg",
-      svgWidth: 16,
-      svgHeight: 16,
-      href: "/",
-    },
-  ];
-
-  if (!myRoles.includes('admin')) {
-    breadcrumbs.push({
-      label: `${orgUser?.name}`,
-      svgPath: "/icons/organization.svg",
-      svgWidth: 16,
-      svgHeight: 16,
-      href: "/",
-    })
-  }
 
   const heading: HeadingObj[] = [
     {
@@ -87,7 +60,6 @@ export default async function Dashboard() {
             userData={userData}
             tabsStatus={tabsStatus}
             heading={heading}
-            breadcrumbs={breadcrumbs}
             filteredRoles={filteredRoles}
             myRoles={myRoles}
             orgUser={orgUser}

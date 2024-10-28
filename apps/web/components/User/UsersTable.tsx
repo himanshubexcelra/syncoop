@@ -74,7 +74,11 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                 setExternalUsers(external)
                 setInternalCount(internal.length);
                 setExternalCount(external.length);
-                type === "Internal" ? setTableData(internal) : setTableData(external);
+                if (type === "Internal") {
+                    setTableData(internal)
+                } else {
+                    setTableData(external);
+                }
                 context?.addToState({
                     ...appContext, userCount: {
                         externalUsers: externalUsers.length,
@@ -290,7 +294,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                                 )}
                             />
                         </Item>
-                        <Item name="searchPanel" />
+                        <Item name="searchPanel" location="before" />
                     </GridToolbar>
                     <SearchPanel visible={true} highlightCaseSensitive={true} />
                 </DataGrid>}

@@ -352,3 +352,12 @@ export interface LibraryDataNode {
   isInInventory?: boolean;
   publishedMoleculeCount?: number;
 }
+export interface ValidateSmileRequest {
+  smiles: string;
+}
+
+export interface UploadMoleculeSmilesRequest {
+  smiles: string[];
+  created_by_user_id : number;
+  library_id: string;
+}

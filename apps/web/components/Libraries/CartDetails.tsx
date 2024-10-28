@@ -1,61 +1,88 @@
 
 import DataGrid, { Column } from 'devextreme-react/data-grid';
-import styles from "./table.module.css";
 import { Button as Btn } from "devextreme-react/button";
 import Image from "next/image";
 
-export default function CartDetails() {
-    const removeItemFromCart = () => {
-        
+export default function CartDetails({ cartData }) {
+    interface CartDetail {
+        moleculeId: number;
+        libraryId: number;
+        molecular_weight: string;
+        projectName: string;
+        libraryName: string;
+        moleculeName: string;
     }
-    const cartDetails = typeof localStorage !== 'undefined' && localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart') ?? '[]') : [];
-    const cartProjectData: [] = cartDetails.reduce((acc, item) => {
-        const project = acc.find(p => p.projectName === item.projectName);
-        if (project) {
-            project.items.push(item);
-        } else {
-            acc.push({ projectName: item.projectName, items: [item] });
+    interface GroupedData {
+        [key: string]: { moleculeId: number; molecularWeight: string; moleculeName: string }[];
+    }
+
+
+
+    const cartDetails: CartDetail[] = cartData.map(item => ({
+        moleculeId: item.moleculeId,
+        libraryId: item.libraryId,
+        molecular_weight: item.molecule.molecular_weight,
+        projectName: item.molecule.library.project.name,
+        libraryName: item.molecule.library.name,
+        moleculeName: item.molecule.source_molecule_name
+    }));
+
+    const removeItemFromCart = () => {
+
+    }
+    const groupedData = cartDetails.reduce((acc: GroupedData, item) => {
+        const key = `${item.projectName}/${item.libraryName}`;
+        if (!acc[key]) {
+            acc[key] = [];
         }
+        acc[key].push({
+            moleculeId: item.moleculeId,
+            molecularWeight: item.molecular_weight,
+            moleculeName: item.moleculeName
+        });
         return acc;
-    }, []);
+    }, {});
+
+    const formattedData = Object.entries(groupedData).map(([key, values]) => ({
+        key,
+        values
+    }));
+
+
     return (
         <>
-            {
-                cartProjectData.length > 0 && cartProjectData.map((project) => (
-                    <>
-                        <div className='accordion-title'>{project.projectName}</div>
-                        <DataGrid
-                            dataSource={project.items}
-                            showBorders={true}
-                            elementAttr={{ cssClass: styles.table }}
-                            className="no-padding-header"
-                        >
-                            <Column dataField="id" caption="ID" />
-                            <Column dataField="moleculeId" caption="Molecule ID" />
-                            <Column dataField="molecularWeight" caption="Molecular Weight" />
-                            <Column
-                                width={80}
-                                cellRender={({ data }: any) => (
-                                    <Btn
-                                        render={() => (
-                                            <>
-                                                <Image
-                                                    src="/icons/delete.svg"
-                                                    width={24}
-                                                    height={24}
-                                                    alt="Create"
-                                                />
-                                            </>
-                                        )}
-                                       onClick={() => removeItemFromCart(data)}
-                                    />
-                                )}
-                                caption="Remove"
-                            />
-
-                        </DataGrid>
-                    </>
-                ))}
+            {formattedData.map((group) => (
+                <div key={group.key}>
+                    <div className='accordion-title'>{group.key}</div>
+                    <DataGrid
+                        dataSource={group.values}
+                        showBorders={true}
+                    >
+                        <Column dataField="moleculeName" caption="Molecule Name" />
+                        <Column dataField="moleculeId" caption="MoleculeID" />
+                        <Column dataField="molecularWeight" caption="MoleculeWeight" />
+                        <Column
+                            width={80}
+                            cellRender={({ group }: any) => (
+                                <Btn
+                                    render={() => (
+                                        <>
+                                            <Image
+                                                src="/icons/delete.svg"
+                                                width={24}
+                                                height={24}
+                                                alt="Create"
+                                            />
+                                        </>
+                                    )}
+                                    onClick={() => removeItemFromCart(group)}
+                                />
+                            )}
+                            caption="Remove"
+                        />
+                    </DataGrid>
+                </div>
+            ))}
         </>
     );
 }

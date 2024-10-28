@@ -1,6 +1,15 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-export async function getOrganization({ withRelation = [], withCount = [], type = '' }: { withRelation?: string[], withCount?: string[], type?: string }) {
+export async function getOrganization(
+  { withRelation = [],
+    withCount = [],
+    type = ''
+  }: {
+    withRelation?: string[],
+    withCount?: string[],
+    type?: string
+  }) {
   const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));
@@ -23,7 +32,14 @@ export async function getOrganization({ withRelation = [], withCount = [], type 
   return data;
 }
 
-export async function getOrganizationById({ withRelation = [], id }: { withRelation?: string[], id?: number }) {
+export async function getOrganizationById(
+  {
+    withRelation = [],
+    id
+  }: {
+    withRelation?: string[],
+    id?: number
+  }) {
   const url = new URL(`${process.env.API_HOST_URL}/v1/organization?id=${id}`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));

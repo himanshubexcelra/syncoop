@@ -20,8 +20,10 @@ export const Messages = {
     FETCH_ERROR: 'Error fetching data: ',
     USER_FETCH_ERROR: 'Error fetching user: ',
     PASSWORD_CHANGE: "Password changed",
-    INVALID_URL: "Invalid URL",
+    INVALID_URL: "Invalid URL. No such library or project found.",
     libraryAddedUpdated(status: string) {
         return `Library ${status} successfully`;
-    }
+    },
+    LIBRARY_LIST_EMPTY:
+        "Your library list is empty, add a library to import molecules"
 }

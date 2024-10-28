@@ -8,20 +8,35 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const libraryId = searchParams.get('libraryId');
+        const isLibrary = searchParams.get('isLibrary') === 'true';
         const query: any = {
-          where: {
-            libraryId:Number(libraryId)
-          },  
-          include: {
-            molecule: {
-                select:{
-                    molecular_weight:true,
-                    source_molecule_name:true,
-                }
+            include: {
+                molecule: {
+                    select: {
+                        molecular_weight: true,
+                        source_molecule_name: true,
+                        library: {
+                            select: {
+                                id: true,
+                                name: true,
+                                project: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
             },
-          },
-          
         };
+
+        if (isLibrary) {
+            query.where = {
+                libraryId: Number(libraryId),
+            };
+        }
         const molecule = await prisma.molecule_cart.findMany(query);
         return new Response(JSON.stringify(molecule), {
             headers: { "Content-Type": "application/json" },
@@ -35,18 +50,18 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request:Request) {
+export async function POST(request: Request) {
     const req = await request.json();
 
     const result = req.map(item => ({
         moleculeId: Number(item.moleculeId),
         libraryId: Number(item.libraryId),
-        createdBy:Number(item.userId)
+        createdBy: Number(item.userId)
     }));
     try {
         await prisma.molecule_cart.createMany({
-            data:result
-          })
+            data: result
+        })
         return new Response(JSON.stringify([]), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,

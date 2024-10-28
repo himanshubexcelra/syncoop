@@ -11,6 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@rdkit/rdkit": "2024.3.5-1.0.0",
     "devextreme": "24.1",
     "devextreme-react": "24.1",
     "next": "14.2.13",

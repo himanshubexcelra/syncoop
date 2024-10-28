@@ -1,9 +1,9 @@
-'use cleint'
+'use client'
 import { useEffect } from "react";
 import { defineCustomElements } from "@/packages/chemuix/dist/esm/loader";
 import { LibraryDataNode } from "@/lib/definition";
 
-const nodes1: LibraryDataNode[] = [
+/* const nodes1: LibraryDataNode[] = [
     {
         id: "06160e59c3ed4901a7fbdc133f34ba79",
         type: "molecule",
@@ -58,20 +58,43 @@ const nodes1: LibraryDataNode[] = [
         isProtected: true,
         isInInventory: true,
     },
-];
-const nodes: { nodes: LibraryDataNode[] } = { nodes: [] }
-export default function PathwayImage() {
+]; */
+
+// const nodes: { nodes: LibraryDataNode[] } = { nodes: [] }
+
+type PathwayImageProps = {
+    children: React.ReactNode,
+    pathwayId: string,
+    nodes: LibraryDataNode[],
+    style: object
+}
+
+export default function PathwayImage({ pathwayId, nodes, children, style }: PathwayImageProps) {
 
     useEffect(() => {
         defineCustomElements(window);
     }, []);
 
     useEffect(() => {
-        const element = document.querySelector("reaction-pathway") || nodes;
-        element.nodes = nodes1;
+        const element = document.querySelector("#" + pathwayId);
+        
+        // @ts-expect-error JSX element not proper typed
+        element.nodes = nodes;
     }, []);
 
     return (
-        <reaction-pathway></reaction-pathway>
+        <div style={style}>
+            {
+                // @ts-expect-error JSX element not recognized
+                <reaction-pathway
+                    id={pathwayId}
+                    nodes="display-score"
+                    display-reaction-reference="true"
+                    display-reaction-name="true"
+                    display-reaction-condition="false"
+                    display-honeycomb="true" />
+            }
+            {children}
+        </div>
     );
 }

@@ -31,10 +31,10 @@ export default function TextWithToggle({ id, text, isExpanded, toggleExpanded, h
             </div>
             {isTruncated && (
                 <button
-                    className="text-themeBlueColor"
+                    className="text-themeBlueColor mb-[1px]"
                     onClick={() => toggleExpanded(id, component)}
                 >
-                    {isExpanded ? 'less' : '...more'}
+                    {isExpanded ? 'less' : 'more'}
                 </button>
             )}
         </div>

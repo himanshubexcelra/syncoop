@@ -1,7 +1,5 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
-
-import { log } from "console";
-
 export async function getLibraries(withRelation: string[] = [], projectId: string) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/project/${projectId}`);
     if (withRelation.length) {
@@ -117,9 +115,13 @@ export async function addMoleculeToCart(moleculeData: []) {
     }
 }
 
-export async function getMoleculeCart(libraryId?: number) {
+export async function getMoleculeCart(libraryId?: number, isLibrary?: boolean) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule/?libraryId=${libraryId}`);
+        const url = new URL(
+            `${process.env.API_HOST_URL}/v1/molecule/?libraryId=${libraryId}` +
+            `&isLibrary=${isLibrary}`
+        );
+
         const response = await fetch(url, {
             mode: "no-cors",
             method: "GET",

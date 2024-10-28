@@ -1,5 +1,5 @@
 "use client"
-
+ 
 import { authorize } from "@/utils/auth";
 import Image from "next/image"
 import React, { useState } from "react"
@@ -12,7 +12,7 @@ import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
 import { UserData } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
-
+ 
 export type ErrorType = {
     email: string,
     password: string[]
@@ -21,17 +21,17 @@ const dialogProperties = {
     width: 336,
     height: 424,
 }
-
+ 
 type LoginFormProps = {
     onSuccess: (userData: UserData) => void;
 }
-
+ 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
     const [visible, setVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
     const [buttonText, setButtonText] = useState('Login');
-
+ 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setLoadIndicatorVisible(true);
@@ -62,28 +62,28 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     const hidePopup = () => {
         setVisible(false);
     };
-
+ 
     return (
-        <>
-            <DialogPopUp {...{ visible, dialogProperties, Content: PopupContent, hidePopup }} />
-            <form onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
-                <div className="mb-6 flex flex-col gap-2">
-                    <Image
+<>
+<DialogPopUp {...{ visible, dialogProperties, Content: PopupContent, hidePopup }} />
+<form onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
+<div className="mb-6 flex flex-col gap-2">
+<Image
                         src="/icons/M-icon.svg"
                         alt="Merck logo"
                         priority
                         width={64}
                         height={30}
                     />
-                </div>
-                <div className="mb-6 flex flex-col gap-2">
-                    <h1 className={styles.Headline}>
+</div>
+<div className="mb-6 flex flex-col gap-2">
+<h1 className={styles.Headline}>
                         Welcome!
-                    </h1>
-                </div>
-                <div className="mb-6 flex flex-col gap-2">
-                    <label htmlFor="email" className={styles.label}>Email Address</label>
-                    <input
+</h1>
+</div>
+<div className="mb-6 flex flex-col gap-2">
+<label htmlFor="email" className={styles.label}>Email Address</label>
+<input
                         type="email"
                         id="email"
                         name="email"
@@ -91,11 +91,11 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                         placeholder="Enter your email"
                         required
                     />
-                </div>
-                <div className="flex flex-col gap-2 mb-6">
-                    <label htmlFor="password" className={styles.label}>Password</label>
-                    <div className="flex items-center">
-                        <input
+</div>
+<div className="flex flex-col gap-2 mb-6">
+<label htmlFor="password" className={styles.label}>Password</label>
+<div className="flex items-center">
+<input
                             type={showPassword ? "text" : "password"}
                             id="password"
                             name="password"
@@ -103,36 +103,36 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                             placeholder="Enter your password"
                             required
                         />
-                        <button
+<button
                             type="button"
                             className="ml-[-30px] flex items-center"
                             onClick={() => setShowPassword(!showPassword)}
-                        >
-                            <Image
+>
+<Image
                                 src={showPassword ? "/icons/eye-off-icon.svg" : "/icons/eye-icon.svg"}
                                 alt={showPassword ? "Hide password" : "Show password"}
                                 width={18}
                                 height={18}
                             />
-                        </button>
-                    </div>
-                    <div className="flex gap-1.5">
-                        <Image
+</button>
+</div>
+<div className="flex gap-1.5">
+<Image
                             src="/icons/info-icon.svg"
                             alt="Forgot Password"
                             priority
                             width={14}
                             height={15}
                         />
-                        <span className="text-foreground text-sm font-bold leading-tight cursor-pointer" onClick={() => setVisible(true)}>Forgot password?</span>
-                    </div>
-                </div>
-
+<span className="text-foreground text-sm font-bold leading-tight cursor-pointer" onClick={() => setVisible(true)}>Forgot password?</span>
+</div>
+</div>
+ 
                 <button type="submit" className="w-24 h-10 p-3 bg-themeBlueColor rounded justify-center items-center inline-flex text-background text-base font-bold font-['Lato'] leading-tight">
-                    <LoadIndicator className={`button-indicator ${styles.white}`} visible={loadIndicatorVisible} height={20} width={20} />
+<LoadIndicator className={`button-indicator ${styles.white}`} visible={loadIndicatorVisible} height={20} width={20} />
                     {buttonText}</button>
-
+ 
             </form>
-        </>
+</>
     )
-} 
+}

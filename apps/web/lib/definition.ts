@@ -15,7 +15,7 @@ export const LoginFormSchema = z.object({
     .trim(),
 });
 
-export interface BreadCrumbsObj {
+export type BreadCrumbsObj = {
   label: string;
   href: string;
   svgPath: string;
@@ -25,7 +25,8 @@ export interface BreadCrumbsObj {
   type?: string;
 }
 
-export interface HeadingObj extends BreadCrumbsObj { }
+export type HeadingObj = BreadCrumbsObj
+
 export interface DropDownItem {
   label: string;
   value: string;
@@ -305,14 +306,6 @@ export interface AppContextModel {
   userCount: UserCountModel;
 }
 
-export interface ProjectListProps {
-  data: ProjectDataFields[],
-  users: User[],
-  fetchOrganizations: FetchUserType,
-  organizationData: OrganizationDataFields[],
-  userData: UserData
-}
-
 export type ToggleExpandType = (value: number, text: string) => void;
 
 export interface ExpandTextType {
@@ -346,8 +339,8 @@ export interface ProductModel {
   id: number;
   moleculeId: number;
   molecularWeight: number;
-  projectId:number;
-  projectName:string;
+  projectId: number;
+  projectName: string;
 }
 
 export interface ProductContextModel {
@@ -365,7 +358,6 @@ export interface CartContextModel {
 
 export interface DashboardPageType {
   userData: UserData,
-  breadcrumbs: BreadCrumbsObj[],
   tabsStatus: TabDetail[],
   filteredRoles: UserRole[],
   myRoles: string[],
@@ -379,7 +371,7 @@ export interface LibraryDataNode {
   type?: string;
   smiles?: string;
   parentId?: string;
-  score?: number | null;
+  score?: string | number | null;
   name?: string;
   condition?: string;
   reactionCount?: number;
@@ -387,4 +379,5 @@ export interface LibraryDataNode {
   isRegulated?: boolean;
   isProtected?: boolean;
   isInInventory?: boolean;
+  publishedMoleculeCount?: number;
 }

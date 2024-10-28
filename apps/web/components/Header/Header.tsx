@@ -29,16 +29,16 @@ export default function Header({ userData }: HeaderProps) {
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
-    const [cartLength,setCartLength] = useState(0)
+    const [cartData, setCartData] = useState([])
     useEffect(() => {
         const fetchCartData = async () => {
-            const cartData: any = libraryId ? await getMoleculeCart(Number(libraryId)) : [];
-            setCartLength(cartData.length);
+            const cartDataAvaialable: any = libraryId ? await getMoleculeCart(Number(libraryId), false) : [];
+            setCartData(cartDataAvaialable);
         };
-    
+
         fetchCartData();
     }, [libraryId, cartDetail]);
-    
+
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -96,7 +96,9 @@ export default function Header({ userData }: HeaderProps) {
                 onHiding={() => setCreatePopupVisibility(false)}
 
                 contentRender={() => (
-                    <CartDetails />
+                    <CartDetails
+                        cartData={cartData}
+                    />
                 )}
                 width={470}
                 // hideOnOutsideClick={true}
@@ -149,7 +151,7 @@ export default function Header({ userData }: HeaderProps) {
                             onClick={() => setCreatePopupVisibility(!createPopupVisible)}
                         />
                         <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                            <span className="text-black text-sm">{cartLength}</span>
+                            <span className="text-black text-sm">{cartData.length}</span>
                         </div>
                     </div>
                 </Link>

@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import toast from "react-hot-toast";
 import {
   Form as CreateForm,

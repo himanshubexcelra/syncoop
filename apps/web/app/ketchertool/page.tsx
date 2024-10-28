@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 80 }]*/
 import EditorBox from "@/components/KetcherTool/Editor";
 import Layout from "@/components/layout";
 import styles from "./page.module.css";

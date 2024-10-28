@@ -3,13 +3,18 @@ import { HeadingObj } from "@/lib/definition";
 import Layout from "@/components/layout";
 import { getUserData } from "@/utils/auth";
 import { redirect } from "next/navigation";
-import { dataSource, features, } from "@/utils/constants";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
 import { TabDetail } from "@/lib/definition";
 import { getFilteredRoles } from "@/components/Role/service";
 import LandingPage from "@/components/Dashboard/LandingPage";
+import { getOrganizationModule, getOrganizationById } from "@/components/Organization/service";
+
+interface Feature {
+  name: string;
+  requiredPurchase: boolean;
+}
 
 export default async function Dashboard() {
 
@@ -21,7 +26,14 @@ export default async function Dashboard() {
   const { userData, actionsEnabled } = sessionData;
   const { myRoles, orgUser } = userData;
   const filteredRoles = await getFilteredRoles();
-
+  const fetchOrgModule = await getOrganizationModule(orgUser.id)
+  const fetchDataSource = await getOrganizationById({ id: 1 });
+  const dataSource = Object.keys(fetchDataSource.metadata
+  ).map(key => ({
+    name: key,
+    description: fetchDataSource.metadata[key]
+  }))
+  const features = fetchOrgModule.map((d: Feature) => ({ name: d.name, value: d.name, checked: d.requiredPurchase }))
   const heading: HeadingObj[] = [
     {
       svgPath: myRoles.includes('admin') ? "/icons/admin-icon-lg.svg" : "/icons/organization.svg",

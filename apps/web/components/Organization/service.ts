@@ -107,3 +107,15 @@ export async function createOrganization(formData: FormData, roleId: number) {
   }
 }
 
+export async function getOrganizationModule(id: number) {
+  const url = new URL(`${process.env.API_HOST_URL}/v1/module?id=${id}`);
+  const response = await fetch(url, {
+    mode: "no-cors",
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+}

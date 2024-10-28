@@ -1,0 +1,13 @@
+{
+  "entries": [
+    "components/reaction-pathway/reaction-pathway.js",
+    "components/reaction-pathway/tests/reaction-pathway-wrapper.js"
+  ],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "4.0.4",
+    "typescriptVersion": "5.0.4"
+  },
+  "collections": [],
+  "bundles": []
+}

@@ -64,11 +64,29 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     };
  
     return (
-<>
-<DialogPopUp {...{ visible, dialogProperties, Content: PopupContent, hidePopup }} />
-<form onSubmit={handleSubmit} className="flex flex-col w-[540px] h-auto p-[32px] gap-[10px] border-2 border-themelightGreyColor bg-background rounded-[8px]">
-<div className="mb-6 flex flex-col gap-2">
-<Image
+        <>
+            <DialogPopUp {
+                ...{
+                    visible,
+                    dialogProperties,
+                    Content: PopupContent,
+                    hidePopup
+                }
+            } />
+            <form onSubmit={handleSubmit} className={
+                `flex 
+                flex-col 
+                w-[540px] 
+                h-auto 
+                p-[32px] 
+                gap-[10px] 
+                border-2 
+                border-themelightGreyColor 
+                bg-background 
+                rounded-[8px]`
+            }>
+                <div className="mb-6 flex flex-col gap-2">
+                    <Image
                         src="/icons/M-icon.svg"
                         alt="Merck logo"
                         priority
@@ -124,14 +142,42 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                             width={14}
                             height={15}
                         />
-<span className="text-foreground text-sm font-bold leading-tight cursor-pointer" onClick={() => setVisible(true)}>Forgot password?</span>
-</div>
-</div>
- 
-                <button type="submit" className="w-24 h-10 p-3 bg-themeBlueColor rounded justify-center items-center inline-flex text-background text-base font-bold font-['Lato'] leading-tight">
-<LoadIndicator className={`button-indicator ${styles.white}`} visible={loadIndicatorVisible} height={20} width={20} />
+                        <span className={
+                            `text-foreground 
+                            text-sm 
+                            font-bold 
+                            leading-tight 
+                            cursor-pointer`
+                        }
+                            onClick={() => setVisible(true)}>
+                            Forgot password?
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" className={
+                    `w-24 
+                    h-10 
+                    p-3 
+                    bg-themeBlueColor 
+                    rounded 
+                    justify-center 
+                    items-center 
+                    inline-flex 
+                    text-background 
+                    text-base 
+                    font-bold 
+                    font-['Lato'] 
+                    leading-tight`
+                }>
+                    <LoadIndicator className={
+                        `button-indicator ${styles.white}`
+                    }
+                        visible={loadIndicatorVisible}
+                        height={20}
+                        width={20} />
+
                     {buttonText}</button>
- 
             </form>
 </>
     )

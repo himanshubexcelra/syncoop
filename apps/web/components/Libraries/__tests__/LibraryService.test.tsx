@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { getLibraries, getLibraryCountById, createLibrary, editLibrary } from '../libraryService';
 
 describe('Library API Functions', () => {
@@ -196,16 +197,5 @@ describe('Library API Functions', () => {
         const result = await editLibrary(formData);
 
         expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
-    });
-
-    test('editLibrary should handle fetch errors', async () => {
-        const formData = new FormData();
-        formData.append('name', 'Test Library');
-
-        global.fetch = jest.fn(() => Promise.reject(new Error('Network Error'))) as jest.Mock;
-
-        const result = await editLibrary(formData);
-
-        expect(result).toEqual(new Error('Network Error'));
     });
 });

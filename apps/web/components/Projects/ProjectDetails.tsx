@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -14,9 +15,15 @@ import { getOrganizationById, getOrganization } from "@/components/Organization/
 import '../Organization/form.css';
 import { debounce } from '@/utils/helpers';
 
-type ProjectDetailsProps = { userData: UserData, actionsEnabled: string[] }
+type ProjectDetailsProps = {
+    userData: UserData,
+    actionsEnabled: string[]
+}
 
-export default function ProjectDetails({ userData, actionsEnabled }: ProjectDetailsProps) {
+export default function ProjectDetails({
+    userData,
+    actionsEnabled
+}: ProjectDetailsProps) {
     const [filteredData, setFilteredData] = useState<ProjectDataFields[]>([]);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
@@ -28,7 +35,7 @@ export default function ProjectDetails({ userData, actionsEnabled }: ProjectDeta
     const [orgProj, setOrgProjects] = useState([]);
 
     const { myRoles } = userData;
-    const createEnabled = actionsEnabled.includes('create_project') || myRoles?.includes('admin') || myRoles?.includes('org_admin')
+    const createEnabled = actionsEnabled.includes('create_project')
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -43,18 +50,27 @@ export default function ProjectDetails({ userData, actionsEnabled }: ProjectDeta
     const fetchOrganizations = async () => {
         let organization;
         if (myRoles?.includes("admin")) {
-            organization = await getOrganization({ withRelation: ['orgUser', 'user_role', 'projects'] });
-            const projectList = organization.map((org: OrganizationDataFields) => org.projects).flat() || [];
+            organization = await getOrganization({
+                withRelation: ['orgUser', 'user_role', 'projects']
+            });
+            const projectList = organization.map(
+                (org: OrganizationDataFields) => org.projects).flat() || [];
             setFilteredData(projectList);
             setOrgProjects(projectList);
             setUsers([]);
             setOrganization(organization);
         } else {
             const tempOrganization = [];
-            organization = await getOrganizationById({ withRelation: ['orgUser', 'user_role', 'projects'], id: userData?.organizationId });
+            organization = await getOrganizationById({
+                withRelation: ['orgUser', 'user_role', 'projects'],
+                id: userData?.organizationId
+            });
             setFilteredData(organization?.projects);
             setOrgProjects(organization?.projects);
-            setUsers(organization?.orgUser?.filter((user: UserData) => user.user_role[0]?.role?.type === 'library_manager' && user.id !== userData.id));
+            setUsers(organization?.orgUser?.filter(
+                (user: UserData) =>
+                    user.user_role[0]?.role?.type === 'library_manager' &&
+                    user.id !== userData.id));
             tempOrganization.push(organization);
             setOrganization(tempOrganization);
         }
@@ -88,7 +104,8 @@ export default function ProjectDetails({ userData, actionsEnabled }: ProjectDeta
     const sortData = () => {
         if (!sort) {
             const tempData = [...filteredData];
-            tempData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+            tempData.sort(
+                (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
             setFilteredData(tempData);
             setSort(true);
         } else {
@@ -133,7 +150,7 @@ export default function ProjectDetails({ userData, actionsEnabled }: ProjectDeta
                                 )}
                                 onClick={() => setCreatePopupVisibility(true)}
                             />}
-                            {createPopupVisible && (
+                            {actionsEnabled.includes('create_project') && createPopupVisible && (
                                 <Popup
                                     title="Add Project"
                                     visible={createPopupVisible}
@@ -142,7 +159,14 @@ export default function ProjectDetails({ userData, actionsEnabled }: ProjectDeta
                                             formRef={formRef}
                                             setCreatePopupVisibility={setCreatePopupVisibility}
                                             fetchOrganizations={fetchOrganizations}
-                                            userData={{ ...userData, owner: { firstName: userData.firstName, lastName: userData.lastName } }}
+                                            userData={
+                                                {
+                                                    ...userData,
+                                                    owner: {
+                                                        firstName: userData.firstName,
+                                                        lastName: userData.lastName
+                                                    }
+                                                }}
                                             users={users}
                                             organizationData={organization}
                                             myRoles={myRoles}
@@ -207,11 +231,19 @@ export default function ProjectDetails({ userData, actionsEnabled }: ProjectDeta
                     </div>
                     <div className="content-wrapper">
                         <ListProjects
-                            userData={{ ...userData, owner: { firstName: userData?.firstName, lastName: userData?.lastName } }}
+                            userData={
+                                {
+                                    ...userData,
+                                    owner: {
+                                        firstName: userData?.firstName,
+                                        lastName: userData?.lastName
+                                    }
+                                }}
                             data={filteredData}
                             fetchOrganizations={fetchOrganizations}
                             users={users}
-                            organizationData={organization} />
+                            organizationData={organization}
+                            actionsEnabled={actionsEnabled} />
                     </div>
                 </div>
             }

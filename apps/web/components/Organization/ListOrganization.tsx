@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import { useRef, useState, useEffect } from "react";
 import DataGrid, {
@@ -8,6 +9,7 @@ import DataGrid, {
   DataGridRef,
   Paging,
   Sorting,
+  HeaderFilter
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup } from "devextreme-react/popup";
@@ -42,7 +44,11 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const appContext = context.state;
 
   const fetchOrganizations = async () => {
-    const organization = await getOrganization({ withRelation: ['orgUser', 'user_role'], withCount: ['projects'] });
+    const organization = await getOrganization(
+      {
+        withRelation: ['orgUser', 'user_role'],
+        withCount: ['projects']
+      });
 
     setTableData(organization);
     setLoader(false);
@@ -87,6 +93,11 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
     }
   }, []);
 
+  const statusHeaderFilter = [
+    { value: 'Enabled', text: 'Enabled' },
+    { value: 'Disabled', text: 'Disabled' },
+  ]
+
   return (
     <>
       <LoadIndicator
@@ -102,7 +113,8 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
         >
           <Paging defaultPageSize={5} defaultPageIndex={0} />
           <Sorting mode="single" />
-          <Column dataField="name" caption="Organization Name" />
+          <HeaderFilter visible={true} />
+          <Column dataField="name" caption="Organization Name" allowHeaderFiltering={false} />
           <Column
             dataField="_count.projects"
             width={90}
@@ -111,6 +123,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             cellRender={({ data }: any) => (
               <span>{data._count?.projects}</span>
             )}
+            allowHeaderFiltering={false}
           />
           <Column
             dataField="molecules"
@@ -119,6 +132,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             cellRender={() => (
               <span>0</span>
             )}
+            allowHeaderFiltering={false}
           />
           <Column
             dataField="orgUser"
@@ -128,13 +142,21 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             cellRender={({ data }: any) => (
               <span>{data?.orgUser?.length}</span>
             )}
+            allowHeaderFiltering={false}
           />
-          <Column dataField="status" alignment="center" caption="Organization Status" />
+          <Column
+            dataField="status"
+            alignment="center"
+            caption="Organization Status"
+          >
+            <HeaderFilter dataSource={statusHeaderFilter} />
+          </Column>
           <Column
             dataField="user.email"
             minWidth={350}
             caption="Organization Admin"
             cellRender={({ data }: any) => <span>{data.user.email}</span>}
+            allowHeaderFiltering={false}
           />
           <Column
             dataField="createdAt"
@@ -144,6 +166,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             cellRender={({ data }) => (
               <span>{formatDate(data.createdAt)}</span>
             )}
+            allowHeaderFiltering={false}
           />
           <Column
             dataField="updatedAt"
@@ -151,6 +174,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             cellRender={({ data }) => (
               <span>{formatDate(data.updatedAt)}</span>
             )}
+            allowHeaderFiltering={false}
           />
           {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
             <Column
@@ -242,26 +266,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                 wrapperAttr={{ class: "create-popup" }}
               />
             </Item>
-            <Item location="after">
-              <Btn
-                text="Filter"
-                icon="filter"
-                elementAttr={{ class: "btn_primary btn-toolbar" }}
-                disabled={true}
-                render={() => (
-                  <>
-                    <Image
-                      src="/icons/filter.svg"
-                      width={24}
-                      height={24}
-                      alt="Filter"
-                    />
-                    <span>Filter</span>
-                  </>
-                )}
-              />
-            </Item>
-            <Item name="searchPanel" />
+            <Item name="searchPanel" location="before" />
           </GridToolbar>
           <SearchPanel visible={true} highlightCaseSensitive={true} />
         </DataGrid>

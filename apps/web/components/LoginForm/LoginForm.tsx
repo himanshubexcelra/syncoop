@@ -66,21 +66,26 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     return (
         <>
-            <DialogPopUp {...{ visible, dialogProperties, Content: PopupContent, hidePopup }} />
-            <form
-                onSubmit={handleSubmit}
-                className={
-                    `flex
-                    flex-col
-                    w-[540px]
-                    h-auto
-                    p-[32px]
-                    gap-[10px]
-                    border-2
-                    border-themelightGreyColor
-                    bg-background
-                    rounded-[8px]`
-                }>
+            <DialogPopUp {
+                ...{
+                    visible,
+                    dialogProperties,
+                    Content: PopupContent,
+                    hidePopup
+                }
+            } />
+            <form onSubmit={handleSubmit} className={
+                `flex 
+                flex-col 
+                w-[540px] 
+                h-auto 
+                p-[32px] 
+                gap-[10px] 
+                border-2 
+                border-themelightGreyColor 
+                bg-background 
+                rounded-[8px]`
+            }>
                 <div className="mb-6 flex flex-col gap-2">
                     <Image
                         src="/icons/M-icon.svg"
@@ -160,12 +165,13 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                             height={15}
                         />
                         <span className={
-                            `text-foreground
-                            text-sm
-                            font-bold
-                            leading-tight
-                            cursor-pointer"
-                            onClick={() => setVisible(true)}`}>
+                            `text-foreground 
+                            text-sm 
+                            font-bold 
+                            leading-tight 
+                            cursor-pointer`
+                        }
+                            onClick={() => setVisible(true)}>
                             Forgot password?
                         </span>
                     </div>
@@ -186,17 +192,14 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                     font-['Lato'] 
                     leading-tight`
                 }>
-                    <LoadIndicator
-                        className={
-                            `button-indicator 
-                        ${styles.white}`
-                        }
+                    <LoadIndicator className={
+                        `button-indicator ${styles.white}`
+                    }
                         visible={loadIndicatorVisible}
                         height={20}
                         width={20} />
-                    {buttonText}
-                </button>
 
+                    {buttonText}</button>
             </form>
         </>
     )

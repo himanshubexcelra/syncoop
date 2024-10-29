@@ -9,10 +9,10 @@ export default function PathwayAction({ pathwayId }: PathwayActionProps) {
 
     useEffect(() => {
         const element = document.querySelector("#" + pathwayId);
-        
-        /* if(element?.shadowRoot?.innerHTML){
-            console.log(2);
-        } */
+
+        if (element?.shadowRoot?.innerHTML) {
+            
+        }
         // @ts-expect-error JSX element not proper typed
         element.addEventListener("reaction-pathway-click", (e: any) => {
             console.log("pathway-object-clicked");

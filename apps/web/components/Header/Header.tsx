@@ -6,15 +6,38 @@ import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+import CartDetails from '../Libraries/CartDetails';
+import { Popup as CartPopup, } from "devextreme-react/popup";
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
+import { getMoleculeCart } from '../Libraries/libraryService';
+
 
 type HeaderProps = {
     userData: UserData
 }
 
 export default function Header({ userData }: HeaderProps) {
+    const context: any = useContext(AppContext);
+    const searchParams = useSearchParams();
+    const libraryId = searchParams.get('libraryId');
+    const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
+    const [popupPosition, setPopupPosition] = useState({} as any);
+    const [createPopupVisible, setCreatePopupVisibility] = useState(false);
+    const [cartData, setCartData] = useState([])
+    useEffect(() => {
+        const fetchCartData = async () => {
+            const cartDataAvaialable: any = libraryId ? await getMoleculeCart(Number(libraryId), false) : [];
+            setCartData(cartDataAvaialable);
+        };
+
+        fetchCartData();
+    }, [libraryId, cartDetail]);
 
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,7 +56,15 @@ export default function Header({ userData }: HeaderProps) {
         }
         setDropdownOpen(false)
     }
-
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setPopupPosition({
+                my: 'top right',
+                at: 'top right',
+                of: window,
+            });
+        }
+    }, []);
     useEffect(() => {
         if (userData) {
             if (userData.firstName)
@@ -59,6 +90,24 @@ export default function Header({ userData }: HeaderProps) {
 
     return (
         <header className="top-0 left-0 w-full h-10 bg-themeBlueColor flex items-center justify-between px-4 shadow-sm">
+            <CartPopup
+                title="Molecule Cart"
+                visible={createPopupVisible}
+                onHiding={() => setCreatePopupVisibility(false)}
+
+                contentRender={() => (
+                    <CartDetails
+                        cartData={cartData}
+                    />
+                )}
+                width={470}
+                // hideOnOutsideClick={true}
+                height="100%"
+                position={popupPosition}
+
+                showCloseButton={true}
+                wrapperAttr={{ class: "create-popup mr-[15px]" }}
+            />
             <div className="flex items-center">
                 <Link href="/">
                     <Image
@@ -91,16 +140,18 @@ export default function Header({ userData }: HeaderProps) {
                     width={20}
                     height={20}
                 />
-                <Link href="/cart">
+                <Link href="#">
                     <div className="relative flex items-center justify-center">
                         <Image priority
                             className="icon-cart"
                             src={"/icons/cart-icon.svg"}
                             alt="Cart"
                             width={33}
-                            height={22} />
+                            height={22}
+                            onClick={() => setCreatePopupVisibility(!createPopupVisible)}
+                        />
                         <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                            <span className="text-black text-sm">12</span>
+                            <span className="text-black text-sm">{cartData.length}</span>
                         </div>
                     </div>
                 </Link>

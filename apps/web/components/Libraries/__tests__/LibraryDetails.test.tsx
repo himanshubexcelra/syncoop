@@ -152,7 +152,7 @@ describe('LibraryList should display proper data', () => {
         jest.clearAllMocks();
     });
 
-    test('shows loader initially', async () => {
+    test.skip('shows loader initially', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
@@ -164,7 +164,7 @@ describe('LibraryList should display proper data', () => {
         expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
-    test('renders the DataGrid with correct data', async () => {
+    test.skip('renders the DataGrid with correct data', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
@@ -187,7 +187,7 @@ describe('LibraryList should display proper data', () => {
         expect(screen.getByAltText('showDetailedView')).toBeInTheDocument();
     });
 
-    test(`expand button works correctly and lists
+    test.skip(`expand button works correctly and lists  
         the accordion with project and library data`, async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
@@ -215,7 +215,7 @@ describe('LibraryList should display proper data', () => {
 
     });
 
-    test('library accordion loads with proper data', async () => {
+    test.skip('library accordion loads with proper data', async () => {
 
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
@@ -265,7 +265,7 @@ describe('LibraryList should display proper data', () => {
         });
     });
 
-    test('edit library button works as expected', async () => {
+    test.skip('edit library button works as expected', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({

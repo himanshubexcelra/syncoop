@@ -8,14 +8,14 @@ import React, {
 import { AppContextModel } from '@/lib/definition';
 
 interface AppState {
-  appContext: AppContextModel
+  appContext: AppContextModel,
 }
 
 const initialContext = {
   userCount: {
     externalUsers: 0,
     internalUsers: 0
-  }
+  },
 }
 
 interface AppContextData {
@@ -35,9 +35,8 @@ export const AppContextProvider: FC<{ children: ReactNode }> =
       ({ appContext: initialContext });
 
     const addToState = (obj: AppState) => {
-      setState(() => obj);
+       setState(() => obj);
     };
-
     return (
       <AppContext.Provider value={{ state, addToState }}>
         {children}

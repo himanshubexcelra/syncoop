@@ -34,7 +34,7 @@ import { MOLECULES, StatusCodeBg, StatusCodeType } from '@/utils/constants';
 import { FormRef } from "devextreme-react/cjs/form";
 import StatusMark from '@/ui/StatusMark';
 import { formatDatetime, formatDetailedDate, popupPositionValue, debounce } from '@/utils/helpers';
-import { getLibraries } from './libraryService';
+import { getLibraries, addMoleculeToCart, getMoleculeCart } from './libraryService';
 import { sortByDate, sortString } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
 import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
@@ -43,6 +43,8 @@ import CreateLibrary from './CreateLibrary';
 import { DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
 
 const selectAllFieldLabel = { 'aria-label': 'Select All Mode' };
 const showCheckboxesFieldLabel = { 'aria-label': 'Show Checkboxes Mode' };
@@ -116,6 +118,14 @@ type LibraryDetailsProps = {
     actionsEnabled: string[],
 }
 
+type ProductModel = {
+    id: number;
+    moleculeId: number;
+    molecularWeight: number;
+    projectId: number;
+    projectName: string;
+};
+
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
@@ -145,7 +155,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [editEnabled, setEditStatus] = useState<boolean>(false);
     const [sortBy, setSortBy] = useState('CreationTime');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
+    const [moleculeData, setMoleculeData] = useState<ProductModel[]>([]);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Store selected item IDs
 
+    const [isCartUpdate, updateCart] = useState(false)
     let toastShown = false;
 
     const grid = useRef<DataGridRef>(null);
@@ -216,6 +231,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             }
         }
     }
+
+    useEffect(() => {
+        const fetchCartData = async () => {
+            const moleculeCart: any = libraryId ? await getMoleculeCart(Number(libraryId), true):[];
+            const moleculeIds = moleculeCart.map(item => item.moleculeId);
+            setSelectedRowKeys(moleculeIds)
+        };
+        fetchCartData();
+    }, [libraryId]);
 
     useEffect(() => {
         fetchLibraries();
@@ -342,6 +366,44 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const admin = ['admin', 'org_admin'].some((role) => myRoles?.includes(role));
         return !(owner || admin);
     }
+
+    const onSelectionChanged = async (e: any) => {
+        updateCart(true);
+        // Check if the data exists in storage
+        setSelectedRowKeys(e.selectedRowKeys);
+        const checkedMolecule = e.selectedRowsData;
+
+        const selectedProjectMolecule = checkedMolecule.map(item => ({
+            ...item,
+            libraryId: libraryId,
+            userId: userData.id
+        }));
+
+        const moleculeCart = libraryId ? await getMoleculeCart(Number(libraryId), true) : [];
+        const preselectedIds = moleculeCart.map(item => item.moleculeId);
+        const updatedMoleculeCart = selectedProjectMolecule.filter(item =>
+            !preselectedIds.includes(item.moleculeId));
+
+        // If the check box is unchecked
+        if (e.currentDeselectedRowKeys.length > 0) {
+            const newmoleculeData: ProductModel[] = checkedMolecule.filter((
+                item: any) => item.id !== e.currentDeselectedRowKeys[0].id
+                && item.projectId !== projects.id);
+            setMoleculeData(newmoleculeData);
+        }
+        else {
+            setMoleculeData(updatedMoleculeCart);
+        }
+    };
+
+    const addProductToCart = () => {
+        context?.addToState({
+            ...appContext, cartDetail: [...moleculeData]
+        })
+        addMoleculeToCart(moleculeData)
+        toast.success('Molecule is updated in your cart.');
+    }
+
 
     return (
         <>
@@ -827,6 +889,9 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                     dataSource={tableData}
                                     showBorders={true}
                                     ref={grid}
+                                    keyExpr="moleculeId"
+                                    selectedRowKeys={selectedRowKeys}
+                                    onSelectionChanged={onSelectionChanged}
                                 >
                                     <Selection
                                         mode="multiple"
@@ -1084,7 +1149,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         </ToolbarItem>
                                         <ToolbarItem location="after">
                                             <Button
-                                                disabled={true}
+                                                onClick={addProductToCart}
+                                                disabled={!isCartUpdate}
                                                 render={() => (
                                                     <>
                                                         <span>Add to cart</span>

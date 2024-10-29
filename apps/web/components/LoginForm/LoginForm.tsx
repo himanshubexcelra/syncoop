@@ -1,6 +1,5 @@
-/*eslint max-len: ["error", { "code": 100 }]*/
 "use client"
-
+ 
 import { authorize } from "@/utils/auth";
 import Image from "next/image"
 import React, { useState } from "react"
@@ -13,7 +12,7 @@ import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
 import { UserData } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
-
+ 
 export type ErrorType = {
     email: string,
     password: string[]
@@ -22,17 +21,17 @@ const dialogProperties = {
     width: 336,
     height: 424,
 }
-
+ 
 type LoginFormProps = {
     onSuccess: (userData: UserData) => void;
 }
-
+ 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
     const [visible, setVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
     const [buttonText, setButtonText] = useState('Login');
-
+ 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setLoadIndicatorVisible(true);
@@ -41,7 +40,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         const response = await authorize(formData);
         if (response) {
             if (response.success) {
-                const { data } = response;
+                const { data } = response;                
                 setLoadIndicatorVisible(false);
                 setButtonText('Login');
                 await onSuccess(data);
@@ -63,7 +62,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     const hidePopup = () => {
         setVisible(false);
     };
-
+ 
     return (
         <>
             <DialogPopUp {
@@ -94,70 +93,49 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                         width={64}
                         height={30}
                     />
-                </div>
-                <div className="mb-6 flex flex-col gap-2">
-                    <h1 className={styles.Headline}>
+</div>
+<div className="mb-6 flex flex-col gap-2">
+<h1 className={styles.Headline}>
                         Welcome!
-                    </h1>
-                </div>
-                <div className="mb-6 flex flex-col gap-2">
-                    <label htmlFor="email" className={styles.label}>Email Address</label>
-                    <input
+</h1>
+</div>
+<div className="mb-6 flex flex-col gap-2">
+<label htmlFor="email" className={styles.label}>Email Address</label>
+<input
                         type="email"
                         id="email"
                         name="email"
-                        className={
-                            `border 
-                            border-themeBorderGrey 
-                            rounded-[4px] 
-                            w-[476px] 
-                            h-[40px] 
-                            flex-shrink-0 
-                            p-3 
-                            bg-themeSilverGreyColor 
-                            ${styles.emailInput}`
-                        }
+                        className={`border border-themeBorderGrey rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor ${styles.emailInput}`}
                         placeholder="Enter your email"
                         required
                     />
-                </div>
-                <div className="flex flex-col gap-2 mb-6">
-                    <label htmlFor="password" className={styles.label}>Password</label>
-                    <div className="flex items-center">
-                        <input
+</div>
+<div className="flex flex-col gap-2 mb-6">
+<label htmlFor="password" className={styles.label}>Password</label>
+<div className="flex items-center">
+<input
                             type={showPassword ? "text" : "password"}
                             id="password"
                             name="password"
-                            className={
-                                `border 
-                                border-themeBorderGrey 
-                                rounded-[4px]
-                                 w-[476px] 
-                                 h-[40px] 
-                                flex-shrink-0 
-                                p-3 
-                                bg-themeSilverGreyColor 
-                                ${styles.emailInput}`
-                            }
+                            className={`border border-themeBorderGrey rounded-[4px] w-[476px] h-[40px] flex-shrink-0 p-3 bg-themeSilverGreyColor ${styles.emailInput}`}
                             placeholder="Enter your password"
                             required
                         />
-                        <button
+<button
                             type="button"
                             className="ml-[-30px] flex items-center"
                             onClick={() => setShowPassword(!showPassword)}
-                        >
-                            <Image
-                                src={showPassword ?
-                                    "/icons/eye-off-icon.svg" : "/icons/eye-icon.svg"}
+>
+<Image
+                                src={showPassword ? "/icons/eye-off-icon.svg" : "/icons/eye-icon.svg"}
                                 alt={showPassword ? "Hide password" : "Show password"}
                                 width={18}
                                 height={18}
                             />
-                        </button>
-                    </div>
-                    <div className="flex gap-1.5">
-                        <Image
+</button>
+</div>
+<div className="flex gap-1.5">
+<Image
                             src="/icons/info-icon.svg"
                             alt="Forgot Password"
                             priority
@@ -201,6 +179,6 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
                     {buttonText}</button>
             </form>
-        </>
+</>
     )
-} 
+}

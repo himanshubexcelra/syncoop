@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-
+import { deleteMoleculeCart } from '../Libraries/libraryService';
 import CartDetails from '../Libraries/CartDetails';
 import { Popup as CartPopup, } from "devextreme-react/popup";
 import { useContext } from "react";
@@ -23,16 +23,22 @@ type HeaderProps = {
 export default function Header({ userData }: HeaderProps) {
     const context: any = useContext(AppContext);
     const searchParams = useSearchParams();
-    const libraryId = searchParams.get('libraryId');
+    const libraryId = searchParams.get('libraryId')?searchParams.get('libraryId'):0;
     const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [cartData, setCartData] = useState([])
+    interface deleteObj {
+        id: number;
+        libraryId: number;
+        moleculeId: number;
+    }
+    
     useEffect(() => {
         const fetchCartData = async () => {
-            const cartDataAvaialable: any = libraryId ? await getMoleculeCart(Number(libraryId), false) : [];
+            const cartDataAvaialable: any = await getMoleculeCart(Number(libraryId), false);
             setCartData(cartDataAvaialable);
         };
 
@@ -46,6 +52,28 @@ export default function Header({ userData }: HeaderProps) {
         setDropdownOpen(!dropdownOpen);
     };
 
+    const removeItemFromCart = (obj:deleteObj) => {
+        const { id, moleculeId, libraryId } = obj;
+        deleteMoleculeCart(id).then((res)=>{
+            if(res){
+            const filteredData = cartData.filter((item: any) => 
+                !(item.moleculeId === moleculeId && item.libraryId === libraryId)
+            );
+            setCartData(filteredData);
+            }
+        })
+        .catch((error)=>{
+            console.log(error);
+        })
+
+        
+    }
+    
+    const removeAll = () => {
+        console.log('Remove All');
+
+        
+    }
     const onItemSelected = async (item: DropDownItem) => {
         if (item.link) {
             router.push(item.link);
@@ -98,6 +126,8 @@ export default function Header({ userData }: HeaderProps) {
                 contentRender={() => (
                     <CartDetails
                         cartData={cartData}
+                        removeItemFromCart={(obj:deleteObj)=>removeItemFromCart(obj)}
+                        removeAll={removeAll}
                     />
                 )}
                 width={470}
@@ -148,10 +178,9 @@ export default function Header({ userData }: HeaderProps) {
                             alt="Cart"
                             width={33}
                             height={22}
-                            onClick={() => setCreatePopupVisibility(!createPopupVisible)}
                         />
                         <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                            <span className="text-black text-sm">{cartData.length}</span>
+                            <span className="text-black text-sm" onClick={() => setCreatePopupVisibility(!createPopupVisible)}>{cartData.length}</span>
                         </div>
                     </div>
                 </Link>

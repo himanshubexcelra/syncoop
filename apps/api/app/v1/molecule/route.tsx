@@ -71,3 +71,35 @@ export async function POST(request: Request) {
         console.error(error);
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const Id = Number(searchParams.get('id'));
+        const query = {
+            where:{
+                id:Id,
+            }
+        }
+        if (isNaN(Id)) {
+            return new Response(JSON.stringify({ error: "Invalid ID" }), {
+                headers: { "Content-Type": "application/json" },
+                status: BAD_REQUEST,
+            });
+        }
+
+        await prisma.molecule_cart.delete(query)
+        
+        
+        return new Response(JSON.stringify([{}]), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST,
+        });
+    }
+}

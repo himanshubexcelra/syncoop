@@ -116,6 +116,8 @@ export async function addMoleculeToCart(moleculeData: []) {
 }
 
 export async function getMoleculeCart(libraryId?: number, isLibrary?: boolean) {
+    console.log(libraryId,"libraryId");
+    
     try {
         const url = new URL(
             `${process.env.API_HOST_URL}/v1/molecule/?libraryId=${libraryId}` +
@@ -125,6 +127,25 @@ export async function getMoleculeCart(libraryId?: number, isLibrary?: boolean) {
         const response = await fetch(url, {
             mode: "no-cors",
             method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
+        return error;
+    }
+}
+
+export async function deleteMoleculeCart(Id?: number) {
+    try {
+        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule/?id=${Id}`);
+
+        const response = await fetch(url, {
+            method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
             },

@@ -2,9 +2,11 @@
 import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from "next/image";
+import Link from 'next/link';
 
-export default function CartDetails({ cartData }) {
+export default function CartDetails({ cartData,removeItemFromCart,removeAll }) {
     interface CartDetail {
+        id:number
         moleculeId: number;
         libraryId: number;
         molecular_weight: string;
@@ -13,12 +15,13 @@ export default function CartDetails({ cartData }) {
         moleculeName: string;
     }
     interface GroupedData {
-        [key: string]: { moleculeId: number; molecularWeight: string; moleculeName: string }[];
+        [key: string]: { id:number, moleculeId: number; molecularWeight: string; moleculeName: string, libraryId:number }[];
     }
 
 
 
     const cartDetails: CartDetail[] = cartData.map(item => ({
+        id:item.id,
         moleculeId: item.moleculeId,
         libraryId: item.libraryId,
         molecular_weight: item.molecule.molecular_weight,
@@ -27,18 +30,18 @@ export default function CartDetails({ cartData }) {
         moleculeName: item.molecule.source_molecule_name
     }));
 
-    const removeItemFromCart = () => {
-
-    }
+    
     const groupedData = cartDetails.reduce((acc: GroupedData, item) => {
         const key = `${item.projectName}/${item.libraryName}`;
         if (!acc[key]) {
             acc[key] = [];
         }
         acc[key].push({
+            id:item.id,
             moleculeId: item.moleculeId,
             molecularWeight: item.molecular_weight,
-            moleculeName: item.moleculeName
+            moleculeName: item.moleculeName,
+            libraryId:item.libraryId
         });
         return acc;
     }, {});
@@ -51,8 +54,10 @@ export default function CartDetails({ cartData }) {
 
     return (
         <>
+          
             {formattedData.map((group) => (
                 <div key={group.key}>
+                    
                     <div className='accordion-title'>{group.key}</div>
                     <DataGrid
                         dataSource={group.values}
@@ -63,7 +68,7 @@ export default function CartDetails({ cartData }) {
                         <Column dataField="molecularWeight" caption="MoleculeWeight" />
                         <Column
                             width={80}
-                            cellRender={({ group }: any) => (
+                            cellRender={({ data }: any) => (
                                 <Btn
                                     render={() => (
                                         <>
@@ -75,14 +80,20 @@ export default function CartDetails({ cartData }) {
                                             />
                                         </>
                                     )}
-                                    onClick={() => removeItemFromCart(group)}
+                                    onClick={() => removeItemFromCart(data)}
                                 />
                             )}
                             caption="Remove"
                         />
+
                     </DataGrid>
+                    
                 </div>
             ))}
+            <div style={{ marginTop: '20px', textAlign: 'right' }}>
+                        <Btn className='btn-primary' text="Submit Order" />
+                        <Link href="#" onClick={removeAll} className='text-themeBlueColor font-bold' style={{ marginLeft: '10px' }}>Remove All</Link>
+                    </div>        
         </>
     );
 }

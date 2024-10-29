@@ -361,3 +361,15 @@ export interface UploadMoleculeSmilesRequest {
   created_by_user_id : number;
   library_id: string;
 }
+
+export interface RejectedSmiles {
+  smiles: string;
+  reason: string;
+}
+export interface UploadMoleculeSmilesResponse {
+  message: string;
+  uploaded_smiles_count: number;
+  rejected_smiles_count: number;
+  uploaded_smiles: string[];
+  rejected_smiles: RejectedSmiles[]
+}

@@ -14,6 +14,7 @@ import { Popup as CartPopup, } from "devextreme-react/popup";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { getMoleculeCart } from '../Libraries/libraryService';
+import toast from "react-hot-toast";
 
 
 type HeaderProps = {
@@ -79,6 +80,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         deleteMoleculeCart().then((res) => {
             if (res) {
                 setCartData([]);
+                toast.success('Molecule is deleted in your cart.');
+
             }
         })
             .catch((error) => {
@@ -183,7 +186,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 />
                 {
                     createEnabled &&
-                    <Link href="#" onClick={() => setCreatePopupVisibility(!createPopupVisible)}>
+                    <Link href="#" onClick={() => setCreatePopupVisibility(cartData.length > 0 ? !createPopupVisible : createPopupVisible)}>
                         <div className="relative flex items-center justify-center">
                             <Image priority
                                 className="icon-cart"
@@ -193,7 +196,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                                 height={22}
                             />
                             <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                                <span className="text-black text-sm" onClick={() => setCreatePopupVisibility(!createPopupVisible)}>{cartData.length}</span>
+                                <span className="text-black text-sm" onClick={() => setCreatePopupVisibility(cartData.length > 0 ? !createPopupVisible : createPopupVisible)}>{cartData.length}</span>
                             </div>
                         </div>
                     </Link>

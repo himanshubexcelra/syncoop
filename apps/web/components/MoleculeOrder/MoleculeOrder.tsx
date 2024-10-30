@@ -84,8 +84,8 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
       width: 240,
       customRender: (data: MoleculeOrder) => (
         <span className='flex justify-center items-center gap-[7.5px]'>
-          <MoleculeStructure
-            structure={data.smile}
+          <MoleculeStructure 
+            structure={data.smile} id={`smiles + ${data.id}`}
           />
           <Button onClick={() => handleStructureZoom(data)}
             render={() => <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />

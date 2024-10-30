@@ -129,6 +129,7 @@ model molecule {
   inchi_key            String
   molecular_weight     Decimal
   finger_print         String
+  isAddedToCart        Boolean
   status               molecule_status
   createdAt            DateTime             @default(now()) @db.Timestamp(6)
   createdBy            Int

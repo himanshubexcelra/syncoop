@@ -2,57 +2,23 @@ import prisma from "@/lib/prisma";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
-interface Item {
-    moleculeId: string; // or number, depending on your data type
-    libraryId: string; // or number
-    organizationId: string; // or number
-    projectId: string; // or number
-    userId: string; // or number
-}
 
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
-        const libraryId = searchParams.get('libraryId');
-        const userId = searchParams.get('userId');
-        const isLibrary = searchParams.get('isLibrary');
-        const query: any = {
-            where: {
-                createdBy: Number(userId)
-            },
-            include: {
-                molecule: {
-                    select: {
-                        molecular_weight: true,
-                        source_molecule_name: true,
-                        library: {
-                            select: {
-                                id: true,
-                                name: true,
-                                project: {
-                                    select: {
-                                        id: true,
-                                        name: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        };
+        const condition = searchParams.get('condition');
+        const organizationId = searchParams.get('organizationId');
 
-        if (isLibrary) {
-            query.where = {
-                libraryId: Number(libraryId),
-            };
+        if (condition === "count") {
+            const count = organizationId
+                ? await prisma.molecule.count({ where: { library: { project: { organizationId: Number(organizationId) } } } })
+                : await prisma.molecule.count();
+            return new Response(JSON.stringify(count), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
         }
-        const molecule = await prisma.molecule_cart.findMany(query);
-        return new Response(JSON.stringify(molecule), {
-            headers: { "Content-Type": "application/json" },
-            status: SUCCESS,
-        });
     } catch (error: any) {
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { "Content-Type": "application/json" },
@@ -63,56 +29,37 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-
-    const result = req.map((item: Item) => ({
-        moleculeId: Number(item.moleculeId),
-        libraryId: Number(item.libraryId),
-        organizationId: Number(item.organizationId),
-        projectId: Number(item.projectId),
-        createdBy: Number(item.userId)
-    }));
+    const { userId, moleculeId, existingFavourite, favourite } = req;
 
     try {
-        await prisma.molecule_cart.createMany({
-            data: result
-        })
-        return new Response(JSON.stringify([]), {
-            headers: { "Content-Type": "application/json" },
-            status: SUCCESS,
-        });
-    }
-    catch (error) {
-        console.error(error);
-    }
-}
-
-export async function DELETE(request: Request) {
-    try {
-        const url = new URL(request.url);
-        const searchParams = new URLSearchParams(url.searchParams);
-        const moleculeId = Number(searchParams.get('moleculeId'));
-        const libraryId = Number(searchParams.get('libraryId'));
-        const projectId = Number(searchParams.get('projectId'));
-        if (!moleculeId && !libraryId && !projectId) {
-            await prisma.molecule_cart.deleteMany({});
-        }
-
-        await prisma.molecule_cart.deleteMany({
-            where: {
-                moleculeId: moleculeId,
-                libraryId: libraryId,
-                projectId: projectId,
+        if (favourite) {
+            // Check if the favorite exists
+            if (existingFavourite) {
+                // If it exists, remove it
+                const favorite = await prisma.molecule_favorites.delete({
+                    where: {
+                        id: existingFavourite.id,
+                    },
+                });
+                return new Response(JSON.stringify(favorite), {
+                    headers: { "Content-Type": "application/json" },
+                    status: SUCCESS,
+                });
             }
-        });
+            // Create a new favorite entry
+            const favorite = await prisma.molecule_favorites.create({
+                data: {
+                    userId,
+                    moleculeId,
+                },
+            });
 
-        return new Response(JSON.stringify([{}]), {
-            headers: { "Content-Type": "application/json" },
-            status: 200, // SUCCESS
-        });
-    } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            headers: { "Content-Type": "application/json" },
-            status: 400, // BAD_REQUEST
-        });
+            return new Response(JSON.stringify(favorite), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
+        }
+    } catch (error) {
+        console.error(error);
     }
 }

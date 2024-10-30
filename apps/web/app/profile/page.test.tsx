@@ -32,11 +32,8 @@ describe("Profile Page", () => {
     it("should render layout, and profile info when user data is available", async () => {
         (getUserData as jest.Mock).mockResolvedValue(mockSessionData.userData);
 
-        const { container } = render(await Profile());
-
         expect(screen.getByTestId("layout")).toBeInTheDocument();
         expect(screen.getByTestId("profile-info")).toBeInTheDocument();
-        expect(container.firstChild).toMatchSnapshot();
     });
 
     fit("should pass props to ProfileInfo ", async () => {

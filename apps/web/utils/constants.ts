@@ -53,62 +53,6 @@ export const MOLECULESTATUS = [
   { name: 'Failed', count: 0, type: 'error' },
 ];
 
-export const MOLECULES = [
-  {
-    id: 1,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'new',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
-  }, {
-    id: 2,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'In Progress',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
-  }, {
-    id: 3,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'ready',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
-  }, {
-    id: 4,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'done',
-    analyse: '',
-    herg: 0.12,
-    caco2: 1.23,
-    clint: 0.92,
-    hepg2cytox: 0.02,
-    solubility: 1.23
-  }
-];
-
 export const PROJECT_TYPES = [
   'Retrosynthesis',
   'Optimization',
@@ -150,16 +94,28 @@ export const stats = [
   },
 ];
 
-export const StatusCodeBg = {
-  ready: 'bg-white',
-  new: 'bg-white',
-  failed: 'bg-themeStatsRedColor',
-  inprogress: 'bg-themeStatsBlueColor',
-  done: 'bg-themeStatsGreenColor',
-  info: 'bg-themeStatsYellowColor'
+export enum StatusCodeBg {
+  READY = 'bg-themeSilverGreyColor',
+  NEW = 'bg-themeSilverGreyColor',
+  FAILED = 'bg-themeStatsRedColor',
+  INPROGRESS = 'bg-themeStatsBlueColor',
+  DONE = 'bg-themeStatsGreenColor',
 }
 
+export enum StatusCodeBgAPI {
+  READY = 'bg-themeSilverGreyColor',
+  NEW = 'bg-themeSilverGreyColor',
+  FAILED = 'bg-themeStatsRedColor',
+  INPROGRESS = 'bg-themeStatsBlueColor',
+  DONE = 'bg-themeStatsGreenColor',
+  INFO = 'bg-themeStatsYellowColor'
+}
 export type StatusCodeType = keyof typeof StatusCodeBg;
+
+export type StatusCodeAPIType = keyof typeof StatusCodeBgAPI;
+export interface DataType {
+  status: StatusCodeType;
+}
 
 export const countCardsDetails = [
   {

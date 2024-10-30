@@ -135,10 +135,40 @@ export interface OrganizationEditField {
   orgAdminRole?: number,
 }
 
-export interface Molecule {
+export interface MoleculeStatus {
   name: string;
   count: string;
   type: string;
+  status: StatusCode;
+}
+
+export interface MoleculeType {
+  createdAt: Date;
+  createdBy: number;
+  finger_print: string;
+  id: number;
+  inchi_key: string;
+  libraryId: number;
+  molecular_weight: number;
+  smile: string;
+  source_molecule_name: string;
+  status: string;
+  updatedAt: Date;
+  updatedBy: number;
+  userId: number;
+}
+
+export interface MoleculeFavourite {
+  userId: number;
+  moleculeId: number;
+  id: number;
+}
+
+export type addToFavouritesProps = {
+  moleculeId: number,
+  userId: number,
+  existingFavourite?: MoleculeFavourite,
+  favourite: boolean,
 }
 
 export interface LibraryFields {
@@ -153,7 +183,8 @@ export interface LibraryFields {
   owner: User;
   ownerId: number;
   createdAt: Date;
-  status?: Molecule[];
+  status?: MoleculeStatus[];
+  molecule: [];
 }
 export interface ProjectDataFields {
   name: string;

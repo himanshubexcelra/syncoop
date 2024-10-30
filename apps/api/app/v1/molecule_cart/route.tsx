@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         const searchParams = new URLSearchParams(url.searchParams);
         const libraryId = searchParams.get('libraryId');
         const userId = searchParams.get('userId');
-        const isLibrary = searchParams.get('isLibrary');
+        const projectId = searchParams.get('projectId');
         const query: any = {
             where: {
                 createdBy: Number(userId)
@@ -43,9 +43,11 @@ export async function GET(request: Request) {
             },
         };
 
-        if (isLibrary) {
+        if (libraryId && projectId) {
             query.where = {
+                createdBy: Number(userId),
                 libraryId: Number(libraryId),
+                projectId:Number(projectId)
             };
         }
         const molecule = await prisma.molecule_cart.findMany(query);
@@ -71,6 +73,9 @@ export async function POST(request: Request) {
         projectId: Number(item.projectId),
         createdBy: Number(item.userId)
     }));
+
+    
+    
 
     try {
         await prisma.molecule_cart.createMany({

@@ -210,7 +210,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             if (libraryId) {
                 const libraryData = await getLibraryById(['molecule'], libraryId);
                 setTableData(libraryData.molecule || []);
-                console.log(libraryData.molecule)
                 const libName = libraryData.name;
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(parseInt(libraryId));
@@ -259,7 +258,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
     const fetchCartData = async () => {
         const moleculeCart = libraryId ?
-            await getMoleculeCart(Number(libraryId), Number(userData.id), true)
+            await getMoleculeCart(Number(libraryId), Number(userData.id), Number(projects.id))
             : [];
         const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
         setSelectedRowKeys(moleculeIds)
@@ -442,13 +441,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const checkedMolecule = e.selectedRowsData;
         const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
             ...item,
+            moleculeId: item.id,
             libraryId: libraryId,
             userId: userData.id,
             organizationId: projects.organizationId,
             projectId: projects.id
         }));
+
         const moleculeCart = libraryId ?
-            await getMoleculeCart(Number(libraryId), Number(userData.id), true)
+            await getMoleculeCart(Number(userData.id), Number(libraryId), Number(projects.id))
             : [];
         const preselectedIds = moleculeCart.map((item: any) => item.moleculeId);
         const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
@@ -997,7 +998,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         dataSource={tableData}
                                         showBorders={true}
                                         ref={grid}
-                                        keyExpr="moleculeId"
+                                        keyExpr="id"
                                         selectedRowKeys={selectedRowKeys}
                                         onSelectionChanged={onSelectionChanged}
                                         columnAutoWidth={false}

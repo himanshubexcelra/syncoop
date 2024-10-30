@@ -42,7 +42,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
 
     useEffect(() => {
         const fetchCartData = async () => {
-            const cartDataAvaialable: any = await getMoleculeCart(Number(libraryId), Number(userData.id), false);
+            const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
             setCartData(cartDataAvaialable);
         };
 

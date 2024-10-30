@@ -57,8 +57,11 @@ export const MOLECULES = [
   {
     id: 1,
     bookamrk: false,
+    libraryId: 1,
+    projectId: 1,
+    organizationId: 2,
     structure: '/icon/libraies.svg',
-    moleculeId: 5,
+    moleculeId: 6,
     molecularWeight: 500,
     status: 'new',
     analyse: '',
@@ -70,8 +73,11 @@ export const MOLECULES = [
   }, {
     id: 2,
     bookamrk: false,
+    libraryId: 2,
+    projectId: 2,
+    organizationId: 1,
     structure: '/icon/libraies.svg',
-    moleculeId: 6,
+    moleculeId: 7,
     molecularWeight: 500,
     status: 'In Progress',
     analyse: '',
@@ -83,8 +89,11 @@ export const MOLECULES = [
   }, {
     id: 3,
     bookamrk: false,
+    libraryId: 1,
+    projectId: 1,
+    organizationId: 2,
     structure: '/icon/libraies.svg',
-    moleculeId: 7,
+    moleculeId: 8,
     molecularWeight: 500,
     status: 'ready',
     analyse: '',
@@ -96,8 +105,11 @@ export const MOLECULES = [
   }, {
     id: 4,
     bookamrk: false,
+    libraryId: 3,
+    projectId: 3,
+    organizationId: 3,
     structure: '/icon/libraies.svg',
-    moleculeId: 8,
+    moleculeId: 9,
     molecularWeight: 500,
     status: 'done',
     analyse: '',
@@ -106,47 +118,9 @@ export const MOLECULES = [
     clint: 0.92,
     hepg2cytox: 0.02,
     solubility: 1.23
-  }, {
-    id: 5,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 9,
-    molecularWeight: 500,
-    status: 'done',
-    analyse: '',
-    herg: 1.1,
-    caco2: 0.3,
-    clint: 0.7,
-    hepg2cytox: 1.23,
-    solubility: 0.3,
-  }, {
-    id: 6,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 10,
-    molecularWeight: 500,
-    status: 'failed',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
-  }, {
-    id: 7,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 11,
-    molecularWeight: 500,
-    status: 'new',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
   }
 ];
+
 
 export const PROJECT_TYPES = [
   'Retrosynthesis',

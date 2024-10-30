@@ -118,14 +118,6 @@ type LibraryDetailsProps = {
     actionsEnabled: string[],
 }
 
-type ProductModel = {
-    id: number;
-    moleculeId: number;
-    molecularWeight: number;
-    projectId: number;
-    projectName: string;
-};
-
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
@@ -157,7 +149,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
     const context: any = useContext(AppContext);
     const appContext = context.state;
-    const [moleculeData, setMoleculeData] = useState<ProductModel[]>([]);
+    const [moleculeData, setMoleculeData] = useState([]);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Store selected item IDs
 
     const [isCartUpdate, updateCart] = useState(false)
@@ -234,12 +226,14 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
     useEffect(() => {
         const fetchCartData = async () => {
-            const moleculeCart: any = libraryId ? await getMoleculeCart(Number(libraryId), true):[];
-            const moleculeIds = moleculeCart.map(item => item.moleculeId);
+            const moleculeCart: any = libraryId ?
+                await getMoleculeCart(Number(libraryId), Number(userData.id), true)
+                : [];
+            const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
             setSelectedRowKeys(moleculeIds)
         };
         fetchCartData();
-    }, [libraryId]);
+    }, [libraryId, userData.id]);
 
     useEffect(() => {
         fetchLibraries();
@@ -372,21 +366,22 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         // Check if the data exists in storage
         setSelectedRowKeys(e.selectedRowKeys);
         const checkedMolecule = e.selectedRowsData;
-
-        const selectedProjectMolecule = checkedMolecule.map(item => ({
+        const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
             ...item,
             libraryId: libraryId,
-            userId: userData.id
+            userId: userData.id,
+            organizationId: projects.organizationId,
+            projectId: projects.id
         }));
-
-        const moleculeCart = libraryId ? await getMoleculeCart(Number(libraryId), true) : [];
-        const preselectedIds = moleculeCart.map(item => item.moleculeId);
-        const updatedMoleculeCart = selectedProjectMolecule.filter(item =>
+        const moleculeCart = libraryId ?
+            await getMoleculeCart(Number(libraryId), Number(userData.id), true)
+            : [];
+        const preselectedIds = moleculeCart.map((item: any) => item.moleculeId);
+        const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
             !preselectedIds.includes(item.moleculeId));
-
         // If the check box is unchecked
         if (e.currentDeselectedRowKeys.length > 0) {
-            const newmoleculeData: ProductModel[] = checkedMolecule.filter((
+            const newmoleculeData = checkedMolecule.filter((
                 item: any) => item.id !== e.currentDeselectedRowKeys[0].id
                 && item.projectId !== projects.id);
             setMoleculeData(newmoleculeData);
@@ -401,10 +396,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             ...appContext, cartDetail: [...moleculeData]
         })
         addMoleculeToCart(moleculeData)
-        toast.success('Molecule is updated in your cart.');
+            .then((res) => {
+                if (res) {
+                    toast.success('Molecule is updated in your cart.');
+                }
+            })
+            .catch((error) => {
+                toast.success(error);
+            })
     }
-
-
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />

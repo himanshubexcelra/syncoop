@@ -5,10 +5,10 @@ import { AppContextProvider } from '../app/AppState';
 export default async function Layout({ children }: { children: React.ReactNode }) {
 
   const sessionData: any = await getUserData();
-  const { userData } = sessionData;
+  const { userData, actionsEnabled } = sessionData;
   return (
     <AppContextProvider>
-      <Header userData={userData} />
+      <Header userData={userData} actionsEnabled={actionsEnabled} />
       {children}
     </AppContextProvider>
   );

@@ -106,45 +106,6 @@ export const MOLECULES = [
     clint: 0.92,
     hepg2cytox: 0.02,
     solubility: 1.23
-  }, {
-    id: 5,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'done',
-    analyse: '',
-    herg: 1.1,
-    caco2: 0.3,
-    clint: 0.7,
-    hepg2cytox: 1.23,
-    solubility: 0.3,
-  }, {
-    id: 6,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'failed',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
-  }, {
-    id: 7,
-    bookamrk: false,
-    structure: '/icon/libraies.svg',
-    moleculeId: 5,
-    molecularWeight: 500,
-    status: 'new',
-    analyse: '',
-    herg: '',
-    caco2: '',
-    clint: '',
-    hepg2cytox: '',
-    solubility: ''
   }
 ];
 

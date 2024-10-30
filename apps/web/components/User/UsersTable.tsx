@@ -296,7 +296,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                         </Item>
                         <Item name="searchPanel" location="before" />
                     </GridToolbar>
-                    <SearchPanel visible={true} highlightCaseSensitive={true} />
+                    <SearchPanel visible={true} highlightSearchText={true} />
                 </DataGrid>}
         </>
     );

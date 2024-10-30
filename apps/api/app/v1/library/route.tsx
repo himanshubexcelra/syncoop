@@ -1,8 +1,8 @@
 import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
-const { LIBRARY_EXISTS } = MESSAGES;
-const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST } = STATUS_TYPE;
+const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;
+const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 
 export async function GET(request: Request) {
     try {
@@ -10,7 +10,9 @@ export async function GET(request: Request) {
         const searchParams = new URLSearchParams(url.searchParams);
         const condition = searchParams.get('condition');
         const organizationId = searchParams.get('organizationId');
+        const libraryId = searchParams.get('id');
         const query: any = {};
+        const joins = searchParams.get('with');
 
         if (condition === "count") {
             const count = organizationId
@@ -19,6 +21,37 @@ export async function GET(request: Request) {
             return new Response(JSON.stringify(count), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
+            });
+        }
+
+        if (joins && joins.length) {
+            query.include = {};
+            if (joins.includes('molecule')) {
+                query.include = {
+                    ...query.include,
+                    molecule: {
+                        include: {
+                            molecule_favorites: true
+                        }
+                    },
+                }
+            }
+        }
+
+        if (libraryId) {
+            query.where = { id: Number(libraryId) }; // Add the where condition to the query
+            const library = await prisma.library.findUnique(query);
+
+            if (!library) {
+                return new Response(JSON.stringify({ error: LIBRARY_NOT_FOUND }), {
+                    headers: { "Content-Type": "application/json" },
+                    status: NOT_FOUND,
+                });
+            }
+
+            return new Response(JSON.stringify(library), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS, // success status code
             });
         }
 

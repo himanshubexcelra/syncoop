@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { Popup, Position } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
 import { useRouter } from 'next/navigation';
-import { formatDetailedDate, popupPositionValue } from "@/utils/helpers";
+import { fetchMoleculeStatus, formatDetailedDate, popupPositionValue } from "@/utils/helpers";
 import {
     FetchUserType,
     OrganizationDataFields,
@@ -31,8 +31,10 @@ type ProjectAccordionDetailProps = {
     myRoles?: string[],
 }
 
-export default function ProjectAccordionDetail({ data,
-    fetchOrganizations, users,
+export default function ProjectAccordionDetail({
+    data,
+    fetchOrganizations,
+    users,
     organizationData,
     myRoles,
     userData,
@@ -46,6 +48,10 @@ export default function ProjectAccordionDetail({ data,
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
     const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
+    const moleculeCount = data.libraries.reduce((count, library) => {
+        return count + library.molecule.length; // Add the count of molecules in each library
+    }, 0);
+    // const projectStatusCount = fetchMoleculeStatus(data);
 
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === userData.id);
@@ -53,7 +59,7 @@ export default function ProjectAccordionDetail({ data,
         const admin = ['admin', 'org_admin'].some(
             (role) => myRoles?.includes(role));
 
-        setEditStatus(!!sharedUser || owner || admin)
+        setEditStatus(actionsEnabled.includes('edit_project') && (!!sharedUser || owner || admin))
     }, [data])
 
     useEffect(() => {
@@ -95,12 +101,14 @@ export default function ProjectAccordionDetail({ data,
                     >
                         Open
                     </Button>
-                    <Button
-                        className='btn-primary accordion-button'
-                        disabled={!editEnabled}
-                        onClick={() => setCreatePopupVisibility(true)}>
-                        Edit
-                    </Button>
+                    {editEnabled &&
+                        <Button
+                            className='btn-primary accordion-button'
+                            disabled={!editEnabled}
+                            onClick={() => setCreatePopupVisibility(true)}>
+                            Edit
+                        </Button>
+                    }
                     <Button
                         className='btn-secondary accordion-button'
                         onClick={
@@ -144,7 +152,10 @@ export default function ProjectAccordionDetail({ data,
                             width={15}
                             height={15}
                         />
-                        0 <span>Molecules</span>
+                        {moleculeCount}
+                        <span className='pl-[5px]'>
+                            {moleculeCount !== 1 ? 'Molecules' : 'Molecule'}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -278,7 +289,7 @@ export default function ProjectAccordionDetail({ data,
                                     URL
                                 </p>
                             </Popup>
-                            <div className='library-name lib-description'>
+                            <div className='library-name'>
                                 {item.description ?
                                     <TextWithToggle
                                         text={item.description}
@@ -293,6 +304,22 @@ export default function ProjectAccordionDetail({ data,
                                     /> :
                                     <>Description: </>
                                 }
+                            </div>
+                            <div className='gap-[10px] flex mt-[8px] flex-wrap'>
+                                {Object.entries(fetchMoleculeStatus(item))
+                                    .map(([status, count]) => {
+                                        let type = 'info';
+                                        if (status === 'Failed') {
+                                            type = 'error';
+                                        } else if (status === 'Done') {
+                                            type = 'success';
+                                        }
+                                        return (
+                                            <span key={status} className={`badge ${type}`}>
+                                                <b>{count}</b> {status}
+                                            </span>
+                                        )
+                                    })}
                             </div>
                         </div>
                     ))}

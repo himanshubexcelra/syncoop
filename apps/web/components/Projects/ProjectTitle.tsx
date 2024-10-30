@@ -5,6 +5,9 @@ import { ProjectDataFields } from '@/lib/definition';
 
 export default function ProjectTitle(data: ProjectDataFields) {
     const libraryCount = data.libraries?.length || 0;
+    const moleculeCount = data.libraries.reduce((count, library) => {
+        return count + library.molecule.length; // Add the count of molecules in each library
+    }, 0);
     return (
         <div>
             <div className='flex'>
@@ -24,7 +27,7 @@ export default function ProjectTitle(data: ProjectDataFields) {
                         height={30}
                         alt="organization"
                     />
-                    <span>0 Molecules</span>
+                    <span>{moleculeCount} {moleculeCount !== 1 ? 'Molecules' : 'Molecule'}</span>
                 </div>
                 <div>
                     <Image

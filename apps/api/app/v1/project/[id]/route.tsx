@@ -31,6 +31,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 },
                 libraries: {
                     include: {
+                        molecule: {
+                            select: {
+                                status: true,
+                            }
+                        },
                         owner: {
                             select: {
                                 id: true,

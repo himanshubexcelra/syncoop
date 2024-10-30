@@ -17,13 +17,15 @@ import { getMoleculeCart } from '../Libraries/libraryService';
 
 
 type HeaderProps = {
-    userData: UserData
+    userData: UserData,
+    actionsEnabled: string[]
 }
 
-export default function Header({ userData }: HeaderProps) {
+export default function Header({ userData, actionsEnabled }: HeaderProps) {
+    const createEnabled = actionsEnabled.includes('create_molecule_order');
     const context: any = useContext(AppContext);
     const searchParams = useSearchParams();
-    const libraryId = searchParams.get('libraryId')?searchParams.get('libraryId'):0;
+    const libraryId = searchParams.get('libraryId') ? searchParams.get('libraryId') : 0;
     const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
@@ -34,16 +36,17 @@ export default function Header({ userData }: HeaderProps) {
         id: number;
         libraryId: number;
         moleculeId: number;
+        projectId: number;
     }
-    
+
     useEffect(() => {
         const fetchCartData = async () => {
-            const cartDataAvaialable: any = await getMoleculeCart(Number(libraryId), false);
+            const cartDataAvaialable: any = await getMoleculeCart(Number(libraryId), Number(userData.id), false);
             setCartData(cartDataAvaialable);
         };
 
         fetchCartData();
-    }, [libraryId, cartDetail]);
+    }, [libraryId, cartDetail, userData.id]);
 
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -52,27 +55,35 @@ export default function Header({ userData }: HeaderProps) {
         setDropdownOpen(!dropdownOpen);
     };
 
-    const removeItemFromCart = (obj:deleteObj) => {
-        const { id, moleculeId, libraryId } = obj;
-        deleteMoleculeCart(id).then((res)=>{
-            if(res){
-            const filteredData = cartData.filter((item: any) => 
-                !(item.moleculeId === moleculeId && item.libraryId === libraryId)
-            );
-            setCartData(filteredData);
+    const removeItemFromCart = (obj: deleteObj) => {
+        const { moleculeId, libraryId, projectId } = obj;
+        console.log(moleculeId, "moleculeId");
+        console.log(libraryId, "libraryId");
+        console.log(projectId, "projectId");
+        deleteMoleculeCart(moleculeId, libraryId, projectId).then((res) => {
+            if (res) {
+                const filteredData = cartData.filter((item: any) =>
+                    !(item.moleculeId === moleculeId && item.libraryId === libraryId && item.projectId === projectId)
+                );
+                setCartData(filteredData);
             }
         })
-        .catch((error)=>{
-            console.log(error);
-        })
+            .catch((error) => {
+                console.log(error);
+            })
 
-        
+
     }
-    
-    const removeAll = () => {
-        console.log('Remove All');
 
-        
+    const removeAll = () => {
+        deleteMoleculeCart().then((res) => {
+            if (res) {
+                setCartData([]);
+            }
+        })
+            .catch((error) => {
+                console.log(error);
+            })
     }
     const onItemSelected = async (item: DropDownItem) => {
         if (item.link) {
@@ -126,7 +137,7 @@ export default function Header({ userData }: HeaderProps) {
                 contentRender={() => (
                     <CartDetails
                         cartData={cartData}
-                        removeItemFromCart={(obj:deleteObj)=>removeItemFromCart(obj)}
+                        removeItemFromCart={(obj: deleteObj) => removeItemFromCart(obj)}
                         removeAll={removeAll}
                     />
                 )}
@@ -170,20 +181,23 @@ export default function Header({ userData }: HeaderProps) {
                     width={20}
                     height={20}
                 />
-                <Link href="#">
-                    <div className="relative flex items-center justify-center">
-                        <Image priority
-                            className="icon-cart"
-                            src={"/icons/cart-icon.svg"}
-                            alt="Cart"
-                            width={33}
-                            height={22}
-                        />
-                        <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                            <span className="text-black text-sm" onClick={() => setCreatePopupVisibility(!createPopupVisible)}>{cartData.length}</span>
+                {
+                    createEnabled &&
+                    <Link href="#" onClick={() => setCreatePopupVisibility(!createPopupVisible)}>
+                        <div className="relative flex items-center justify-center">
+                            <Image priority
+                                className="icon-cart"
+                                src={"/icons/cart-icon.svg"}
+                                alt="Cart"
+                                width={33}
+                                height={22}
+                            />
+                            <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
+                                <span className="text-black text-sm" onClick={() => setCreatePopupVisibility(!createPopupVisible)}>{cartData.length}</span>
+                            </div>
                         </div>
-                    </div>
-                </Link>
+                    </Link>
+                }
                 <div>
                     <div className="flex items-center justify-center w-[24px] h-[24px] text-white rounded-full border-2 border-white cursor-pointer" onClick={toggleDropdown}>{shortName}</div>
                     <PopupBox

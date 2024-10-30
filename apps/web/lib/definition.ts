@@ -381,3 +381,22 @@ export interface LibraryDataNode {
   isInInventory?: boolean;
   publishedMoleculeCount?: number;
 }
+
+export interface MoleculeData {
+  analyse: string,
+  bookmark: boolean,
+  caco2: string,
+  clint: string,
+  hepg2cytox: string,
+  herg: "",
+  id: number,
+  libraryId: number,
+  molecularWeight: number,
+  moleculeId: number,
+  organizationId: number,
+  projectId: number,
+  solubility: string,
+  status: string,
+  structure: string,
+  userId: number
+}

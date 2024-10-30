@@ -9,6 +9,12 @@ import Image from 'next/image';
 import { StatusCodeBg, StatusCodeType } from '@/utils/constants';
 import { Button } from 'devextreme-react';
 import StatusMark from '@/ui/StatusMark';
+import dynamic from 'next/dynamic';
+
+const MoleculeStructure = dynamic(
+  () => import("@/utils/MoleculeStructure"),
+  { ssr: false }
+);
 
 interface MoleculeOrder {
   id: number;
@@ -48,8 +54,10 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
 
   const breadcrumbs: BreadCrumbsObj[] = [
     { label: "Home", svgPath: "/icons/home-icon.svg", svgWidth: 16, svgHeight: 16, href: "/" },
-    { label: "Molecule Orders", svgPath: "/icons/molecule-order.svg", 
-      svgWidth: 16, svgHeight: 16, href: "/projects" },
+    {
+      label: "Molecule Orders", svgPath: "/icons/molecule-order.svg",
+      svgWidth: 16, svgHeight: 16, href: "/projects"
+    },
   ];
 
   const handleBookMarkItem = (data: any) => console.log(data, 'data-data');
@@ -76,8 +84,11 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
       width: 240,
       customRender: (data: MoleculeOrder) => (
         <span className='flex justify-center items-center gap-[7.5px]'>
-          <Image src={data.structure || '/icons/molecule-order-structure.svg'}
-            width={107.5} height={58} alt="Structure" />
+          {/* <Image src={data.structure || '/icons/molecule-order-structure.svg'}
+            width={107.5} height={58} alt="Structure" /> */}
+          <MoleculeStructure
+            structure={data.smile}
+          />
           <Button onClick={() => handleStructureZoom(data)}
             render={() => <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
           <Button onClick={() => handleStructureEdit(data)}
@@ -106,9 +117,9 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
       customRender: (data: any) => (
         <span className={`flex items-center gap-[5px]
           ${StatusCodeBg[data.status?.toLowerCase()]}`}>
-             {data.status}
-             <StatusMark status={data.status} />
-         </span>
+          {data.status}
+          <StatusMark status={data.status} />
+        </span>
       ),
     },
     {

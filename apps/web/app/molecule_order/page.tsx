@@ -1,9 +1,9 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import Layout from '@/components/layout';
-import MoleculeOrderPage from './MoleculeOrderPage';
 import { getMoleculesOrder } from './service';
 import { getUserData } from '@/utils/auth';
 import { redirect } from 'next/navigation';
+import MoleculeOrderPage from '@/components/MoleculeOrder/MoleculeOrder';
 
 export default async function Page({ searchParams }: 
   { searchParams: { projectId?: string; libraryId?: string } }) {

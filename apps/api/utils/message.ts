@@ -6,7 +6,8 @@ export const MESSAGES = {
     LIBRARY_EXISTS: 'Library name is already taken.',
     ORGANIZATION_ID_NEEDED: 'Organization id is required',
     EMAIL_ALREADY_EXIST: `Email already exists`,
-    USER_NOT_FOUND: 'User does not exist'
+    USER_NOT_FOUND: 'User does not exist',
+    MOLECULE_ORDER_NOT_FOUND: 'Molecule order does not exist',
 }
 
 export const STATUS_TYPE = {

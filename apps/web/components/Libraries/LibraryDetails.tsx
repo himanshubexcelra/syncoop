@@ -61,6 +61,7 @@ import { DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
+import EditMolecule from '../Molecule/EditMolecule/EditMolecule';
 import SendMoleculesForSynthesis from './SendMoleculesForSynthesis';
 
 const selectAllFieldLabel = { 'aria-label': 'Select All Mode' };
@@ -154,6 +155,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [expanded, setExpanded] = useState(libraryId ? false : true);
     const [checkBoxesMode, setCheckBoxesMode] =
         useState<DataGridTypes.SelectionColumnDisplayMode>('always');
+    const [selectedRows, setSelectedRows] = useState([]);
+    const [editMolecules, setEditMolecules] = useState<any[]>([]);
     const [searchValue, setSearchValue] = useState('');
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
@@ -166,10 +169,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [sortBy, setSortBy] = useState('CreationTime');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
     const [viewAddMolecule, setViewAddMolecule] = useState(false);
+    const [viewEditMolecule, setViewEditMolecule] = useState(false);
     const [synthesisView, setSynthesisView] = useState(false);
 
     let toastShown = false;
-
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
 
@@ -258,6 +261,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
     const onAllModeChanged = useCallback(({ value }: any) => {
         setAllMode(value);
+    }, []);
+    const onSelectionChanged = useCallback((event: any) => {
+        const { selectedRowKeys } = event
+        setSelectedRows(selectedRowKeys);
     }, []);
 
     const bookMarkItem = async ({ data, existingFavourite }: {
@@ -409,6 +416,11 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const admin = ['admin', 'org_admin'].some((role) => myRoles?.includes(role));
         return !(owner || admin);
     }
+    const showEditMolecule = useCallback((data: any | null = null) => {
+        const moleculesToEdit = data ? [data] : selectedRows;
+        setEditMolecules(moleculesToEdit);
+        setViewEditMolecule(true);
+    }, [selectedRows]);
 
     const cellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
         if (e.rowType === "data") {
@@ -931,6 +943,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         columnAutoWidth={false}
                                         width="100%"
                                         onCellPrepared={cellPrepared}
+                                        onSelectionChanged={onSelectionChanged}
                                     >
                                         <Selection
                                             mode="multiple"
@@ -952,8 +965,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                     width={24}
                                                     height={24}
                                                     alt="favourite-header"
-                                                />
-                                            }
+                                                />}
                                             cellRender={({ data }) => {
                                                 const existingFavourite =
                                                     data.molecule_favorites.find((
@@ -997,7 +1009,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         alt="molecule-order-structure"
                                                     />
                                                     <Button
-                                                        disabled={true}
+                                                        disabled=
+                                                        {!actionsEnabled.includes('edit_molecule')}
                                                         render={() => (
                                                             <>
                                                                 <Image
@@ -1005,9 +1018,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                                     width={24}
                                                                     height={24}
                                                                     alt="edit"
+                                                                    onClick={
+                                                                        () =>
+                                                                            showEditMolecule(data)}
                                                                 />
                                                             </>
                                                         )}
+
                                                     />
                                                     <Button
                                                         disabled={true}
@@ -1220,6 +1237,18 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         )}
                                                     />
                                                 </ToolbarItem>}
+                                            {actionsEnabled.includes('edit_molecule') &&
+                                                <ToolbarItem location="after">
+                                                    <Button
+                                                        disabled={selectedRows?.length < 1}
+                                                        onClick={() => showEditMolecule()}
+                                                        render={() => (
+                                                            <span>
+                                                                {`Edit (${selectedRows?.length})`}
+                                                            </span>
+                                                        )}
+                                                    />
+                                                </ToolbarItem>}
                                             <ToolbarItem location="after">
                                                 <Button
                                                     disabled={true}
@@ -1307,6 +1336,54 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             }
                                         />
                                     }
+                                    <Popup
+                                        title="Add Molecule"
+                                        visible={viewAddMolecule}
+                                        contentRender={() => (
+                                            <AddMolecule />
+                                        )}
+                                        resizeEnabled={true}
+                                        hideOnOutsideClick={true}
+                                        defaultWidth={700}
+                                        defaultHeight={'100%'}
+                                        position={{
+                                            my: { x: 'right', y: 'top' },
+                                            at: { x: 'right', y: 'top' },
+                                        }}
+                                        onHiding={() => {
+                                            setViewAddMolecule(false)
+                                        }}
+                                        dragEnabled={false}
+                                        showCloseButton={true}
+                                        wrapperAttr={
+                                            {
+                                                class: "create-popup mr-[15px]"
+                                            }
+                                        } />
+                                    <Popup
+                                        title="Edit Molecule"
+                                        visible={viewEditMolecule}
+                                        contentRender={() => (
+                                            <EditMolecule editMolecules={editMolecules} />
+                                        )}
+                                        resizeEnabled={true}
+                                        hideOnOutsideClick={true}
+                                        defaultWidth={700}
+                                        defaultHeight={'100%'}
+                                        position={{
+                                            my: { x: 'right', y: 'top' },
+                                            at: { x: 'right', y: 'top' },
+                                        }}
+                                        onHiding={() => {
+                                            setViewEditMolecule(false)
+                                        }}
+                                        dragEnabled={false}
+                                        showCloseButton={true}
+                                        wrapperAttr={
+                                            {
+                                                class: "create-popup mr-[15px]"
+                                            }
+                                        } />
                                     <div className='flex justify-center mt-[25px]'>
                                         <span className='text-themeGreyColor'>
                                             {tableData.length}

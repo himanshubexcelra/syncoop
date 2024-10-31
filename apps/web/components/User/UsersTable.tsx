@@ -83,7 +83,8 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                     ...appContext, userCount: {
                         externalUsers: externalUsers.length,
                         internalUsers: internalUsers.length
-                    }
+                    },
+                    refreshUsersTable: false,
                 })
             }
             else {
@@ -107,7 +108,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
     }, []);
     useEffect(() => {
         fetchAndFilterData();
-    }, [myRoles, type, orgUser]);
+    }, [myRoles, type, orgUser, appContext?.refreshUsersTable]);
 
     return (
         <>

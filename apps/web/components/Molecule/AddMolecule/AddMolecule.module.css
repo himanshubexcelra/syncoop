@@ -115,3 +115,39 @@
     border-radius: 4px;
     background: var(--themeBlueColor);
 }
+.rejectButton {
+    display: inline-flex;
+    height: 32px;
+    padding: 8px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    border: 2px solid var(--themeDotRedColor);
+    color: var(--themeDotRedColor);
+    text-align: center;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16.8px 
+}
+
+.discardText {
+    color: var(--messageDarkBlue);
+    font-family: Lato;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.buttonNoBorder{
+    color: var(--themeBlueColor);
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16.8px
+}

@@ -40,7 +40,8 @@ const config: Config = {
         tableBackground: "var(--tableBackground)",
         greyHover: "var(--greyHover)",
         greyMessage: "var(--greyMessage)",
-        blueLightBg: "var(--blueLightBg)"
+        blueLightBg: "var(--blueLightBg)",
+        messageDarkBlue: "var(--messageDarkBlue)",
       },
     },
   },

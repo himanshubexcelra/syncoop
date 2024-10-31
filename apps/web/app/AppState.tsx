@@ -16,6 +16,8 @@ const initialContext = {
     externalUsers: 0,
     internalUsers: 0
   },
+  refreshAssayTable: false,
+  refreshUsersTable: false,
 }
 
 interface AppContextData {

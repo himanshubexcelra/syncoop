@@ -36,7 +36,7 @@ export default function LandingPage({ userData,
     };
 
     useEffect(() => {
-        if (myRoles.includes('admin') || myRoles.includes('org_admin')) fetchOrganizationData();
+        if (['admin', 'org_admin'].some((role) => myRoles?.includes(role))) fetchOrganizationData();
     }, []);
 
     useEffect(() => {

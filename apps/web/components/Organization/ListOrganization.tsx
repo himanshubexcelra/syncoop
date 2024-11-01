@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import { useRef, useState, useEffect } from "react";
 import DataGrid, {

@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import toast from "react-hot-toast";
 import { useContext, useEffect, useState } from "react";

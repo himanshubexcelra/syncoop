@@ -16,6 +16,8 @@ const initialContext = {
     externalUsers: 0,
     internalUsers: 0
   },
+  refreshAssayTable: false,
+  refreshUsersTable: false,
 }
 
 interface AppContextData {
@@ -35,8 +37,9 @@ export const AppContextProvider: FC<{ children: ReactNode }> =
       ({ appContext: initialContext });
 
     const addToState = (obj: AppState) => {
-       setState(() => obj);
+      setState(() => obj);
     };
+
     return (
       <AppContext.Provider value={{ state, addToState }}>
         {children}

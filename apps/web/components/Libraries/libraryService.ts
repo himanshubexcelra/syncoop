@@ -134,7 +134,7 @@ export async function editLibrary(formData: FormData) {
 export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/molecule`,
+            `${process.env.API_HOST_URL}/v1/molecule_cart`,
             {
                 mode: "no-cors",
                 method: "POST",
@@ -157,13 +157,18 @@ export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
     }
 }
 
-export async function getMoleculeCart(libraryId?: number, userId?: number, isLibrary?: boolean) {
+export async function getMoleculeCart(userId?: number, libraryId?: number, projectId?: number) {
     try {
-        const url = new URL(
-            `${process.env.API_HOST_URL}/v1/molecule/?libraryId=${libraryId}` +
-            `&userId=${userId}&isLibrary=${isLibrary}`
-        );
-
+        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
+        if (libraryId) {
+            url.searchParams.append('libraryId', String(libraryId));
+        }
+        if (userId) {
+            url.searchParams.append('userId', String(userId));
+        }
+        if (projectId) {
+            url.searchParams.append('projectId', String(projectId));
+        }
         const response = await fetch(url, {
             mode: "no-cors",
             method: "GET",
@@ -180,10 +185,22 @@ export async function getMoleculeCart(libraryId?: number, userId?: number, isLib
     }
 }
 
-
-export async function deleteMoleculeCart(Id?: number) {
+export async function deleteMoleculeCart(
+    moleculeId?: number,
+    libraryId?: number,
+    projectId?: number
+) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule/?id=${Id}`);
+        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
+        if (moleculeId) {
+            url.searchParams.append('moleculeId', String(moleculeId));
+        }
+        if (libraryId) {
+            url.searchParams.append('libraryId', String(libraryId));
+        }
+        if (projectId) {
+            url.searchParams.append('projectId', String(projectId));
+        }
 
         const response = await fetch(url, {
             method: "DELETE",

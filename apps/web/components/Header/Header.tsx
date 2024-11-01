@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
 import { DropDownItem, UserData } from '@/lib/definition';
@@ -14,6 +15,8 @@ import { Popup as CartPopup, } from "devextreme-react/popup";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { getMoleculeCart } from '../Libraries/libraryService';
+import { Messages } from "@/utils/message";
+
 import toast from "react-hot-toast";
 
 
@@ -57,12 +60,23 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     };
 
     const removeItemFromCart = (obj: deleteObj) => {
-        const { moleculeId, libraryId, projectId } = obj;
+
+        const { moleculeId, libraryId, projectId, moleculeName } = obj;
         deleteMoleculeCart(moleculeId, libraryId, projectId).then((res) => {
             if (res) {
+                console.log(obj, 'RES');
+
                 const filteredData = cartData.filter((item: any) =>
-                    !(item.moleculeId === moleculeId && item.libraryId === libraryId && item.projectId === projectId)
+                    !
+                    (
+                        item.moleculeId === moleculeId &&
+                        item.libraryId === libraryId &&
+                        item.projectId === projectId
+                    )
                 );
+                const message = Messages.deleteMoleculeMessage(moleculeName);
+                toast.success(message);
+
                 setCartData(filteredData);
             }
         })
@@ -77,7 +91,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         deleteMoleculeCart().then((res) => {
             if (res) {
                 setCartData([]);
-                toast.success('Molecule is deleted in your cart.');
+                toast.success(Messages.REMOVE_ALL_MESSAGE);
 
             }
         })
@@ -128,7 +142,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     }, [userData])
 
     return (
-        <header className="top-0 left-0 w-full h-10 bg-themeBlueColor flex items-center justify-between px-4 shadow-sm">
+        <header className="top-0 left-0 w-full h-10 bg-themeBlueColor 
+            flex items-center justify-between px-4 shadow-sm">
             <CartPopup
                 title="Molecule Cart"
                 visible={createPopupVisible}
@@ -183,7 +198,14 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 />
                 {
                     createEnabled &&
-                    <Link href="#" onClick={() => setCreatePopupVisibility(cartData.length > 0 ? !createPopupVisible : createPopupVisible)}>
+                    <Link href="#"
+                        onClick={() =>
+                            setCreatePopupVisibility(
+                                cartData.length > 0 ? !createPopupVisible : createPopupVisible
+                            )
+                        }
+
+                    >
                         <div className="relative flex items-center justify-center">
                             <Image priority
                                 className="icon-cart"
@@ -192,15 +214,33 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                                 width={33}
                                 height={22}
                             />
-                            <div className="absolute flex items-center justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0">
-                                <span className="text-black text-sm" onClick={() => setCreatePopupVisibility(cartData.length > 0 ? !createPopupVisible : createPopupVisible)}>{cartData.length}</span>
+                            <div className="absolute flex items-center 
+                            justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0"
+                            >
+                                <span
+                                    className="text-black text-sm"
+                                    onClick={() =>
+                                        setCreatePopupVisibility(
+                                            cartData.length > 0 ?
+                                                !createPopupVisible : createPopupVisible
+                                        )
+                                    }
+                                >
+                                    {cartData.length}
+                                </span>
+
                             </div>
                         </div>
                     </Link>
                 }
                 <div>
-                    <div className="flex items-center justify-center w-[24px] h-[24px] text-white rounded-full border-2 border-white cursor-pointer" onClick={toggleDropdown}>{shortName}</div>
-                    <PopupBox
+                    <div
+                        className="flex items-center justify-center w-[24px] h-[24px] 
+    text-white rounded-full border-2 border-white cursor-pointer"
+                        onClick={toggleDropdown}
+                    >
+                        {shortName}
+                    </div>                    <PopupBox
                         isOpen={dropdownOpen}
                         onItemSelected={(item: DropDownItem) => onItemSelected(item)}
                         onClose={toggleDropdown}

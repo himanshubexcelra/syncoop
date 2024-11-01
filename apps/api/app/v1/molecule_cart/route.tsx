@@ -98,8 +98,8 @@ export async function DELETE(request: Request) {
         const moleculeId = Number(searchParams.get('moleculeId'));
         const libraryId = Number(searchParams.get('libraryId'));
         const projectId = Number(searchParams.get('projectId'));
-        if(!moleculeId && !libraryId && !projectId){
-            await prisma.user.deleteMany({});
+        if(!searchParams.toString()){
+            await prisma.molecule_cart.deleteMany({});
         }
 
         await prisma.molecule_cart.deleteMany({

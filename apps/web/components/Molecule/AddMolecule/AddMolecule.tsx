@@ -2,13 +2,23 @@
 import React, { useRef, useState } from 'react';
 import styles from './AddMolecule.module.css'
 import Image from 'next/image';
+import DiscardMolecule from './DiscardMolecule';
+import DialogPopUp from '@/ui/DialogPopUp';
+
+const dialogProperties = {
+    width: 455,
+    height: 148,
+}
 
 const AddMolecule = () => {
     const [file, setFile] = useState<File | null>(null);
+    const [discardvisible, setDiscardVisible] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState('');
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-
+    const hidePopup = () => {
+        setDiscardVisible(false);
+    };
     console.log({ error, isDragging, file });
     const handleDragOver = (e: any) => {
         e.preventDefault();
@@ -23,12 +33,15 @@ const AddMolecule = () => {
     const validateFile = (file: any) => {
         const validTypes = ['.csv', '.sdf'];
         const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-
+        const maxSizeBytes = 10 * 1024 * 1024;
         if (!validTypes.includes(fileExtension)) {
             setError('Please upload a CSV or SDF file');
             return false;
         }
-
+        if (file?.size > maxSizeBytes) {
+            setError('File size must be less than 10 MB');
+            return false;
+        }
         setError('');
         return true;
     };
@@ -139,9 +152,22 @@ const AddMolecule = () => {
                 </div>
                 <div className="flex justify-start gap-2 mt-5 ">
                     <button className={styles.primaryButton}>Save Molecule</button>
-                    <button className={styles.secondaryButton}>Reset</button>
+                    <button
+                        className={styles.secondaryButton}
+                        onClick={() => setDiscardVisible(true)}
+                    >
+                        Reset
+                    </button>
                 </div>
             </div>
+            <DialogPopUp {
+                ...{
+                    visible: discardvisible,
+                    dialogProperties,
+                    Content: DiscardMolecule,
+                    hidePopup
+                }
+            } />
         </>
     );
 };

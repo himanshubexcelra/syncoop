@@ -25,5 +25,9 @@ export const Messages = {
         return `Library ${status} successfully`;
     },
     LIBRARY_LIST_EMPTY:
-        "Your library list is empty, add a library to import molecules"
+        "Your library list is empty, add a library to import molecules",
+    deleteMoleculeMessage(status: string) {
+            return `${status} deleted successfully`;
+        }, 
+    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart."       
 }

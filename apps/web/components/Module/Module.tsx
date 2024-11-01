@@ -1,38 +1,45 @@
-/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Module.module.css';
-import { ModuleTableProps } from '@/lib/definition';
+import { ModuleFeature, ModuleTableProps } from '@/lib/definition';
+import { getModule } from './service';
+import { LoadIndicator } from 'devextreme-react';
 
-export default function Module({ features, myRoles }: ModuleTableProps) {
+export default function Module({ orgUser, myRoles }: ModuleTableProps) {
 
-    const [featureStates, setFeatureStates] = useState(features);
+    const [features, setFeatures] = useState<ModuleFeature[]>([]);
+    const [loader, setLoader] = useState(true);
+    const orgId = orgUser?.id
 
-    const toggleCheckbox = (index: number) => {
-        const updatedFeatures = featureStates.map((feature, i) =>
-            i === index ? { ...feature, checked: !feature.checked } : feature
-        );
-        setFeatureStates(updatedFeatures);
-    };
-
+    const fetchData = async () => {
+        const moduleData = await getModule(orgId)
+        setFeatures(moduleData)
+        setLoader(false);
+    }
+    useEffect(() => {
+        fetchData();
+    }, [orgId])
     return (
-        <div className="grid grid-cols-2 p-4 gap-x-10">
-            {featureStates.map((feature, index) => (
-                <div className={`grid grid-cols-12 ${styles.row} text-left`} key={feature.value}>
-                    <div className="bg-moduleCheckBoxBg w-15 h-15 p-5 col-span-1">
-                        <input
-                            type="checkbox"
-                            className={`form-checkbox w-4 h-4 ${styles.checboxEdge}`}
-                            checked={feature.checked}
-                            onChange={myRoles?.includes('admin') ?
-                                () => toggleCheckbox(index) : undefined}
-                            disabled={!myRoles?.includes('admin')}
-                        />
-                    </div>
-                    <span className={`p-4 col-span-11 ${styles.text}`}>{feature.name}</span>
+        <>
+            <LoadIndicator visible={loader} />
+            {!loader && (
+                <div className="grid grid-cols-2 p-4 gap-x-10">
+                    {features.map((feature) => (
+                        <div className={`grid grid-cols-12 ${styles.row} text-left`} key={feature.id}>
+                            <div className="bg-moduleCheckBoxBg w-15 h-15 p-5 col-span-1">
+                                <input
+                                    type="checkbox"
+                                    className={`form-checkbox w-4 h-4 ${styles.checkboxEdge}`}
+                                    checked={feature.requiredPurchase}
+                                    disabled={!myRoles?.includes('admin')}
+                                />
+                            </div>
+                            <span className={`p-4 col-span-11 ${styles.text}`}>{feature.name}</span>
+                        </div>
+                    ))}
                 </div>
-            ))}
-        </div>
+            )}
+        </>
     );
 };

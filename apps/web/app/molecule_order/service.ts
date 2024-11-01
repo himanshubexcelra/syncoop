@@ -11,10 +11,8 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_order`);
 
     // Add query parameters based on provided params
-    if (params.organizationId && params.projectId && params.libraryId) {
+    if (params.organizationId) {
         url.searchParams.append("organizationId", params.organizationId);
-        url.searchParams.append("projectId", params.projectId);
-        url.searchParams.append("libraryId", params.libraryId);
     }
 
     try {

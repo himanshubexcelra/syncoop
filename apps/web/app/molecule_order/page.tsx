@@ -5,15 +5,9 @@ import { getUserData } from '@/utils/auth';
 import { redirect } from 'next/navigation';
 import MoleculeOrderPage from '@/components/MoleculeOrder/MoleculeOrder';
 import { Messages } from '@/utils/message';
+import toast from 'react-hot-toast';
 
-type MoleculeOrderProps = {
-  searchParams: {
-    projectId?: string;
-    libraryId?: string;
-  };
-};
-
-export default async function MoleculeOrder({ searchParams }: MoleculeOrderProps) {
+export default async function MoleculeOrder() {
   const sessionData = await getUserData();
 
   // Redirect to home if no session
@@ -30,17 +24,15 @@ export default async function MoleculeOrder({ searchParams }: MoleculeOrderProps
 
   try {
     if (type === "external") {
-      // External users: fetch records filtered by organizationId, projectId, and libraryId
+      // External users: fetch records filtered by organizationId
       data = await getMoleculesOrder({
-        organizationId,
-        projectId: searchParams.projectId,
-        libraryId: searchParams.libraryId,
+        organizationId
       });
     } else if (type === "Internal") {
       // Internal users: fetch all records without filters
       data = await getMoleculesOrder({});
     } else {
-      console.warn(Messages.USER_ROLE_CHECK);
+      toast.error(Messages.USER_ROLE_CHECK);
     }
     // Transform the fetched data if data is available
     transformedData = data?.map((item: any) => {

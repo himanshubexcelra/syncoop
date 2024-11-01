@@ -8,16 +8,12 @@ const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
-        const projectId = url.searchParams.get("projectId");
-        const libraryId = url.searchParams.get("libraryId");
         const organizationId = url.searchParams.get("organizationId");
 
         // Define whereClause conditionally based on user type
         const whereClause = organizationId
             ? {
-                organizationId: Number(organizationId),
-                projectId: projectId ? Number(projectId) : undefined,
-                libraryId: libraryId ? Number(libraryId) : undefined,
+                organizationId: Number(organizationId)
             }
             : undefined; // Internal users will have an undefined whereClause to fetch all records
 

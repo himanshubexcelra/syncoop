@@ -98,10 +98,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
             >
 
                 {enableGrouping && <GroupPanel visible={true} />}
-                <SearchPanel
-                    visible={true}
-                    highlightSearchText={true}
-                />
+
                 <HeaderFilter visible={true} />
                 {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
                 {enableFiltering && <FilterRow visible={true} />}
@@ -130,6 +127,33 @@ const CustomDataGrid = <T extends Record<string, any>>({
 
                 {groupingColumn && <Column dataField={String(groupingColumn)}
                     dataType="string" groupIndex={0} />}
+
+                <GridToolbar>
+                    <ToolbarItem location="after">
+                        <Button
+                            text="Send for Synthesis(8)"
+                            icon="plus"
+                            render={(buttonData: any) => (
+                                <>
+                                    <Image
+                                        src="/icons/plus.svg"
+                                        width={24}
+                                        height={24}
+                                        alt="Create"
+                                    />
+                                    <span className='ml-[5px]'>
+                                        {buttonData.text}
+                                    </span>
+                                </>
+                            )}
+                        />
+                    </ToolbarItem>
+                    <ToolbarItem name="searchPanel" location="before" />
+                </GridToolbar>
+                <SearchPanel
+                    visible={true}
+                    highlightSearchText={true}
+                />
             </DataGrid>
 
             {enableOptions && (

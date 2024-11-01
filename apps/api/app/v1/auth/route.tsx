@@ -29,6 +29,7 @@ export async function POST(request: Request) {
           select: {
             id: true,
             name: true,
+            type: true,
             /* org_module: {
               include: {
                 module: {

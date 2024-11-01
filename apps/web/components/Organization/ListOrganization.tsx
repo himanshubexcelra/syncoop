@@ -1,4 +1,3 @@
-/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import { useRef, useState, useEffect } from "react";
 import DataGrid, {
@@ -27,6 +26,11 @@ import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { getFilteredRoles } from "../Role/service";
 
+enum OrganizationType {
+  Internal = "Internal",
+  External = "External"
+}
+
 type ListOrganizationProps = {
   userData: UserData, actionsEnabled: string[]
 }
@@ -50,7 +54,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
         withCount: ['projects']
       });
     organization = organization.filter
-      ((organization: OrganizationDataFields) => organization.type !== 'Internal');
+      ((organization: OrganizationDataFields) => organization.type !== OrganizationType.Internal);
     setTableData(organization);
     setLoader(false);
   }

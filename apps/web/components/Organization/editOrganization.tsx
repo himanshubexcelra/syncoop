@@ -1,4 +1,3 @@
-/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import toast from "react-hot-toast";
 import { useContext, useEffect, useState } from "react";
@@ -117,7 +116,8 @@ export default function EditOrganization({
     }
   }
 
-  const disableAllowed = myRoles?.includes('admin') && organizationData.orgAdminId !== loggedInUser;
+  const disableAllowed = myRoles?.includes('admin') &&
+    organizationData.orgAdminId !== loggedInUser;
 
   const cancelSave = () => {
     formRef?.current!.instance().reset();

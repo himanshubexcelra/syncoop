@@ -26,9 +26,9 @@ export const Messages = {
     },
     LIBRARY_LIST_EMPTY:
         "Your library list is empty, add a library to import molecules",
-    USER_ROLE_CHECK: "User role not supported or missing required parameters.",
     deleteMoleculeMessage(status: string) {
             return `${status} deleted successfully`;
         }, 
-    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart."       
+    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",    
+    USER_ROLE_CHECK: "User role not supported or missing required parameters."
 }

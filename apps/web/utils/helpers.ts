@@ -1,4 +1,5 @@
-import { LoginFormSchema } from "@/lib/definition"
+import { ProjectDataFields } from './../lib/definition';
+import { LibraryFields, LoginFormSchema, Molecule, StatusCode } from "@/lib/definition"
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -58,7 +59,7 @@ export function formatDate(date: Date) {
   return `${month}/${day}/${year}`;
 }
 
-export function getCountCardsDetails(projectCount: number, libraryCount: number) {
+export function getCountCardsDetails(projectCount: number, libraryCount: number, moleculeCount: number) {
   return [
     {
       name: "Libraries",
@@ -77,7 +78,7 @@ export function getCountCardsDetails(projectCount: number, libraryCount: number)
       name: "Molecules",
       svgPath: "/icons/molecule-icon.svg",
       innerGap: "gap-2",
-      count: "551"
+      count: String(moleculeCount)
     }
   ];
 }
@@ -139,4 +140,22 @@ export function debounce<T extends (...args: any[]) => any>(
       func.apply(this, args); // Use the correct this context
     }, delay);
   };
+}
+
+export function fetchMoleculeStatus(data: LibraryFields) {
+  const projectStatusCount = {
+    [StatusCode.READY]: 0,
+    [StatusCode.NEW]: 0,
+    [StatusCode.FAILED]: 0,
+    [StatusCode.INPROGRESS]: 0,
+    [StatusCode.DONE]: 0,
+  };
+
+  data.molecule.forEach((molecule: Molecule) => {
+    if (projectStatusCount[molecule.status] !== undefined) {
+      projectStatusCount[molecule.status] += 1;
+    }
+  });
+
+  return projectStatusCount;
 }

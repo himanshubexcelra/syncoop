@@ -87,7 +87,18 @@ export async function GET(request: Request) {
           projects: {
             include: {
               sharedUsers: true, // Include shared users for each project
-              libraries: true,
+              libraries: {
+                select: {
+                  description: true,
+                  name: true,
+                  id: true,
+                  molecule: {
+                    select: {
+                      status: true,
+                    }
+                  },
+                },
+              },
               owner: {
                 select: {
                   firstName: true,

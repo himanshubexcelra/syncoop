@@ -269,7 +269,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             </Item>
             <Item name="searchPanel" location="before" />
           </GridToolbar>
-          <SearchPanel visible={true} highlightCaseSensitive={true} />
+          <SearchPanel visible={true} highlightSearchText={true} />
         </DataGrid>
       }
     </>

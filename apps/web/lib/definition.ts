@@ -135,10 +135,40 @@ export interface OrganizationEditField {
   orgAdminRole?: number,
 }
 
-export interface Molecule {
+export interface MoleculeStatus {
   name: string;
   count: string;
   type: string;
+  status: StatusCode;
+}
+
+export interface MoleculeType {
+  createdAt: Date;
+  createdBy: number;
+  finger_print: string;
+  id: number;
+  inchi_key: string;
+  libraryId: number;
+  molecular_weight: number;
+  smile: string;
+  source_molecule_name: string;
+  status: string;
+  updatedAt: Date;
+  updatedBy: number;
+  userId: number;
+}
+
+export interface MoleculeFavourite {
+  userId: number;
+  moleculeId: number;
+  id: number;
+}
+
+export type addToFavouritesProps = {
+  moleculeId: number,
+  userId: number,
+  existingFavourite?: MoleculeFavourite,
+  favourite: boolean,
 }
 
 export interface LibraryFields {
@@ -153,7 +183,8 @@ export interface LibraryFields {
   owner: User;
   ownerId: number;
   createdAt: Date;
-  status?: Molecule[];
+  status?: MoleculeStatus[];
+  molecule: [];
 }
 export interface ProjectDataFields {
   name: string;
@@ -233,17 +264,22 @@ export interface Assay {
 }
 
 export interface AssayTableProps {
-  dataSource: Assay[];
+  orgUser: OrgUser;
 }
 
 export interface ModuleFeature {
+  id: number;
   name: string;
-  value: string;
-  checked: boolean;
+  description: string;
+  requiredPurchase: boolean;
+  createdAt: string;
+  createdBy: number;
+  updatedAt: string
+  updatedBy: number | null;
 }
 
 export interface ModuleTableProps {
-  features: ModuleFeature[];
+  orgUser: OrgUser;
   myRoles?: string[];
 }
 
@@ -304,6 +340,8 @@ export interface UserCountModel {
 
 export interface AppContextModel {
   userCount: UserCountModel;
+  refreshAssayTable: boolean;
+  refreshUsersTable: boolean;
 }
 
 export type ToggleExpandType = (value: number, text: string) => void;

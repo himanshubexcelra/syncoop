@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import toast from "react-hot-toast";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./table.css";
 import {
   Form,
@@ -19,6 +19,7 @@ import { DELAY, status } from "@/utils/constants";
 import { OrganizationEditField, userType, OrganizationDataFields } from "@/lib/definition";
 import { TextBoxTypes } from 'devextreme-react/text-box';
 import { User } from "@/lib/definition";
+import { AppContext } from "@/app/AppState";
 
 const functionalAssay = {
   functionalAssay1: '',
@@ -40,7 +41,8 @@ export default function EditOrganization({
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.orgAdminId);
   const meta = organizationData.metadata ? organizationData.metadata : functionalAssay
   const [metaData, setMetaData] = useState(meta);
-
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
   // Update local state when organizationData changes
   useEffect(() => {
     const data = organizationData.metadata || functionalAssay;
@@ -62,6 +64,7 @@ export default function EditOrganization({
         formRef.current!.instance().reset();
         fetchOrganizations();
         showEditPopup(false);
+        context?.addToState({ ...appContext, refreshAssayTable: true })
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);

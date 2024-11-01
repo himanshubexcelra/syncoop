@@ -3,7 +3,6 @@ import { HeadingObj } from "@/lib/definition";
 import Layout from "@/components/layout";
 import { getUserData } from "@/utils/auth";
 import { redirect } from "next/navigation";
-import { dataSource, features, } from "@/utils/constants";
 import AssayTable from "@/components/AssayTable/AssayTable";
 import Module from "@/components/Module/Module";
 import StatusComponent from "@/components/StatusDetails/StatusComponent";
@@ -43,12 +42,12 @@ export default async function Dashboard() {
     {
       title: "Assays",
       Component: AssayTable,
-      props: { dataSource },
+      props: { orgUser },
     },
     {
       title: "Modules",
       Component: Module,
-      props: { features, myRoles },
+      props: { orgUser, myRoles },
     }
   ];
 

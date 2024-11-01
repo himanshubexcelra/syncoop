@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-import { addToFavouritesProps } from "@/lib/definition";
+import { addToFavouritesProps, MoleculeType } from "@/lib/definition";
 
 export async function getLibraries(withRelation: string[] = [], projectId: string) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/project/${projectId}`);
@@ -127,7 +127,92 @@ export async function editLibrary(formData: FormData) {
             return { status: response.status, error };
         }
     } catch (error: any) {
-        console.error('error', error)
+        return error;
+    }
+}
+
+export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
+    try {
+        const response: any = await fetch(
+            `${process.env.API_HOST_URL}/v1/molecule_cart`,
+            {
+                mode: "no-cors",
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(moleculeData),
+            }
+        );
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else if (response.status === 500) {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
+
+export async function getMoleculeCart(userId?: number, libraryId?: number, projectId?: number) {
+    try {
+        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
+        if (libraryId) {
+            url.searchParams.append('libraryId', String(libraryId));
+        }
+        if (userId) {
+            url.searchParams.append('userId', String(userId));
+        }
+        if (projectId) {
+            url.searchParams.append('projectId', String(projectId));
+        }
+        const response = await fetch(url, {
+            mode: "no-cors",
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
+        return error;
+    }
+}
+
+export async function deleteMoleculeCart(
+    moleculeId?: number,
+    libraryId?: number,
+    projectId?: number
+) {
+    try {
+        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
+        if (moleculeId) {
+            url.searchParams.append('moleculeId', String(moleculeId));
+        }
+        if (libraryId) {
+            url.searchParams.append('libraryId', String(libraryId));
+        }
+        if (projectId) {
+            url.searchParams.append('projectId', String(projectId));
+        }
+
+        const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
         return error;
     }
 }

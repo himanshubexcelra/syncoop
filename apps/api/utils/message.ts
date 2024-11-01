@@ -6,7 +6,8 @@ export const MESSAGES = {
     LIBRARY_EXISTS: 'Library name is already taken.',
     ORGANIZATION_ID_NEEDED: 'Organization id is required',
     EMAIL_ALREADY_EXIST: `Email already exists`,
-    USER_NOT_FOUND: 'User does not exist'
+    USER_NOT_FOUND: 'User does not exist',
+    LIBRARY_NOT_FOUND: 'Library does not exist',
 }
 
 export const STATUS_TYPE = {
@@ -16,4 +17,12 @@ export const STATUS_TYPE = {
     NOT_FOUND: 404,
     BAD_REQUEST: 400,
     INTERNAL_SERVER_ERROR: 500
+}
+
+export enum StatusCode {
+    READY = 'Ready',
+    NEW = 'New',
+    FAILED = 'Failed',
+    INPROGRESS = 'In Progress',
+    DONE = 'Done',
 }

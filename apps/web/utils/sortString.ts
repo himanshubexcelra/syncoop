@@ -44,3 +44,12 @@ export function sortByDate(data: any, field: string, sortBy: string): any[] {
     });
     return sortedLibraries;
 }
+
+export function sortNumber(data: any, field: string, sortBy: string): any[] {
+    const sortedLibraries = data.sort((a: any, b: any) => {
+        return sortBy === 'asc'
+            ? a[field].length - b[field].length
+            : b[field].length - a[field].length;
+    });
+    return sortedLibraries;
+}

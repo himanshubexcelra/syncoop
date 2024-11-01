@@ -14,6 +14,8 @@ import { createOrganization } from "./service";
 import "./table.css";
 import { OrganizationCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
+import { AppContext } from "@/app/AppState";
+import { useContext } from "react";
 
 export default function RenderCreateOrganization({
   setCreatePopupVisibility,
@@ -22,6 +24,8 @@ export default function RenderCreateOrganization({
   roleId,
   createdBy
 }: OrganizationCreateFields) {
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
@@ -30,6 +34,7 @@ export default function RenderCreateOrganization({
         formRef.current!.instance().reset();
         fetchOrganizations();
         setCreatePopupVisibility(false);
+        context?.addToState({ ...appContext, refreshUsersTable: true })
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);

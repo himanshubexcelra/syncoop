@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from 'devextreme-react/button';
-import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
 import Image from "next/image";
 import { Popup } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
@@ -83,22 +82,32 @@ export default function ProjectDetails({
 
     const handleSearch = debounce((value: string) => {
         let filteredValue;
-        if (value)
-            filteredValue = filteredData?.filter((item) =>
-                item.name.toLowerCase().includes(value.toLowerCase()) ||
-                item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                item.type.toLowerCase().includes(value.toLowerCase()) ||
-                item.target?.toLowerCase().includes(value.toLowerCase()) ||
-                item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
-                item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
-        else filteredValue = orgProj || [];
-
+        if (value) {
+            if (filteredData.length > 0) {
+                filteredValue = filteredData.filter((item) =>
+                    item.name.toLowerCase().includes(value.toLowerCase()) ||
+                    item.description?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.type.toLowerCase().includes(value.toLowerCase()) ||
+                    item.target?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
+            } else {
+                filteredValue = orgProj.filter((item: ProjectDataFields) =>
+                    item.name.toLowerCase().includes(value.toLowerCase()) ||
+                    item.description?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.type.toLowerCase().includes(value.toLowerCase()) ||
+                    item.target?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
+            }
+        } else {
+            filteredValue = orgProj || [];
+        }
         setFilteredData(filteredValue);
     }, 500);
 
-    const searchData = (e: TextBoxTypes.ValueChangedEvent) => {
-        const { value } = e;
-        handleSearch(value);
+    const searchData = (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleSearch(e.target.value);
     }
 
     const sortData = () => {
@@ -217,14 +226,12 @@ export default function ProjectDetails({
                                     alt="Sort"
                                     className='search-icon'
                                 />
-                                <Textbox
+                                <input
                                     placeholder="Search"
-                                    className="search-input-project"
-                                    inputAttr={{
-                                        style: { paddingRight: '30px' }
-                                    }}
-                                    valueChangeEvent="keyup"
-                                    onValueChanged={searchData}
+                                    className="search-input"
+                                    width={120}
+                                    style={{ paddingLeft: '30px' }}
+                                    onChange={searchData}
                                 />
                             </div>
                         </div>

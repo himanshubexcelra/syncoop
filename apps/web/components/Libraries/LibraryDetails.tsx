@@ -13,16 +13,22 @@ import {
     User,
     LibraryFields,
     UserData,
+    StatusCode,
+    MoleculeFavourite,
+    MoleculeType,
+    addToFavouritesProps,
 } from '@/lib/definition';
 import DataGrid, {
     Item as ToolbarItem,
     Column,
     Toolbar as GridToolbar,
     DataGridRef,
-    Paging,
+    Scrolling,
     Sorting,
     Selection,
     DataGridTypes,
+    SearchPanel,
+    HeaderFilter,
 } from "devextreme-react/data-grid";
 import { Popup, Position } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
@@ -30,19 +36,33 @@ import { SelectBox } from 'devextreme-react/select-box';
 import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import '../Organization/form.css';
-import { MOLECULES, StatusCodeBg, StatusCodeType } from '@/utils/constants';
+import {
+    StatusCodeBg,
+    StatusCodeType,
+    DataType,
+    StatusCodeBgAPI,
+    StatusCodeAPIType
+} from '@/utils/constants';
 import { FormRef } from "devextreme-react/cjs/form";
 import StatusMark from '@/ui/StatusMark';
-import { formatDatetime, formatDetailedDate, popupPositionValue, debounce } from '@/utils/helpers';
-import { getLibraries } from './libraryService';
-import { sortByDate, sortString } from '@/utils/sortString';
+import {
+    formatDatetime,
+    formatDetailedDate,
+    popupPositionValue,
+    debounce,
+    fetchMoleculeStatus
+} from '@/utils/helpers';
+import { addToFavourites, getLibraries, getLibraryById } from './libraryService';
+import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
-import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
 import TextWithToggle from '@/ui/TextWithToggle';
 import CreateLibrary from './CreateLibrary';
 import { DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
+import EditMolecule from '../Molecule/EditMolecule/EditMolecule';
+import SendMoleculesForSynthesis from './SendMoleculesForSynthesis';
 
 const selectAllFieldLabel = { 'aria-label': 'Select All Mode' };
 const showCheckboxesFieldLabel = { 'aria-label': 'Show Checkboxes Mode' };
@@ -50,7 +70,7 @@ const showCheckboxesFieldLabel = { 'aria-label': 'Show Checkboxes Mode' };
 const showCheckBoxesModes = ['none', 'onClick', 'onLongTap', 'always'];
 const selectAllModes = ['allPages', 'page'];
 
-const sortByFields = ['Name', 'Owner', 'UpdationTime', 'CreationTime'];
+const sortByFields = ['Name', 'Owner', 'UpdationTime', 'CreationTime', 'Count of Molecules'];
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -123,17 +143,20 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
     const libraryId = searchParams.get('libraryId');
-    const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
+    const [tableData, setTableData] = useState<MoleculeType[]>([]);
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
     const [selectedLibrary, setSelectedLibrary] =
         useState(libraryId ? parseInt(libraryId, 10) : '');
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
     const [loader, setLoader] = useState(true);
+    const [moleculeLoader, setMoleculeLoader] = useState(false);
     const [allMode, setAllMode] = useState<DataGridTypes.SelectAllMode>('allPages');
     const [expanded, setExpanded] = useState(libraryId ? false : true);
     const [checkBoxesMode, setCheckBoxesMode] =
         useState<DataGridTypes.SelectionColumnDisplayMode>('always');
+    const [selectedRows, setSelectedRows] = useState([]);
+    const [editMolecules, setEditMolecules] = useState<any[]>([]);
     const [searchValue, setSearchValue] = useState('');
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
@@ -145,16 +168,17 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [editEnabled, setEditStatus] = useState<boolean>(false);
     const [sortBy, setSortBy] = useState('CreationTime');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
+    const [viewAddMolecule, setViewAddMolecule] = useState(false);
+    const [viewEditMolecule, setViewEditMolecule] = useState(false);
+    const [synthesisView, setSynthesisView] = useState(false);
 
     let toastShown = false;
-
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
 
     const { myRoles } = userData;
 
     const createEnabled = actionsEnabled.includes('create_library');
-
 
     const fetchLibraries = async () => {
         const projectData = await getLibraries(['libraries'], params.id);
@@ -164,7 +188,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 (library: LibraryFields) => library.id === parseInt(libraryId, 10));
         }
         if (projectData && !!selectedLib) {
-            setTableData(MOLECULES);
             const sortKey = 'createdAt';
             const sortBy = 'desc';
             const tempLibraries = sortByDate(projectData.libraries, sortKey, sortBy);
@@ -175,7 +198,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 projectHref: `/${params.id}`
             });
             if (libraryId) {
-                const libName = selectedLib.name;
+                const libraryData = await getLibraryById(['molecule'], libraryId);
+                setTableData(libraryData.molecule || []);
+                console.log(libraryData.molecule)
+                const libName = libraryData.name;
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(parseInt(libraryId));
                 breadcrumbTemp = breadcrumbArr({
@@ -193,7 +219,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                         isActive: true,
                     }];
             } else {
-                const libName = tempLibraries[0]?.name || 'untitled';
+                if (tempLibraries.length) {
+                    const libraryData = await getLibraryById(['molecule'], tempLibraries[0]?.id);
+                    setTableData(libraryData.molecule || []);
+                } const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(tempLibraries[0]?.id);
                 setSortBy('CreationTime');
@@ -205,6 +234,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 });
             }
             setBreadCrumbs(breadcrumbTemp);
+            setMoleculeLoader(false);
             setLoader(false);
         } else {
             if (!toastShown) {
@@ -232,8 +262,32 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const onAllModeChanged = useCallback(({ value }: any) => {
         setAllMode(value);
     }, []);
+    const onSelectionChanged = useCallback((event: any) => {
+        const { selectedRowKeys } = event
+        setSelectedRows(selectedRowKeys);
+    }, []);
 
-    const bookMarkItem = () => {
+    const bookMarkItem = async ({ data, existingFavourite }: {
+        data: MoleculeType,
+        existingFavourite: MoleculeFavourite
+    }) => {
+        setMoleculeLoader(true);
+        const dataField: addToFavouritesProps = {
+            moleculeId: data.id, userId: data.userId, favourite: true
+        };
+        if (existingFavourite) dataField.existingFavourite = existingFavourite;
+        const response = await addToFavourites(dataField);
+        if (!response.error) {
+            const libraryData =
+                await getLibraryById(['molecule'], data.libraryId.toString());
+            setMoleculeLoader(false);
+            setTableData(libraryData.molecule || []);
+        } else {
+            const toastId = toast.error(`${response.error}`);
+            await delay(DELAY);
+            toast.remove(toastId);
+            setMoleculeLoader(false);
+        }
     }
 
     const handleSortChange = (value: string) => {
@@ -253,13 +307,19 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             } else if (sortKey === 'Owner') {
                 sortKey = 'owner.firstName';
                 object = true;
+            } else if (sortKey === 'Count of Molecules') {
+                sortKey = 'molecule';
+                sortBy = 'desc';
             } else {
                 sortKey = 'name';
             }
-
-            if (sortKey !== 'updatedAt' && sortKey !== 'createdAt')
+            if (sortKey === 'molecule') {
+                tempLibraries = sortNumber(projects.libraries, sortKey, sortBy);
+            } else if (sortKey !== 'updatedAt' && sortKey !== 'createdAt') {
                 tempLibraries = sortString(projects.libraries, sortKey, sortBy, object);
-            else tempLibraries = sortByDate(projects.libraries, sortKey, sortBy);
+            } else {
+                tempLibraries = sortByDate(projects.libraries, sortKey, sortBy);
+            }
             setProjects((prevState) => ({
                 ...prevState,
                 libraries: tempLibraries,
@@ -293,16 +353,31 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const handleSearch = debounce((value: string) => {
         setLoader(true);
         if (value) {
-            const filteredLibraries = projects.libraries.filter((item) =>
-                item.name.toLowerCase().includes(value.toLowerCase()) ||
-                item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                item.owner.firstName.toLowerCase().includes(value.toLowerCase()) ||
-                item.owner.lastName.toLowerCase().includes(value.toLowerCase())
-            );
-            setProjects((prevState) => ({
-                ...prevState,
-                libraries: filteredLibraries,
-            }));
+            if (projects.libraries.length > 0) {
+                const filteredLibraries = projects.libraries.filter((item) =>
+                    item.name.toLowerCase().includes(value.toLowerCase()) ||
+                    item.description?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.firstName.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.lastName.toLowerCase().includes(value.toLowerCase()) ||
+                    item.molecule.length.toString().includes(value.toLowerCase())
+                );
+                setProjects((prevState) => ({
+                    ...prevState,
+                    libraries: filteredLibraries,
+                }));
+            } else {
+                const filteredLibraries = initProjects.libraries.filter((item) =>
+                    item.name.toLowerCase().includes(value.toLowerCase()) ||
+                    item.description?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.firstName.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.lastName.toLowerCase().includes(value.toLowerCase()) ||
+                    item.molecule.length.toString().includes(value.toLowerCase())
+                );
+                setProjects((prevState) => ({
+                    ...prevState,
+                    libraries: filteredLibraries,
+                }));
+            }
         }
         else {
             setProjects(initProjects);
@@ -310,14 +385,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         setLoader(false);
     }, 500);
 
-    const searchLibrary = (e: TextBoxTypes.ValueChangedEvent) => {
-        const { value } = e;
-        setSearchValue(value);
-        handleSearch(value);
+    const searchLibrary = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchValue(e.target.value);
+        handleSearch(e.target.value);
     }
 
     const renderTitle = (title: string) => (
-        <div className="accordion-title">{title}</div> // Add your custom class here
+        <div className="accordion-title">{title}</div>
     );
 
     const toggleExpanded = (id: number, type: string) => {
@@ -341,6 +415,20 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const owner = item.ownerId === userData.id;
         const admin = ['admin', 'org_admin'].some((role) => myRoles?.includes(role));
         return !(owner || admin);
+    }
+    const showEditMolecule = useCallback((data: any | null = null) => {
+        const moleculesToEdit = data ? [data] : selectedRows;
+        setEditMolecules(moleculesToEdit);
+        setViewEditMolecule(true);
+    }, [selectedRows]);
+
+    const cellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
+        if (e.rowType === "data") {
+            if (e.column.dataField === "status") {
+                const color: StatusCodeType = e.data.status?.toUpperCase();
+                e.cellElement.classList.add(StatusCodeBg[color]);
+            }
+        }
     }
 
     return (
@@ -456,7 +544,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         value={sortBy}
                                                         itemRender={sortItemsRender}
                                                         className=
-                                                        {`w-[130px] bg-transparent library-select`}
+                                                        {`w-[145px] bg-transparent library-select`}
                                                         onValueChange={(e) => handleSortChange(e)}
                                                         placeholder=''
                                                     />
@@ -512,16 +600,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                             alt="Sort"
                                                             className='search-icon library-search'
                                                         />
-                                                        <Textbox
+                                                        <input
                                                             placeholder="Search"
                                                             className="search-input"
                                                             width={120}
-                                                            inputAttr={{
-                                                                style: { paddingRight: '30px' }
-                                                            }}
+                                                            style={{ paddingLeft: '30px' }}
                                                             value={searchValue}
-                                                            valueChangeEvent="keyup"
-                                                            onValueChanged={searchLibrary}
+                                                            onChange={searchLibrary}
                                                         />
                                                     </div>
                                                 </div>
@@ -602,9 +687,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                             'selected-accordion' : ''
                                                         }`
                                                     }
-                                                    onClick={() => {
+                                                    onClick={async () => {
+                                                        setMoleculeLoader(true)
                                                         setSelectedLibrary(item.id);
                                                         setSelectedLibraryName(item.name);
+                                                        const libraryData =
+                                                            await getLibraryById(['molecule'],
+                                                                item.id.toString());
+                                                        setTableData(libraryData.molecule || []);
+                                                        setMoleculeLoader(false)
                                                     }}>
                                                     <div className={
                                                         `library-name
@@ -738,7 +829,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         </div>
                                                     </div>
                                                     {
-                                                        item.status &&
                                                         <div
                                                             className={
                                                                 `library-name
@@ -749,20 +839,39 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                                 no-border`
                                                             }>
                                                             <div>Molecules:
-                                                                {item.status?.map(val => (
-                                                                    <span
-                                                                        key={val.name}
-                                                                        className={
-                                                                            `badge ${val.type}`
+                                                                <span>{item.molecule.length}</span>
+                                                                {Object.entries(
+                                                                    fetchMoleculeStatus(item))
+                                                                    .map(([status, count]) => {
+                                                                        let type = 'info';
+                                                                        if (status === 'Failed') {
+                                                                            type = 'error';
                                                                         }
-                                                                    >
-                                                                        {val.count} {val.name}
-                                                                    </span>
-                                                                ))}
+                                                                        else if
+                                                                            (status === 'Done') {
+                                                                            type = 'success';
+                                                                        }
+                                                                        return (
+                                                                            <span
+                                                                                key={status}
+                                                                                className={
+                                                                                    `badge ${type}`
+                                                                                }
+                                                                            >
+                                                                                <b
+                                                                                    className="
+                                                                                    pr-[5px]"
+                                                                                >
+                                                                                    {count}
+                                                                                </b>
+                                                                                {status}
+                                                                            </span>
+                                                                        )
+                                                                    })}
                                                             </div>
                                                         </div>
                                                     }
-                                                    < div className='library-name no-border' >
+                                                    <div className='library-name no-border'>
                                                         {
                                                             item.description ?
                                                                 <TextWithToggle
@@ -819,235 +928,275 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                             </div>
                             )
                             }
-                            <div className={
-                                `border
+                            {moleculeLoader ?
+                                <LoadIndicator
+                                    visible={moleculeLoader}
+                                /> :
+                                <div className={
+                                    `border
                                 border-solid
                                 ${expanded ? 'w-[60vw]' : 'w-100vw'}`}>
-                                <DataGrid
-                                    dataSource={tableData}
-                                    showBorders={true}
-                                    ref={grid}
-                                >
-                                    <Selection
-                                        mode="multiple"
-                                        selectAllMode={allMode}
-                                        showCheckBoxesMode={checkBoxesMode}
-                                    />
-                                    <Paging defaultPageSize={10} defaultPageIndex={0} />
-                                    <Sorting mode="single" />
-                                    <Column
-                                        dataField="bookmark"
-                                        width={90}
-                                        alignment="center"
-                                        allowSorting={false}
-                                        headerCellRender={() =>
-                                            <Image
-                                                src="/icons/star.svg"
-                                                width={24}
-                                                height={24}
-                                                alt="Create"
-                                            />
-                                        }
-                                        cellRender={() => (
-                                            <span className={`flex
+                                    <DataGrid
+                                        dataSource={tableData}
+                                        showBorders={true}
+                                        ref={grid}
+                                        columnAutoWidth={false}
+                                        width="100%"
+                                        onCellPrepared={cellPrepared}
+                                        onSelectionChanged={onSelectionChanged}
+                                    >
+                                        <Selection
+                                            mode="multiple"
+                                            selectAllMode={allMode}
+                                            showCheckBoxesMode={checkBoxesMode}
+                                        />
+                                        <Sorting mode="single" />
+                                        <Scrolling mode="infinite" />
+                                        <HeaderFilter visible={true} />
+                                        <Column
+                                            dataField="bookmark"
+                                            width={90}
+                                            alignment="center"
+                                            allowSorting={false}
+                                            allowHeaderFiltering={false}
+                                            headerCellRender={() =>
+                                                <Image
+                                                    src="/icons/star.svg"
+                                                    width={24}
+                                                    height={24}
+                                                    alt="favourite-header"
+                                                />}
+                                            cellRender={({ data }) => {
+                                                const existingFavourite =
+                                                    data.molecule_favorites.find((
+                                                        val: MoleculeFavourite) =>
+                                                        val.userId === data.userId &&
+                                                        val.moleculeId === data.id);
+                                                return (
+                                                    <span className={`flex
                                                 justify-center
                                                 cursor-pointer`}
-                                                onClick={bookMarkItem}>
-                                                <Image
-                                                    src="/icons/star-filled.svg"
-                                                    width={24}
-                                                    height={24}
-                                                    alt="Create"
-                                                />
-                                            </span>
-                                        )}
-                                    />
-                                    <Column dataField="Structure"
-                                        minWidth={150}
-                                        cellRender={() => (
-                                            <span className='flex justify-center gap-[7.5px]'
-                                                onClick={bookMarkItem}>
-                                                <Image
-                                                    src="/icons/libraries.svg"
-                                                    width={24}
-                                                    height={24}
-                                                    alt="Create"
-                                                />
-                                                <Button
-                                                    disabled={true}
-                                                    render={() => (
-                                                        <>
-                                                            <Image
-                                                                src="/icons/edit.svg"
-                                                                width={24}
-                                                                height={24}
-                                                                alt="edit"
-                                                            />
-                                                        </>
-                                                    )}
-                                                />
-                                                <Button
-                                                    disabled={true}
-                                                    render={() => (
-                                                        <>
-                                                            <Image
-                                                                src="/icons/zoom.svg"
-                                                                width={24}
-                                                                height={24}
-                                                                alt="zoom"
-                                                            />
-                                                        </>
-                                                    )}
-                                                />
-                                                <Button
-                                                    disabled={true}
-                                                    render={() => (
-                                                        <>
-                                                            <Image
-                                                                src="/icons/delete.svg"
-                                                                width={24}
-                                                                height={24}
-                                                                alt="delete"
-                                                            />
-                                                        </>
-                                                    )}
-                                                />
+                                                        onClick={() =>
+                                                            bookMarkItem({
+                                                                data,
+                                                                existingFavourite
+                                                            })
+                                                        }>
+                                                        <Image
+                                                            src={existingFavourite ?
+                                                                "/icons/star-filled.svg" :
+                                                                "/icons/star.svg"
+                                                            }
+                                                            width={24}
+                                                            height={24}
+                                                            alt="favourite"
+                                                        />
+                                                    </span>
+                                                )
+                                            }}
+                                        />
+                                        <Column dataField="Structure"
+                                            minWidth={330}
+                                            cellRender={({ data }) => (
+                                                <span className='flex justify-center gap-[7.5px]'
+                                                >
+                                                    <Image src={
+                                                        data.structure ||
+                                                        '/icons/molecule-order-structure.svg'
+                                                    }
+                                                        width={107.5}
+                                                        height={58}
+                                                        alt="molecule-order-structure"
+                                                    />
+                                                    <Button
+                                                        disabled=
+                                                        {!actionsEnabled.includes('edit_molecule')}
+                                                        render={() => (
+                                                            <>
+                                                                <Image
+                                                                    src="/icons/edit.svg"
+                                                                    width={24}
+                                                                    height={24}
+                                                                    alt="edit"
+                                                                    onClick={
+                                                                        () =>
+                                                                            showEditMolecule(data)}
+                                                                />
+                                                            </>
+                                                        )}
 
-                                            </span>
-                                        )} />
-                                    <Column dataField="moleculeId" caption="Molecule ID" />
-                                    <Column
-                                        dataField="molecularWeight"
-                                        caption="Molecular Weight" />
-                                    <Column dataField="status" cellRender={({ data }: any) => (
-                                        <span className={`flex items-center gap-[5px]`}>
-                                            {data.status}
-                                            <StatusMark status={data.status} />
-                                        </span>
-                                    )} />
-                                    <Column dataField="analyse" />
-                                    <Column
-                                        dataField="herg" caption="HERG" cellRender={
-                                            ({ data }) => {
-                                                let color: StatusCodeType = 'ready';
-                                                if (data.herg <= 0.5) {
-                                                    color = 'failed';
-                                                } else if (data.herg >= 0.5 && data.herg < 1) {
-                                                    color = 'info';
+                                                    />
+                                                    <Button
+                                                        disabled={true}
+                                                        render={() => (
+                                                            <>
+                                                                <Image
+                                                                    src="/icons/zoom.svg"
+                                                                    width={24}
+                                                                    height={24}
+                                                                    alt="zoom"
+                                                                />
+                                                            </>
+                                                        )}
+                                                    />
+                                                    <Button
+                                                        disabled={true}
+                                                        render={() => (
+                                                            <>
+                                                                <Image
+                                                                    src="/icons/delete.svg"
+                                                                    width={24}
+                                                                    height={24}
+                                                                    alt="delete"
+                                                                />
+                                                            </>
+                                                        )}
+                                                    />
+
+                                                </span>
+                                            )} />
+                                        <Column
+                                            dataField="id"
+                                            caption="Molecule ID"
+                                            alignment="center"
+                                        />
+                                        <Column
+                                            dataField="molecular_weight"
+                                            caption="Molecular Weight"
+                                            width={160}
+                                            alignment="center"
+                                        />
+                                        <Column
+                                            dataField="status"
+                                            cellRender={({ data }: { data: DataType }) => {
+                                                const color: StatusCodeType = data.status;
+                                                return (
+                                                    <span className={`flex items-center gap-[5px]
+                                             ${StatusCodeBg[color]}`}>
+                                                        {data.status}
+                                                        <StatusMark status={StatusCode[color]} />
+                                                    </span>
+                                                )
+                                            }} />
+                                        <Column
+                                            dataField="analyse"
+                                            visible={!expanded}
+                                            allowHeaderFiltering={false}
+                                            allowSorting={false}
+                                        />
+                                        <Column
+                                            dataField="herg"
+                                            caption="HERG"
+                                            visible={!expanded}
+                                            allowHeaderFiltering={false}
+                                            allowSorting={false}
+                                            cellRender={({ data }) => {
+                                                let color: StatusCodeAPIType = 'READY';
+                                                if (data.herg <= 0.5) color = 'FAILED';
+                                                else if (data.herg >= 0.5 && data.herg < 1) {
+                                                    color = 'INFO';
                                                 } else if (data.herg >= 1) {
-                                                    color = 'done';
+                                                    color = 'DONE';
                                                 }
                                                 return (
-                                                    <span
-                                                        className={
-                                                            `flex 
-                                                            items-center 
-                                                            gap-[5px] 
-                                                            ${StatusCodeBg[color]}`
-                                                        }>
+                                                    <span className={`flex items-center
+                                                gap-[5px] ${StatusCodeBgAPI[color]}`}>
                                                         {data.herg}
                                                     </span>
                                                 )
                                             }} />
-                                    <Column
-                                        dataField="caco2"
-                                        caption="CACO-2"
-                                        cellRender={({ data }) => {
-                                            let color: StatusCodeType = 'ready';
-                                            if (data.caco2 <= 0.5) {
-                                                color = 'failed';
-                                            } else if (data.caco2 >= 0.5 && data.caco2 < 1) {
-                                                color = 'info';
-                                            }
-                                            else if (data.caco2 >= 1) color = 'done';
-                                            return (
-                                                <span className={
-                                                    `flex 
-                                                    items-center 
-                                                    gap-[5px] 
-                                                    ${StatusCodeBg[color]}`
-                                                }>
-                                                    {data.caco2}
-                                                </span>
-                                            )
-                                        }} />
-                                    <Column
-                                        dataField="clint"
-                                        caption="cLint"
-                                        cellRender={
-                                            ({ data }) => {
-                                                let color: StatusCodeType = 'ready';
-                                                if (data.clint <= 0.5) {
-                                                    color = 'failed';
-                                                } else if (data.clint >= 0.5 && data.clint < 1) {
-                                                    color = 'info';
-                                                } else if (data.clint >= 1) {
-                                                    color = 'done';
+                                        <Column
+                                            dataField="caco2"
+                                            caption="CACO-2"
+                                            visible={!expanded}
+                                            allowHeaderFiltering={false}
+                                            allowSorting={false}
+                                            cellRender={({ data }) => {
+                                                let color: StatusCodeAPIType = 'READY';
+                                                if (data.caco2 <= 0.5) color = 'FAILED';
+                                                else if (data.caco2 >= 0.5 && data.caco2 < 1) {
+                                                    color = 'INFO';
+                                                } else if (data.caco2 >= 1) {
+                                                    color = 'DONE';
                                                 }
                                                 return (
-                                                    <span className={
-                                                        `flex 
-                                                        items-center 
-                                                        gap-[5px] 
-                                                        ${StatusCodeBg[color]}`
-                                                    }>
+                                                    <span className={`flex items-center
+                                                    gap-[5px] ${StatusCodeBgAPI[color]}`}>
+                                                        {data.caco2}
+                                                    </span>
+                                                )
+                                            }} />
+                                        <Column
+                                            dataField="clint"
+                                            caption="cLint"
+                                            visible={!expanded}
+                                            allowSorting={false}
+                                            allowHeaderFiltering={false}
+                                            cellRender={({ data }) => {
+                                                let color: StatusCodeAPIType = 'READY';
+                                                if (data.clint <= 0.5) color = 'FAILED';
+                                                else if (data.clint >= 0.5 && data.clint < 1) {
+                                                    color = 'INFO';
+                                                } else if (data.clint >= 1) {
+                                                    color = 'DONE';
+                                                }
+                                                return (
+                                                    <span className={`flex items-center
+                                                 gap-[5px] ${StatusCodeBgAPI[color]}`}>
                                                         {data.clint}
                                                     </span>
                                                 )
                                             }} />
-                                    <Column
-                                        dataField="hepg2cytox"
-                                        caption="HepG2-cytox"
-                                        cellRender={
-                                            ({ data }) => {
-                                                let color: StatusCodeType = 'ready';
-                                                if (data.hepg2cytox <= 0.5) {
-                                                    color = 'failed';
-                                                } else if (data.hepg2cytox >= 0.5 &&
+                                        <Column
+                                            dataField="hepg2cytox"
+                                            caption="HepG2"
+                                            visible={!expanded}
+                                            allowHeaderFiltering={false}
+                                            allowSorting={false}
+                                            cellRender={({ data }) => {
+                                                let color: StatusCodeAPIType = 'READY';
+                                                if (data.hepg2cytox <= 0.5) color = 'FAILED';
+                                                else if (data.hepg2cytox >= 0.5 &&
                                                     data.hepg2cytox < 1) {
-                                                    color = 'info';
+                                                    color = 'INFO';
                                                 } else if (data.hepg2cytox >= 1) {
-                                                    color = 'done';
+                                                    color = 'DONE';
                                                 }
                                                 return (
-                                                    <span className={
-                                                        `flex 
-                                                        items-center 
-                                                        gap-[5px] 
-                                                        ${StatusCodeBg[color]}`
-                                                    }>
+                                                    <span className={`flex items-center
+                                                 gap-[5px] ${StatusCodeBgAPI[color]}`}>
                                                         {data.hepg2cytox}
                                                     </span>
                                                 )
                                             }} />
-                                    <Column dataField="solubility" cellRender={({ data }) => {
-                                        let color: StatusCodeType = 'ready';
-                                        if (data.solubility <= 0.5) {
-                                            color = 'failed';
-                                        } else if (data.solubility >= 0.5 && data.solubility < 1) {
-                                            color = 'info';
-                                        } else if (data.solubility >= 1) {
-                                            color = 'done';
-                                        }
-                                        return (
-                                            <span className={
-                                                `flex 
-                                                items-center 
-                                                gap-[5px] 
-                                                ${StatusCodeBg[color]}`
-                                            }>
-                                                {data.solubility}
-                                            </span>
-                                        )
-                                    }} />
+                                        <Column
+                                            dataField="solubility"
+                                            visible={!expanded}
+                                            allowHeaderFiltering={false}
+                                            allowSorting={false}
+                                            cellRender={({ data }) => {
+                                                let color: StatusCodeAPIType = 'READY';
+                                                if (data.solubility <= 0.5) color = 'FAILED';
+                                                else if (data.solubility >= 0.5 &&
+                                                    data.solubility < 1) {
+                                                    color = 'INFO';
+                                                } else if (data.solubility >= 1) {
+                                                    color = 'DONE';
+                                                }
+                                                return (
+                                                    <span className={`flex items-center
+                                                    gap-[5px] ${StatusCodeBgAPI[color]}`}>
+                                                        {data.solubility}
+                                                    </span>
+                                                )
+                                            }} />
 
-                                    <GridToolbar>
-                                        {actionsEnabled.includes('create_molecule') &&
+                                        <GridToolbar>
                                             <ToolbarItem location="after">
                                                 <Button
-                                                    text="Add Molecule"
+                                                    text="Send for Synthesis(8)" // TODO
                                                     icon="plus"
-                                                    disabled={true}
+                                                    onClick={() => setSynthesisView(true)}
                                                     render={(buttonData: any) => (
                                                         <>
                                                             <Image
@@ -1062,64 +1211,203 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         </>
                                                     )}
                                                 />
-                                            </ToolbarItem>}
-                                        <ToolbarItem location="after">
-                                            <Button
-                                                text="Filter"
-                                                icon="filter"
-                                                elementAttr={{ class: "ml-[5px]" }}
-                                                disabled={true}
-                                                render={() => (
-                                                    <>
-                                                        <Image
-                                                            src="/icons/filter.svg"
-                                                            width={24}
-                                                            height={24}
-                                                            alt="Filter"
-                                                        />
-                                                        <span>Filter</span>
-                                                    </>
-                                                )}
-                                            />
-                                        </ToolbarItem>
-                                        <ToolbarItem location="after">
-                                            <Button
-                                                disabled={true}
-                                                render={() => (
-                                                    <>
-                                                        <span>Add to cart</span>
-                                                    </>
-                                                )}
-                                            />
-                                        </ToolbarItem>
-                                    </GridToolbar>
-                                    <div>
+                                            </ToolbarItem>
+                                            {actionsEnabled.includes('create_molecule') &&
+                                                <ToolbarItem location="after">
+                                                    <Button
+                                                        text="Add Molecule"
+                                                        icon="plus"
+                                                        visible={
+                                                            actionsEnabled.includes(
+                                                                'create_molecule')
+                                                        }
+                                                        onClick={() => setViewAddMolecule(true)}
+                                                        render={(buttonData: any) => (
+                                                            <>
+                                                                <Image
+                                                                    src="/icons/plus.svg"
+                                                                    width={24}
+                                                                    height={24}
+                                                                    alt="Create"
+                                                                />
+                                                                <span className='ml-[5px]'>
+                                                                    {buttonData.text}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    />
+                                                </ToolbarItem>}
+                                            {actionsEnabled.includes('edit_molecule') &&
+                                                <ToolbarItem location="after">
+                                                    <Button
+                                                        disabled={selectedRows?.length < 1}
+                                                        onClick={() => showEditMolecule()}
+                                                        render={() => (
+                                                            <span>
+                                                                {`Edit (${selectedRows?.length})`}
+                                                            </span>
+                                                        )}
+                                                    />
+                                                </ToolbarItem>}
+                                            <ToolbarItem location="after">
+                                                <Button
+                                                    disabled={true}
+                                                    render={() => (
+                                                        <>
+                                                            <span>Add to cart</span>
+                                                        </>
+                                                    )}
+                                                />
+                                            </ToolbarItem>
+                                            <ToolbarItem name="searchPanel" location="before" />
+                                        </GridToolbar>
+                                        <SearchPanel
+                                            visible={!expanded}
+                                            highlightSearchText={true}
+                                        />
                                         <div>
-                                            <SelectBox
-                                                id="select-all-mode"
-                                                inputAttr={selectAllFieldLabel}
-                                                dataSource={selectAllModes}
-                                                value={allMode}
-                                                disabled={checkBoxesMode === 'none'}
-                                                onValueChanged={onAllModeChanged}
-                                            />
+                                            <div>
+                                                <SelectBox
+                                                    id="select-all-mode"
+                                                    inputAttr={selectAllFieldLabel}
+                                                    dataSource={selectAllModes}
+                                                    value={allMode}
+                                                    disabled={checkBoxesMode === 'none'}
+                                                    onValueChanged={onAllModeChanged}
+                                                />
+                                            </div>
+                                            <div className="option checkboxes-mode">
+                                                <SelectBox
+                                                    id="show-checkboxes-mode"
+                                                    inputAttr={showCheckboxesFieldLabel}
+                                                    dataSource={showCheckBoxesModes}
+                                                    value={checkBoxesMode}
+                                                    onValueChanged={onCheckBoxesModeChanged}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="option checkboxes-mode">
-                                            <SelectBox
-                                                id="show-checkboxes-mode"
-                                                inputAttr={showCheckboxesFieldLabel}
-                                                dataSource={showCheckBoxesModes}
-                                                value={checkBoxesMode}
-                                                onValueChanged={onCheckBoxesModeChanged}
-                                            />
-                                        </div>
+                                    </DataGrid>
+                                    {viewAddMolecule && <Popup
+                                        title="Add Molecule"
+                                        visible={viewAddMolecule}
+                                        contentRender={() => (
+                                            <AddMolecule />
+                                        )}
+                                        resizeEnabled={true}
+                                        hideOnOutsideClick={true}
+                                        defaultWidth={700}
+                                        defaultHeight={'100%'}
+                                        position={{
+                                            my: { x: 'right', y: 'top' },
+                                            at: { x: 'right', y: 'top' },
+                                        }}
+                                        onHiding={() => {
+                                            setViewAddMolecule(false)
+                                        }}
+                                        dragEnabled={false}
+                                        showCloseButton={true}
+                                        wrapperAttr={
+                                            {
+                                                class: "create-popup mr-[15px]"
+                                            }
+                                        } />
+                                    }
+                                    {synthesisView &&
+                                        <Popup
+                                            title='Send Molecules for Retrosynthesis?'
+                                            visible={synthesisView}
+                                            contentRender={() => (
+                                                <SendMoleculesForSynthesis
+                                                    moleculeData={tableData}
+                                                />
+                                            )}
+                                            width={650}
+                                            hideOnOutsideClick={true}
+                                            height="100%"
+                                            position={popupPosition}
+                                            onHiding={() => {
+                                                setSynthesisView(false);
+                                            }}
+                                            showCloseButton={true}
+                                            wrapperAttr={
+                                                {
+                                                    class: "create-popup mr-[15px]"
+                                                }
+                                            }
+                                        />
+                                    }
+                                    <Popup
+                                        title="Add Molecule"
+                                        visible={viewAddMolecule}
+                                        contentRender={() => (
+                                            <AddMolecule />
+                                        )}
+                                        resizeEnabled={true}
+                                        hideOnOutsideClick={true}
+                                        defaultWidth={700}
+                                        defaultHeight={'100%'}
+                                        position={{
+                                            my: { x: 'right', y: 'top' },
+                                            at: { x: 'right', y: 'top' },
+                                        }}
+                                        onHiding={() => {
+                                            setViewAddMolecule(false)
+                                        }}
+                                        dragEnabled={false}
+                                        showCloseButton={true}
+                                        wrapperAttr={
+                                            {
+                                                class: "create-popup mr-[15px]"
+                                            }
+                                        } />
+                                    <Popup
+                                        title="Edit Molecule"
+                                        visible={viewEditMolecule}
+                                        contentRender={() => (
+                                            <EditMolecule editMolecules={editMolecules} />
+                                        )}
+                                        resizeEnabled={true}
+                                        hideOnOutsideClick={true}
+                                        defaultWidth={700}
+                                        defaultHeight={'100%'}
+                                        position={{
+                                            my: { x: 'right', y: 'top' },
+                                            at: { x: 'right', y: 'top' },
+                                        }}
+                                        onHiding={() => {
+                                            setViewEditMolecule(false)
+                                        }}
+                                        dragEnabled={false}
+                                        showCloseButton={true}
+                                        wrapperAttr={
+                                            {
+                                                class: "create-popup mr-[15px]"
+                                            }
+                                        } />
+                                    <div className='flex justify-center mt-[25px]'>
+                                        <span className='text-themeGreyColor'>
+                                            {tableData.length}
+                                            <span className='pl-[3px]'>
+                                                {tableData.length === 1 ? 'molecule' : 'molecules'}
+                                            </span>
+                                            <span className='pl-[2px]'> found </span>
+                                        </span>
+                                        {!!tableData.length && ' | '}
+                                        {!!tableData.length &&
+                                            <span className={
+                                                `text-themeSecondayBlue 
+                                                pl-[5px] 
+                                                font-bold`
+                                            }>
+                                                Select All {tableData.length}
+                                            </span>}
                                     </div>
-                                </DataGrid>
-                            </div>
+                                </div >
+                            }
                         </div >
                     </div >
                 }
-            </div>
+            </ div>
         </>
     )
 }

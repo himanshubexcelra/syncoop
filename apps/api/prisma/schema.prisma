@@ -120,9 +120,9 @@ model molecule {
   id                   Int              @id @default(autoincrement())
   source_molecule_name String
   organizationId       Int
-  organization         organization    @relation(fields: [organizationId], references: [id])
+  organization         organization     @relation(fields: [organizationId], references: [id])
   projectId            Int
-  project              project         @relation(fields: [projectId], references: [id])
+  project              project          @relation(fields: [projectId], references: [id])
   libraryId            Int
   library              library          @relation(fields: [libraryId], references: [id])
   smile                String
@@ -148,14 +148,14 @@ model molecule_cart {
   moleculeId     Int
   molecule       molecule  @relation(fields: [moleculeId], references: [id])
   libraryId      Int
-  library        library      @relation(fields: [libraryId], references: [id])
-  createdAt      DateTime     @default(now()) @db.Timestamp(6)
+  library        library   @relation(fields: [libraryId], references: [id])
+  createdAt      DateTime  @default(now()) @db.Timestamp(6)
   createdBy      Int
-  userWhoCreated user         @relation("userWhoCreated", fields: [createdBy], references: [id])
-  updatedAt      DateTime?    @default(now()) @db.Timestamp(6)
+  userWhoCreated user      @relation("userWhoCreated", fields: [createdBy], references: [id])
+  updatedAt      DateTime? @default(now()) @db.Timestamp(6)
   updatedBy      Int?
-  userWhoUpdated user?        @relation("userWhoUpdated", fields: [updatedBy], references: [id])
-  user           user?        @relation(fields: [userId], references: [id])
+  userWhoUpdated user?     @relation("userWhoUpdated", fields: [updatedBy], references: [id])
+  user           user?     @relation(fields: [userId], references: [id])
   userId         Int?
 }
 

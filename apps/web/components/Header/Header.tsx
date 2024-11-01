@@ -41,6 +41,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         libraryId: number;
         moleculeId: number;
         projectId: number;
+        moleculeName: string,
     }
 
     useEffect(() => {
@@ -64,8 +65,6 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         const { moleculeId, libraryId, projectId, moleculeName } = obj;
         deleteMoleculeCart(moleculeId, libraryId, projectId).then((res) => {
             if (res) {
-                console.log(obj, 'RES');
-
                 const filteredData = cartData.filter((item: any) =>
                     !
                     (

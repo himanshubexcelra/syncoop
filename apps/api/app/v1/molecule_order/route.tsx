@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 

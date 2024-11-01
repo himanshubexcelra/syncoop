@@ -16,6 +16,7 @@ import DataGrid, {
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
+import { Button } from 'devextreme-react';
 
 interface ColumnConfig<T> {
     dataField: keyof T;
@@ -55,7 +56,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
     const dataGridRef = useRef<any>(null);
 
-    const onScroll = useCallback(() => {
+    const handleScroll = useCallback(() => {
         if (dataGridRef.current) {
             const instance = dataGridRef.current.instance;
             const { scrollHeight, clientHeight, scrollTop } = instance.scrollable().scrollOffset();
@@ -82,6 +83,24 @@ const CustomDataGrid = <T extends Record<string, any>>({
         }
     }, [data, enableAutoScroll]);
 
+    // Add the scroll event listener
+    useEffect(() => {
+        if (dataGridRef.current && enableInfiniteScroll) {
+            const instance = dataGridRef.current.instance;
+            const scrollable = instance.scrollable();
+
+            if (scrollable) {
+                scrollable.on('scroll', handleScroll);
+            }
+
+            return () => {
+                if (scrollable) {
+                    scrollable.off('scroll', handleScroll);
+                }
+            };
+        }
+    }, [enableInfiniteScroll, handleScroll]);
+
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
@@ -95,9 +114,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 showBorders={true}
                 height="600px"
                 width="100%"
-                onScroll={onScroll}
             >
-
                 {enableGrouping && <GroupPanel visible={true} />}
 
                 <HeaderFilter visible={true} />
@@ -116,7 +133,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     <Column
                         key={String(column.dataField)}
                         dataField={String(column.dataField)}
-                        caption={column.dataField !== 'bookmark' ? column.title : undefined}
+                        // caption={column?.dataField !== 'bookmark' ? column.title : undefined}
                         headerCellRender={column.dataField === 'bookmark' ? () => (
                             <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
                         ) : undefined}
@@ -155,7 +172,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
                             )}
                         />
                     </ToolbarItem>
-                    <ToolbarItem name="searchPanel" location="after" />
                 </GridToolbar>
 
                 <SearchPanel

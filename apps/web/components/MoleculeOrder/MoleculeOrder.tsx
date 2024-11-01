@@ -4,17 +4,14 @@
 import React, { useState } from 'react';
 import Breadcrumb from '@/components/Breadcrumbs/BreadCrumbs';
 import CustomDataGrid from '@/sharedComponents/table/dataGrid';
-import { BreadCrumbsObj } from '@/lib/definition';
+import { BreadCrumbsObj, StatusCode } from '@/lib/definition';
 import Image from 'next/image';
 import { StatusCodeAPIType, StatusCodeBg, StatusCodeBgAPI } from '@/utils/constants';
 import { Button } from 'devextreme-react';
 import StatusMark from '@/ui/StatusMark';
 import dynamic from 'next/dynamic';
 
-const MoleculeStructure = dynamic(
-  () => import("@/utils/MoleculeStructure"),
-  { ssr: false }
-);
+const MoleculeStructure = dynamic(() => import('@/utils/MoleculeStructure'), { ssr: false });
 
 interface MoleculeOrder {
   id: number;
@@ -32,15 +29,22 @@ interface MoleculeOrder {
   anlayse?: number;
   herg?: number;
   caco2?: number;
+}
 
+interface ColumnConfig<T> {
+  dataField: keyof T;
+  title?: string | React.ReactNode;
+  width?: number;
+  minWidth?: number;
+  customRender?: (data: T) => React.ReactNode;
 }
 
 // Custom renderer function
-const customRenderForField = (data: MoleculeOrder, field: string) => {
+const customRenderForField = (data: MoleculeOrder, field: keyof MoleculeOrder) => {
   let color: StatusCodeAPIType = 'READY';
-  const value: number = data[field];  // Dynamic field access based on the `field` parameter
+  const value = data[field]; // Dynamic field access based on the `field` parameter
 
-  if (value !== undefined) {
+  if (typeof value === 'number') {
     if (value <= 0.5) color = 'FAILED';
     else if (value > 0.5 && value < 1) color = 'INFO';
     else if (value >= 1) color = 'DONE';
@@ -58,10 +62,10 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
   const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>(initialData);
 
   const breadcrumbs: BreadCrumbsObj[] = [
-    { label: "Home", svgPath: "/icons/home-icon.svg", svgWidth: 16, svgHeight: 16, href: "/" },
+    { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
     {
-      label: "Molecule Orders", svgPath: "/icons/molecule-order.svg",
-      svgWidth: 16, svgHeight: 16, href: "/projects"
+      label: 'Molecule Orders', svgPath: '/icons/molecule-order.svg',
+      svgWidth: 16, svgHeight: 16, href: '/projects'
     },
   ];
 
@@ -71,14 +75,13 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
   const handleStructureDelete = () => { };
 
   // Column configuration
-  const moleculeColumns = [
+  const moleculeColumns: ColumnConfig<MoleculeOrder>[] = [
     {
       dataField: 'bookmark',
       width: 100,
       title: <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />,
       customRender: () => (
-        <span className='flex justify-center cursor-pointer'
-          onClick={() => handleBookMarkItem()}>
+        <span className="flex justify-center cursor-pointer" onClick={() => handleBookMarkItem()}>
           <Image src="/icons/star-filled.svg" width={24} height={24} alt="Bookmarked" />
         </span>
       ),
@@ -87,11 +90,10 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
       dataField: 'smile',
       title: 'Structure',
       minWidth: 400,
-      customRender: (data: MoleculeOrder) => (
-        <span className='flex justify-center items-center gap-[7.5px]'>
+      customRender: (data) => (
+        <span className="flex justify-center items-center gap-[7.5px]">
           <MoleculeStructure height={80} width={80} svgMode={true}
-            structure={data.smile} id={`smiles + ${data.id}`}
-          />
+            structure={data.smile} id={`smiles-${data.id}`} />
           <Button onClick={() => handleStructureZoom()}
             render={() => <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
           <Button onClick={() => handleStructureEdit()}
@@ -101,61 +103,49 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
         </span>
       ),
     },
-    {
-      dataField: 'orderId',
-      title: 'order',
-    },
-    {
-      dataField: 'moleculeId',
-      title: 'Molecule ID',
-    },
-    {
-      dataField: 'molecular_weight',
-      title: 'Molecule Weight',
-    },
+    { dataField: 'orderId', title: 'Order' },
+    { dataField: 'moleculeId', title: 'Molecule ID' },
+    { dataField: 'molecular_weight', title: 'Molecular Weight' },
     {
       dataField: 'status',
       title: 'Status',
       width: 170,
-      customRender: (data: any) => (
-        <span className={`flex items-center gap-[5px]
-          ${StatusCodeBg[data?.status?.toUpperCase()]}`}>
-          {data.status}
-          <StatusMark status={data.status} />
-        </span>
-      ),
+      customRender: (data: MoleculeOrder) => {
+        const colorKey = data.status.toUpperCase() as keyof typeof StatusCodeBg;
+        const color = StatusCodeBg[colorKey] || StatusCodeBg.READY;
+
+        return (
+          <span className={`flex items-center gap-[5px] ${color}`}>
+            {data.status}
+            <StatusMark status={StatusCode[colorKey]} />
+          </span>
+        );
+      },
     },
     {
       dataField: 'yield', title: 'Yield', width: 100,
-      customRender: (data: MoleculeOrder) => customRenderForField(data, 'clint')
+      customRender: (data) => customRenderForField(data, 'yield')
     },
     {
       dataField: 'anlayse', title: 'Analyse', width: 100,
-      customRender: (data: MoleculeOrder) => customRenderForField(data, 'hepg2cytox')
+      customRender: (data) => customRenderForField(data, 'anlayse')
     },
     {
       dataField: 'herg', title: 'HERG', width: 100,
-      customRender: (data: MoleculeOrder) => customRenderForField(data, 'herg')
+      customRender: (data) => customRenderForField(data, 'herg')
     },
     {
       dataField: 'caco2', title: 'Caco-2', width: 100,
-      customRender: (data: MoleculeOrder) => customRenderForField(data, 'caco2')
+      customRender: (data) => customRenderForField(data, 'caco2')
     },
   ];
 
-  console.log(moleculeOrderData, 'moleculeOrderData');
-
   return (
-    <div className='flex flex-col'>
+    <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
       <div className="p-[20px]">
         <main className="main main-title">
-          <Image
-            src="/icons/molecule-order.svg"
-            width={33}
-            height={30}
-            alt="Project logo"
-          />
+          <Image src="/icons/molecule-order.svg" width={33} height={30} alt="Project logo" />
           <span>Molecule Orders</span>
         </main>
         <CustomDataGrid

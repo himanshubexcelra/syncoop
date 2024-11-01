@@ -24,6 +24,11 @@ export const KetcherAPI = (ketcherInstance: any) => {
       return ketcherInstance.getMolfile();
     },
 
+    // Returns Promise<string>
+    exportSmile: function () {
+      return ketcherInstance.getSmiles();
+    },
+
     getSelectedAtomId: function () {
       const selection = ketcherInstance.editor.selection();
       if (!selection?.atoms) {

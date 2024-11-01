@@ -364,6 +364,14 @@ export interface LibraryCreateFields {
   userData: UserData,
   libraryIdx?: number,
 }
+export interface ProjectAccordionType {
+  data: ProjectDataFields,
+  users: User[],
+  fetchOrganizations: FetchUserType,
+  organizationData: OrganizationDataFields[],
+  dataCreate: UserData,
+  roleType: string | undefined,
+}
 
 export interface DashboardPageType {
   userData: UserData,

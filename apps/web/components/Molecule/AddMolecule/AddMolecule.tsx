@@ -4,6 +4,7 @@ import styles from './AddMolecule.module.css'
 import Image from 'next/image';
 import DiscardMolecule from './DiscardMolecule';
 import DialogPopUp from '@/ui/DialogPopUp';
+import EditorBox from '@/components/KetcherTool/KetcherBox';
 
 const dialogProperties = {
     width: 455,
@@ -140,6 +141,7 @@ const AddMolecule = () => {
                         </div>
                     </div>}
             </div>
+            <EditorBox></EditorBox>
             <div>
                 <div className="flex flex-col gap-2 mt-5">
                     <label className={styles.moleculeLabel}>Molecule name (optional)</label>

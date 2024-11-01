@@ -2,8 +2,8 @@
 import styled from '@emotion/styled'
 import { useCallback, useState } from 'react'
 import { ButtonsConfig, Editor } from 'ketcher-react'
-import { Ketcher, RemoteStructServiceProvider } from 'ketcher-core'
-/* import { StandaloneStructServiceProvider } from 'ketcher-standalone' */
+import { Ketcher, /* RemoteStructServiceProvider */ } from 'ketcher-core'
+import { StandaloneStructServiceProvider } from 'ketcher-standalone'
 import 'ketcher-react/dist/index.css'
 
 import { Panel } from '../../components/KetcherTool/Panel'
@@ -25,7 +25,7 @@ const GridWrapper = styled('div')`
     }
   `
 
-const KetcherBox = styled('div')`
+const KetcherBox1 = styled('div')`
     grid-area: Ketcher;
     
   `
@@ -50,14 +50,14 @@ const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
     }, {})
 }
 
-const structServiceProvider = new RemoteStructServiceProvider(
+/* const structServiceProvider = new RemoteStructServiceProvider(
     process.env.REACT_APP_API_PATH!,
     {
         'custom header': 'value' // optionally you can add custom headers object 
     }
-)
+) */
 
-// const structServiceProvider = new StandaloneStructServiceProvider();
+const structServiceProvider = new StandaloneStructServiceProvider();
 
 const getUniqueKey = (() => {
     let count = 0
@@ -67,7 +67,7 @@ const getUniqueKey = (() => {
     }
 })()
 
-export default function EditorBox() {
+export default function KetcherBox() {
     const [outputValue, setOutputValue] = useState('')
     const [hiddenButtons, setHiddenButtons] = useState(initiallyHidden)
     const [editorKey, setEditorKey] = useState('first-editor-key')
@@ -82,7 +82,7 @@ export default function EditorBox() {
     // const sigmaStyle = { height: "500px", width: "500px" };
     return <>
         <GridWrapper>
-            <KetcherBox>
+            <KetcherBox1>
                 <Editor
                     key={editorKey}
                     staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
@@ -94,7 +94,7 @@ export default function EditorBox() {
                             ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
                     }}
                 />
-            </KetcherBox>
+            </KetcherBox1>
             <PanelBox>
                 <Panel
                     printToTerminal={setOutputValue}

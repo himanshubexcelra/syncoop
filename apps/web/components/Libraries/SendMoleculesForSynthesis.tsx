@@ -8,10 +8,10 @@ import DataGrid, {
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Button } from "devextreme-react/button";
-import { Molecule } from "@/lib/definition";
+import { MoleculeType } from "@/lib/definition";
 
 type SendMoleculesForSynthesisProps = {
-    moleculeData: Molecule,
+    moleculeData: MoleculeType[],
 }
 
 export default function SendMoleculesForSynthesis({

@@ -52,7 +52,13 @@ import {
     debounce,
     fetchMoleculeStatus
 } from '@/utils/helpers';
-import { addToFavourites, getLibraries, getLibraryById } from './libraryService';
+import {
+    addToFavourites,
+    getLibraries,
+    getLibraryById,
+    addMoleculeToCart,
+    getMoleculeCart
+} from './libraryService';
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
 import TextWithToggle from '@/ui/TextWithToggle';
@@ -60,6 +66,8 @@ import CreateLibrary from './CreateLibrary';
 import { DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
 import EditMolecule from '../Molecule/EditMolecule/EditMolecule';
 import SendMoleculesForSynthesis from './SendMoleculesForSynthesis';
@@ -142,7 +150,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
-    const libraryId = searchParams.get('libraryId');
+    const [libraryId, setLibraryId] = useState(searchParams.get('libraryId'));
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
@@ -155,7 +163,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [expanded, setExpanded] = useState(libraryId ? false : true);
     const [checkBoxesMode, setCheckBoxesMode] =
         useState<DataGridTypes.SelectionColumnDisplayMode>('always');
-    const [selectedRows, setSelectedRows] = useState([]);
     const [editMolecules, setEditMolecules] = useState<any[]>([]);
     const [searchValue, setSearchValue] = useState('');
     const [expandMenu, setExpandedMenu] = useState(-1);
@@ -168,10 +175,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [editEnabled, setEditStatus] = useState<boolean>(false);
     const [sortBy, setSortBy] = useState('CreationTime');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
+    const [moleculeData, setMoleculeData] = useState([]);
+    const [selectedRows, setSelectedRows] = useState([]); // Store selected item IDs
     const [viewAddMolecule, setViewAddMolecule] = useState(false);
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
     const [synthesisView, setSynthesisView] = useState(false);
 
+    const [isCartUpdate, updateCart] = useState(false)
     let toastShown = false;
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
@@ -200,7 +212,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             if (libraryId) {
                 const libraryData = await getLibraryById(['molecule'], libraryId);
                 setTableData(libraryData.molecule || []);
-                console.log(libraryData.molecule)
                 const libName = libraryData.name;
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(parseInt(libraryId));
@@ -222,6 +233,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 if (tempLibraries.length) {
                     const libraryData = await getLibraryById(['molecule'], tempLibraries[0]?.id);
                     setTableData(libraryData.molecule || []);
+                    setLibraryId(libraryData.id)
                 } const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(tempLibraries[0]?.id);
@@ -247,6 +259,18 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         }
     }
 
+    const fetchCartData = async () => {
+        const moleculeCart = libraryId ?
+            await getMoleculeCart(Number(userData.id), Number(libraryId), Number(projects.id))
+            : [];
+        const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
+        setSelectedRows(moleculeIds)
+    };
+
+    useEffect(() => {
+        fetchCartData();
+    }, [libraryId, userData.id]);
+
     useEffect(() => {
         fetchLibraries();
     }, [params.id, libraryId]);
@@ -262,11 +286,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const onAllModeChanged = useCallback(({ value }: any) => {
         setAllMode(value);
     }, []);
-    const onSelectionChanged = useCallback((event: any) => {
-        const { selectedRowKeys } = event
-        setSelectedRows(selectedRowKeys);
-    }, []);
-
     const bookMarkItem = async ({ data, existingFavourite }: {
         data: MoleculeType,
         existingFavourite: MoleculeFavourite
@@ -422,6 +441,52 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         setViewEditMolecule(true);
     }, [selectedRows]);
 
+    const onSelectionChanged = async (e: any) => {
+        updateCart(true);
+        // Check if the data exists in storage
+        setSelectedRows(e.selectedRowKeys);
+        const checkedMolecule = e.selectedRowsData;
+        const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
+            ...item,
+            moleculeId: item.id,
+            libraryId: libraryId,
+            userId: userData.id,
+            organizationId: projects.organizationId,
+            projectId: projects.id
+        }));
+
+        const moleculeCart = libraryId ?
+            await getMoleculeCart(Number(userData.id), Number(libraryId), Number(projects.id))
+            : [];
+        const preselectedIds = moleculeCart.map((item: any) => item.moleculeId);
+        const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
+            !preselectedIds.includes(item.moleculeId));
+        // If the check box is unchecked
+        if (e.currentDeselectedRowKeys.length > 0) {
+            const newmoleculeData = checkedMolecule.filter((
+                item: any) => item.id !== e.currentDeselectedRowKeys[0].id
+                && item.projectId !== projects.id);
+            setMoleculeData(newmoleculeData);
+        }
+        else {
+            setMoleculeData(updatedMoleculeCart);
+        }
+    };
+
+    const addProductToCart = () => {
+        context?.addToState({
+            ...appContext, cartDetail: [...moleculeData]
+        })
+        addMoleculeToCart(moleculeData)
+            .then((res) => {
+                if (res) {
+                    toast.success('Molecule is updated in your cart.');
+                }
+            })
+            .catch((error) => {
+                toast.success(error);
+            })
+    }
     const cellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
         if (e.rowType === "data") {
             if (e.column.dataField === "status") {
@@ -940,10 +1005,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         dataSource={tableData}
                                         showBorders={true}
                                         ref={grid}
+                                        keyExpr="id"
+                                        selectedRowKeys={selectedRows}
+                                        onSelectionChanged={onSelectionChanged}
                                         columnAutoWidth={false}
                                         width="100%"
                                         onCellPrepared={cellPrepared}
-                                        onSelectionChanged={onSelectionChanged}
                                     >
                                         <Selection
                                             mode="multiple"
@@ -1251,7 +1318,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 </ToolbarItem>}
                                             <ToolbarItem location="after">
                                                 <Button
-                                                    disabled={true}
+                                                    onClick={addProductToCart}
+                                                    disabled={!isCartUpdate}
                                                     render={() => (
                                                         <>
                                                             <span>Add to cart</span>
@@ -1390,16 +1458,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             <span className='pl-[3px]'>
                                                 {tableData.length === 1 ? 'molecule' : 'molecules'}
                                             </span>
-                                            <span className='pl-[2px]'> found </span>
+                                            <span className='pl-[2px]'> found</span>
                                         </span>
-                                        {!!tableData.length && ' | '}
+                                        {!!tableData.length && <span>&nbsp;|&nbsp;</span>}
                                         {!!tableData.length &&
                                             <span className={
                                                 `text-themeSecondayBlue 
                                                 pl-[5px] 
                                                 font-bold`
-                                            }>
-                                                Select All {tableData.length}
+                                            }>Select All {tableData.length}
                                             </span>}
                                     </div>
                                 </div >

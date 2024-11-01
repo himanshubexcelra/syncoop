@@ -21,7 +21,12 @@ export const KetcherAPI = (ketcherInstance: any) => {
     // Returns Promise<string>
     exportCtab: function () {
       console.log(ketcherInstance);
-      return ketcherInstance.getMolfile();
+      return ketcherInstance.getSmiles();
+    },
+
+    // Returns Promise<string>
+    exportSmile: function () {
+      return ketcherInstance.getSmiles();
     },
 
     getSelectedAtomId: function () {

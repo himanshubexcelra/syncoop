@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 import Image from "next/image";
 import { useState, useEffect, useRef } from 'react';
@@ -31,12 +32,16 @@ export default function LandingPage({ userData,
     const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgUser)
 
     const fetchOrganizationData = async () => {
-        const organization = await getOrganizationById({ withRelation: ['orgUser', 'user_role'], id: userData?.organizationId });
+        const organization = await getOrganizationById(
+            {
+                withRelation: ['orgUser', 'user_role'],
+                id: userData?.organizationId
+            });
         setOrganization(organization);
     };
 
     useEffect(() => {
-        if (myRoles.includes('org_admin')) fetchOrganizationData();
+        if (['admin', 'org_admin'].some((role) => myRoles?.includes(role))) fetchOrganizationData();
     }, []);
 
     useEffect(() => {
@@ -56,7 +61,13 @@ export default function LandingPage({ userData,
             <Tabs tabsDetails={tabsStatus} />
             {myRoles.includes('admin') &&
                 <>
-                    <TabUsersTable orgUser={orgUser} filteredRoles={filteredRoles} myRoles={myRoles} userId={id} actionsEnabled={actionsEnabled} />
+                    <TabUsersTable
+                        orgUser={orgUser}
+                        filteredRoles={filteredRoles}
+                        myRoles={myRoles}
+                        userId={id}
+                        actionsEnabled={actionsEnabled}
+                    />
                     <div>
                         <div className={styles.imageContainer}>
                             <Image

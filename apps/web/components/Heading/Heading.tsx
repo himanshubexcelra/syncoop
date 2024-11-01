@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import React from 'react';
 import { HeadingObj } from '@/lib/definition';
 import Image from 'next/image';

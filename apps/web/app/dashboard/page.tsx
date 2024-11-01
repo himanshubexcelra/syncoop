@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import styles from "./page.module.css";
 import { HeadingObj } from "@/lib/definition";
 import Layout from "@/components/layout";

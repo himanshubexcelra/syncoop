@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 
@@ -59,7 +60,9 @@ export async function GET(request: Request) {
           },
         }
       }
-      if (joins.includes('org_module') && joins.includes('module_action_role_permission') && roleIds) {
+      if (joins.includes('org_module')
+        && joins.includes('module_action_role_permission')
+        && roleIds) {
         query.include = {
           ...query.include,
           org_module: {

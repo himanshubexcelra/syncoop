@@ -27,6 +27,11 @@ import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { getFilteredRoles } from "../Role/service";
 
+enum OrganizationType {
+  Internal = "Internal",
+  External = "External"
+}
+
 type ListOrganizationProps = {
   userData: UserData, actionsEnabled: string[]
 }
@@ -44,12 +49,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const appContext = context.state;
 
   const fetchOrganizations = async () => {
-    const organization = await getOrganization(
+    let organization = await getOrganization(
       {
         withRelation: ['orgUser', 'user_role'],
         withCount: ['projects']
       });
-
+    organization = organization.filter
+      ((organization: OrganizationDataFields) => organization.type !== OrganizationType.Internal);
     setTableData(organization);
     setLoader(false);
   }

@@ -264,17 +264,22 @@ export interface Assay {
 }
 
 export interface AssayTableProps {
-  dataSource: Assay[];
+  orgUser: OrgUser;
 }
 
 export interface ModuleFeature {
+  id: number;
   name: string;
-  value: string;
-  checked: boolean;
+  description: string;
+  requiredPurchase: boolean;
+  createdAt: string;
+  createdBy: number;
+  updatedAt: string
+  updatedBy: number | null;
 }
 
 export interface ModuleTableProps {
-  features: ModuleFeature[];
+  orgUser: OrgUser;
   myRoles?: string[];
 }
 
@@ -335,6 +340,8 @@ export interface UserCountModel {
 
 export interface AppContextModel {
   userCount: UserCountModel;
+  refreshAssayTable: boolean;
+  refreshUsersTable: boolean;
 }
 
 export type ToggleExpandType = (value: number, text: string) => void;

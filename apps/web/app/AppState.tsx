@@ -8,14 +8,16 @@ import React, {
 import { AppContextModel } from '@/lib/definition';
 
 interface AppState {
-  appContext: AppContextModel
+  appContext: AppContextModel,
 }
 
 const initialContext = {
   userCount: {
     externalUsers: 0,
     internalUsers: 0
-  }
+  },
+  refreshAssayTable: false,
+  refreshUsersTable: false,
 }
 
 interface AppContextData {

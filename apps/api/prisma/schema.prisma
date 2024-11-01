@@ -123,24 +123,24 @@ model molecule {
   organization         organization         @relation(fields: [organizationId], references: [id])
   projectId            Int
   project              project              @relation(fields: [projectId], references: [id])
-  libraryId            Int
-  library              library              @relation(fields: [libraryId], references: [id])
-  smile                String
+  library_id           Int
+  library              library              @relation(fields: [library_id], references: [id])
+  smiles_string        String
   inchi_key            String
   molecular_weight     Decimal
   finger_print         String
-  isAddedToCart        Boolean
+  is_added_to_cart     Boolean
   status               molecule_status
-  createdAt            DateTime             @default(now()) @db.Timestamp(6)
-  createdBy            Int
-  userWhoCreated       user                 @relation("userWhoCreated", fields: [createdBy], references: [id])
-  updatedAt            DateTime?            @default(now()) @db.Timestamp(6)
-  updatedBy            Int?
-  userWhoUpdated       user?                @relation("userWhoUpdated", fields: [updatedBy], references: [id])
+  created_at           DateTime             @default(now()) @db.Timestamp(6)
+  created_by           Int
+  userWhoCreated       user                 @relation("userWhoCreated", fields: [created_by], references: [id])
+  updated_at           DateTime?            @default(now()) @db.Timestamp(6)
+  updated_by           Int?
+  userWhoUpdated       user?                @relation("userWhoUpdated", fields: [updated_by], references: [id])
+  molecule_cart        molecule_cart[]
   user                 user?                @relation(fields: [userId], references: [id])
   userId               Int?
   molecule_favorites   molecule_favorites[]
-  molecule_cart        molecule_cart[]
   molecule_order       molecule_order[]
 }
 
@@ -153,46 +153,47 @@ model molecule_favorites {
 }
 
 model molecule_cart {
-  id             Int          @id @default(autoincrement())
-  moleculeId     Int
-  molecule       molecule     @relation(fields: [moleculeId], references: [id])
-  organizationId Int
-  organization   organization @relation(fields: [organizationId], references: [id])
-  projectId      Int
-  project        project      @relation(fields: [projectId], references: [id])
-  libraryId      Int
-  library        library      @relation(fields: [libraryId], references: [id])
-  createdAt      DateTime     @default(now()) @db.Timestamp(6)
-  createdBy      Int
-  userWhoCreated user         @relation("userWhoCreated", fields: [createdBy], references: [id])
-  updatedAt      DateTime?    @default(now()) @db.Timestamp(6)
-  updatedBy      Int?
-  userWhoUpdated user?        @relation("userWhoUpdated", fields: [updatedBy], references: [id])
-  user           user?        @relation(fields: [userId], references: [id])
-  userId         Int?
+  id              Int          @id @default(autoincrement())
+  molecule_id     Int
+  molecule        molecule     @relation(fields: [molecule_id], references: [id])
+  organization_id Int
+  organization    organization @relation(fields: [organization_id], references: [id])
+  project_id      Int
+  project         project      @relation(fields: [project_id], references: [id])
+  library_id      Int
+  library         library      @relation(fields: [library_id], references: [id])
+  batch_detail    Json
+  created_at      DateTime     @default(now()) @db.Timestamp(6)
+  created_by      Int
+  userWhoCreated  user         @relation("userWhoCreated", fields: [created_by], references: [id])
+  updated_at      DateTime?    @default(now()) @db.Timestamp(6)
+  updated_by      Int?
+  userWhoUpdated  user?        @relation("userWhoUpdated", fields: [updated_by], references: [id])
+  user            user?        @relation(fields: [userId], references: [id])
+  userId          Int?
 }
 
 model molecule_order {
-  id             Int          @id @default(autoincrement())
-  orderId        Int
-  orderName      String
-  moleculeId     Int
-  molecule       molecule     @relation(fields: [moleculeId], references: [id])
-  organizationId Int
-  organization   organization @relation(fields: [organizationId], references: [id])
-  projectId      Int
-  project        project      @relation(fields: [projectId], references: [id])
-  libraryId      Int
-  library        library      @relation(fields: [libraryId], references: [id])
-  batch_detail   Json
-  createdAt      DateTime     @default(now()) @db.Timestamp(6)
-  createdBy      Int
-  userWhoCreated user         @relation("userWhoCreated", fields: [createdBy], references: [id])
-  updatedAt      DateTime?    @default(now()) @db.Timestamp(6)
-  updatedBy      Int?
-  userWhoUpdated user?        @relation("userWhoUpdated", fields: [updatedBy], references: [id])
-  user           user?        @relation(fields: [userId], references: [id])
-  userId         Int?
+  id              Int          @id @default(autoincrement())
+  order_id        Int
+  order_name      String
+  molecule_id     Int
+  molecule        molecule     @relation(fields: [molecule_id], references: [id])
+  organization_id Int
+  organization    organization @relation(fields: [organization_id], references: [id])
+  project_id      Int
+  project         project      @relation(fields: [project_id], references: [id])
+  library_id      Int
+  library         library      @relation(fields: [library_id], references: [id])
+  batch_detail    Json
+  created_at      DateTime     @default(now()) @db.Timestamp(6)
+  created_by      Int
+  userWhoCreated  user         @relation("userWhoCreated", fields: [created_by], references: [id])
+  updated_at      DateTime?    @default(now()) @db.Timestamp(6)
+  updated_by      Int?
+  userWhoUpdated  user?        @relation("userWhoUpdated", fields: [updated_by], references: [id])
+  user            user?        @relation(fields: [userId], references: [id])
+  userId          Int?
 }
 
 //model module_role_permission {

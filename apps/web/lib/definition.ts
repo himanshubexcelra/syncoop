@@ -373,27 +373,6 @@ export interface ProjectAccordionType {
   roleType: string | undefined,
 }
 
-export interface ProductModel {
-  id: number;
-  moleculeId: number;
-  molecularWeight: number;
-  projectId: number;
-  projectName: string;
-}
-
-export interface ProductContextModel {
-  cartDetail: ProductModel[];
-}
-
-export interface CartContextModel {
-  cart: ProductModel[];
-  addToCart: (product: ProductModel) => void;
-  removeFromCart: (productId: number) => void;
-  clearCart: () => void;
-  userData: UserData,
-  myRoles?: string[],
-}
-
 export interface DashboardPageType {
   userData: UserData,
   tabsStatus: TabDetail[],

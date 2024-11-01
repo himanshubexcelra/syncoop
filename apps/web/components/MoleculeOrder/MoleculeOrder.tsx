@@ -141,8 +141,9 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
       dataField: 'caco2', title: 'Caco-2', width: 100,
       customRender: (data: MoleculeOrder) => customRenderForField(data, 'caco2')
     },
-
   ];
+
+  console.log(moleculeOrderData, 'moleculeOrderData');
 
   return (
     <div className='flex flex-col'>
@@ -160,7 +161,7 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
         <CustomDataGrid
           columns={moleculeColumns}
           data={moleculeOrderData}
-          groupingColumn="organizationName"
+          groupingColumn="rowGroupName"
           enableRowSelection
           enableGrouping
           enableInfiniteScroll={false}

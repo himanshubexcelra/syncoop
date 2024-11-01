@@ -29,29 +29,33 @@ export default async function MoleculeOrder({ searchParams }: MoleculeOrderProps
   let transformedData: any[] = [];
 
   try {
-    if (type === "Internal") {
-      // For internal users, pass organizationId as a parameter
-      data = await getMoleculesOrder({ organizationId });
-    } else if (type === "External" && searchParams.projectId && searchParams.libraryId) {
-      // For external users, pass projectId and libraryId as parameters
+    if (type === "external") {
+      // External users: fetch records filtered by organizationId, projectId, and libraryId
       data = await getMoleculesOrder({
+        organizationId,
         projectId: searchParams.projectId,
         libraryId: searchParams.libraryId,
       });
+    } else if (type === "Internal") {
+      // Internal users: fetch all records without filters
+      data = await getMoleculesOrder({});
     } else {
       console.warn(Messages.USER_ROLE_CHECK);
     }
-
     // Transform the fetched data if data is available
     transformedData = data?.map((item: any) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { batch_detail, molecule, organization, ...rest } = item;
+      const { batch_detail, molecule, organization, orderName, project, library, ...rest } = item;
       return {
         ...rest,
         organizationName: organization.name,
         molecular_weight: molecule.molecular_weight,
         smile: molecule.smile,
         status: molecule.status,
+        orderName,
+        rowGroupName: type === "Internal"
+          ? `${organization.name} / ${orderName}`
+          : `${project.name} / ${library.name}`
       };
     });
 

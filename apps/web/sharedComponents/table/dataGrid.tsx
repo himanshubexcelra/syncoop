@@ -16,7 +16,6 @@ import DataGrid, {
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
-import { Button } from 'devextreme-react';
 
 interface ColumnConfig<T> {
     dataField: keyof T;
@@ -83,6 +82,8 @@ const CustomDataGrid = <T extends Record<string, any>>({
         }
     }, [data, enableAutoScroll]);
 
+    // Custom render function for grouping cell to show only the value
+    const groupCellRender = (e: any) => <span>{e.value}</span>;
 
     return (
         <div>
@@ -125,8 +126,14 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     />
                 ))}
 
-                {groupingColumn && <Column dataField={String(groupingColumn)}
-                    dataType="string" groupIndex={0} />}
+                {groupingColumn && (
+                    <Column
+                        dataField={String(groupingColumn)}
+                        dataType="string"
+                        groupIndex={0}
+                        groupCellRender={groupCellRender}
+                    />
+                )}
 
                 <GridToolbar>
                     <ToolbarItem location="after">
@@ -148,8 +155,9 @@ const CustomDataGrid = <T extends Record<string, any>>({
                             )}
                         />
                     </ToolbarItem>
-                    <ToolbarItem name="searchPanel" location="before" />
+                    <ToolbarItem name="searchPanel" location="after" />
                 </GridToolbar>
+
                 <SearchPanel
                     visible={true}
                     highlightSearchText={true}

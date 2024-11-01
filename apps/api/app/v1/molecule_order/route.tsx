@@ -7,36 +7,23 @@ const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 
 export async function GET(request: Request) {
     try {
-        // Parse the URL to retrieve query parameters
         const url = new URL(request.url);
-        const projectId = url.searchParams.get('projectId');
-        const libraryId = url.searchParams.get('libraryId');
-        const organizationId = url.searchParams.get('organizationId');
+        const projectId = url.searchParams.get("projectId");
+        const libraryId = url.searchParams.get("libraryId");
+        const organizationId = url.searchParams.get("organizationId");
 
-        // Check if the required parameters are present
-        if (!organizationId && (!projectId || !libraryId)) {
-            return new Response(JSON.stringify({ error: MOLECULE_ORDER_NOT_FOUND }), {
-                headers: { "Content-Type": "application/json" },
-                status: NOT_FOUND,
-            });
-        }
-
-        // Build the database query conditionally based on the provided parameters
+        // Define whereClause conditionally based on user type
         const whereClause = organizationId
-            ? { organizationId: Number(organizationId) }
-            : {
-                projectId: Number(projectId),
-                libraryId: Number(libraryId),
-            };
+            ? {
+                organizationId: Number(organizationId),
+                projectId: projectId ? Number(projectId) : undefined,
+                libraryId: libraryId ? Number(libraryId) : undefined,
+            }
+            : undefined; // Internal users will have an undefined whereClause to fetch all records
 
-        // Query the database for records based on the `whereClause`
         const data = await prisma.molecule_order.findMany({
             include: {
-                organization: {
-                    select: {
-                        name: true,
-                    },
-                },
+                organization: { select: { name: true } },
                 molecule: {
                     select: {
                         molecular_weight: true,
@@ -44,22 +31,42 @@ export async function GET(request: Request) {
                         status: true,
                     },
                 },
+                project: {
+                    select: {
+                        name: true
+                    }
+                },
+                library: {
+                    select: {
+                        name: true
+                    }
+                },
             },
             where: whereClause,
         });
 
-        // Return the fetched data with a 200 status code
+        if (!data || data.length === 0) {
+            return new Response(
+                JSON.stringify({ error: MOLECULE_ORDER_NOT_FOUND }),
+                {
+                    headers: { "Content-Type": "application/json" },
+                    status: NOT_FOUND,
+                }
+            );
+        }
+
         return new Response(JSON.stringify(data), {
             headers: { "Content-Type": "application/json" },
-            status: SUCCESS, // success status code
+            status: SUCCESS,
         });
     } catch (error: any) {
         console.error("Error fetching molecule order data:", error);
-
-        // Return an error response if any issue arises
-        return new Response(JSON.stringify({ error: error.message }), {
-            headers: { "Content-Type": "application/json" },
-            status: BAD_REQUEST,
-        });
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            {
+                headers: { "Content-Type": "application/json" },
+                status: BAD_REQUEST,
+            }
+        );
     }
 }

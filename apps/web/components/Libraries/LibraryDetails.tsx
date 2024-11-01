@@ -1458,16 +1458,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             <span className='pl-[3px]'>
                                                 {tableData.length === 1 ? 'molecule' : 'molecules'}
                                             </span>
-                                            <span className='pl-[2px]'> found </span>
+                                            <span className='pl-[2px]'> found</span>
                                         </span>
-                                        {!!tableData.length && ' | '}
+                                        {!!tableData.length && <span>&nbsp;|&nbsp;</span>}
                                         {!!tableData.length &&
                                             <span className={
                                                 `text-themeSecondayBlue 
                                                 pl-[5px] 
                                                 font-bold`
-                                            }>
-                                                Select All {tableData.length}
+                                            }>Select All {tableData.length}
                                             </span>}
                                     </div>
                                 </div >

@@ -24,7 +24,9 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1', // Adjust based on your project structure
   },
-  testPathIgnorePatterns: ['<rootDir>/packages/', 'packages', 
+  testPathIgnorePatterns: [
+    '<rootDir>/packages/',
+    'packages',
     '<rootDir>/components/Libraries/__tests__/LibraryDetails.test.tsx'
   ],
 }

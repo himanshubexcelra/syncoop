@@ -3,7 +3,7 @@ import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
 import Link from 'next/link';
-
+import { submitOrder } from './libraryService';
 interface Molecule {
     molecular_weight: string;
     library: {
@@ -20,25 +20,37 @@ interface CartItem {
     moleculeId: number;
     libraryId: number;
     projectId: number;
+    organizationId: number;
     molecule: Molecule;
+    moleculeName: string;
 }
 
 interface CartDetailsProps {
     cartData: CartItem[];
+    userId: number;
     removeItemFromCart: (item: CartItem) => void;
-    removeAll: () => void;
+    removeAll: (userId: number, type: string) => void;
 }
 
-const CartDetails: FC<CartDetailsProps> = ({ cartData, removeItemFromCart, removeAll }) => {
+const CartDetails: FC<CartDetailsProps> = ({ cartData, userId, removeItemFromCart, removeAll }) => {
     interface CartDetail {
         id: number;
         moleculeId: number;
         libraryId: number;
+        organizationId: number;
         projectId: number;
         molecular_weight: string;
         projectName: string;
         libraryName: string;
         moleculeName: string;
+    }
+
+    interface OrderDetail {
+        moleculeId: number;
+        libraryId: number;
+        projectId: number;
+        organizationId: number;
+        userId: number;
     }
 
     interface GroupedData {
@@ -50,11 +62,32 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, removeItemFromCart, remov
         moleculeId: item.moleculeId,
         libraryId: item.libraryId,
         projectId: item.projectId,
+        organizationId: item.organizationId,
         molecular_weight: item.molecule.molecular_weight,
         projectName: item.molecule.library.project.name,
         libraryName: item.molecule.library.name,
         moleculeName: item.molecule.source_molecule_name
     }));
+
+    const orderDetails: OrderDetail[] = cartData.map(item => ({
+        moleculeId: item.moleculeId,
+        libraryId: item.libraryId,
+        projectId: item.projectId,
+        organizationId: item.organizationId,
+        userId: userId
+    }));
+
+    const handleSubmitOrder = () => {
+        submitOrder(orderDetails).then((res) => {
+            if (res[0].orderId) {
+                removeAll(userId, 'SubmitOrder')
+            }
+        })
+            .catch((error) => {
+                console.log(error);
+
+            })
+    }
 
     const groupedData = cartDetails.reduce((acc: GroupedData, item) => {
         const key = `${item.projectName}/${item.libraryName}`;
@@ -112,8 +145,8 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, removeItemFromCart, remov
                         </div>
                     ))}
                     <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                        <Btn className='btn-primary' text="Submit Order" />
-                        <Link href="#" onClick={removeAll} className='text-themeBlueColor font-bold' style={{ marginLeft: '10px' }}>Remove All</Link>
+                        <Btn className='btn-primary' onClick={handleSubmitOrder} text="Submit Order" />
+                        <Link href="#" onClick={() => removeAll(userId, 'RemoveAll')} className='text-themeBlueColor font-bold' style={{ marginLeft: '10px' }}>Remove All</Link>
                     </div>
                 </div>
             ) : (

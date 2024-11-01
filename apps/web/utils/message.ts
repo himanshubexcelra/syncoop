@@ -29,5 +29,6 @@ export const Messages = {
     deleteMoleculeMessage(status: string) {
             return `${status} deleted successfully`;
         }, 
-    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart."       
+    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",       
+    SUBMIT_ORDER: "Order Submitted Successfully"
 }

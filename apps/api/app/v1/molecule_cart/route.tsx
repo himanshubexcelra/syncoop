@@ -47,7 +47,7 @@ export async function GET(request: Request) {
             query.where = {
                 createdBy: Number(userId),
                 libraryId: Number(libraryId),
-                projectId:Number(projectId)
+                projectId: Number(projectId)
             };
         }
         const molecule = await prisma.molecule_cart.findMany(query);
@@ -74,8 +74,8 @@ export async function POST(request: Request) {
         createdBy: Number(item.userId)
     }));
 
-    
-    
+
+
 
     try {
         await prisma.molecule_cart.createMany({
@@ -98,8 +98,15 @@ export async function DELETE(request: Request) {
         const moleculeId = Number(searchParams.get('moleculeId'));
         const libraryId = Number(searchParams.get('libraryId'));
         const projectId = Number(searchParams.get('projectId'));
-        if(!searchParams.toString()){
-            await prisma.molecule_cart.deleteMany({});
+        const userId = Number(searchParams.get('userId'));
+
+
+        if (!moleculeId && !libraryId && !projectId) {
+            await prisma.molecule_cart.deleteMany({
+                where: {
+                    createdBy: userId
+                }
+            });
         }
 
         await prisma.molecule_cart.deleteMany({
@@ -107,6 +114,7 @@ export async function DELETE(request: Request) {
                 moleculeId: moleculeId,
                 libraryId: libraryId,
                 projectId: projectId,
+                createdBy: userId
             }
         });
 

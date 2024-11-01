@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
-import { DropDownItem, UserData } from '@/lib/definition';
+import { DropDownItem, UserData, deleteObj, orderType } from '@/lib/definition';
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -36,13 +36,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [cartData, setCartData] = useState([])
-    interface deleteObj {
-        id: number;
-        libraryId: number;
-        moleculeId: number;
-        projectId: number;
-        moleculeName: string,
-    }
+
 
     useEffect(() => {
         const fetchCartData = async () => {
@@ -86,11 +80,16 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
 
     }
 
-    const removeAll = () => {
-        deleteMoleculeCart().then((res) => {
+    const removeAll = (userId: number, type: string) => {
+        deleteMoleculeCart(userId).then((res) => {
             if (res) {
                 setCartData([]);
-                toast.success(Messages.REMOVE_ALL_MESSAGE);
+                if (type === 'RemoveAll') {
+                    toast.success(Messages.REMOVE_ALL_MESSAGE);
+                }
+                else {
+                    toast.success(Messages.SUBMIT_ORDER);
+                }
 
             }
         })
@@ -108,6 +107,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         }
         setDropdownOpen(false)
     }
+
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setPopupPosition({
@@ -151,8 +152,11 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 contentRender={() => (
                     <CartDetails
                         cartData={cartData}
+                        userId={userData.id}
                         removeItemFromCart={(obj: deleteObj) => removeItemFromCart(obj)}
-                        removeAll={removeAll}
+                        removeAll={(userId: number, type: string) => removeAll(userId, type)}
+
+
                     />
                 )}
                 width={470}

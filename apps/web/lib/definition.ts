@@ -419,3 +419,19 @@ export interface LibraryDataNode {
   isInInventory?: boolean;
   publishedMoleculeCount?: number;
 }
+
+export interface orderType {
+  moleculeId: number;
+  libraryId: number;
+  projectId: number;
+  organizationId: number;
+  userId: number;
+}
+
+export interface deleteObj {
+  id: number;
+  libraryId: number;
+  moleculeId: number;
+  projectId: number;
+  moleculeName: string,
+}

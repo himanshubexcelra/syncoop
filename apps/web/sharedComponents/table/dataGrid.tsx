@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DataGrid, {
     Column,
@@ -9,9 +10,13 @@ import DataGrid, {
     Sorting,
     FilterRow,
     LoadPanel,
+    HeaderFilter,
+    Toolbar as GridToolbar,
+    ToolbarItem,
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
+import { Button } from 'devextreme-react';
 
 interface ColumnConfig<T> {
     dataField: keyof T;
@@ -78,6 +83,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
         }
     }, [data, enableAutoScroll]);
 
+
     return (
         <div>
             <DataGrid
@@ -90,15 +96,21 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 width="100%"
                 onScroll={onScroll}
             >
+
                 {enableGrouping && <GroupPanel visible={true} />}
-                <SearchPanel visible={true} />
+                <SearchPanel
+                    visible={true}
+                    highlightSearchText={true}
+                />
+                <HeaderFilter visible={true} />
                 {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
                 <Scrolling mode={enableInfiniteScroll ? 'infinite' : 'standard'} />
                 <LoadPanel enabled={true} />
                 {enableRowSelection && (
-                    <Selection mode="multiple" selectAllMode={'allPages'} showCheckBoxesMode={'always'} />
+                    <Selection mode="multiple" selectAllMode={'allPages'}
+                        showCheckBoxesMode={'always'} />
                 )}
 
                 {/* Render columns specified in the configuration passed from the parent */}
@@ -111,11 +123,13 @@ const CustomDataGrid = <T extends Record<string, any>>({
                             <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
                         ) : undefined}
                         width={column.width ? String(column.width) : undefined}
-                        cellRender={column.customRender ? ({ data }) => column.customRender!(data) : undefined}
+                        cellRender={column.customRender ? ({ data }) =>
+                            column.customRender!(data) : undefined}
                     />
                 ))}
 
-                {groupingColumn && <Column dataField={String(groupingColumn)} dataType="string" groupIndex={0} />}
+                {groupingColumn && <Column dataField={String(groupingColumn)}
+                    dataType="string" groupIndex={0} />}
             </DataGrid>
 
             {enableOptions && (

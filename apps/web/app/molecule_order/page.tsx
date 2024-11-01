@@ -4,9 +4,16 @@ import { getMoleculesOrder } from './service';
 import { getUserData } from '@/utils/auth';
 import { redirect } from 'next/navigation';
 import MoleculeOrderPage from '@/components/MoleculeOrder/MoleculeOrder';
+import { Messages } from '@/utils/message';
 
-export default async function Page({ searchParams }: 
-  { searchParams: { projectId?: string; libraryId?: string } }) {
+type MoleculeOrderProps = {
+  searchParams: {
+    projectId?: string;
+    libraryId?: string;
+  };
+};
+
+export default async function MoleculeOrder({ searchParams }: MoleculeOrderProps) {
   const sessionData = await getUserData();
 
   // Redirect to home if no session
@@ -15,32 +22,28 @@ export default async function Page({ searchParams }:
   }
 
   const { userData } = sessionData;
-  const { myRoles, organizationId } = userData;
-
-  // Identify if the user is internal or external based on roles
-  const isInternalUser = myRoles.some((role: string) => 
-    role === 'researcher' || role === 'protocol_approver');
-  const isExternalUser = myRoles.some((role: string) => 
-    role === 'library_manager' || role === 'admin');
+  const { organizationId, orgUser } = userData;
+  const { type } = orgUser;
 
   let data = [];
+  let transformedData: any[] = [];
+
   try {
-    if (isInternalUser) {
+    if (type === "Internal") {
       // For internal users, pass organizationId as a parameter
       data = await getMoleculesOrder({ organizationId });
-    } else if (isExternalUser && searchParams.projectId && searchParams.libraryId) {
+    } else if (type === "External" && searchParams.projectId && searchParams.libraryId) {
       // For external users, pass projectId and libraryId as parameters
       data = await getMoleculesOrder({
         projectId: searchParams.projectId,
         libraryId: searchParams.libraryId,
       });
     } else {
-      console.warn("User role not supported or missing required parameters.");
-      return <MoleculeOrderPage initialData={[]} />;
+      console.warn(Messages.USER_ROLE_CHECK);
     }
 
-    // Transform the fetched data
-    const transformedData = data.map((item: any) => {
+    // Transform the fetched data if data is available
+    transformedData = data?.map((item: any) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { batch_detail, molecule, organization, ...rest } = item;
       return {
@@ -52,9 +55,15 @@ export default async function Page({ searchParams }:
       };
     });
 
-    return <Layout><MoleculeOrderPage initialData={transformedData} /></Layout>;
   } catch (error) {
-    console.error("Error in data fetching:", error);
-    return <Layout> <MoleculeOrderPage initialData={[]} /></Layout>;
+    console.error(Messages.FETCH_ERROR, error);
+    transformedData = []; // Set to an empty array in case of an error
   }
+
+  return (
+    <Layout>
+      <MoleculeOrderPage initialData={transformedData} />
+    </Layout>
+  );
+
 }

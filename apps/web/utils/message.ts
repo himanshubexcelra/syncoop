@@ -25,5 +25,6 @@ export const Messages = {
         return `Library ${status} successfully`;
     },
     LIBRARY_LIST_EMPTY:
-        "Your library list is empty, add a library to import molecules"
+        "Your library list is empty, add a library to import molecules",
+    USER_ROLE_CHECK: "User role not supported or missing required parameters."
 }

@@ -1,15 +1,24 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/components/Breadcrumbs/BreadCrumbs';
 import CustomDataGrid from '@/sharedComponents/table/dataGrid';
-import { BreadCrumbsObj, StatusCode } from '@/lib/definition';
+import {
+  BreadCrumbsObj,
+  MoleculeOrderParams,
+  OrganizationType,
+  StatusCode,
+  UserData
+} from '@/lib/definition';
 import Image from 'next/image';
 import { StatusCodeAPIType, StatusCodeBg, StatusCodeBgAPI } from '@/utils/constants';
 import { Button } from 'devextreme-react';
 import StatusMark from '@/ui/StatusMark';
 import dynamic from 'next/dynamic';
+import { getMoleculesOrder } from '@/app/molecule_order/service';
+import { Messages } from '@/utils/message';
+import toast from 'react-hot-toast';
 
 const MoleculeStructure = dynamic(() => import('@/utils/MoleculeStructure'), { ssr: false });
 
@@ -57,9 +66,7 @@ const customRenderForField = (data: MoleculeOrder, field: keyof MoleculeOrder) =
   );
 };
 
-const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>(initialData);
+const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
   const breadcrumbs: BreadCrumbsObj[] = [
     { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
@@ -69,23 +76,71 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
     },
   ];
 
-  const handleBookMarkItem = () => { };
+  const { organizationId, orgUser, myRoles } = userData;
+  const { type } = orgUser;
+  const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([])
+
+  const fetchMoleculeOrders = async () => {
+    let data = [];
+    let transformedData: any[] = [];
+
+    try {
+      if (type === OrganizationType.External) {
+        // External users: fetch records filtered by organizationId
+        let params: MoleculeOrderParams = {
+          organizationId: organizationId
+        };
+        if (myRoles[0] === 'library_manager') {
+          params = {
+            ...params,
+            createdBy: userData.id
+          }
+        }
+        data = await getMoleculesOrder(params);
+      } else if (type === OrganizationType.Internal) {
+        // Internal users: fetch all records without filters
+        data = await getMoleculesOrder({});
+      } else {
+        toast.error(Messages.USER_ROLE_CHECK);
+      }
+      // Transform the fetched data if data is available
+      transformedData = data?.map((item: any) => {
+        const {
+          molecule,
+          organization,
+          orderName,
+          project,
+          library,
+          ...rest
+        } = item;
+
+        return {
+          ...rest,
+          organizationName: organization.name,
+          molecular_weight: molecule.molecular_weight,
+          smile: molecule.smile,
+          status: molecule.status,
+          orderName,
+          "project / library": type === OrganizationType.Internal
+            ? `${organization.name} / ${orderName}`
+            : `${project.name} / ${library.name}`
+        };
+      });
+
+      setMoleculeOrderData(transformedData);
+    } catch (error) {
+      console.error(Messages.FETCH_ERROR, error);
+      transformedData = []; // Set to an empty array in case of an error
+      setMoleculeOrderData([]);
+    }
+  }
+
   const handleStructureEdit = () => { };
   const handleStructureZoom = () => { };
   const handleStructureDelete = () => { };
 
   // Column configuration
   const moleculeColumns: ColumnConfig<MoleculeOrder>[] = [
-    {
-      dataField: 'bookmark',
-      width: 100,
-      title: <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />,
-      customRender: () => (
-        <span className="flex justify-center cursor-pointer" onClick={() => handleBookMarkItem()}>
-          <Image src="/icons/star-filled.svg" width={24} height={24} alt="Bookmarked" />
-        </span>
-      ),
-    },
     {
       dataField: 'smile',
       title: 'Structure',
@@ -139,6 +194,10 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
       customRender: (data) => customRenderForField(data, 'caco2')
     },
   ];
+
+  useEffect(() => {
+    fetchMoleculeOrders();
+  }, [])
 
   return (
     <div className="flex flex-col">

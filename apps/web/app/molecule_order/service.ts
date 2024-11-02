@@ -8,10 +8,10 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
 
     // Add query parameters based on provided params
     if (params.organizationId) {
-        url.searchParams.append("organizationId", params.organizationId);
+        url.searchParams.append("organizationId", params.organizationId.toString());
     }
     if (params.createdBy) {
-        url.searchParams.append("createdBy", params.createdBy);
+        url.searchParams.append("createdBy", params.createdBy.toString());
     }
 
     try {

@@ -228,6 +228,7 @@ export interface User {
   user_role: UserRoleType[];
   role?: string,
   permission?: string,
+  type: string
 }
 
 export interface UserRoleType {
@@ -251,7 +252,7 @@ export interface UserData {
   id: number;
   owner?: OwnerType;
   status?: string;
-  myRoles?: string[]
+  myRoles: string[]
 }
 export interface projectType {
   id: number,
@@ -389,4 +390,16 @@ export interface LibraryDataNode {
   isProtected?: boolean;
   isInInventory?: boolean;
   publishedMoleculeCount?: number;
+}
+
+export interface MoleculeOrderParams {
+  projectId?: number;
+  libraryId?: number;
+  organizationId?: number;
+  createdBy?: number;
+}
+
+export enum OrganizationType {
+  Internal = "Internal",
+  External = "External"
 }

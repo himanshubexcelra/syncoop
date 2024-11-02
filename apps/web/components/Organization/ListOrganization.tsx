@@ -18,7 +18,7 @@ import { LoadIndicator } from 'devextreme-react/load-indicator';
 import "./table.css";
 import './form.css';
 import styles from "./table.module.css";
-import { OrganizationDataFields, UserData, UserRole } from "@/lib/definition";
+import { OrganizationDataFields, OrganizationType, UserData, UserRole } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
 import { getOrganization } from "@/components/Organization/service";
@@ -26,11 +26,6 @@ import { formatDate } from "@/utils/helpers";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { getFilteredRoles } from "../Role/service";
-
-enum OrganizationType {
-  Internal = "Internal",
-  External = "External"
-}
 
 type ListOrganizationProps = {
   userData: UserData, actionsEnabled: string[]

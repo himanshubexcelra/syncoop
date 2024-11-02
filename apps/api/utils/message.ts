@@ -8,6 +8,7 @@ export const MESSAGES = {
     EMAIL_ALREADY_EXIST: `Email already exists`,
     USER_NOT_FOUND: 'User does not exist',
     LIBRARY_NOT_FOUND: 'Library does not exist',
+    MOLECULE_ORDER_NOT_FOUND: 'Molecule order does not exist',
 }
 
 export const STATUS_TYPE = {

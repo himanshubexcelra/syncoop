@@ -174,9 +174,9 @@ export default function RenderCreateUser({
                 displayExpr: "name",
                 valueExpr: "id",
                 value: myRoles.includes('admin')
-                    ? (type === 'External' ? "" : organization && organization[0].id)
+                    ? (type === OrganizationType.External ? "" : organization && organization[0].id)
                     : organization[0].id,
-                disabled: !myRoles.includes('admin') || type === "Internal",
+                disabled: !myRoles.includes('admin') || type === OrganizationType.Internal,
                 onOpened: async () => {
                     if (type) {
                         const organizationDropdown = await getOrganization({ type });

@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import React from 'react';
 import { HeadingObj } from '@/lib/definition';
 import Image from 'next/image';
@@ -30,7 +31,7 @@ const Heading: React.FC<HeadingProps> = ({ heading, myRoles, showEditPopup }) =>
                     </React.Fragment>
                 ))}
             </div>
-            {myRoles?.includes('org_admin') && showEditPopup && (
+            {['admin', 'org_admin'].some((role) => myRoles?.includes(role)) && showEditPopup && (
                 <Button
                     className='btn-secondary'
                     onClick={() => showEditPopup(true)}

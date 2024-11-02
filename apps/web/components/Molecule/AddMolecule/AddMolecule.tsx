@@ -5,21 +5,59 @@ import Image from 'next/image';
 import DiscardMolecule from './DiscardMolecule';
 import DialogPopUp from '@/ui/DialogPopUp';
 import EditorBox from '@/components/KetcherTool/KetcherBox';
+import { uploadMoleculeSmiles } from '../service';
+import { getUserData } from '@/utils/auth';
+import { Messages } from '@/utils/message';
+import toast from 'react-hot-toast';
+import { DELAY } from '@/utils/constants';
+import { delay } from '@/utils/helpers';
 
 const dialogProperties = {
     width: 455,
     height: 148,
 }
 
-const AddMolecule = () => {
+interface AddMoleculeProps {
+    libraryId: string | null;
+    projectId: string | null;
+}
+
+const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
     const [file, setFile] = useState<File | null>(null);
     const [discardvisible, setDiscardVisible] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState('');
+    const [moleculeName, setMoleculeName] = useState<string>('')
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const hidePopup = () => {
         setDiscardVisible(false);
     };
+    const saveMolecule = async () => {
+        const sessionData = await getUserData();
+        const userData: any = sessionData?.userData;
+        KetcherFunctions.exportSmile().then(async (str) => {
+            const result = await uploadMoleculeSmiles({
+                smiles: [str],
+                "created_by_user_id": userData.id,
+                "library_id": libraryId?.toString() || '',
+                "project_id": projectId?.toString() || '',
+                "organization_id": userData.organizationId,
+                "source_molecule_name": moleculeName
+            })
+            if (result.rejected_smiles.length > 0) {
+                const rejectedSmile = result.rejected_smiles[0]
+                const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
+                const toastId = toast.error(message);
+                await delay(DELAY);
+                toast.remove(toastId);
+            } else {
+                const message = Messages.ADD_MOLECULE_SUCCESS;
+                const toastId = toast.success(message);
+                await delay(DELAY);
+                toast.remove(toastId);
+            }
+        });
+    }
     console.log({ error, isDragging, file });
     const handleDragOver = (e: any) => {
         e.preventDefault();
@@ -150,10 +188,13 @@ const AddMolecule = () => {
                         name="molecule"
                         className={styles.moleculeInput}
                         placeholder="Molecule name"
+                        value={moleculeName}
+                        onChange={(event) => setMoleculeName(event.target.value)}
                     />
                 </div>
                 <div className="flex justify-start gap-2 mt-5 ">
-                    <button className={styles.primaryButton}>Save Molecule</button>
+                    <button className={styles.primaryButton}
+                        onClick={() => saveMolecule()}>Save Molecule</button>
                     <button
                         className={styles.secondaryButton}
                         onClick={() => setDiscardVisible(true)}

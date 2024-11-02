@@ -396,8 +396,11 @@ export interface ValidateSmileRequest {
 }
 export interface UploadMoleculeSmilesRequest {
   smiles: string[];
-  created_by_user_id : number;
+  created_by_user_id: number;
   library_id: string;
+  project_id: string;
+  organization_id: number;
+  source_molecule_name: string;
 }
 
 export interface RejectedSmiles {

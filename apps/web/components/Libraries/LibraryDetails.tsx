@@ -1291,7 +1291,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         title="Add Molecule"
                                         visible={viewAddMolecule}
                                         contentRender={() => (
-                                            <AddMolecule />
+                                            <AddMolecule libraryId={libraryId}
+                                                projectId={params.id} />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}
@@ -1340,7 +1341,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         title="Add Molecule"
                                         visible={viewAddMolecule}
                                         contentRender={() => (
-                                            <AddMolecule />
+                                            <AddMolecule libraryId={libraryId}
+                                                projectId={params.id} />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}

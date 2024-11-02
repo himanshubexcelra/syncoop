@@ -1,11 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-interface MoleculeOrderParams {
-    projectId?: string;
-    libraryId?: string;
-    organizationId?: string;
-}
+import { MoleculeOrderParams } from "@/lib/definition";
 
 export async function getMoleculesOrder(params: MoleculeOrderParams) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_order`);
@@ -13,6 +9,9 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
     // Add query parameters based on provided params
     if (params.organizationId) {
         url.searchParams.append("organizationId", params.organizationId);
+    }
+    if (params.createdBy) {
+        url.searchParams.append("createdBy", params.createdBy);
     }
 
     try {

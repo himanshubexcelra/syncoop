@@ -390,3 +390,15 @@ export interface LibraryDataNode {
   isInInventory?: boolean;
   publishedMoleculeCount?: number;
 }
+
+export interface MoleculeOrderParams {
+  projectId?: string;
+  libraryId?: string;
+  organizationId?: string;
+  createdBy?: string;
+}
+
+export enum OrganizationType {
+  Internal = "Internal",
+  External = "External"
+}

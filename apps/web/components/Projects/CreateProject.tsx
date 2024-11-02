@@ -16,7 +16,12 @@ import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
 import { delay } from "@/utils/helpers";
 import { createProjectApi, editProject } from "./projectService";
 import "./projects.css";
-import { ProjectCreateFields, OrganizationDataFields, User } from "@/lib/definition";
+import {
+  ProjectCreateFields,
+  OrganizationDataFields,
+  User,
+  OrganizationType
+} from "@/lib/definition";
 import { DELAY, PERMISSIONS, PROJECT_TYPES } from "@/utils/constants";
 import DataGrid, { Column, Sorting, DataGridRef } from "devextreme-react/data-grid";
 import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
@@ -191,7 +196,8 @@ export default function CreateProject({
       editorType="dxSelectBox"
       editorOptions={{
         items: organizationData.filter(
-          (organization: OrganizationDataFields) => organization.type !== 'Internal'),
+          (organization: OrganizationDataFields) =>
+            organization.type !== OrganizationType.Internal),
         displayExpr: "name",
         placeholder: "Organization name",
         valueExpr: "id",

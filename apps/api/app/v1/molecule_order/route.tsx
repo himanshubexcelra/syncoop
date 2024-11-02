@@ -9,14 +9,23 @@ export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
         const organizationId = url.searchParams.get("organizationId");
+        const createdBy = url.searchParams.get("createdBy");
 
         // Define whereClause conditionally based on user type
-        const whereClause = organizationId
-            ? {
+        let where = {};
+        if (organizationId) {
+            where = {
+                ...where,
                 organizationId: Number(organizationId)
             }
-            : undefined; // Internal users will have an undefined whereClause to fetch all records
-
+        }
+        if(createdBy) {
+            where = {
+                ...where,
+                createdBy: Number(createdBy),
+            }
+        }
+        console.log(where);
         const data = await prisma.molecule_order.findMany({
             include: {
                 organization: { select: { name: true } },
@@ -38,7 +47,7 @@ export async function GET(request: Request) {
                     }
                 },
             },
-            where: whereClause,
+            where,
         });
 
         if (!data || data.length === 0) {

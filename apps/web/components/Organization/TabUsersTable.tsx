@@ -24,7 +24,7 @@ export default function TabUsersTable({
                 filteredRoles,
                 myRoles, orgUser,
                 userId, actionsEnabled,
-                type: "Internal",
+                type: OrganizationType.Internal,
                 setInternalCount, setExternalCount
             }
         },
@@ -37,7 +37,7 @@ export default function TabUsersTable({
                 orgUser,
                 userId,
                 actionsEnabled,
-                type: "External",
+                type: OrganizationType.External,
                 setExternalCount, setInternalCount
             }
         },

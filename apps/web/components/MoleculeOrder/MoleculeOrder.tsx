@@ -151,7 +151,7 @@ const MoleculeOrderPage = ({ initialData }: { initialData: MoleculeOrder[] }) =>
         <CustomDataGrid
           columns={moleculeColumns}
           data={moleculeOrderData}
-          groupingColumn="rowGroupName"
+          groupingColumn="project / library"
           enableRowSelection
           enableGrouping
           enableInfiniteScroll={false}

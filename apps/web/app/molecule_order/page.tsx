@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import MoleculeOrderPage from '@/components/MoleculeOrder/MoleculeOrder';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
+import { MoleculeOrderParams, OrganizationType } from '@/lib/definition';
 
 export default async function MoleculeOrder() {
   const sessionData = await getUserData();
@@ -16,19 +17,26 @@ export default async function MoleculeOrder() {
   }
 
   const { userData } = sessionData;
-  const { organizationId, orgUser } = userData;
+  const { organizationId, orgUser, myRoles } = userData;
   const { type } = orgUser;
 
   let data = [];
   let transformedData: any[] = [];
 
   try {
-    if (type === "external") {
+    if (type === OrganizationType.External) {
       // External users: fetch records filtered by organizationId
-      data = await getMoleculesOrder({
+      let params: MoleculeOrderParams = {
         organizationId
-      });
-    } else if (type === "Internal") {
+      };
+      if (myRoles[0] === 'library_manager') {
+        params = {
+          ...params,
+          createdBy: userData.id
+        }
+      }
+      data = await getMoleculesOrder(params);
+    } else if (type === OrganizationType.Internal) {
       // Internal users: fetch all records without filters
       data = await getMoleculesOrder({});
     } else {
@@ -45,7 +53,7 @@ export default async function MoleculeOrder() {
         smile: molecule.smile,
         status: molecule.status,
         orderName,
-        rowGroupName: type === "Internal"
+        "project / library": type === OrganizationType.Internal
           ? `${organization.name} / ${orderName}`
           : `${project.name} / ${library.name}`
       };

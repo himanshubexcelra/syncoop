@@ -16,7 +16,12 @@ import RadioGroup from "devextreme-react/radio-group";
 import { editOrganization } from "./service";
 import { delay } from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
-import { OrganizationEditField, userType, OrganizationDataFields } from "@/lib/definition";
+import {
+  OrganizationEditField,
+  userType,
+  OrganizationDataFields,
+  OrganizationType
+} from "@/lib/definition";
 import { TextBoxTypes } from 'devextreme-react/text-box';
 import { User } from "@/lib/definition";
 import { AppContext } from "@/app/AppState";
@@ -90,7 +95,8 @@ export default function EditOrganization({
   };
   const orgType = organizationData.type
   const userList = organizationData?.orgUser?.filter((user: User) =>
-    user.user_role[0]?.role?.type === (orgType === 'Internal' ? 'admin' : 'org_admin'))
+    user.user_role[0]?.role?.type ===
+    (orgType === OrganizationType.Internal ? 'admin' : 'org_admin'))
 
   const primaryContact = {
     key: "id",

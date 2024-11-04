@@ -10,10 +10,13 @@ import DataGrid, {
     Sorting,
     FilterRow,
     LoadPanel,
-    HeaderFilter
+    HeaderFilter,
+    Toolbar,
+    Item,
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
+import { Button } from 'devextreme-react';
 
 interface ColumnConfig<T> {
     dataField: keyof T;
@@ -34,6 +37,8 @@ interface CustomDataGridProps<T> {
     enableFiltering?: boolean;
     enableOptions?: boolean;
     loadMoreData?: () => void;
+    buttonText?: string;
+    onButtonClick?: () => void;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
@@ -48,6 +53,8 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableFiltering = true,
     enableOptions = true,
     loadMoreData,
+    buttonText,
+    onButtonClick,
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -130,7 +137,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     <Column
                         key={String(column.dataField)}
                         dataField={String(column.dataField)}
-                        // caption={column?.dataField !== 'bookmark' ? column.title : undefined}
                         headerCellRender={column.dataField === 'bookmark' ? () => (
                             <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
                         ) : undefined}
@@ -148,17 +154,24 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         groupCellRender={groupCellRender}
                     />
                 )}
-
-                {/* <Toolbar>
-                    {groupingColumn && <Item name="groupPanel"></Item>}
-                    <Item name="searchPanel" locateInMenu='always' location='after'></Item>
-
-                </Toolbar> */}
-
+                <Toolbar>
+                    {buttonText && <Item location="after">
+                        <Button
+                            text={buttonText}
+                            onClick={onButtonClick}
+                            className="btn-primary"
+                        />
+                    </Item>}
+                    {groupingColumn &&
+                        <Item location="before" name="groupPanel" />
+                    }
+                    <Item name="searchPanel" locateInMenu="always" location="after" />
+                </Toolbar>
                 <SearchPanel
                     visible={true}
                     highlightSearchText={true}
                 />
+
             </DataGrid>
 
             {enableOptions && (

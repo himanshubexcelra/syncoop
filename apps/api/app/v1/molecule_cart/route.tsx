@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
 import { STATUS_TYPE } from "@/utils/message";
 
@@ -29,6 +30,7 @@ export async function GET(request: Request) {
                     select: {
                         molecular_weight: true,
                         source_molecule_name: true,
+                        is_added_to_cart: true,
                         library: {
                             select: {
                                 id: true,
@@ -85,15 +87,15 @@ export async function POST(request: Request) {
             id: { in: updatedmoleculeId }
         },
         data: {
-            isAddedToCart: true,
+            is_added_to_cart: true,
         },
     });
     try {
         if (updatedResult.count > 0) {
-            await prisma.molecule_cart.createMany({
+            const response = await prisma.molecule_cart.createMany({
                 data: result
             })
-            return new Response(JSON.stringify([]), {
+            return new Response(JSON.stringify(response), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
@@ -106,7 +108,12 @@ export async function POST(request: Request) {
         }
     }
     catch (error) {
-        console.error(error);
+        return new Response(JSON.stringify({
+            success: false,
+            errorMessage: `Error: ${error}`
+        }), {
+            status: STATUS_TYPE.BAD_REQUEST,
+        })
     }
 }
 
@@ -132,7 +139,7 @@ export async function DELETE(request: Request) {
                     id: { in: moleculeIdUpdate }
                 },
                 data: {
-                    isAddedToCart: false,
+                    is_added_to_cart: false,
                 },
             });
             if (updatedResult.count > 0) {
@@ -149,7 +156,7 @@ export async function DELETE(request: Request) {
                 id: moleculeId
             },
             data: {
-                isAddedToCart: false,
+                is_added_to_cart: false,
             },
         });
         if (updatedResult.count > 0) {

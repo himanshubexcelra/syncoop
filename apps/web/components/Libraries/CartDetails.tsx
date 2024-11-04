@@ -1,10 +1,17 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
 import Link from 'next/link';
-import { CartItem, DeleteMoleculeCart } from '@/lib/definition';
+import { 
+    CartItem, 
+    DeleteMoleculeCart,
+    CartDetail, 
+    OrderDetail, 
+    GroupedData 
+} from '@/lib/definition';
 import { submitOrder } from './libraryService';
-
+import { generateRandomDigitNumber } from '@/utils/helpers';
 interface CartDetailsProps {
     cartData: CartItem[];
     userId: number;
@@ -12,32 +19,13 @@ interface CartDetailsProps {
     removeAll: (userId: number, type: string) => void;
 }
 
-export default function CartDetails({ cartData, userId, removeItemFromCart, removeAll }: CartDetailsProps) {
-    interface CartDetail {
-        id: number;
-        moleculeId: number;
-        libraryId: number;
-        organizationId: number;
-        projectId: number;
-        molecular_weight: string;
-        projectName: string;
-        libraryName: string;
-        moleculeName: string;
-        userId: number;
-    }
-
-    interface OrderDetail {
-        moleculeId: number;
-        libraryId: number;
-        projectId: number;
-        organizationId: number;
-        userId: number;
-    }
-
-    interface GroupedData {
-        [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; libraryId: number, projectId: number, userId: number }[];
-    }
-
+export default function CartDetails({
+    cartData,
+    userId,
+    removeItemFromCart,
+    removeAll
+}: CartDetailsProps
+) {
     const cartDetails: CartDetail[] = cartData.map(item => ({
         id: item.id,
         moleculeId: item.moleculeId,
@@ -51,7 +39,11 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
         userId: userId
     }));
 
+    const orderId = generateRandomDigitNumber();
+    const orderName = `Order${orderId}`
     const orderDetails: OrderDetail[] = cartData.map(item => ({
+        orderId: Number(orderId),
+        orderName: orderName,
         moleculeId: item.moleculeId,
         libraryId: item.libraryId,
         projectId: item.projectId,
@@ -128,8 +120,16 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
                         </div>
                     ))}
                     <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                        <Btn className='btn-primary' onClick={handleSubmitOrder} text="Submit Order" />
-                        <Link href="#" onClick={() => removeAll(userId, 'RemoveAll')} className='text-themeBlueColor font-bold' style={{ marginLeft: '10px' }}>Remove All</Link>
+                        <Btn
+                            className='btn-primary'
+                            onClick={handleSubmitOrder}
+                            text="Submit Order"
+                        />
+                        <Link href="#" onClick={() => removeAll(userId, 'RemoveAll')}
+                            className='text-themeBlueColor font-bold'
+                            style={{ marginLeft: '10px' }}>
+                            Remove All
+                        </Link>
                     </div>
                 </div>
             ) : (
@@ -137,4 +137,4 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
             )}
         </>
     );
-};
+} 

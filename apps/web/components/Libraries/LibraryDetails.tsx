@@ -36,7 +36,6 @@ import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import '../Organization/form.css';
 import {
-    StatusCodeBg,
     StatusCodeType,
     DataType,
     StatusCodeBgAPI,
@@ -181,12 +180,14 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
     const context: any = useContext(AppContext);
     const appContext = context.state;
+
     const [moleculeData, setMoleculeData] = useState([]);
-    const [selectedRows, setSelectedRows] = useState([]); // Store selected item IDs
+    const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
+    const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
     const [viewAddMolecule, setViewAddMolecule] = useState(false);
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
 
-    const [isCartUpdate, updateCart] = useState(false)
+    // const [isCartUpdate, updateCart] = useState(false)
     let toastShown = false;
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
@@ -267,9 +268,16 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             await getMoleculeCart(Number(userData.id), Number(libraryId), Number(projects.id))
             : [];
         const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
+        const moleculeIdsInCart = moleculeCart
+            .filter((item: any) => item.molecule.is_added_to_cart)
+            .map((item: any) => item.moleculeId);
+        setCartMolecule(moleculeIdsInCart)
         setSelectedRows(moleculeIds)
     };
+    useEffect(() => {
+        fetchCartData();
 
+    }, [appContext])
     useEffect(() => {
         fetchCartData();
     }, [libraryId, userData.id]);
@@ -446,8 +454,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     }, [selectedRows]);
 
     const onSelectionChanged = async (e: any) => {
-        updateCart(true);
-        // Check if the data exists in storage
         setSelectedRows(e.selectedRowKeys);
         const checkedMolecule = e.selectedRowsData;
         const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
@@ -483,22 +489,18 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         })
         addMoleculeToCart(moleculeData)
             .then((res) => {
-                if (res) {
-                    toast.success('Molecule is updated in your cart.');
-                }
+                toast.success(Messages.addMoleculeCartMessage(res.count));
             })
             .catch((error) => {
                 toast.success(error);
             })
     }
-    const cellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
-        if (e.rowType === "data") {
-            if (e.column.dataField === "status") {
-                const color: StatusCodeType = e.data.status?.toUpperCase();
-                e.cellElement.classList.add(StatusCodeBg[color]);
-            }
+    const onCellPrepared = (e: any) => {
+        if (isMoleculeInCart.includes(e.key)) {
+            e.cellElement.style.pointerEvents = 'none';
+            e.cellElement.style.opacity = 0.5;
         }
-    }
+    };
 
     return (
         <>
@@ -1014,7 +1016,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         onSelectionChanged={onSelectionChanged}
                                         columnAutoWidth={false}
                                         width="100%"
-                                        onCellPrepared={cellPrepared}
+                                        onCellPrepared={onCellPrepared}
                                     >
                                         <Selection
                                             mode="multiple"
@@ -1314,11 +1316,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             <ToolbarItem location="after">
                                                 <Button
                                                     onClick={addProductToCart}
-                                                    disabled={!isCartUpdate}
+                                                    disabled={
+                                                        selectedRows.length > 0 ? false : true
+                                                    }
                                                     render={() => (
-                                                        <>
-                                                            <span>Add to cart</span>
-                                                        </>
+                                                        <span>
+                                                            {`Add to Cart(${selectedRows?.length})`}
+                                                        </span>
                                                     )}
                                                 />
                                             </ToolbarItem>

@@ -169,3 +169,8 @@ export function fetchMoleculeStatus(data: LibraryFields) {
 export function isAdmin(myRoles: string[]) {
   return ['admin', 'org_admin'].some((role) => myRoles.includes(role));
 }
+export function generateRandomDigitNumber() {
+  // Generate a random number between 10000000 and 99999999
+  const randomNum = Math.floor(10000000 + Math.random() * 90000000);
+  return randomNum;
+}

@@ -13,11 +13,6 @@ interface OrderData {
 
 }
 
-function generateRandomEightDigitNumber() {
-    // Generate a random number between 10000000 and 99999999
-    const randomNum = Math.floor(10000000 + Math.random() * 90000000);
-    return randomNum;
-}
 
 const { MOLECULE_ORDER_NOT_FOUND } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
@@ -42,7 +37,6 @@ export async function GET(request: Request) {
                 createdBy: Number(createdBy),
             }
         }
-        console.log(where);
         const data = await prisma.molecule_order.findMany({
             include: {
                 organization: { select: { name: true } },
@@ -82,7 +76,6 @@ export async function GET(request: Request) {
             status: SUCCESS,
         });
     } catch (error: any) {
-        console.error("Error fetching molecule order data:", error);
         return new Response(
             JSON.stringify({ error: error.message }),
             {
@@ -95,11 +88,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const orderId = generateRandomEightDigitNumber();
-    const orderName = `Order${orderId}`
     const result = req.map((item: OrderData) => ({
-        orderId: Number(orderId),
-        orderName: orderName,
+        orderId: Number(item.orderId),
+        orderName: item.orderName,
         moleculeId: Number(item.moleculeId),
         organizationId: Number(item.organizationId),
         projectId: Number(item.projectId),
@@ -119,6 +110,9 @@ export async function POST(request: Request) {
         });
     }
     catch (error) {
-        console.error(error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // BAD_REQUEST
+        });
     }
 }

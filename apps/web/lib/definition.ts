@@ -441,3 +441,30 @@ export interface CartItem {
   molecule: MoleculeObj;
   moleculeName: string;
 }
+
+export interface CartDetail {
+  id: number;
+  moleculeId: number;
+  libraryId: number;
+  organizationId: number;
+  projectId: number;
+  molecular_weight: string;
+  projectName: string;
+  libraryName: string;
+  moleculeName: string;
+  userId: number;
+}
+
+export interface OrderDetail {
+  orderId: number;
+  orderName: string;
+  moleculeId: number;
+  libraryId: number;
+  projectId: number;
+  organizationId: number;
+  userId: number;
+}
+
+export interface GroupedData {
+  [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; libraryId: number, projectId: number, userId: number }[];
+}

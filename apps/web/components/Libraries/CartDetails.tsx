@@ -23,6 +23,7 @@ interface CartItem {
     organizationId: number;
     molecule: Molecule;
     moleculeName: string;
+    userId: number;
 }
 
 interface CartDetailsProps {
@@ -43,6 +44,7 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, userId, removeItemFromCar
         projectName: string;
         libraryName: string;
         moleculeName: string;
+        userId: number;
     }
 
     interface OrderDetail {
@@ -54,7 +56,7 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, userId, removeItemFromCar
     }
 
     interface GroupedData {
-        [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; libraryId: number, projectId: number }[];
+        [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; libraryId: number, projectId: number, userId: number }[];
     }
 
     const cartDetails: CartDetail[] = cartData.map(item => ({
@@ -66,7 +68,8 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, userId, removeItemFromCar
         molecular_weight: item.molecule.molecular_weight,
         projectName: item.molecule.library.project.name,
         libraryName: item.molecule.library.name,
-        moleculeName: item.molecule.source_molecule_name
+        moleculeName: item.molecule.source_molecule_name,
+        userId: userId
     }));
 
     const orderDetails: OrderDetail[] = cartData.map(item => ({
@@ -100,7 +103,8 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, userId, removeItemFromCar
             molecularWeight: item.molecular_weight,
             moleculeName: item.moleculeName,
             libraryId: item.libraryId,
-            projectId: item.projectId
+            projectId: item.projectId,
+            userId: item.userId
         });
         return acc;
     }, {});

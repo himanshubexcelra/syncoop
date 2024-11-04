@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
-import { DropDownItem, UserData, deleteObj, orderType } from '@/lib/definition';
+import { DropDownItem, UserData, deleteObj } from '@/lib/definition';
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -55,9 +55,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     };
 
     const removeItemFromCart = (obj: deleteObj) => {
-
-        const { moleculeId, libraryId, projectId, moleculeName } = obj;
-        deleteMoleculeCart(moleculeId, libraryId, projectId).then((res) => {
+        const { moleculeId, libraryId, projectId, moleculeName, userId } = obj;
+        deleteMoleculeCart(userId,moleculeId, libraryId, projectId).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
                     !
@@ -85,6 +84,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
             if (res) {
                 setCartData([]);
                 if (type === 'RemoveAll') {
+                    setCreatePopupVisibility(false)
                     toast.success(Messages.REMOVE_ALL_MESSAGE);
                 }
                 else {
@@ -155,8 +155,6 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                         userId={userData.id}
                         removeItemFromCart={(obj: deleteObj) => removeItemFromCart(obj)}
                         removeAll={(userId: number, type: string) => removeAll(userId, type)}
-
-
                     />
                 )}
                 width={470}

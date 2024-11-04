@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { STATUS_TYPE } from "@/utils/message";
-const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
+const { SUCCESS } = STATUS_TYPE;
 interface OrderData {
     orderId: number;
     orderName: number;

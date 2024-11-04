@@ -9,6 +9,9 @@ interface Item {
     projectId: string; // or number
     userId: string; // or number
 }
+interface updatedItem {
+    moleculeId: number; // or number, depending on your data type
+}
 
 export async function GET(request: Request) {
     try {
@@ -75,16 +78,32 @@ export async function POST(request: Request) {
     }));
 
 
+    const updatedmoleculeId = result.map((item: updatedItem) => Number(item.moleculeId));
 
-
+    const updatedResult = await prisma.molecule.updateMany({
+        where: {
+            id: { in: updatedmoleculeId }
+        },
+        data: {
+            isAddedToCart: true,
+        },
+    });
     try {
-        await prisma.molecule_cart.createMany({
-            data: result
-        })
-        return new Response(JSON.stringify([]), {
-            headers: { "Content-Type": "application/json" },
-            status: SUCCESS,
-        });
+        if (updatedResult.count > 0) {
+            await prisma.molecule_cart.createMany({
+                data: result
+            })
+            return new Response(JSON.stringify([]), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
+        }
+        else {
+            return new Response(JSON.stringify([]), {
+                headers: { "Content-Type": "application/json" },
+                status: BAD_REQUEST,
+            });
+        }
     }
     catch (error) {
         console.error(error);
@@ -99,33 +118,58 @@ export async function DELETE(request: Request) {
         const libraryId = Number(searchParams.get('libraryId'));
         const projectId = Number(searchParams.get('projectId'));
         const userId = Number(searchParams.get('userId'));
-
-
+        // Check for remove all option
         if (!moleculeId && !libraryId && !projectId) {
+            // Find all molecule to update isAddedToCart first
+            const moleculeIDs = await prisma.molecule_cart.findMany({
+                select: {
+                    moleculeId: true
+                },
+            });
+            const moleculeIdUpdate = moleculeIDs.map(molecule => molecule.moleculeId);
+            const updatedResult = await prisma.molecule.updateMany({
+                where: {
+                    id: { in: moleculeIdUpdate }
+                },
+                data: {
+                    isAddedToCart: false,
+                },
+            });
+            if (updatedResult.count > 0) {
+                await prisma.molecule_cart.deleteMany({
+                    where: {
+                        createdBy: userId
+                    }
+                });
+            }
+        }
+        // Check for individual Moldecule Delete
+        const updatedResult = await prisma.molecule.updateMany({
+            where: {
+                id: moleculeId
+            },
+            data: {
+                isAddedToCart: false,
+            },
+        });
+        if (updatedResult.count > 0) {
             await prisma.molecule_cart.deleteMany({
                 where: {
+                    moleculeId: moleculeId,
+                    libraryId: libraryId,
+                    projectId: projectId,
                     createdBy: userId
                 }
             });
         }
-
-        await prisma.molecule_cart.deleteMany({
-            where: {
-                moleculeId: moleculeId,
-                libraryId: libraryId,
-                projectId: projectId,
-                createdBy: userId
-            }
-        });
-
         return new Response(JSON.stringify([{}]), {
             headers: { "Content-Type": "application/json" },
-            status: 200, // SUCCESS
+            status: SUCCESS, // SUCCESS
         });
     } catch (error: any) {
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { "Content-Type": "application/json" },
-            status: 400, // BAD_REQUEST
+            status: BAD_REQUEST, // BAD_REQUEST
         });
     }
 }

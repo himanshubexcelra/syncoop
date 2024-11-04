@@ -205,7 +205,6 @@ export async function deleteMoleculeCart(
         if (projectId) {
             url.searchParams.append('projectId', String(projectId));
         }
-
         const response = await fetch(url, {
             method: "DELETE",
             headers: {

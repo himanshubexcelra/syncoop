@@ -1016,6 +1016,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             mode="multiple"
                                             selectAllMode={allMode}
                                             showCheckBoxesMode={checkBoxesMode}
+
                                         />
                                         <Sorting mode="single" />
                                         <Scrolling mode="infinite" />

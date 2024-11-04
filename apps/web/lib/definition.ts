@@ -434,4 +434,5 @@ export interface deleteObj {
   moleculeId: number;
   projectId: number;
   moleculeName: string,
+  userId:number;
 }

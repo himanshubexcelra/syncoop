@@ -4,7 +4,7 @@ import styles from './AddMolecule.module.css'
 import Image from 'next/image';
 import DiscardMolecule from './DiscardMolecule';
 import DialogPopUp from '@/ui/DialogPopUp';
-import EditorBox from '@/components/KetcherTool/KetcherBox';
+import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
 
 const dialogProperties = {
     width: 455,
@@ -15,12 +15,10 @@ const AddMolecule = () => {
     const [file, setFile] = useState<File | null>(null);
     const [discardvisible, setDiscardVisible] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    const [error, setError] = useState('');
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const hidePopup = () => {
         setDiscardVisible(false);
     };
-    console.log({ error, isDragging, file });
     const handleDragOver = (e: any) => {
         e.preventDefault();
         setIsDragging(true);
@@ -36,14 +34,11 @@ const AddMolecule = () => {
         const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
         const maxSizeBytes = 10 * 1024 * 1024;
         if (!validTypes.includes(fileExtension)) {
-            setError('Please upload a CSV or SDF file');
             return false;
         }
         if (file?.size > maxSizeBytes) {
-            setError('File size must be less than 10 MB');
             return false;
         }
-        setError('');
         return true;
     };
 
@@ -141,7 +136,10 @@ const AddMolecule = () => {
                         </div>
                     </div>}
             </div>
-            <EditorBox></EditorBox>
+            <div className={`mt-5 ${styles.uploadPart} p-4`}>
+                <h2 className={`${styles.heading} mb-2`}>Draw a Molecule</h2>
+                <div className={styles.ketcherContainer}><KetcherDrawBox /></div>
+            </div>
             <div>
                 <div className="flex flex-col gap-2 mt-5">
                     <label className={styles.moleculeLabel}>Molecule name (optional)</label>

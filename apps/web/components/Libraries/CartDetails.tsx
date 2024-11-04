@@ -1,35 +1,16 @@
-import { FC } from 'react';
 import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
 import Link from 'next/link';
-
-interface Molecule {
-    molecular_weight: string;
-    library: {
-        name: string;
-        project: {
-            name: string;
-        };
-    };
-    source_molecule_name: string;
-}
-
-interface CartItem {
-    id: number;
-    moleculeId: number;
-    libraryId: number;
-    projectId: number;
-    molecule: Molecule;
-}
+import { CartItem, DeleteMoleculeCart } from '@/lib/definition';
 
 interface CartDetailsProps {
     cartData: CartItem[];
-    removeItemFromCart: (item: CartItem) => void;
+    removeItemFromCart: (item: DeleteMoleculeCart) => void;
     removeAll: () => void;
 }
 
-const CartDetails: FC<CartDetailsProps> = ({ cartData, removeItemFromCart, removeAll }) => {
+export default function CartDetails({ cartData, removeItemFromCart, removeAll }: CartDetailsProps) {
     interface CartDetail {
         id: number;
         moleculeId: number;
@@ -122,5 +103,3 @@ const CartDetails: FC<CartDetailsProps> = ({ cartData, removeItemFromCart, remov
         </>
     );
 };
-
-export default CartDetails;

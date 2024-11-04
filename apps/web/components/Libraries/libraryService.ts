@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-import { addToFavouritesProps, MoleculeType } from "@/lib/definition";
+import { addToFavouritesProps, MoleculeType, OrderType } from "@/lib/definition";
 
 export async function getLibraries(withRelation: string[] = [], projectId: string) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/project/${projectId}`);
@@ -78,7 +78,6 @@ export async function geMoleculeCountById(organizationId?: number) {
         return error;
     }
 }
-
 
 export async function createLibrary(formData: FormData) {
     try {
@@ -186,6 +185,7 @@ export async function getMoleculeCart(userId?: number, libraryId?: number, proje
 }
 
 export async function deleteMoleculeCart(
+    userId?: number,
     moleculeId?: number,
     libraryId?: number,
     projectId?: number
@@ -243,3 +243,28 @@ export async function addToFavourites(formData: addToFavouritesProps) {
     }
 }
 
+export async function submitOrder(orderData: OrderType[]) {
+    try {
+        const response: any = await fetch(
+            `${process.env.API_HOST_URL}/v1/molecule_order`,
+            {
+                mode: "no-cors",
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(orderData),
+            }
+        );
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else if (response.status === 500) {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}

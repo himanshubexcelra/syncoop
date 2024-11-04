@@ -151,3 +151,13 @@
     font-weight: 700;
     line-height: 16.8px
 }
+
+.ketcherContainer {
+    height: 50vh;
+    width: auto;
+  }
+
+.moleculeViewBox {
+    border: 1px solid var(--themeGreyBorder);
+    background: var(--background);
+}

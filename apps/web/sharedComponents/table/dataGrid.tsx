@@ -10,13 +10,10 @@ import DataGrid, {
     Sorting,
     FilterRow,
     LoadPanel,
-    HeaderFilter,
-    Toolbar as GridToolbar,
-    ToolbarItem,
+    HeaderFilter
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
-import { Button } from 'devextreme-react';
 
 interface ColumnConfig<T> {
     dataField: keyof T;
@@ -122,7 +119,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
                 <Scrolling mode={enableInfiniteScroll ? 'infinite' : 'standard'} />
-                <LoadPanel enabled={true} />
+                <LoadPanel enabled={!data.length} />
                 {enableRowSelection && (
                     <Selection mode="multiple" selectAllMode={'allPages'}
                         showCheckBoxesMode={'always'} />
@@ -152,27 +149,11 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     />
                 )}
 
-                <GridToolbar>
-                    <ToolbarItem location="after">
-                        <Button
-                            text="Send for Synthesis(8)"
-                            icon="plus"
-                            render={(buttonData: any) => (
-                                <>
-                                    <Image
-                                        src="/icons/plus.svg"
-                                        width={24}
-                                        height={24}
-                                        alt="Create"
-                                    />
-                                    <span className='ml-[5px]'>
-                                        {buttonData.text}
-                                    </span>
-                                </>
-                            )}
-                        />
-                    </ToolbarItem>
-                </GridToolbar>
+                {/* <Toolbar>
+                    {groupingColumn && <Item name="groupPanel"></Item>}
+                    <Item name="searchPanel" locateInMenu='always' location='after'></Item>
+
+                </Toolbar> */}
 
                 <SearchPanel
                     visible={true}

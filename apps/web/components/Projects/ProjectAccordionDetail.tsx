@@ -51,7 +51,6 @@ export default function ProjectAccordionDetail({
     const moleculeCount = data.libraries.reduce((count, library) => {
         return count + library.molecule.length; // Add the count of molecules in each library
     }, 0);
-    // const projectStatusCount = fetchMoleculeStatus(data);
 
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === userData.id);

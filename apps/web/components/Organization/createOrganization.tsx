@@ -8,24 +8,38 @@ import {
   RequiredRule,
   EmailRule,
   Label,
+  GroupItem,
+  Item,
 } from "devextreme-react/form";
-import { delay } from "@/utils/helpers";
+import { delay, generatePassword } from "@/utils/helpers";
 import { createOrganization } from "./service";
 import "./table.css";
-import { OrganizationCreateFields } from "@/lib/definition";
+import { LoginFormSchema, OrganizationCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { AppContext } from "@/app/AppState";
 import { useContext } from "react";
+import { Messages } from "@/utils/message";
+import { useMemo, useState } from "react";
+import { ButtonTypes } from "devextreme-react/cjs/button";
+import { TextBoxTypes } from "devextreme-react/cjs/text-box";
+import Image from "next/image";
+import { Tooltip, } from "devextreme-react";
+import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
+
+const customPasswordCheck = (password: any) =>
+  LoginFormSchema.shape.password.safeParse(password).success
 
 export default function RenderCreateOrganization({
   setCreatePopupVisibility,
   formRef,
   fetchOrganizations,
   roleId,
-  createdBy
+  createdBy,
 }: OrganizationCreateFields) {
   const context: any = useContext(AppContext);
   const appContext = context.state;
+  const [password, setPassword] = useState('');
+  const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
@@ -42,9 +56,41 @@ export default function RenderCreateOrganization({
       }
     }
   };
+  const passwordButton = useMemo<ButtonTypes.Properties>(
+    () => ({
+      icon: passwordMode === "text" ? "eyeclose" : "eyeopen",
+      stylingMode: "text",
+      onClick: () => {
+        setPasswordMode((prevPasswordMode: TextBoxTypes.TextBoxType) =>
+          prevPasswordMode === "text" ? "password" : "text"
+        );
+      },
+    }),
+    [passwordMode]
+  );
+  const handleGeneratePassword = () => {
+    const generatedPassword = generatePassword();
+    setPassword(generatedPassword);
+    navigator.clipboard.writeText(generatedPassword)
+      .then(() => toast.success(Messages.PASSWORD_COPY))
+      .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
+    formRef.current!.instance().updateData("password", generatedPassword);
+  };
+
+  const handleCopyPassword = async () => {
+    if (password === "") {
+      const toastId = toast.error(Messages.PASSWORD_EMPTY)
+      await delay(DELAY);
+      toast.remove(toastId);
+      return;
+    }
+    navigator.clipboard.writeText(password)
+      .then(() => toast.success(Messages.PASSWORD_COPY))
+      .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
+  };
 
   return (
-    <CreateForm ref={formRef} showValidationSummary={true}>
+    <CreateForm ref={formRef} showValidationSummary={true} >
       <SimpleItem
         dataField="name"
         editorOptions={{ placeholder: "Enter new organization name" }}
@@ -72,6 +118,72 @@ export default function RenderCreateOrganization({
         <RequiredRule message="Email is required" />
         <EmailRule message="Invalid Email Address" />
       </SimpleItem>
+      <GroupItem colCount={4} cssClass="password-group">
+        <SimpleItem
+          dataField="password"
+          editorType="dxTextBox"
+          cssClass="custom-password"
+          editorOptions={{
+            mode: passwordMode,
+            placeholder: "Enter Password",
+            buttons: [{
+              name: "password",
+              location: "after",
+              options: passwordButton,
+            }],
+          }}
+          validationRules={[
+            {
+              type: 'required',
+              message: Messages.requiredMessage('Password')
+            },
+            {
+              type: 'custom',
+              validationCallback: (e) => {
+                return customPasswordCheck(e.value);
+              },
+              message: Messages.PASSWORD_CRITERIA
+            }
+          ]}
+        />
+        <Item>
+          <Image
+            src="/icons/copy-icon.svg"
+            alt="copy"
+            width={16}
+            height={16}
+            priority
+            onClick={handleCopyPassword}
+          />
+        </Item>
+        <Item>
+          <div id="info-box">
+            <Image
+              src="/icons/info-icon.svg"
+              alt="info"
+              width={14}
+              height={15}
+              priority
+              id="info-icon-password"
+            />
+            <Tooltip
+              target="#info-icon-password"
+              showEvent="mouseenter"
+              hideEvent="mouseleave"
+              position="bottom"
+              hideOnOutsideClick={false}
+            >
+              <PasswordCriteria />
+            </Tooltip>
+          </div>
+        </Item>
+        <ButtonItem >
+          <ButtonOptions
+            text={`Generate`}
+            onClick={handleGeneratePassword}
+            elementAttr={{ class: 'secondaryButton' }} />
+        </ButtonItem>
+      </GroupItem>
       <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
         <ButtonOptions
           text="Create Organization"

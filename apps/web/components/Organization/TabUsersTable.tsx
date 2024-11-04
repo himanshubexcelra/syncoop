@@ -3,7 +3,7 @@
 import Tabs from "@/ui/Tab/Tabs";
 import UsersTable from "../User/UsersTable";
 import { useState } from "react";
-import { UserTableProps } from "@/lib/definition";
+import { OrganizationType, UserTableProps } from "@/lib/definition";
 
 export default function TabUsersTable({
     filteredRoles,

@@ -228,6 +228,7 @@ export interface User {
   user_role: UserRoleType[];
   role?: string,
   permission?: string,
+  type: string
 }
 
 export interface UserRoleType {
@@ -251,7 +252,7 @@ export interface UserData {
   id: number;
   owner?: OwnerType;
   status?: string;
-  myRoles?: string[]
+  myRoles: string[]
 }
 export interface projectType {
   id: number,
@@ -364,35 +365,6 @@ export interface LibraryCreateFields {
   userData: UserData,
   libraryIdx?: number,
 }
-export interface ProjectAccordionType {
-  data: ProjectDataFields,
-  users: User[],
-  fetchOrganizations: FetchUserType,
-  organizationData: OrganizationDataFields[],
-  dataCreate: UserData,
-  roleType: string | undefined,
-}
-
-export interface ProductModel {
-  id: number;
-  moleculeId: number;
-  molecularWeight: number;
-  projectId: number;
-  projectName: string;
-}
-
-export interface ProductContextModel {
-  cartDetail: ProductModel[];
-}
-
-export interface CartContextModel {
-  cart: ProductModel[];
-  addToCart: (product: ProductModel) => void;
-  removeFromCart: (productId: number) => void;
-  clearCart: () => void;
-  userData: UserData,
-  myRoles?: string[],
-}
 
 export interface DashboardPageType {
   userData: UserData,
@@ -420,7 +392,7 @@ export interface LibraryDataNode {
   publishedMoleculeCount?: number;
 }
 
-export interface orderType {
+export interface OrderType {
   moleculeId: number;
   libraryId: number;
   projectId: number;
@@ -428,11 +400,44 @@ export interface orderType {
   userId: number;
 }
 
-export interface deleteObj {
+export interface DeleteMoleculeCart {
   id: number;
   libraryId: number;
   moleculeId: number;
   projectId: number;
   moleculeName: string,
-  userId:number;
+  userId: number;
+}
+
+export interface MoleculeOrderParams {
+  projectId?: number;
+  libraryId?: number;
+  organizationId?: number;
+  createdBy?: number;
+}
+
+export enum OrganizationType {
+  Internal = "Internal",
+  External = "External"
+}
+
+export interface MoleculeObj {
+  molecular_weight: string;
+  library: {
+    name: string;
+    project: {
+      name: string;
+    };
+  };
+  source_molecule_name: string;
+}
+
+export interface CartItem {
+  id: number;
+  moleculeId: number;
+  libraryId: number;
+  projectId: number;
+  organizationId: number;
+  molecule: MoleculeObj;
+  moleculeName: string;
 }

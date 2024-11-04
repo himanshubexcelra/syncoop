@@ -18,7 +18,7 @@ import { LoadIndicator } from 'devextreme-react/load-indicator';
 import "./table.css";
 import './form.css';
 import styles from "./table.module.css";
-import { OrganizationDataFields, UserData, UserRole } from "@/lib/definition";
+import { OrganizationDataFields, OrganizationType, UserData, UserRole } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
 import { getOrganization } from "@/components/Organization/service";
@@ -44,12 +44,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const appContext = context.state;
 
   const fetchOrganizations = async () => {
-    const organization = await getOrganization(
+    let organization = await getOrganization(
       {
         withRelation: ['orgUser', 'user_role'],
         withCount: ['projects']
       });
-
+    organization = organization.filter
+      ((organization: OrganizationDataFields) => organization.type !== OrganizationType.Internal);
     setTableData(organization);
     setLoader(false);
   }

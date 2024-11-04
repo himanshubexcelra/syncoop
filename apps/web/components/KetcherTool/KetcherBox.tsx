@@ -1,17 +1,16 @@
 "use client"
-import styled from '@emotion/styled'
-import { useCallback, useState } from 'react'
+// import styled from '@emotion/styled'
+import { /* useCallback */ useState } from 'react'
 import { ButtonsConfig, Editor } from 'ketcher-react'
 import { Ketcher, /* RemoteStructServiceProvider */ } from 'ketcher-core'
 import { StandaloneStructServiceProvider } from 'ketcher-standalone'
 import 'ketcher-react/dist/index.css'
-
-import { Panel } from '../../components/KetcherTool/Panel'
-import { OutputArea } from '../../components/KetcherTool/OutputArea'
-import { initiallyHidden } from '../../components/KetcherTool/constants/buttons'
+/* import { Panel } from '../../components/KetcherTool/Panel'
+import { OutputArea } from '../../components/KetcherTool/OutputArea' */
+import { initiallyHidden } from './constants/buttons'
 import { KetcherAPI } from '../../utils/ketcherFunctions'
 
-const GridWrapper = styled('div')`
+/* const GridWrapper = styled('div')`
     height: 85vh;
     width: 90vw;
     overflow: visible;
@@ -25,7 +24,7 @@ const GridWrapper = styled('div')`
     }
   `
 
-const KetcherBox1 = styled('div')`
+const KetcherBox = styled('div')`
     grid-area: Ketcher;
     
   `
@@ -41,7 +40,7 @@ const PanelBox = styled('div')`
     padding-left: 8px;
   `
 
-
+ */
 const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
     return btnArr.reduce((acc: any, button: any) => {
         if (button) acc[button] = { hidden: true }
@@ -50,63 +49,38 @@ const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
     }, {})
 }
 
-/* const structServiceProvider = new RemoteStructServiceProvider(
-    process.env.REACT_APP_API_PATH!,
-    {
-        'custom header': 'value' // optionally you can add custom headers object 
-    }
-) */
+// const structServiceProvider = new RemoteStructServiceProvider(
+//     process.env.REACT_APP_API_PATH!,
+//     {
+//         'custom header': 'value' // optionally you can add custom headers object 
+//     }
+// )
 
 const structServiceProvider = new StandaloneStructServiceProvider();
 
-const getUniqueKey = (() => {
-    let count = 0
-    return () => {
-        count += 1
-        return `editor-key-${count}`
-    }
-})()
+// const getUniqueKey = (() => {
+//     let count = 0
+//     return () => {
+//         count += 1
+//         return `editor-key-${count}`
+//     }
+// })()
 
-export default function KetcherBox() {
-    const [outputValue, setOutputValue] = useState('')
-    const [hiddenButtons, setHiddenButtons] = useState(initiallyHidden)
-    const [editorKey, setEditorKey] = useState('first-editor-key')
+export default function KetcherDrawBox() {
+    const [hiddenButtons] = useState(initiallyHidden)
+    const [editorKey] = useState('first-editor-key')
 
-    const updateHiddenButtons = useCallback(
-        (buttonsToHide: string[]) => {
-            setHiddenButtons(buttonsToHide)
-            setEditorKey(getUniqueKey())
-        },
-        [setHiddenButtons, setEditorKey]
-    )
-    // const sigmaStyle = { height: "500px", width: "500px" };
+
     return <>
-        <GridWrapper>
-            <KetcherBox1>
-                <Editor
-                    key={editorKey}
-                    staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
-                    buttons={getHiddenButtonsConfig(hiddenButtons)}
-                    structServiceProvider={structServiceProvider}
-                    errorHandler={(err) => console.log(err)}
-                    onInit={(ketcher: Ketcher) => {
-                        ; (global as any).ketcher = ketcher
-                            ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
-                    }}
-                />
-            </KetcherBox1>
-            <PanelBox>
-                <Panel
-                    printToTerminal={setOutputValue}
-                    hiddenButtons={hiddenButtons}
-                    buttonsHideHandler={updateHiddenButtons}
-                />
-            </PanelBox>
-            <OutputBox>
-                <OutputArea
-                    outputValue={outputValue}
-                    setOutputValue={setOutputValue}
-                />
-            </OutputBox>
-        </GridWrapper></>
+        <Editor
+            key={editorKey}
+            staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
+            buttons={getHiddenButtonsConfig(hiddenButtons)}
+            structServiceProvider={structServiceProvider}
+            errorHandler={(err: any) => console.log(err)}
+            onInit={(ketcher: Ketcher) => {
+                ; (global as any).ketcher = ketcher
+                    ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
+            }}
+        /></>
 }

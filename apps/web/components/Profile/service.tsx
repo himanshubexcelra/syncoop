@@ -16,6 +16,5 @@ export async function getUsersById(withRelation: string[] = [], id: number) {
         },
     });
     const data = await response.json();
-    console.log(data)
     return data;
 }

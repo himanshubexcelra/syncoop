@@ -3,7 +3,7 @@
 import Tabs from "@/ui/Tab/Tabs";
 import UsersTable from "../User/UsersTable";
 import { useState } from "react";
-import { UserTableProps } from "@/lib/definition";
+import { OrganizationType, UserTableProps } from "@/lib/definition";
 
 export default function TabUsersTable({
     filteredRoles,
@@ -24,7 +24,7 @@ export default function TabUsersTable({
                 filteredRoles,
                 myRoles, orgUser,
                 userId, actionsEnabled,
-                type: "Internal",
+                type: OrganizationType.Internal,
                 setInternalCount, setExternalCount
             }
         },
@@ -37,7 +37,7 @@ export default function TabUsersTable({
                 orgUser,
                 userId,
                 actionsEnabled,
-                type: "External",
+                type: OrganizationType.External,
                 setExternalCount, setInternalCount
             }
         },

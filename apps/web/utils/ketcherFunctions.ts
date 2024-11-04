@@ -21,7 +21,7 @@ export const KetcherAPI = (ketcherInstance: any) => {
     // Returns Promise<string>
     exportCtab: function () {
       console.log(ketcherInstance);
-      return ketcherInstance.getSmiles();
+      return ketcherInstance.getMolfile();
     },
 
     // Returns Promise<string>

@@ -14,6 +14,7 @@ import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { getFilteredRoles } from "../Role/service";
 import { Button } from "devextreme-react";
+import { OrganizationType } from "@/lib/definition";
 
 
 export default function RenderEditUser({
@@ -97,7 +98,8 @@ export default function RenderEditUser({
                     displayExpr: "name",
                     valueExpr: "id",
                     value: tableData.orgUser.id,
-                    disabled: isMyProfile || !myRoles.includes('admin') || type === "Internal",
+                    disabled: isMyProfile || !myRoles.includes('admin') ||
+                        type === OrganizationType.Internal,
                 }}
             >
                 <Label text="Organization" />

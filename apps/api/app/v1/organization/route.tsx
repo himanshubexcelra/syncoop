@@ -1,5 +1,7 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
+import bcrypt from "bcrypt";
 
 const { ORGANIZATION_ALREADY_EXISTS, USER_BELONGS_TO_ANOTHER_ORG } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
@@ -59,7 +61,9 @@ export async function GET(request: Request) {
           },
         }
       }
-      if (joins.includes('org_module') && joins.includes('module_action_role_permission') && roleIds) {
+      if (joins.includes('org_module')
+        && joins.includes('module_action_role_permission')
+        && roleIds) {
         query.include = {
           ...query.include,
           org_module: {
@@ -179,8 +183,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 
   const req = await request.json();
-  const { name, firstName, lastName, email, roleId, createdBy } = req;
-
+  const { name, firstName, lastName, email, roleId, createdBy, password } = req;
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
   // Check if an organization with the same name already exists (case insensitive)
   try {
     const existingOrganization = await prisma.organization.findFirst({
@@ -206,6 +211,7 @@ export async function POST(request: Request) {
           firstName,
           lastName,
           email,
+          password: hashedPassword,
           status: 'Enabled',
           user_role: {
             create: {
@@ -267,7 +273,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, name, orgAdminId: oldAdmin, user: { id: orgAdminId }, status, metadata, orgAdminRole } = req;
+    const { id, name, user: { id: orgAdminId }, status, metadata } = req;
 
     // Check if user is associated with another organization
     const existingUser = await prisma.organization.findFirst({
@@ -307,20 +313,6 @@ export async function PUT(request: Request) {
         },
       },
     });
-
-    if (orgAdminId !== oldAdmin) {
-      // Assign admin role to the new user
-      await prisma.user_role.create({
-        data: {
-          user: {
-            connect: { id: orgAdminId },
-          },
-          role: {
-            connect: { id: orgAdminRole }, // Connect the admin role
-          },
-        },
-      });
-    }
 
     return new Response(JSON.stringify(updatedOrganization), {
       headers: { "Content-Type": "application/json" },

@@ -30,5 +30,6 @@ export const Messages = {
             return `${status} deleted successfully`;
         }, 
     REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",       
-    SUBMIT_ORDER: "Order Submitted Successfully"
+    SUBMIT_ORDER: "Order Submitted Successfully",
+    USER_ROLE_CHECK: "User role not supported or missing required parameters."
 }

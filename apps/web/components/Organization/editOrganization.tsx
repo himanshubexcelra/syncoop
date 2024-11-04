@@ -16,8 +16,14 @@ import RadioGroup from "devextreme-react/radio-group";
 import { editOrganization } from "./service";
 import { delay } from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
-import { OrganizationEditField, userType, OrganizationDataFields } from "@/lib/definition";
+import {
+  OrganizationEditField,
+  userType,
+  OrganizationDataFields,
+  OrganizationType
+} from "@/lib/definition";
 import { TextBoxTypes } from 'devextreme-react/text-box';
+import { User } from "@/lib/definition";
 import { AppContext } from "@/app/AppState";
 
 const functionalAssay = {
@@ -87,15 +93,18 @@ export default function EditOrganization({
     }));
     setPrimaryContactId(user?.id)
   };
+  const orgType = organizationData.type
+  const userList = organizationData?.orgUser?.filter((user: User) =>
+    user.user_role[0]?.role?.type ===
+    (orgType === OrganizationType.Internal ? 'admin' : 'org_admin'))
 
   const primaryContact = {
     key: "id",
-    dataSource: organizationData.orgUser,
+    dataSource: userList,
     displayExpr: (item: userType) => `${item?.firstName} ${item?.lastName || ''}`,
     valueExpr: "id",
     value: primaryContactId, // Bind the value to state
     onValueChanged: handleContactChange,
-    disabled: true
   };
 
   const setMetaDataValue = (e: TextBoxTypes.ValueChangedEvent) => {
@@ -114,7 +123,8 @@ export default function EditOrganization({
     }
   }
 
-  const disableAllowed = myRoles?.includes('admin') && organizationData.orgAdminId !== loggedInUser;
+  const disableAllowed = myRoles?.includes('admin') &&
+    organizationData.orgAdminId !== loggedInUser;
 
   const cancelSave = () => {
     formRef?.current!.instance().reset();

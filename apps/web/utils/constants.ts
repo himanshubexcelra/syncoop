@@ -110,6 +110,7 @@ export enum StatusCodeBgAPI {
   DONE = 'bg-themeStatsGreenColor',
   INFO = 'bg-themeStatsYellowColor'
 }
+
 export type StatusCodeType = keyof typeof StatusCodeBg;
 
 export type StatusCodeAPIType = keyof typeof StatusCodeBgAPI;

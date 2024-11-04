@@ -15,7 +15,7 @@ import { Button as Btn } from "devextreme-react/button";
 import "./table.css";
 import styles from "./table.module.css";
 import RenderCreateUser from "./createUser";
-import { UserTableProps } from "@/lib/definition";
+import { OrganizationType, UserTableProps } from "@/lib/definition";
 import { getUsers } from "./service";
 import { User } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
@@ -67,14 +67,14 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
 
             if (myRoles.includes("admin")) {
                 const [internal, external] = await Promise.all([
-                    getUsers(['orgUser', 'user_role'], "Internal", userId),
-                    getUsers(['orgUser', 'user_role'], "External", userId)
+                    getUsers(['orgUser', 'user_role'], OrganizationType.Internal, userId),
+                    getUsers(['orgUser', 'user_role'], OrganizationType.External, userId)
                 ])
                 setInternalUsers(internal)
                 setExternalUsers(external)
                 setInternalCount(internal.length);
                 setExternalCount(external.length);
-                if (type === "Internal") {
+                if (type === OrganizationType.Internal) {
                     setTableData(internal)
                 } else {
                     setTableData(external);
@@ -154,7 +154,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                         width={140}
                         caption="Last Name"
                     />
-                    {type === "External" && <Column
+                    {type === OrganizationType.External && <Column
                         dataField="orgUser.name"
                         caption="Organization"
                         width={130}

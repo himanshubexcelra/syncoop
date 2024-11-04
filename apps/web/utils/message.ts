@@ -27,5 +27,11 @@ export const Messages = {
     LIBRARY_LIST_EMPTY:
         "Your library list is empty, add a library to import molecules",
     ADD_MOLECULE_SUCCESS: 'Molecule added successfully',
-    ADD_MOLECULE_ERROR: 'Failed to add molecule for reason : '
+    ADD_MOLECULE_ERROR: 'Failed to add molecule for reason : ',
+    deleteMoleculeMessage(status: string) {
+            return `${status} deleted successfully`;
+        }, 
+    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",       
+    SUBMIT_ORDER: "Order Submitted Successfully",
+    USER_ROLE_CHECK: "User role not supported or missing required parameters."
 }

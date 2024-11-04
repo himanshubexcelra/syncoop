@@ -1,5 +1,4 @@
-import { ProjectDataFields } from './../lib/definition';
-import { LibraryFields, LoginFormSchema, Molecule, StatusCode } from "@/lib/definition"
+import { LibraryFields, LoginFormSchema, MoleculeType, StatusCode } from "@/lib/definition"
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -143,7 +142,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 export function fetchMoleculeStatus(data: LibraryFields) {
-  const projectStatusCount = {
+  let projectStatusCount = {
     [StatusCode.READY]: 0,
     [StatusCode.NEW]: 0,
     [StatusCode.FAILED]: 0,
@@ -151,11 +150,22 @@ export function fetchMoleculeStatus(data: LibraryFields) {
     [StatusCode.DONE]: 0,
   };
 
-  data.molecule.forEach((molecule: Molecule) => {
-    if (projectStatusCount[molecule.status] !== undefined) {
-      projectStatusCount[molecule.status] += 1;
+  data.molecule.forEach((molecule: MoleculeType) => {
+    const keys = Object.keys(projectStatusCount);
+    const values = Object.values(projectStatusCount);
+    const keyIndex = keys.indexOf(molecule.status)
+    if (keyIndex > -1) {
+      const key = keys[keyIndex];
+      projectStatusCount = {
+        ...projectStatusCount,
+        [key]: values[keyIndex] + 1
+      }
     }
   });
 
   return projectStatusCount;
+}
+
+export function isAdmin(myRoles: string[]) {
+  return ['admin', 'org_admin'].some((role) => myRoles.includes(role));
 }

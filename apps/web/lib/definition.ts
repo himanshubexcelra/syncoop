@@ -228,6 +228,7 @@ export interface User {
   user_role: UserRoleType[];
   role?: string,
   permission?: string,
+  type: string
 }
 
 export interface UserRoleType {
@@ -251,7 +252,7 @@ export interface UserData {
   id: number;
   owner?: OwnerType;
   status?: string;
-  myRoles?: string[]
+  myRoles: string[]
 }
 export interface projectType {
   id: number,
@@ -413,4 +414,52 @@ export interface UploadMoleculeSmilesResponse {
   rejected_smiles_count: number;
   uploaded_smiles: string[];
   rejected_smiles: RejectedSmiles[]
+}
+export interface OrderType {
+  moleculeId: number;
+  libraryId: number;
+  projectId: number;
+  organizationId: number;
+  userId: number;
+}
+
+export interface DeleteMoleculeCart {
+  id: number;
+  libraryId: number;
+  moleculeId: number;
+  projectId: number;
+  moleculeName: string,
+}
+
+export interface MoleculeOrderParams {
+  projectId?: number;
+  libraryId?: number;
+  organizationId?: number;
+  createdBy?: number;
+}
+
+export enum OrganizationType {
+  Internal = "Internal",
+  External = "External"
+}
+
+export interface MoleculeObj {
+  molecular_weight: string;
+  library: {
+      name: string;
+      project: {
+          name: string;
+      };
+  };
+  source_molecule_name: string;
+}
+
+export interface CartItem {
+  id: number;
+  moleculeId: number;
+  libraryId: number;
+  projectId: number;
+  organizationId: number;
+  molecule: MoleculeObj;
+  moleculeName: string;
 }

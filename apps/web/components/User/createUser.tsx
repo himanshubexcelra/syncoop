@@ -18,7 +18,7 @@ import Image from "next/image";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";
 import { ButtonTypes } from "devextreme-react/cjs/button";
 import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
-import { LoginFormSchema } from "@/lib/definition";
+import { LoginFormSchema, OrganizationType } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { Messages } from "@/utils/message";

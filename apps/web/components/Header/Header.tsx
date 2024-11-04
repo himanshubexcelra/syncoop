@@ -1,7 +1,8 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
-import { DropDownItem, UserData, deleteObj, orderType } from '@/lib/definition';
+import { DeleteMoleculeCart, DropDownItem, UserData } from '@/lib/definition';
+
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -9,15 +10,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { deleteMoleculeCart } from '../Libraries/libraryService';
-import CartDetails from '../Libraries/CartDetails';
 import { Popup as CartPopup, } from "devextreme-react/popup";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
-import { getMoleculeCart } from '../Libraries/libraryService';
 import { Messages } from "@/utils/message";
-
 import toast from "react-hot-toast";
+import { deleteMoleculeCart, getMoleculeCart } from '../Libraries/libraryService';
+import CartDetails from '../Libraries/CartDetails';
 
 
 type HeaderProps = {
@@ -35,8 +34,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
-    const [cartData, setCartData] = useState([])
-
+    const [cartData, setCartData] = useState([]);
 
     useEffect(() => {
         const fetchCartData = async () => {
@@ -54,7 +52,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         setDropdownOpen(!dropdownOpen);
     };
 
-    const removeItemFromCart = (obj: deleteObj) => {
+    const removeItemFromCart = (obj: DeleteMoleculeCart) => {
 
         const { moleculeId, libraryId, projectId, moleculeName } = obj;
         deleteMoleculeCart(moleculeId, libraryId, projectId).then((res) => {
@@ -153,10 +151,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                     <CartDetails
                         cartData={cartData}
                         userId={userData.id}
-                        removeItemFromCart={(obj: deleteObj) => removeItemFromCart(obj)}
+                        removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
                         removeAll={(userId: number, type: string) => removeAll(userId, type)}
-
-
                     />
                 )}
                 width={470}

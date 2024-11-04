@@ -21,7 +21,6 @@ function generateRandomEightDigitNumber() {
 
 const { MOLECULE_ORDER_NOT_FOUND } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
-const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
 
 export async function GET(request: Request) {
     try {

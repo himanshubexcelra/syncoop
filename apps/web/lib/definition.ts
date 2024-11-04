@@ -392,7 +392,7 @@ export interface LibraryDataNode {
   publishedMoleculeCount?: number;
 }
 
-export interface orderType {
+export interface OrderType {
   moleculeId: number;
   libraryId: number;
   projectId: number;
@@ -400,7 +400,7 @@ export interface orderType {
   userId: number;
 }
 
-export interface deleteObj {
+export interface DeleteMoleculeCart {
   id: number;
   libraryId: number;
   moleculeId: number;
@@ -418,4 +418,25 @@ export interface MoleculeOrderParams {
 export enum OrganizationType {
   Internal = "Internal",
   External = "External"
+}
+
+export interface MoleculeObj {
+  molecular_weight: string;
+  library: {
+      name: string;
+      project: {
+          name: string;
+      };
+  };
+  source_molecule_name: string;
+}
+
+export interface CartItem {
+  id: number;
+  moleculeId: number;
+  libraryId: number;
+  projectId: number;
+  organizationId: number;
+  molecule: MoleculeObj;
+  moleculeName: string;
 }

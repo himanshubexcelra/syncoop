@@ -13,12 +13,14 @@ import {
 } from '@/lib/definition';
 import Image from 'next/image';
 import { StatusCodeAPIType, StatusCodeBg, StatusCodeBgAPI } from '@/utils/constants';
-import { Button } from 'devextreme-react';
+import { Button, Popup } from 'devextreme-react';
 import StatusMark from '@/ui/StatusMark';
 import dynamic from 'next/dynamic';
 import { getMoleculesOrder } from '@/app/molecule_order/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
+import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
+import { isAdmin, popupPositionValue } from '@/utils/helpers';
 
 const MoleculeStructure = dynamic(() => import('@/utils/MoleculeStructure'), { ssr: false });
 
@@ -78,69 +80,11 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
   const { organizationId, orgUser, myRoles } = userData;
   const { type } = orgUser;
-  const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([])
+  const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([]);
+  const [synthesisView, setSynthesisView] = useState(false);
+  const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
 
-  const fetchMoleculeOrders = async () => {
-    let data = [];
-    let transformedData: any[] = [];
-
-    try {
-      if (type === OrganizationType.External) {
-        // External users: fetch records filtered by organizationId
-        let params: MoleculeOrderParams = {
-          organizationId: organizationId
-        };
-        if (myRoles[0] === 'library_manager') {
-          params = {
-            ...params,
-            createdBy: userData.id
-          }
-        }
-        data = await getMoleculesOrder(params);
-      } else if (type === OrganizationType.Internal) {
-        // Internal users: fetch all records without filters
-        data = await getMoleculesOrder({});
-      } else {
-        toast.error(Messages.USER_ROLE_CHECK);
-      }
-      // Transform the fetched data if data is available
-      transformedData = data?.map((item: any) => {
-        const {
-          molecule,
-          organization,
-          orderName,
-          project,
-          library,
-          ...rest
-        } = item;
-
-        return {
-          ...rest,
-          organizationName: organization.name,
-          molecular_weight: molecule.molecular_weight,
-          smile: molecule.smile,
-          status: molecule.status,
-          orderName,
-          "project / library": type === OrganizationType.Internal
-            ? `${organization.name} / ${orderName}`
-            : `${project.name} / ${library.name}`
-        };
-      });
-
-      setMoleculeOrderData(transformedData);
-    } catch (error) {
-      console.error(Messages.FETCH_ERROR, error);
-      transformedData = []; // Set to an empty array in case of an error
-      setMoleculeOrderData([]);
-    }
-  }
-
-  const handleStructureEdit = () => { };
-  const handleStructureZoom = () => { };
-  const handleStructureDelete = () => { };
-
-  // Column configuration
-  const moleculeColumns: ColumnConfig<MoleculeOrder>[] = [
+  const columns: ColumnConfig<MoleculeOrder>[] = [
     {
       dataField: 'smile',
       title: 'Structure',
@@ -195,8 +139,85 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     },
   ];
 
+  const rowGroupName = () => {
+    if (type === OrganizationType.External) {
+      return "project / library";
+    } else if (type === OrganizationType.Internal) {
+      return "organization / order";
+    }
+  }
+
+  const fetchMoleculeOrders = async () => {
+    let data = [];
+    let transformedData: any[] = [];
+
+    try {
+      if (type === OrganizationType.External) {
+        // External users: fetch records filtered by organizationId
+        let params: MoleculeOrderParams = {
+          organizationId: organizationId
+        };
+        if (!isAdmin(myRoles) && myRoles.includes('library_manager')) {
+          params = {
+            ...params,
+            createdBy: userData.id
+          }
+        }
+        data = await getMoleculesOrder(params);
+      } else if (type === OrganizationType.Internal) {
+        // Internal users: fetch all records without filters
+        data = await getMoleculesOrder({});
+      } else {
+        toast.error(Messages.USER_ROLE_CHECK);
+      }
+      console.log(data);
+      // Transform the fetched data if data is available
+      transformedData = data?.map((item: any) => {
+        const {
+          molecule,
+          organization,
+          orderName,
+          project,
+          library,
+          ...rest
+        } = item;
+
+        return {
+          ...rest,
+          organizationName: organization.name,
+          molecular_weight: molecule.molecular_weight,
+          smile: molecule.smile,
+          status: molecule.status,
+          orderName,
+          ...(() => {
+            if (type === OrganizationType.External) {
+              return {
+                "project / library": `${project.name} / ${library.name}`
+              }
+            } else if (type === OrganizationType.Internal) {
+              return {
+                "organization / order": `${organization.name} / ${orderName}`
+              }
+            }
+          })()
+        };
+      });
+
+      setMoleculeOrderData(transformedData);
+    } catch (error) {
+      console.error(Messages.FETCH_ERROR, error);
+      transformedData = []; // Set to an empty array in case of an error
+      setMoleculeOrderData([]);
+    }
+  }
+
+  const handleStructureEdit = () => { };
+  const handleStructureZoom = () => { };
+  const handleStructureDelete = () => { };
+
   useEffect(() => {
     fetchMoleculeOrders();
+    setSynthesisPopupPosition(popupPositionValue());
   }, [])
 
   return (
@@ -208,9 +229,9 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           <span>Molecule Orders</span>
         </main>
         <CustomDataGrid
-          columns={moleculeColumns}
+          columns={columns}
           data={moleculeOrderData}
-          groupingColumn="project / library"
+          groupingColumn={rowGroupName()}
           enableRowSelection
           enableGrouping
           enableInfiniteScroll={false}
@@ -218,6 +239,31 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           enableFiltering={false}
           enableOptions={false}
         />
+
+        {synthesisView &&
+          <Popup
+            title='Send Molecules for Retrosynthesis?'
+            visible={synthesisView}
+            contentRender={() => (
+              <SendMoleculesForSynthesis
+                moleculeData={[]}
+              />
+            )}
+            width={650}
+            hideOnOutsideClick={true}
+            height="100%"
+            position={synthesisPopupPos}
+            onHiding={() => {
+              setSynthesisView(false);
+            }}
+            showCloseButton={true}
+            wrapperAttr={
+              {
+                class: "create-popup mr-[15px]"
+              }
+            }
+          />
+        }
       </div>
     </div>
   );

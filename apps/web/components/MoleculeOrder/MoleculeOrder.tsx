@@ -111,7 +111,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             {data.status.toUpperCase() === "FAILED" &&
               <Image src="/icons/warning.svg" width={14} height={14} alt="Molecule order failed" />}
             {data.status}
-            <StatusMark status={StatusCode["READY"]} />
+            <StatusMark status={StatusCode[colorKey]} />
           </span>
         );
       },

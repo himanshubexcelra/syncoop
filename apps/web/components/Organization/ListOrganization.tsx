@@ -103,6 +103,12 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
     { value: 'Disabled', text: 'Disabled' },
   ]
 
+  const handlePopupShown = () => {
+    if (formRef.current) {
+      formRef.current.instance().resetValues();
+    }
+  };
+
   return (
     <>
       <LoadIndicator
@@ -227,6 +233,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
               <Popup
                 title="Create Organization"
                 visible={createPopupVisible}
+                onShown={handlePopupShown}
                 contentRender={() => (
                   <RenderCreateOrganization
                     formRef={formRef}

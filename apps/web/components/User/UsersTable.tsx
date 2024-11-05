@@ -236,7 +236,7 @@ export default function UsersTable({
                                         setCreatePopupVisibility={setCreatePopupVisibility}
                                         setTableData={setTableData}
                                         tableData={tableData}
-                                        password={password}
+                                        password_hash={password}
                                         setPassword={setPassword}
                                         organizationData={[orgUser]}
                                         roles={filteredRoles}

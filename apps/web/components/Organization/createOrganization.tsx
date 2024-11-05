@@ -118,11 +118,11 @@ export default function RenderCreateOrganization({
         <RequiredRule message="Email is required" />
         <EmailRule message="Invalid Email Address" />
       </SimpleItem>
-      <GroupItem colCount={4} cssClass="password_hash-group">
+      <GroupItem colCount={4} cssClass="password-group">
         <SimpleItem
           dataField="password_hash"
           editorType="dxTextBox"
-          cssClass="custom-password_hash"
+          cssClass="custom-password"
           editorOptions={{
             mode: passwordMode,
             placeholder: "Enter Password",
@@ -147,22 +147,24 @@ export default function RenderCreateOrganization({
           ]}
         />
         <Item>
-          <Image
-            src="/icons/copy-icon.svg"
-            alt="copy"
-            width={16}
-            height={16}
-            priority
-            onClick={handleCopyPassword}
-          />
+          <div className="ml-[15px] mb-[10px]">
+            <Image
+              src="/icons/copy-icon.svg"
+              alt="copy"
+              width={16}
+              height={16}
+              priority
+              onClick={handleCopyPassword}
+            />
+          </div>
         </Item>
         <Item>
-          <div id="info-box">
+          <div id="info-box" className="mb-[10px]">
             <Image
               src="/icons/info-icon.svg"
               alt="info"
-              width={14}
-              height={15}
+              width={16}
+              height={16}
               priority
               id="info-icon-password_hash"
             />

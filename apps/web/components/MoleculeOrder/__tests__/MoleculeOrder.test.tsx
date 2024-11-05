@@ -70,9 +70,9 @@ describe('MoleculeOrderPage Component', () => {
 
         render(<MoleculeOrderPage userData={mockUserData} />);
 
-        // Wait for any data-related element to appear
+        // Optionally, confirm that data content is present in any form
         await waitFor(() => {
-            expect(screen.getByText(/Molecule Orders/i)).toBeInTheDocument();
+            expect(screen.queryAllByText(/Molecule Orders/i).length).toBeGreaterThan(0);
         });
 
         // Optionally, confirm that data content is present in any form

@@ -18,6 +18,12 @@ import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
 import { Button } from 'devextreme-react';
 
+interface ToolbarButtonConfig {
+    text: string;
+    onClick: () => void;
+    icon?: string;
+}
+
 interface ColumnConfig<T> {
     dataField: keyof T;
     title?: string | React.ReactNode;
@@ -28,6 +34,7 @@ interface ColumnConfig<T> {
 interface CustomDataGridProps<T> {
     data: T[];
     columns: ColumnConfig<T>[];
+    toolbarButtons?: ToolbarButtonConfig[];
     groupingColumn?: string;
     enableRowSelection?: boolean;
     enableGrouping?: boolean;
@@ -44,6 +51,7 @@ interface CustomDataGridProps<T> {
 const CustomDataGrid = <T extends Record<string, any>>({
     data,
     columns,
+    toolbarButtons = [],
     groupingColumn,
     enableRowSelection = true,
     enableGrouping = true,
@@ -53,8 +61,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableFiltering = true,
     enableOptions = true,
     loadMoreData,
-    buttonText,
-    onButtonClick,
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -155,13 +161,16 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     />
                 )}
                 <Toolbar>
-                    {buttonText && <Item location="after">
-                        <Button
-                            text={buttonText}
-                            onClick={onButtonClick}
-                            className="btn-primary"
-                        />
-                    </Item>}
+                    {toolbarButtons.map((button, index) => (
+                        <Item key={index} location="after">
+                            <Button
+                                text={button.text}
+                                onClick={button.onClick}
+                                icon={button.icon}
+                                className="btn-primary"
+                            />
+                        </Item>
+                    ))}
                     {groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }

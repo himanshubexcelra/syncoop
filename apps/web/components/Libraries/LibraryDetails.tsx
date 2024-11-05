@@ -1363,7 +1363,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         title="Add Molecule"
                                         visible={viewAddMolecule}
                                         contentRender={() => (
-                                            <AddMolecule />
+                                            <AddMolecule libraryId={library_id}
+                                                projectId={params.id} />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}

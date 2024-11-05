@@ -34,7 +34,7 @@ fdescribe('Organization API Functions', () => {
         jest.clearAllMocks();
     });
 
-    test.skip('getOrganization should fetch organization data successfully', async () => {
+    test('getOrganization should fetch organization data successfully', async () => {
         const mockResponse = data;
 
         global.fetch = jest.fn(() =>
@@ -61,7 +61,7 @@ fdescribe('Organization API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test.skip('editOrganization should update organization successfully', async () => {
+    test('editOrganization should update organization successfully', async () => {
         const mockResponse = data;
         const formData = new FormData();
 
@@ -85,7 +85,7 @@ fdescribe('Organization API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test.skip('editOrganization should handle error responses', async () => {
+    test('editOrganization should handle error responses', async () => {
         const formData = new FormData();
         formData.append('name', 'Test Organization');
 
@@ -101,7 +101,7 @@ fdescribe('Organization API Functions', () => {
         expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
     });
 
-    test.skip('createOrganization should create organization successfully', async () => {
+    test('createOrganization should create organization successfully', async () => {
         const mockResponse = data;
         const formData = new FormData();
         formData.append('name', 'Test Organization');
@@ -127,7 +127,7 @@ fdescribe('Organization API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test.skip('createOrganization should handle error responses', async () => {
+    test('createOrganization should handle error responses', async () => {
         const formData = new FormData();
         formData.append('name', 'Test Organization');
 
@@ -143,7 +143,7 @@ fdescribe('Organization API Functions', () => {
         expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
     });
 
-    test.skip('createOrganization should handle fetch errors', async () => {
+    test('createOrganization should handle fetch errors', async () => {
         const formData = new FormData();
         formData.append('name', 'Test Organization');
 

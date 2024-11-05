@@ -1,8 +1,9 @@
 import {
+    UploadMoleculeFileRequest,
     UploadMoleculeSmilesRequest,
     ValidateSmileRequest
 } from "../../lib/definition";
-import CustomFile from "../../utils/file"
+import CustomFile from "../../utils/file";
 
 // const sampleMolecules = {
 //     "smiles": "Cc1ccccc1"
@@ -64,10 +65,15 @@ export async function uploadMoleculeSmiles(formData: UploadMoleculeSmilesRequest
     }
 }
 
-export async function uploadMoleculeFile(file: File) {
+export async function uploadMoleculeFile(data: UploadMoleculeFileRequest) {
     try {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', data.file);
+        formData.append('created_by_user_id', data.created_by_user_id);
+        formData.append('library_id', data.library_id);
+        formData.append('project_id', data.project_id);
+        formData.append('organization_id', data.organization_id);
+        formData.append('updated_by_user_id', data.updated_by_user_id);
         const response = await fetch(`${process.env.API_END_POINT}/upload_molecule_files`, {
             method: "POST",
             body: formData,

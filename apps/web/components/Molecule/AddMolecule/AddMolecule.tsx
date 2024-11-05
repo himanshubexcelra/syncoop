@@ -4,7 +4,7 @@ import styles from './AddMolecule.module.css'
 import Image from 'next/image';
 import DiscardMolecule from './DiscardMolecule';
 import DialogPopUp from '@/ui/DialogPopUp';
-import { uploadMoleculeSmiles } from '../service';
+import { downloadCSV, uploadMoleculeFile, uploadMoleculeSmiles } from '../service';
 import { getUserData } from '@/utils/auth';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
@@ -108,6 +108,25 @@ const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
     const removeItem = () => {
         setFile(null)
     }
+
+    const handleUpload = async () => {
+        const sessionData = await getUserData();
+        const userData: any = sessionData?.userData;
+        if (file) {
+            uploadMoleculeFile({
+                "file": file,
+                "created_by_user_id": userData?.id.toString() || '',
+                "library_id": libraryId?.toString() || '',
+                "project_id": projectId?.toString() || '',
+                "organization_id": userData?.organizationId.toString() || '',
+                "updated_by_user_id": userData?.id.toString() || '',
+            })
+        }
+    }
+    const downloadTemplate = () => {
+        const header = { col1: "ID (optional)", col2: "SMILES (mandatory)" }
+        downloadCSV(header, [], 'molecule_template')
+    }
     return (
         <>
             <div className={`w-full p-3 ${styles.uploadPart}`}>
@@ -120,6 +139,7 @@ const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
                         &nbsp;
                         <button
                             className={styles.templateButton}
+                            onClick={() => downloadTemplate()}
                         >
                             Download Template
                         </button>
@@ -166,7 +186,8 @@ const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
                             />
                         </div>
                         <div className="flex gap-2">
-                            <button className={styles.primaryButton}>Upload</button>
+                            <button className={styles.primaryButton}
+                                onClick={() => handleUpload()}>Upload</button>
                             <button
                                 className={styles.secondaryButton}
                                 onClick={removeItem}

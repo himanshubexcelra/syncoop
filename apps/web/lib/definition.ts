@@ -446,10 +446,10 @@ export enum OrganizationType {
 export interface MoleculeObj {
   molecular_weight: string;
   library: {
+    name: string;
+    project: {
       name: string;
-      project: {
-          name: string;
-      };
+    };
   };
   source_molecule_name: string;
 }
@@ -462,4 +462,12 @@ export interface CartItem {
   organization_id: number;
   molecule: MoleculeObj;
   moleculeName: string;
+}
+export interface UploadMoleculeFileRequest {
+  file: File;
+  created_by_user_id: string;
+  library_id: string;
+  project_id: string;
+  organization_id: string;
+  updated_by_user_id: string;
 }

@@ -36,8 +36,6 @@ import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import '../Organization/form.css';
 import {
-    StatusCodeBg,
-    StatusCodeType,
     DataType,
     StatusCodeBgAPI,
     StatusCodeAPIType
@@ -151,6 +149,7 @@ type LibraryDetailsProps = {
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
+    const cartEnabled = actionsEnabled.includes('create_molecule_order');
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
@@ -181,13 +180,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
     const context: any = useContext(AppContext);
     const appContext = context.state;
+
     const [moleculeData, setMoleculeData] = useState([]);
-    const [selectedRows, setSelectedRows] = useState([]); // Store selected item IDs
+    const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
+    const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
     const [selectedRowsData, setSelectedRowsData] = useState([])
     const [viewAddMolecule, setViewAddMolecule] = useState(false);
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
-
-    const [isCartUpdate, updateCart] = useState(false)
     let toastShown = false;
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
@@ -268,12 +267,17 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
         const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
+        const moleculeIdsInCart = moleculeCart
+            .filter((item: any) => item.molecule.is_added_to_cart)
+            .map((item: any) => item.moleculeId);
+        setCartMolecule(moleculeIdsInCart)
         setSelectedRows(moleculeIds)
     };
 
+
     useEffect(() => {
         fetchCartData();
-    }, [library_id, userData.id]);
+    }, [library_id, userData.id, appContext]);
 
     useEffect(() => {
         fetchLibraries();
@@ -447,8 +451,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     }, [selectedRowsData]);
 
     const onSelectionChanged = async (e: any) => {
-        updateCart(true);
-        // Check if the data exists in storage
         setSelectedRows(e.selectedRowKeys);
         setSelectedRowsData(e.selectedRowsData)
         const checkedMolecule = e.selectedRowsData;
@@ -485,23 +487,18 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         })
         addMoleculeToCart(moleculeData)
             .then((res) => {
-                if (res) {
-                    toast.success('Molecule is updated in your cart.');
-                }
+                toast.success(Messages.addMoleculeCartMessage(res.count));
             })
             .catch((error) => {
                 toast.success(error);
             })
     }
-    const cellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
-        if (e.rowType === "data") {
-            if (e.column.dataField === "status") {
-                const color: StatusCodeType = e.data.status?.toUpperCase();
-                e.cellElement.classList.add(StatusCodeBg[color]);
-            }
+    const onCellPrepared = (e: any) => {
+        if (isMoleculeInCart.includes(e.key)) {
+            e.cellElement.style.pointerEvents = 'none';
+            e.cellElement.style.opacity = 0.5;
         }
-    }
-
+    };
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -1021,12 +1018,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         onSelectionChanged={onSelectionChanged}
                                         columnAutoWidth={false}
                                         width="100%"
-                                        onCellPrepared={cellPrepared}
+                                        onCellPrepared={onCellPrepared}
                                     >
                                         <Selection
                                             mode="multiple"
                                             selectAllMode={allMode}
                                             showCheckBoxesMode={checkBoxesMode}
+
                                         />
                                         <Sorting mode="single" />
                                         <Scrolling mode="infinite" />
@@ -1316,17 +1314,23 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         )}
                                                     />
                                                 </ToolbarItem>}
-                                            <ToolbarItem location="after">
-                                                <Button
-                                                    onClick={addProductToCart}
-                                                    disabled={!isCartUpdate}
-                                                    render={() => (
-                                                        <>
-                                                            <span>Add to cart</span>
-                                                        </>
-                                                    )}
-                                                />
-                                            </ToolbarItem>
+                                            {cartEnabled &&
+                                                <ToolbarItem location="after">
+                                                    <Button
+                                                        onClick={addProductToCart}
+                                                        disabled={
+                                                            selectedRows.length > 0 ? false : true
+                                                        }
+                                                        render={() => (
+                                                            <span>
+                                                                {`Add to Cart
+                                                                    (${selectedRows?.length})
+                                                                `}
+                                                            </span>
+                                                        )}
+                                                    />
+                                                </ToolbarItem>
+                                            }
                                             <ToolbarItem name="searchPanel" location="before" />
                                         </GridToolbar>
                                         <SearchPanel

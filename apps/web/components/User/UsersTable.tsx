@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import { useEffect, useRef, useState } from "react";
 import DataGrid, {
@@ -29,7 +30,16 @@ const resetDialogProperties = {
     width: 480,
     height: 260,
 }
-export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setInternalCount, setExternalCount, userId, actionsEnabled }: UserTableProps) {
+export default function UsersTable({
+    orgUser,
+    filteredRoles,
+    myRoles,
+    type,
+    setInternalCount,
+    setExternalCount,
+    userId,
+    actionsEnabled
+}: UserTableProps) {
     const [editPopup, setEditPopup] = useState(false);
     const [internalUsers, setInternalUsers] = useState<User[]>([]);
     const [externalUsers, setExternalUsers] = useState<User[]>([]);
@@ -59,7 +69,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
     }
     const contentProps = {
         onClose: hidePasswordPopup,
-        email: editRow?.email
+        email_id: editRow?.email_id
     }
     const fetchAndFilterData = async () => {
         setLoader(true);
@@ -126,7 +136,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                     <Paging defaultPageSize={5} defaultPageIndex={0} />
                     <Sorting mode="single" />
                     <Column
-                        dataField="email"
+                        dataField="email_id"
                         caption="Email Address"
                         width={350}
                         cellRender={(data: any) => {
@@ -142,7 +152,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                         }}
                     />
                     <Column
-                        dataField="firstName"
+                        dataField="first_name"
                         caption="First Name"
                         width={130}
                         alignment="left"
@@ -150,7 +160,7 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                         defaultSortOrder="asc"
                     />
                     <Column
-                        dataField="lastName"
+                        dataField="last_name"
                         width={140}
                         caption="Last Name"
                     />
@@ -163,13 +173,16 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                         dataField="user_role"
                         caption="Roles"
                         cellRender={(data: any) => {
-                            return <div className="flex gap-5">{data?.value?.map((item: any, index: number) => {
-                                return (
-                                    <div key={index} className={`p-1.5 text-white ${styles.roles}`}>
-                                        {item.role.name}
-                                    </div>
-                                );
-                            })}</div>;
+                            return <div className="flex gap-5">
+                                {data?.value?.map((item: any, index: number) => {
+                                    return (
+                                        <div key={index} className={`
+                                                p-1.5 text-white ${styles.roles}
+                                            `}>
+                                            {item.role.name}
+                                        </div>
+                                    );
+                                })}</div>;
                         }}
                     />
                     {(actionsEnabled.includes('edit_user') || myRoles.includes('admin')) && <Column
@@ -199,7 +212,8 @@ export default function UsersTable({ orgUser, filteredRoles, myRoles, type, setI
                                 text="Add New User"
                                 icon="plus"
                                 className={`${styles.button_primary_toolbar} mr-[20px]`}
-                                visible={actionsEnabled.includes('create_user') || myRoles.includes('admin')}
+                                visible={actionsEnabled.includes('create_user') ||
+                                    myRoles.includes('admin')}
                                 render={(buttonData: any) => (
                                     <>
                                         <Image

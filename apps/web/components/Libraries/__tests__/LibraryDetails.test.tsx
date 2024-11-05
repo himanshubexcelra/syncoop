@@ -4,8 +4,7 @@ import LibraryDetails from '../LibraryDetails';
 import {
     getLibraries,
     getLibraryById,
-    addToFavourites,
-    getMoleculeCart
+    addToFavourites
 } from '@/components/Libraries/libraryService';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 // import CreateLibrary from '../CreateLibrary';
@@ -27,9 +26,6 @@ jest.mock('@/components/Libraries/libraryService', () => ({
     getLibraryById: jest.fn(),
     editLieditLibrary: jest.fn(),
     addToFavourites: jest.fn(),
-    getMoleculeCart: jest.fn(),
-    deleteMoleculeCart: jest.fn(),
-    addMoleculeToCart: jest.fn()
 }));
 
 const actionsEnabled = ['create_molecule', 'create_library', 'edit_library'];
@@ -41,15 +37,15 @@ const data = {
     type: 'Optimization',
     description: 'Example data',
     rganizationId: 1,
-    createdAt: '2024-10-17T08:18:35.505Z',
-    updatedAt: '2024-10-17T08:18:35.505Z',
+    created_at: '2024-10-17T08:18:35.505Z',
+    updated_at: '2024-10-17T08:18:35.505Z',
     ownerId: 1,
-    updatedById: 1,
+    updated_byId: 1,
     owner: {
         id: 1,
-        firstName: 'System',
-        lastName: 'Admin',
-        email: 'sys_admin@external.milliporesigma.com'
+        first_name: 'System',
+        last_name: 'Admin',
+        email_id: 'sys_admin@external.milliporesigma.com'
     },
     library: { name: 'fauxbio' },
     libraries: [
@@ -58,23 +54,23 @@ const data = {
             name: 'EGFR-v1',
             description: 'Smaple data',
             target: 'Target',
-            projectId: 2,
-            createdAt: '2024-10-17T09:53:33.045Z',
-            updatedAt: null,
+            project_id: 2,
+            created_at: '2024-10-17T09:53:33.045Z',
+            updated_at: null,
             ownerId: 7,
-            updatedById: null,
+            updated_byId: null,
             owner: {
                 id: 1,
-                firstName: 'System',
-                lastName: 'Admin',
-                email: 'sys_admin@external.milliporesigma.com'
+                first_name: 'System',
+                last_name: 'Admin',
+                email_id: 'sys_admin@external.milliporesigma.com'
             },
-            updatedBy: null,
+            updated_by: null,
             molecule: [{
                 id: 1,
                 molecular_weight: 12,
                 userId: 1,
-                libraryId: 2,
+                library_id: 2,
             }],
         },
         {
@@ -82,23 +78,23 @@ const data = {
             name: 'Lib3',
             description: 'Smaple data',
             target: 'Target',
-            projectId: 2,
-            createdAt: '2024-10-17T09:53:33.070Z',
-            updatedAt: null,
+            project_id: 2,
+            created_at: '2024-10-17T09:53:33.070Z',
+            updated_at: null,
             ownerId: 7,
-            updatedById: null,
+            updated_byId: null,
             owner: {
                 id: 1,
-                firstName: 'System',
-                lastName: 'Admin',
-                email: 'sys_admin@external.milliporesigma.com'
+                first_name: 'System',
+                last_name: 'Admin',
+                email_id: 'sys_admin@external.milliporesigma.com'
             },
-            updatedBy: null,
+            updated_by: null,
             molecule: [{
                 id: 1,
                 molecular_weight: 12,
                 userId: 1,
-                libraryId: 2,
+                library_id: 2,
             }],
         }
     ]
@@ -109,19 +105,19 @@ const libraryData = {
     name: 'EGFR-v1',
     description: 'Smaple data',
     target: 'Target',
-    projectId: 2,
-    createdAt: '2024-10-17T09:53:33.045Z',
-    updatedAt: null,
+    project_id: 2,
+    created_at: '2024-10-17T09:53:33.045Z',
+    updated_at: null,
     ownerId: 7,
-    updatedById: null,
+    updated_byId: null,
     owner: {
         id: 1,
-        firstName: 'System',
-        lastName: 'Admin',
-        email: 'sys_admin@external.milliporesigma.com'
+        first_name: 'System',
+        last_name: 'Admin',
+        email_id: 'sys_admin@external.milliporesigma.com'
     },
     molecule: [],
-    updatedBy: null
+    updated_by: null
 }
 
 const libraryData1 = {
@@ -129,39 +125,39 @@ const libraryData1 = {
     name: 'EGFR-v1',
     description: 'Smaple data',
     target: 'Target',
-    projectId: 2,
-    createdAt: '2024-10-17T09:53:33.045Z',
-    updatedAt: null,
+    project_id: 2,
+    created_at: '2024-10-17T09:53:33.045Z',
+    updated_at: null,
     ownerId: 7,
-    updatedById: null,
+    updated_byId: null,
     owner: {
         id: 1,
-        firstName: 'System',
-        lastName: 'Admin',
-        email: 'sys_admin@external.milliporesigma.com'
+        first_name: 'System',
+        last_name: 'Admin',
+        email_id: 'sys_admin@external.milliporesigma.com'
     },
     molecule: [{
         id: 1,
         molecular_weight: 12,
         userId: 1,
-        libraryId: 2,
+        library_id: 2,
         molecule_favorites: [],
     }],
-    updatedBy: null
+    updated_by: null
 }
 
 const userData = {
     id: 1,
-    organizationId: 1,
-    email: "forum.tanna@external.milliporesigma.com",
-    firstName: "Forum",
-    lastName: "Tanna",
+    organization_id: 1,
+    email_id: "forum.tanna@external.milliporesigma.com",
+    first_name: "Forum",
+    last_name: "Tanna",
     myRoles: ['admin'],
     roles: [{ id: 1, type: 'admin' }],
     orgUser: {
-        id: 1, name: 'System Admin', firstName: "Forum",
-        lastName: "Tanna",
-        email: "forum.tanna@external.milliporesigma.com",
+        id: 1, name: 'System Admin', first_name: "Forum",
+        last_name: "Tanna",
+        email_id: "forum.tanna@external.milliporesigma.com",
         status: "active",
         user_role: [{
             role: {
@@ -178,9 +174,9 @@ const userData = {
             name: 'Merck',
             description: 'Merck Corporation',
             logo: 'logo.jpg',
-            createdBy: 1,
-            createdAt: '2024-08-05T15:44:09.158Z',
-            updatedAt: '2024-08-05T15:44:09.158Z',
+            created_by: 1,
+            created_at: '2024-08-05T15:44:09.158Z',
+            updated_at: '2024-08-05T15:44:09.158Z',
             status: 'active',
             user_role: [{
                 role: {
@@ -226,7 +222,6 @@ describe('LibraryList should display loader initially', () => {
     });
 
     test('shows loader initially', async () => {
-        (getMoleculeCart as jest.Mock).mockResolvedValue([]);
         await act(async () => {
             render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
@@ -253,10 +248,10 @@ describe('LibraryList should display proper data', () => {
         (getLibraries as jest.Mock).mockResolvedValue(data);
         (getLibraryById as jest.Mock).mockResolvedValue(libraryData);
         (addToFavourites as jest.Mock).mockResolvedValue({ id: 19, moleculeId: 1, userId: 1 });
+        
     });
 
     test('renders the DataGrid with correct data', async () => {
-        (getMoleculeCart as jest.Mock).mockResolvedValue([]);
         await act(async () => {
             render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
@@ -270,7 +265,7 @@ describe('LibraryList should display proper data', () => {
         expect(screen.getByAltText('showDetailedView')).toBeInTheDocument();
     });
 
-    test.skip(`expand button works correctly and lists  
+    test(`expand button works correctly and lists
         the accordion with project and library data`, async () => {
         await act(async () => {
             render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
@@ -288,9 +283,7 @@ describe('LibraryList should display proper data', () => {
     });
 
     test('library accordion loads with proper data', async () => {
-        
         await act(async () => {
-            (getMoleculeCart as jest.Mock).mockResolvedValue([]);
             render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
 
@@ -330,7 +323,6 @@ describe('LibraryList should display proper data', () => {
     });
 
     test('edit library button works as expected', async () => {
-        (getMoleculeCart as jest.Mock).mockResolvedValue([]);
         await act(async () => {
             render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);
         });
@@ -362,7 +354,6 @@ describe('LibraryList should display proper data', () => {
     });
 
     test('open library button works as expected', async () => {
-        (getMoleculeCart as jest.Mock).mockResolvedValue([]);
         const pushMock = jest.fn(); // Mock function for router.push
         (useRouter as jest.Mock).mockReturnValue({ push: pushMock });
 
@@ -382,6 +373,7 @@ describe('LibraryList should display proper data', () => {
         const tabs = screen.getAllByRole('tab');
         await act(async () => { fireEvent.click(tabs[tabs.length - 1]) });
 
+
         const openButton = screen.getAllByText('Open');
 
         await act(() => openButton[0].click());
@@ -392,7 +384,6 @@ describe('LibraryList should display proper data', () => {
     });
 
     test('Add to favourite column works as expected', async () => {
-        (getMoleculeCart as jest.Mock).mockResolvedValue([]);
         (getLibraryById as jest.Mock).mockResolvedValue(libraryData1);
         await act(async () => {
             render(<LibraryDetails userData={userData} actionsEnabled={actionsEnabled} />);

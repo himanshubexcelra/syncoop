@@ -31,16 +31,21 @@ type ProfileInfoProps = {
     orgDetailLoggedIn?: OrgUser
 }
 
-export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled, orgDetailLoggedIn }: ProfileInfoProps) {
+export default function ProfileInfo({ id,
+    myRoles,
+    isMyProfile,
+    actionsEnabled,
+    orgDetailLoggedIn
+}: ProfileInfoProps) {
     const [data, setData] = useState<UserData[]>([]);
     const [formVisible, setFormVisible] = useState(false);
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
     const formRef = useRef<any>(null);
-    const { email, firstName, lastName, orgUser, user_role, status } = data[0] || {}
+    const { email_id, first_name, last_name, orgUser, user_role, status } = data[0] || {}
     const userRoleNames = user_role?.map(role => role.role.name).join(', ');
 
     const formEdit = {
-        email, firstName, user_role, lastName, orgUser
+        email_id, first_name, user_role, last_name, orgUser
     }
 
     const hidePopup = () => {
@@ -48,7 +53,7 @@ export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled, 
     };
 
     const contentProps = {
-        email,
+        email_id,
         onClose: hidePopup
     }
 
@@ -69,7 +74,7 @@ export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled, 
     const heading: HeadingObj[] = [
         {
             svgPath: "/icons/profile-icon-lg-active.svg",
-            label: firstName ? `${firstName}` : '',
+            label: first_name ? `${first_name}` : '',
             svgWidth: 33,
             svgHeight: 36,
             href: "",
@@ -106,22 +111,23 @@ export default function ProfileInfo({ id, myRoles, isMyProfile, actionsEnabled, 
                         </div>
                         <div>
                             <span className={styles.type}>First Name:</span>
-                            <span className={styles.output}> {firstName}</span>
+                            <span className={styles.output}> {first_name}</span>
                         </div>
                         <div>
-                            <span className={styles.type}>Email:</span>
-                            <span className={styles.output}> {email}</span>
+                            <span className={styles.type}>email_id:</span>
+                            <span className={styles.output}> {email_id}</span>
                         </div>
                         <div>
                             <span className={styles.type}>Last Name:</span>
-                            <span className={styles.output}> {lastName}</span>
+                            <span className={styles.output}> {last_name}</span>
                         </div>
                         {!isMyProfile && <div>
                             <span className={styles.type}>Status:</span>
                             <span className={styles.output}> {status}</span>
                         </div>}
                     </div>
-                </div><MainPopup
+                </div>
+                <MainPopup
                     title="Edit Profile"
                     visible={formVisible}
                     contentRender={() => (

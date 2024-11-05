@@ -36,7 +36,6 @@ import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import '../Organization/form.css';
 import {
-    StatusCodeType,
     DataType,
     StatusCodeBgAPI,
     StatusCodeAPIType
@@ -81,7 +80,7 @@ const showCheckboxesFieldLabel = { 'aria-label': 'Show Checkboxes Mode' };
 const showCheckBoxesModes = ['none', 'onClick', 'onLongTap', 'always'];
 const selectAllModes = ['allPages', 'page'];
 
-const sortByFields = ['Name', 'Owner', 'UpdationTime', 'CreationTime', 'Count of Molecules'];
+const sortByFields = ['Name', 'Owner', 'Updation Time', 'Creation Time', 'Count of Molecules'];
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -126,19 +125,19 @@ const initialProjectData: ProjectDataFields = {
     name: '',
     id: 0,
     description: '',
-    organizationId: undefined,
+    organization_id: undefined,
     organization: {} as OrganizationDataFields, // Provide a default organization object
     user: {} as userType, // Provide a default user object
     sharedUsers: [],
     target: '',
     type: '',
-    updatedBy: {} as userType, // Provide a default user object
-    updatedAt: new Date(),
+    updated_by: {} as userType, // Provide a default user object
+    updated_at: new Date(),
     userId: undefined,
     owner: {} as User, // Provide a default owner object
     ownerId: 0,
     orgUser: undefined,
-    createdAt: new Date(),
+    created_at: new Date(),
     libraries: [] as unknown as LibraryFields[],
 };
 
@@ -153,17 +152,17 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
-    const [libraryId, setLibraryId] = useState(searchParams.get('libraryId'));
+    const [library_id, setLibraryId] = useState(searchParams.get('library_id'));
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
     const [selectedLibrary, setSelectedLibrary] =
-        useState(libraryId ? parseInt(libraryId, 10) : '');
+        useState(library_id ? parseInt(library_id, 10) : '');
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
     const [loader, setLoader] = useState(true);
     const [moleculeLoader, setMoleculeLoader] = useState(false);
     const [allMode, setAllMode] = useState<DataGridTypes.SelectAllMode>('allPages');
-    const [expanded, setExpanded] = useState(libraryId ? false : true);
+    const [expanded, setExpanded] = useState(library_id ? false : true);
     const [checkBoxesMode, setCheckBoxesMode] =
         useState<DataGridTypes.SelectionColumnDisplayMode>('always');
     const [editMolecules, setEditMolecules] = useState<any[]>([]);
@@ -184,10 +183,9 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [moleculeData, setMoleculeData] = useState([]);
     const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
     const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
+    const [selectedRowsData, setSelectedRowsData] = useState([])
     const [viewAddMolecule, setViewAddMolecule] = useState(false);
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
-
-    // const [isCartUpdate, updateCart] = useState(false)
     let toastShown = false;
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<FormRef>(null);
@@ -199,12 +197,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const fetchLibraries = async () => {
         const projectData = await getLibraries(['libraries'], params.id);
         let selectedLib = { name: '' };
-        if (libraryId && projectData) {
+        if (library_id && projectData) {
             selectedLib = projectData.libraries.find(
-                (library: LibraryFields) => library.id === parseInt(libraryId, 10));
+                (library: LibraryFields) => library.id === parseInt(library_id, 10));
         }
         if (projectData && !!selectedLib) {
-            const sortKey = 'createdAt';
+            const sortKey = 'created_at';
             const sortBy = 'desc';
             const tempLibraries = sortByDate(projectData.libraries, sortKey, sortBy);
             setProjects({ ...projectData, libraries: tempLibraries });
@@ -213,12 +211,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 projectTitle: `${projectData.name}`,
                 projectHref: `/${params.id}`
             });
-            if (libraryId) {
-                const libraryData = await getLibraryById(['molecule'], libraryId);
+            if (library_id) {
+                const libraryData = await getLibraryById(['molecule'], library_id);
                 setTableData(libraryData.molecule || []);
                 const libName = libraryData.name;
                 setSelectedLibraryName(libName);
-                setSelectedLibrary(parseInt(libraryId));
+                setSelectedLibrary(parseInt(library_id));
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,
                     projectHref: `/${params.id}`, projectSvg: "/icons/project-inactive.svg"
@@ -230,7 +228,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                         svgPath: "/icons/library-active.svg",
                         svgWidth: 16,
                         svgHeight: 16,
-                        href: `/projects/${params.id}?libraryId=${libraryId}`,
+                        href: `/projects/${params.id}?library_id=${library_id}`,
                         isActive: true,
                     }];
             } else {
@@ -264,8 +262,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     }
 
     const fetchCartData = async () => {
-        const moleculeCart = libraryId ?
-            await getMoleculeCart(Number(userData.id), Number(libraryId), Number(projects.id))
+        const moleculeCart = library_id ?
+            await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
         const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
         const moleculeIdsInCart = moleculeCart
@@ -274,17 +272,15 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         setCartMolecule(moleculeIdsInCart)
         setSelectedRows(moleculeIds)
     };
-    useEffect(() => {
-        fetchCartData();
 
-    }, [appContext])
+
     useEffect(() => {
         fetchCartData();
-    }, [libraryId, userData.id]);
+    }, [library_id, userData.id, appContext]);
 
     useEffect(() => {
         fetchLibraries();
-    }, [params.id, libraryId]);
+    }, [params.id, library_id]);
 
     useEffect(() => {
         setPopupPosition(popupPositionValue());
@@ -310,7 +306,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const response = await addToFavourites(dataField);
         if (!response.error) {
             const libraryData =
-                await getLibraryById(['molecule'], data.libraryId.toString());
+                await getLibraryById(['molecule'], data.library_id.toString());
             setMoleculeLoader(false);
             setTableData(libraryData.molecule || []);
         } else {
@@ -329,14 +325,14 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             let sortBy = 'asc';
             let object = false;
             let tempLibraries: LibraryFields[] = [];
-            if (sortKey === 'UpdationTime') {
-                sortKey = 'updatedAt';
+            if (sortKey === 'Updation Time') {
+                sortKey = 'updated_at';
                 sortBy = 'desc';
-            } else if (sortKey === 'CreationTime') {
-                sortKey = 'createdAt';
+            } else if (sortKey === 'Creation Time') {
+                sortKey = 'created_at';
                 sortBy = 'desc';
             } else if (sortKey === 'Owner') {
-                sortKey = 'owner.firstName';
+                sortKey = 'owner.first_name';
                 object = true;
             } else if (sortKey === 'Count of Molecules') {
                 sortKey = 'molecule';
@@ -346,7 +342,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             }
             if (sortKey === 'molecule') {
                 tempLibraries = sortNumber(projects.libraries, sortKey, sortBy);
-            } else if (sortKey !== 'updatedAt' && sortKey !== 'createdAt') {
+            } else if (sortKey !== 'updated_at' && sortKey !== 'created_at') {
                 tempLibraries = sortString(projects.libraries, sortKey, sortBy, object);
             } else {
                 tempLibraries = sortByDate(projects.libraries, sortKey, sortBy);
@@ -373,7 +369,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const copyUrl = (type: string, name: string, id?: number) => {
         if (typeof window !== "undefined") {
             let url = `${urlHost}/projects/${params.id}`;
-            if (type === 'library') url = `${urlHost}/projects/${params.id}?libraryId=${id}`;
+            if (type === 'library') url = `${urlHost}/projects/${params.id}?library_id=${id}`;
             navigator.clipboard.writeText(url)
                 .then(() => toast.success(Messages.urlCopied(type, name)))
                 .catch(() => toast.error(Messages.URL_COPY_ERROR));
@@ -388,8 +384,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 const filteredLibraries = projects.libraries.filter((item) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.owner.firstName.toLowerCase().includes(value.toLowerCase()) ||
-                    item.owner.lastName.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.molecule.length.toString().includes(value.toLowerCase())
                 );
                 setProjects((prevState) => ({
@@ -400,8 +396,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 const filteredLibraries = initProjects.libraries.filter((item) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.owner.firstName.toLowerCase().includes(value.toLowerCase()) ||
-                    item.owner.lastName.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
+                    item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.molecule.length.toString().includes(value.toLowerCase())
                 );
                 setProjects((prevState) => ({
@@ -448,25 +444,26 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         return !(owner || admin);
     }
     const showEditMolecule = useCallback((data: any | null = null) => {
-        const moleculesToEdit = data ? [data] : selectedRows;
+        const moleculesToEdit = data ? [data] : selectedRowsData;
         setEditMolecules(moleculesToEdit);
         setViewEditMolecule(true);
-    }, [selectedRows]);
+    }, [selectedRowsData]);
 
     const onSelectionChanged = async (e: any) => {
         setSelectedRows(e.selectedRowKeys);
+        setSelectedRowsData(e.selectedRowsData)
         const checkedMolecule = e.selectedRowsData;
         const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
             ...item,
             moleculeId: item.id,
-            libraryId: libraryId,
+            library_id: library_id,
             userId: userData.id,
-            organizationId: projects.organizationId,
-            projectId: projects.id
+            organization_id: projects.organization_id,
+            project_id: projects.id
         }));
 
-        const moleculeCart = libraryId ?
-            await getMoleculeCart(Number(userData.id), Number(libraryId), Number(projects.id))
+        const moleculeCart = library_id ?
+            await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
         const preselectedIds = moleculeCart.map((item: any) => item.moleculeId);
         const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
@@ -475,7 +472,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         if (e.currentDeselectedRowKeys.length > 0) {
             const newmoleculeData = checkedMolecule.filter((
                 item: any) => item.id !== e.currentDeselectedRowKeys[0].id
-                && item.projectId !== projects.id);
+                && item.project_id !== projects.id);
             setMoleculeData(newmoleculeData);
         }
         else {
@@ -501,7 +498,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             e.cellElement.style.opacity = 0.5;
         }
     };
-
+    const cartPermission = ['admin', 'org_admin', 'library_manager']
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -547,8 +544,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 <div>
                                                     Project Owner:
                                                     <span>
-                                                        {projects.owner.firstName}
-                                                        {projects.owner.lastName}
+                                                        {`${projects.owner.first_name}
+                                                         ${projects.owner.last_name}`}
                                                     </span>
                                                 </div>
                                                 <div className='flex'>
@@ -577,7 +574,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             </div>
                                             <div className='library-name no-border'>
                                                 Last Modified: <span>
-                                                    {formatDetailedDate(projects.updatedAt)}
+                                                    {formatDetailedDate(projects.updated_at)}
                                                 </span>
                                             </div>
                                             <div className='library-name no-border'>
@@ -663,7 +660,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                             </>
                                                         )}
                                                     />
-                                                    <div className="search-box">
+                                                    <div
+                                                        className={`search-box 
+                                                        bg-themeSilverGreyColor`}
+                                                    >
                                                         <Image
                                                             src="/icons/search.svg"
                                                             width={24}
@@ -693,7 +693,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                                 fetchLibraries={fetchLibraries}
                                                                 userData={userData}
                                                                 projectData={projects}
-                                                                libraryIdx={-1}
+                                                                library_idx={-1}
                                                             />
                                                         )}
                                                         width={477}
@@ -726,7 +726,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                                 fetchLibraries={fetchLibraries}
                                                                 userData={userData}
                                                                 projectData={projects}
-                                                                libraryIdx={selectedLibraryIdx}
+                                                                library_idx={selectedLibraryIdx}
                                                             />
                                                         )}
                                                         width={477}
@@ -776,7 +776,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                     }>
                                                         <div className='flex w-[55%]'>
                                                             <div className=
-                                                                {`w-[20%]flex justify-end`}>
+                                                                {`flex`}>
                                                                 Library:
                                                             </div>
                                                             <span>{item.name}</span>
@@ -785,7 +785,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                             {`flex justify-between w-[45%]`}>
                                                             <div>Created On:
                                                                 <span>{
-                                                                    formatDatetime(item.createdAt)
+                                                                    formatDatetime(item.created_at)
                                                                 }
                                                                 </span>
                                                             </div>
@@ -855,21 +855,23 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                     }>
                                                         <div className='flex w-[55%]'>
                                                             <div className=
-                                                                {`w-[20%] flex justify-end`}>
+                                                                {`flex`}>
                                                                 Owner:
                                                             </div>
                                                             <span>
-                                                                {item.owner.firstName}
-                                                                {item.owner.lastName}
+                                                                {item.owner.first_name}
+                                                                {item.owner.last_name}
                                                             </span>
                                                         </div>
                                                         <div className='w-[45%] flex justify-start'>
-                                                            {item.updatedBy &&
+                                                            {item.updated_by &&
                                                                 <>
                                                                     Last Updated By:
                                                                     <span>
-                                                                        {item.updatedBy.firstName}
-                                                                        {item.updatedBy.lastName}
+                                                                        {`${item.updated_by
+                                                                            .first_name} 
+                                                                            ${item.updated_by
+                                                                                .last_name}`}
                                                                     </span>
                                                                 </>
                                                             }
@@ -883,17 +885,17 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                     }>
                                                         <div className='flex w-[55%]'>
                                                             <div className=
-                                                                {`w-[20%] flex justify-end`}>
+                                                                {`flex`}>
                                                                 Target:
                                                             </div>
                                                             <span>{item.target}</span></div>
                                                         <div className='w-[45%]'>
-                                                            {item.updatedAt &&
+                                                            {item.updated_at &&
                                                                 <>
                                                                     Last Updated On:
                                                                     <span>
                                                                         {formatDatetime(
-                                                                            item.updatedAt)}
+                                                                            item.updated_at)}
                                                                     </span>
                                                                 </>
                                                             }
@@ -906,7 +908,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                                 gap-[10px]
                                                                 flex mt-[8px]
                                                                 flex-wrap
-                                                                justify-around
+                                                                justify-between
                                                                 no-border`
                                                             }>
                                                             <div>Molecules:
@@ -972,7 +974,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                             onClick={() => {
                                                                 const url =
                                                                     `/projects/${params.id}` +
-                                                                    `?libraryId=${item.id}`;
+                                                                    `?library_id=${item.id}`;
                                                                 setSelectedLibrary(idx);
                                                                 setSelectedLibraryName(item.name);
                                                                 setExpanded(false);
@@ -1076,7 +1078,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 <span className='flex justify-center gap-[7.5px]'
                                                 >
                                                     <MoleculeStructure
-                                                        structure={data.smile}
+                                                        structure={data.smiles_string}
                                                         id={`smiles-${rowIndex}`}
                                                         width={120}
                                                         height={120}
@@ -1147,12 +1149,11 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             dataField="status"
                                             minWidth={120}
                                             cellRender={({ data }: { data: DataType }) => {
-                                                const color: StatusCodeType = data.status;
                                                 return (
                                                     <span className={`flex items-center gap-[5px]`}>
                                                         {data.status}
                                                         {/* @ts-expect-error: type mismatch*/}
-                                                        <StatusMark status={color} />
+                                                        <StatusMark status={data.status} />
                                                     </span>
                                                 )
                                             }} />
@@ -1313,19 +1314,24 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         )}
                                                     />
                                                 </ToolbarItem>}
-                                            <ToolbarItem location="after">
-                                                <Button
-                                                    onClick={addProductToCart}
-                                                    disabled={
-                                                        selectedRows.length > 0 ? false : true
-                                                    }
-                                                    render={() => (
-                                                        <span>
-                                                            {`Add to Cart(${selectedRows?.length})`}
-                                                        </span>
-                                                    )}
-                                                />
-                                            </ToolbarItem>
+                                            {userData.myRoles.
+                                                some(role => cartPermission.includes(role)) &&
+                                                <ToolbarItem location="after">
+                                                    <Button
+                                                        onClick={addProductToCart}
+                                                        disabled={
+                                                            selectedRows.length > 0 ? false : true
+                                                        }
+                                                        render={() => (
+                                                            <span>
+                                                                {`Add to Cart
+                                                                    (${selectedRows?.length})
+                                                                `}
+                                                            </span>
+                                                        )}
+                                                    />
+                                                </ToolbarItem>
+                                            }
                                             <ToolbarItem name="searchPanel" location="before" />
                                         </GridToolbar>
                                         <SearchPanel
@@ -1379,31 +1385,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             }
                                         } />
                                     }
-
-                                    <Popup
-                                        title="Add Molecule"
-                                        visible={viewAddMolecule}
-                                        contentRender={() => (
-                                            <AddMolecule />
-                                        )}
-                                        resizeEnabled={true}
-                                        hideOnOutsideClick={true}
-                                        defaultWidth={700}
-                                        defaultHeight={'100%'}
-                                        position={{
-                                            my: { x: 'right', y: 'top' },
-                                            at: { x: 'right', y: 'top' },
-                                        }}
-                                        onHiding={() => {
-                                            setViewAddMolecule(false)
-                                        }}
-                                        dragEnabled={false}
-                                        showCloseButton={true}
-                                        wrapperAttr={
-                                            {
-                                                class: "create-popup mr-[15px]"
-                                            }
-                                        } />
                                     <Popup
                                         title="Edit Molecule"
                                         visible={viewEditMolecule}
@@ -1412,7 +1393,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}
-                                        defaultWidth={1400}
+                                        defaultWidth={900}
                                         defaultHeight={'100%'}
                                         position={{
                                             my: { x: 'right', y: 'top' },

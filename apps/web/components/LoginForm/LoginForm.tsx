@@ -15,7 +15,7 @@ import { UserData } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
 
 export type ErrorType = {
-    email: string,
+    email_id: string,
     password: string[]
 }
 const dialogProperties = {
@@ -105,7 +105,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                     <input
                         type="email"
                         id="email"
-                        name="email"
+                        name="email_id"
                         className={
                             `border 
                             border-themeBorderGrey 
@@ -127,7 +127,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                         <input
                             type={showPassword ? "text" : "password"}
                             id="password"
-                            name="password"
+                            name="password_hash"
                             className={
                                 `border 
                                 border-themeBorderGrey 

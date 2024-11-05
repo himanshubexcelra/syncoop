@@ -6,11 +6,10 @@ interface OrderData {
     orderId: number;
     orderName: number;
     moleculeId: number;
-    libraryId: number;
-    projectId: number;
-    organizationId: number;
+    library_id: number;
+    project_id: number;
+    organization_id: number;
     userId: string;
-
 }
 
 
@@ -20,21 +19,21 @@ const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
-        const organizationId = url.searchParams.get("organizationId");
-        const createdBy = url.searchParams.get("createdBy");
+        const organization_id = url.searchParams.get("organization_id");
+        const created_by = url.searchParams.get("created_by");
 
         // Define whereClause conditionally based on user type
         let where = {};
-        if (organizationId) {
+        if (organization_id) {
             where = {
                 ...where,
-                organizationId: Number(organizationId)
+                organization_id: Number(organization_id)
             }
         }
-        if (createdBy) {
+        if (created_by) {
             where = {
                 ...where,
-                createdBy: Number(createdBy),
+                created_by: Number(created_by),
             }
         }
         const data = await prisma.molecule_order.findMany({
@@ -43,7 +42,7 @@ export async function GET(request: Request) {
                 molecule: {
                     select: {
                         molecular_weight: true,
-                        smile: true,
+                        smiles_string: true,
                         status: true,
                     },
                 },
@@ -92,13 +91,12 @@ export async function POST(request: Request) {
         orderId: Number(item.orderId),
         orderName: item.orderName,
         moleculeId: Number(item.moleculeId),
-        organizationId: Number(item.organizationId),
-        projectId: Number(item.projectId),
-        libraryId: Number(item.libraryId),
+        organization_id: Number(item.organization_id),
+        project_id: Number(item.project_id),
+        library_id: Number(item.library_id),
         batch_detail: {},
-        createdBy: Number(item.userId),
-        updatedBy: Number(item.userId),
-        userId: Number(item.userId)
+        created_by: Number(item.userId),
+        updated_by: Number(item.userId)
     }));
     try {
         await prisma.molecule_order.createMany({
@@ -109,7 +107,7 @@ export async function POST(request: Request) {
             status: SUCCESS,
         });
     }
-    catch (error) {
+    catch (error: any) {
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { "Content-Type": "application/json" },
             status: BAD_REQUEST, // BAD_REQUEST

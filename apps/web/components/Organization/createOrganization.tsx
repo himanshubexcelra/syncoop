@@ -27,23 +27,23 @@ import { Tooltip, } from "devextreme-react";
 import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
 
 const customPasswordCheck = (password: any) =>
-  LoginFormSchema.shape.password.safeParse(password).success
+  LoginFormSchema.shape.password_hash.safeParse(password).success
 
 export default function RenderCreateOrganization({
   setCreatePopupVisibility,
   formRef,
   fetchOrganizations,
   roleId,
-  createdBy,
+  created_by,
 }: OrganizationCreateFields) {
   const context: any = useContext(AppContext);
   const appContext = context.state;
-  const [password, setPassword] = useState('');
+  const [password_hash, setPassword] = useState('');
   const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
-      const response = await createOrganization({ ...values, createdBy }, roleId);
+      const response = await createOrganization({ ...values, created_by }, roleId);
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();
@@ -74,17 +74,17 @@ export default function RenderCreateOrganization({
     navigator.clipboard.writeText(generatedPassword)
       .then(() => toast.success(Messages.PASSWORD_COPY))
       .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
-    formRef.current!.instance().updateData("password", generatedPassword);
+    formRef.current!.instance().updateData("password_hash", generatedPassword);
   };
 
   const handleCopyPassword = async () => {
-    if (password === "") {
+    if (password_hash === "") {
       const toastId = toast.error(Messages.PASSWORD_EMPTY)
       await delay(DELAY);
       toast.remove(toastId);
       return;
     }
-    navigator.clipboard.writeText(password)
+    navigator.clipboard.writeText(password_hash)
       .then(() => toast.success(Messages.PASSWORD_COPY))
       .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
   };
@@ -99,35 +99,35 @@ export default function RenderCreateOrganization({
         <RequiredRule message="Organization name is required" />
       </SimpleItem>
       <SimpleItem
-        dataField="firstName"
+        dataField="first_name"
         editorOptions={{ placeholder: "Organization Admin first name" }}
       >
         <Label text="Organization Admin First Name" />
       </SimpleItem>
       <SimpleItem
-        dataField="lastName"
+        dataField="last_name"
         editorOptions={{ placeholder: "Organization Admin last name" }}
       >
         <Label text="Organization Admin Last Name" />
       </SimpleItem>
       <SimpleItem
-        dataField="email"
-        editorOptions={{ placeholder: "Enter admin email address" }}
+        dataField="email_id"
+        editorOptions={{ placeholder: "Enter admin email id address" }}
       >
         <Label text="Organization Admin Email Address" />
         <RequiredRule message="Email is required" />
         <EmailRule message="Invalid Email Address" />
       </SimpleItem>
-      <GroupItem colCount={4} cssClass="password-group">
+      <GroupItem colCount={4} cssClass="password_hash-group">
         <SimpleItem
-          dataField="password"
+          dataField="password_hash"
           editorType="dxTextBox"
-          cssClass="custom-password"
+          cssClass="custom-password_hash"
           editorOptions={{
             mode: passwordMode,
             placeholder: "Enter Password",
             buttons: [{
-              name: "password",
+              name: "password_hash",
               location: "after",
               options: passwordButton,
             }],
@@ -164,10 +164,10 @@ export default function RenderCreateOrganization({
               width={14}
               height={15}
               priority
-              id="info-icon-password"
+              id="info-icon-password_hash"
             />
             <Tooltip
-              target="#info-icon-password"
+              target="#info-icon-password_hash"
               showEvent="mouseenter"
               hideEvent="mouseleave"
               position="bottom"

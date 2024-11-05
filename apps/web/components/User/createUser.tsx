@@ -23,14 +23,14 @@ import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { Messages } from "@/utils/message";
 
-const customPasswordCheck = (password: any) => LoginFormSchema.shape.password.safeParse(password).success
+const customPasswordCheck = (password: any) => LoginFormSchema.shape.password_hash.safeParse(password).success
 
 export default function RenderCreateUser({
     setCreatePopupVisibility,
     setTableData,
     formRef,
     tableData,
-    password,
+    password_hash,
     setPassword,
     roles,
     organizationData,
@@ -56,7 +56,7 @@ export default function RenderCreateUser({
     );
     const handleSubmit = async () => {
         const values = formRef.current!.instance().option("formData");
-        const validationCheck = customPasswordCheck(values.password) && formRef.current!.instance().validate().isValid
+        const validationCheck = customPasswordCheck(values.password_hash) && formRef.current!.instance().validate().isValid
         if (validationCheck) {
             const response = await createUser(values);
             if (response.status === 200) {
@@ -83,17 +83,17 @@ export default function RenderCreateUser({
         navigator.clipboard.writeText(generatedPassword)
             .then(() => toast.success(Messages.PASSWORD_COPY))
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
-        formRef.current!.instance().updateData("password", generatedPassword);
+        formRef.current!.instance().updateData("password_hash", generatedPassword);
     };
 
     const handleCopyPassword = async () => {
-        if (password === "") {
+        if (password_hash === "") {
             const toastId = toast.error(Messages.PASSWORD_EMPTY)
             await delay(DELAY);
             toast.remove(toastId);
             return;
         }
-        navigator.clipboard.writeText(password)
+        navigator.clipboard.writeText(password_hash)
             .then(() => toast.success(Messages.PASSWORD_COPY))
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
@@ -106,10 +106,10 @@ export default function RenderCreateUser({
         return (
             <div className="flex items-center gap-2">
                 <TextBox
-                    value={password}
+                    value={password_hash}
                     onValueChanged={(e) => {
                         setPassword(e.value);
-                        data.component.updateData("password", e.value);
+                        data.component.updateData("password_hash", e.value);
                     }}
                     placeholder="Enter Password"
                     inputAttr={passwordLabel}
@@ -117,7 +117,7 @@ export default function RenderCreateUser({
 
                 >
                     <TextBoxButton
-                        name="password"
+                        name="password_hash"
                         location="after"
                         options={passwordButton}
                     />
@@ -193,7 +193,7 @@ export default function RenderCreateUser({
         <CreateForm ref={formRef}>
             {OrganizationSelectBox}
             <SimpleItem
-                dataField="email"
+                dataField="email_id"
                 editorOptions={{ placeholder: "User Email Address" }}
             >
                 <Label text="User Email Address" />
@@ -201,14 +201,14 @@ export default function RenderCreateUser({
                 <EmailRule message={Messages.EMAIL_INVALID} />
             </SimpleItem>
             <SimpleItem
-                dataField="firstName"
+                dataField="first_name"
                 editorOptions={{ placeholder: "First Name" }}
             >
                 <Label text="First Name" />
                 <RequiredRule message={Messages.requiredMessage('First Name')} />
             </SimpleItem>
             <SimpleItem
-                dataField="lastName"
+                dataField="last_name"
                 editorOptions={{ placeholder: "Last Name" }}
             >
                 <Label text="Last Name" />
@@ -231,7 +231,7 @@ export default function RenderCreateUser({
                 <RequiredRule message={Messages.ROLE_REQUIRED} />
             </SimpleItem>
             <SimpleItem
-                dataField="password"
+                dataField="password_hash"
                 render={passwordEditorRender}
             >
                 <RequiredRule message={Messages.requiredMessage('Password')} />

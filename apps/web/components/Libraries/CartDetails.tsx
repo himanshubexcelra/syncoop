@@ -3,12 +3,12 @@ import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-    CartItem, 
+import {
+    CartItem,
     DeleteMoleculeCart,
-    CartDetail, 
-    OrderDetail, 
-    GroupedData 
+    CartDetail,
+    OrderDetail,
+    GroupedData
 } from '@/lib/definition';
 import { submitOrder } from './libraryService';
 import { generateRandomDigitNumber } from '@/utils/helpers';
@@ -24,14 +24,14 @@ export default function CartDetails({
     userId,
     removeItemFromCart,
     removeAll
-}: CartDetailsProps
-) {
+}: CartDetailsProps) {
+
     const cartDetails: CartDetail[] = cartData.map(item => ({
         id: item.id,
         moleculeId: item.moleculeId,
-        libraryId: item.libraryId,
-        projectId: item.projectId,
-        organizationId: item.organizationId,
+        library_id: item.library_id,
+        project_id: item.project_id,
+        organization_id: item.organization_id,
         molecular_weight: item.molecule.molecular_weight,
         projectName: item.molecule.library.project.name,
         libraryName: item.molecule.library.name,
@@ -45,14 +45,15 @@ export default function CartDetails({
         orderId: Number(orderId),
         orderName: orderName,
         moleculeId: item.moleculeId,
-        libraryId: item.libraryId,
-        projectId: item.projectId,
-        organizationId: item.organizationId,
+        library_id: item.library_id,
+        project_id: item.project_id,
+        organization_id: item.organization_id,
         userId: userId
     }));
 
     const handleSubmitOrder = () => {
         submitOrder(orderDetails).then((res) => {
+
             if (res[0].orderId) {
                 removeAll(userId, 'SubmitOrder')
             }
@@ -73,9 +74,9 @@ export default function CartDetails({
             moleculeId: item.moleculeId,
             molecularWeight: item.molecular_weight,
             moleculeName: item.moleculeName,
-            libraryId: item.libraryId,
-            projectId: item.projectId,
-            userId: item.userId
+            library_id: item.library_id,
+            project_id: item.project_id,
+            userId: userId
         });
         return acc;
     }, {});
@@ -123,13 +124,13 @@ export default function CartDetails({
                         <Btn
                             className='btn-primary'
                             onClick={handleSubmitOrder}
-                            text="Submit Order"
-                        />
-                        <Link href="#" onClick={() => removeAll(userId, 'RemoveAll')}
+                            text="Submit Order" />
+                        <Link href="#"
+                            onClick={() =>
+                                removeAll(userId, 'RemoveAll')}
                             className='text-themeBlueColor font-bold'
-                            style={{ marginLeft: '10px' }}>
-                            Remove All
-                        </Link>
+                            style={{ marginLeft: '10px' }
+                            }>Remove All</Link>
                     </div>
                 </div>
             ) : (

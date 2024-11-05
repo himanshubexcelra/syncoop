@@ -23,9 +23,9 @@ describe('ProfileInfo Component', () => {
 
     const mockUserData = [
         {
-            email: 'test@example.com',
-            firstName: 'Apoorv',
-            lastName: 'Mehrotra',
+            email_id: 'test@example.com',
+            first_name: 'Apoorv',
+            last_name: 'Mehrotra',
             orgUser: { name: 'FauxBio' },
             user_role: [{ role: { name: 'Admin' } }],
             status: 'Enabled',
@@ -52,7 +52,7 @@ describe('ProfileInfo Component', () => {
         expect(screen.getByText('Admin')).toBeInTheDocument();
         expect(screen.getByText('First Name:')).toBeInTheDocument();
         expect(screen.getAllByText('Apoorv')).toHaveLength(2);
-        expect(screen.getByText('Email:')).toBeInTheDocument();
+        expect(screen.getByText('email_id:')).toBeInTheDocument();
         expect(screen.getByText('test@example.com')).toBeInTheDocument();
         expect(screen.getByText('Last Name:')).toBeInTheDocument();
         expect(screen.getByText('Mehrotra')).toBeInTheDocument();

@@ -1,6 +1,6 @@
 "use client"
 // import styled from '@emotion/styled'
-import { /* useCallback */ useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ButtonsConfig, Editor } from 'ketcher-react'
 import { Ketcher, /* RemoteStructServiceProvider */ } from 'ketcher-core'
 import { StandaloneStructServiceProvider } from 'ketcher-standalone'
@@ -42,11 +42,11 @@ const PanelBox = styled('div')`
 
  */
 const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
-    return btnArr.reduce((acc: any, button: any) => {
-        if (button) acc[button] = { hidden: true }
+  return btnArr.reduce((acc: any, button: any) => {
+    if (button) acc[button] = { hidden: true }
 
-        return acc
-    }, {})
+    return acc
+  }, {})
 }
 
 // const structServiceProvider = new RemoteStructServiceProvider(
@@ -65,22 +65,32 @@ const structServiceProvider = new StandaloneStructServiceProvider();
 //         return `editor-key-${count}`
 //     }
 // })()
+interface KetcherDrawBoxProps {
+  reactionString: string;
+}
+export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxProps) {
+  const [hiddenButtons] = useState(initiallyHidden)
+  const [editorKey] = useState('first-editor-key')
 
-export default function KetcherDrawBox() {
-    const [hiddenButtons] = useState(initiallyHidden)
-    const [editorKey] = useState('first-editor-key')
+  useEffect(() => {
+    if ((global as any).KetcherFunctions && reactionString !== '') {
+      (global as any).KetcherFunctions.renderFromCtab(reactionString);
+    }
+  }, [reactionString]);
 
-
-    return <>
-        <Editor
-            key={editorKey}
-            staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
-            buttons={getHiddenButtonsConfig(hiddenButtons)}
-            structServiceProvider={structServiceProvider}
-            errorHandler={(err: any) => console.log(err)}
-            onInit={(ketcher: Ketcher) => {
-                ; (global as any).ketcher = ketcher
-                    ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
-            }}
-        /></>
+  return <>
+    <Editor
+      key={editorKey}
+      staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
+      buttons={getHiddenButtonsConfig(hiddenButtons)}
+      structServiceProvider={structServiceProvider}
+      errorHandler={(err: any) => console.log(err)}
+      onInit={(ketcher: Ketcher) => {
+        ; (global as any).ketcher = ketcher
+          ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
+        if (reactionString !== '') {
+          (global as any).KetcherFunctions.renderFromCtab(reactionString);
+        }
+      }}
+    /></>
 }

@@ -8,9 +8,10 @@ import { defaultRoutesEnabled } from "./constants";
 export async function authorize(formData: FormData) {
     try {
         const body = JSON.stringify({
-            email: formData.get('email'),
-            password: formData.get('password')
+            email_id: formData.get('email_id'),
+            password_hash: formData.get('password_hash')
         });
+        console.log(body);
         const response: any = await fetch(`${process.env.API_HOST_URL}/v1/auth`, {
             mode: 'no-cors',
             method: 'POST',
@@ -23,10 +24,10 @@ export async function authorize(formData: FormData) {
             const output = await response.json();
             const {
                 id,
-                firstName,
-                lastName,
-                email,
-                organizationId,
+                first_name,
+                last_name,
+                email_id,
+                organization_id,
                 user_role,
                 orgUser
             } = output.data;
@@ -34,12 +35,12 @@ export async function authorize(formData: FormData) {
             const roles = user_role.map(({ role }: any) => role);
             const userData = {
                 id,
-                firstName,
-                lastName,
-                email,
+                first_name,
+                last_name,
+                email_id,
                 roles,
                 myRoles: roles.map((role: any) => role.type),
-                organizationId,
+                organization_id,
                 orgUser
             };
             const sessionData = JSON.stringify(userData);

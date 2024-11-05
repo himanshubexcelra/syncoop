@@ -14,19 +14,19 @@ const libraryData = {
     name: 'EGFR-v1',
     description: 'Smaple data',
     target: 'Target',
-    projectId: 2,
-    createdAt: '2024-10-17T09:53:33.045Z',
-    updatedAt: null,
+    project_id: 2,
+    created_at: '2024-10-17T09:53:33.045Z',
+    updated_at: null,
     ownerId: 7,
-    updatedById: null,
+    updated_byId: null,
     owner: {
         id: 1,
-        firstName: 'System',
-        lastName: 'Admin',
-        email: 'sys_admin@external.milliporesigma.com'
+        first_name: 'System',
+        last_name: 'Admin',
+        email_id: 'sys_admin@external.milliporesigma.com'
     },
     molecule: [],
-    updatedBy: null
+    updated_by: null
 }
 
 describe('Library API Functions', () => {
@@ -37,15 +37,15 @@ describe('Library API Functions', () => {
         type: 'Optimization',
         description: 'Example data',
         rganizationId: 1,
-        createdAt: '2024-10-17T08:18:35.505Z',
-        updatedAt: '2024-10-17T08:18:35.505Z',
+        created_at: '2024-10-17T08:18:35.505Z',
+        updated_at: '2024-10-17T08:18:35.505Z',
         ownerId: 1,
-        updatedById: 1,
+        updated_byId: 1,
         owner: {
             id: 1,
-            firstName: 'System',
-            lastName: 'Admin',
-            email: 'sys_admin@external.milliporesigma.com'
+            first_name: 'System',
+            last_name: 'Admin',
+            email_id: 'sys_admin@external.milliporesigma.com'
         },
         library: { name: 'fauxbio' },
         libraries: [
@@ -54,36 +54,36 @@ describe('Library API Functions', () => {
                 name: 'EGFR-v1',
                 description: 'Smaple data',
                 target: 'Target',
-                projectId: 2,
-                createdAt: '2024-10-17T09:53:33.045Z',
-                updatedAt: null,
+                project_id: 2,
+                created_at: '2024-10-17T09:53:33.045Z',
+                updated_at: null,
                 ownerId: 7,
-                updatedById: null,
+                updated_byId: null,
                 owner: {
                     id: 1,
-                    firstName: 'System',
-                    lastName: 'Admin',
-                    email: 'sys_admin@external.milliporesigma.com'
+                    first_name: 'System',
+                    last_name: 'Admin',
+                    email_id: 'sys_admin@external.milliporesigma.com'
                 },
-                updatedBy: null
+                updated_by: null
             },
             {
                 id: 4,
                 name: 'Lib3',
                 description: 'Smaple data',
                 target: 'Target',
-                projectId: 2,
-                createdAt: '2024-10-17T09:53:33.070Z',
-                updatedAt: null,
+                project_id: 2,
+                created_at: '2024-10-17T09:53:33.070Z',
+                updated_at: null,
                 ownerId: 7,
-                updatedById: null,
+                updated_byId: null,
                 owner: {
                     id: 1,
-                    firstName: 'System',
-                    lastName: 'Admin',
-                    email: 'sys_admin@external.milliporesigma.com'
+                    first_name: 'System',
+                    last_name: 'Admin',
+                    email_id: 'sys_admin@external.milliporesigma.com'
                 },
-                updatedBy: null
+                updated_by: null
             }
         ]
     };
@@ -102,9 +102,9 @@ describe('Library API Functions', () => {
         ) as jest.Mock;
 
         const withRelation = ['libraries'];
-        const projectId = '2'
-        const result = await getLibraries(withRelation, projectId);
-        const url = new URL(`${process.env.API_HOST_URL}/v1/project/${projectId}`);
+        const project_id = '2'
+        const result = await getLibraries(withRelation, project_id);
+        const url = new URL(`${process.env.API_HOST_URL}/v1/project/${project_id}`);
         if (withRelation.length) {
             url.searchParams.append('with', JSON.stringify(withRelation));
         }
@@ -130,9 +130,9 @@ describe('Library API Functions', () => {
         ) as jest.Mock;
 
         const withRelation = ['molecule'];
-        const libraryId = '2'
-        const result = await getLibraryById(withRelation, libraryId);
-        const url = new URL(`${process.env.API_HOST_URL}/v1/library?id=${libraryId}`);
+        const library_id = '2'
+        const result = await getLibraryById(withRelation, library_id);
+        const url = new URL(`${process.env.API_HOST_URL}/v1/library?id=${library_id}`);
         if (withRelation.length) {
             url.searchParams.append('with', JSON.stringify(withRelation));
         }
@@ -157,11 +157,11 @@ describe('Library API Functions', () => {
             })
         ) as jest.Mock;
 
-        const organizationId = 2;
-        const result = await getLibraryCountById(organizationId);
+        const organization_id = 2;
+        const result = await getLibraryCountById(organization_id);
         const url = new URL(`${process.env.API_HOST_URL}/v1/library`);
-        if (organizationId) {
-            url.searchParams.append('organizationId', String(organizationId));
+        if (organization_id) {
+            url.searchParams.append('organization_id', String(organization_id));
         }
         url.searchParams.append('condition', 'count');
         expect(fetch).toHaveBeenCalledTimes(1);
@@ -184,11 +184,11 @@ describe('Library API Functions', () => {
             })
         ) as jest.Mock;
 
-        const organizationId = 2;
-        const result = await geMoleculeCountById(organizationId);
+        const organization_id = 2;
+        const result = await geMoleculeCountById(organization_id);
         const url = new URL(`${process.env.API_HOST_URL}/v1/library`);
-        if (organizationId) {
-            url.searchParams.append('organizationId', String(organizationId));
+        if (organization_id) {
+            url.searchParams.append('organization_id', String(organization_id));
         }
         url.searchParams.append('condition', 'count');
         expect(fetch).toHaveBeenCalledTimes(1);

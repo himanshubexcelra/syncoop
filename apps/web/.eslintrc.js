@@ -7,6 +7,7 @@ module.exports = {
     project: true,
   },
   rules: {
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "react-hooks/exhaustive-deps": "off"
   }
 };

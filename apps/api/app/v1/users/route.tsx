@@ -54,7 +54,7 @@ export async function GET(request: Request) {
         if (orgId) {
             query.where = {
                 ...query.where,
-                organizationId: Number(orgId),
+                organization_id: Number(orgId),
             };
         }
         if (orgType) {
@@ -90,12 +90,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const req = await request.json();
-        const { firstName, lastName, roles, email, organization } = req
+        const { first_name, last_name, roles, email_id, organization } = req
         const existingUser = await prisma.user.findUnique({
-            where: { email: email },
+            where: { email_id: email_id },
         });
         const saltRounds = 10;
-        const password = await bcrypt.hash(req.password, saltRounds);
+        const password_hash = await bcrypt.hash(req.password_hash, saltRounds);
         if (existingUser) {
             return new Response(JSON.stringify({ error: EMAIL_ALREADY_EXIST }), {
                 headers: { "Content-Type": "application/json" },
@@ -104,12 +104,12 @@ export async function POST(request: Request) {
         }
         const newUser = await prisma.user.create({
             data: {
-                firstName,
-                lastName,
-                email,
-                password,
+                first_name,
+                last_name,
+                email_id,
+                password_hash,
                 status: 'Enabled',
-                organizationId: organization,
+                organization_id: organization,
                 user_role: {
                     create: roles.map((roleId: number) => ({
                         role: { connect: { id: roleId } }
@@ -144,11 +144,11 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { email, firstName, lastName,
+        const { email_id, first_name, last_name,
             oldPassword, newPassword, organization, roles } = req;
 
         const existingUser = await prisma.user.findUnique({
-            where: { email: email },
+            where: { email_id: email_id },
         });
 
         if (!existingUser) {
@@ -162,7 +162,7 @@ export async function PUT(request: Request) {
         }
 
         if (oldPassword && newPassword) {
-            const dbPassword = existingUser?.password || ''
+            const dbPassword = existingUser?.password_hash || ''
             const isPasswordValid = await bcrypt.compare(oldPassword, dbPassword);
             if (!isPasswordValid) {
                 return new Response(
@@ -177,20 +177,20 @@ export async function PUT(request: Request) {
         }
         const updatedData: any = {};
 
-        if (firstName) {
-            updatedData.firstName = firstName;
+        if (first_name) {
+            updatedData.first_name = first_name;
         }
 
-        if (lastName) {
-            updatedData.lastName = lastName;
+        if (last_name) {
+            updatedData.last_name = last_name;
         }
 
         if (newPassword) {
             const saltRounds = 10;
-            updatedData.password = await bcrypt.hash(newPassword, saltRounds);
+            updatedData.password_hash = await bcrypt.hash(newPassword, saltRounds);
         }
         if (organization) {
-            updatedData.organizationId = organization;
+            updatedData.organization_id = organization;
         }
         if (roles && Array.isArray(roles)) {
             await prisma.user_role.deleteMany({
@@ -207,7 +207,7 @@ export async function PUT(request: Request) {
             });
         }
         const updatedUser = await prisma.user.update({
-            where: { email: email },
+            where: { email_id: email_id },
             data: updatedData,
             include: {
                 user_role: {

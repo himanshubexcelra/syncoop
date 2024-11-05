@@ -12,7 +12,7 @@ export async function GET(request: Request) {
                 where: {
                     org_module: {
                         some: {
-                            organizationId: Number(orgId),
+                            organization_id: Number(orgId),
                         },
                     },
                 },

@@ -176,7 +176,9 @@ const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
             </div>
             <div className={`mt-5 ${styles.uploadPart} p-4`}>
                 <h2 className={`${styles.heading} mb-2`}>Draw a Molecule</h2>
-                <div className={styles.ketcherContainer}><KetcherDrawBox /></div>
+                <div className={styles.ketcherContainer}>
+                    <KetcherDrawBox reactionString={''} />
+                </div>
             </div>
             <div>
                 <div className="flex flex-col gap-2 mt-5">

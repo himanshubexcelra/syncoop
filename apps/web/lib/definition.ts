@@ -2,8 +2,8 @@
 import { z } from "zod";
 
 export const LoginFormSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email." })/* .trim() */,
-  password: z
+  email_id: z.string().email({ message: "Please enter a valid email id." })/* .trim() */,
+  password_hash: z
     .string()
     .min(8, { message: 'Password should be at least 8 characters long' })
     .regex(/[a-z]/, { message: 'Password should contain at least one lowercase letter.' })
@@ -51,9 +51,9 @@ export interface OrganizationTableFields {
 }
 export interface userType {
   id: number,
-  firstName: string,
-  lastName: string,
-  email: string,
+  first_name: string,
+  last_name: string,
+  email_id: string,
   status: string,
 }
 
@@ -61,9 +61,9 @@ export interface sharedUserType {
   userId: number,
   id: number,
   name: string,
-  lastName: string,
-  firstName?: string,
-  email: string,
+  last_name: string,
+  first_name?: string,
+  email_id: string,
   status: string,
   role?: string
 }
@@ -78,7 +78,7 @@ export interface metaDataType {
 export interface OrganizationDataFields {
   id?: number;
   name?: string;
-  email?: string;
+  email_id?: string;
   status?: string;
   orgUser?: User[];
   metadata?: metaDataType;
@@ -106,7 +106,7 @@ export interface OrganizationCreateFields {
   edit?: boolean,
   roleId: number,
   data?: UserData,
-  createdBy: number
+  created_by: number
 }
 
 export interface ProjectCreateFields {
@@ -143,18 +143,18 @@ export interface MoleculeStatus {
 }
 
 export interface MoleculeType {
-  createdAt: Date;
-  createdBy: number;
+  created_at: Date;
+  created_by: number;
   finger_print: string;
   id: number;
   inchi_key: string;
-  libraryId: number;
+  library_id: number;
   molecular_weight: number;
-  smile: string;
+  smiles_string: string;
   source_molecule_name: string;
   status: string;
-  updatedAt: Date;
-  updatedBy: number;
+  updated_at: Date;
+  updated_by: number;
   userId: number;
 }
 
@@ -175,14 +175,14 @@ export interface LibraryFields {
   name: string;
   id: number;
   description?: string;
-  projectId?: number;
+  project_id?: number;
   project: ProjectDataFields,
   target?: string;
-  updatedBy?: userType;
-  updatedAt?: Date;
+  updated_by?: userType;
+  updated_at?: Date;
   owner: User;
   ownerId: number;
-  createdAt: Date;
+  created_at: Date;
   status?: MoleculeStatus[];
   molecule: [];
 }
@@ -190,20 +190,20 @@ export interface ProjectDataFields {
   name: string;
   id: number;
   description?: string;
-  organizationId?: number;
+  organization_id?: number;
   organization: OrganizationDataFields,
   user: userType;
   sharedUsers: sharedUserType[];
   target: string;
   type: string;
-  updatedBy: userType;
-  updatedAt: Date;
+  updated_by: userType;
+  updated_at: Date;
   userId?: number;
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
   libraries: LibraryFields[];
-  createdAt: Date,
+  created_at: Date,
 }
 
 export interface UserRole {
@@ -219,11 +219,11 @@ interface Organization {
 
 export interface User {
   id: number;
-  firstName: string;
+  first_name: string;
   name?: string;
-  email: string;
+  email_id: string;
   status: string;
-  lastName: string;
+  last_name: string;
   organization: Organization;
   user_role: UserRoleType[];
   role?: string,
@@ -237,17 +237,17 @@ export interface UserRoleType {
 }
 
 export interface OwnerType {
-  firstName?: string;
-  lastName?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface UserData {
-  email: string;
-  firstName: string;
-  lastName: string;
+  email_id: string;
+  first_name: string;
+  last_name: string;
   user_role: UserRoleType[];
   organization?: object;
-  organizationId: number;
+  organization_id: number;
   orgUser: User;
   id: number;
   owner?: OwnerType;
@@ -273,10 +273,10 @@ export interface ModuleFeature {
   name: string;
   description: string;
   requiredPurchase: boolean;
-  createdAt: string;
-  createdBy: number;
-  updatedAt: string
-  updatedBy: number | null;
+  created_at: string;
+  created_by: number;
+  updated_at: string
+  updated_by: number | null;
 }
 
 export interface ModuleTableProps {
@@ -363,7 +363,7 @@ export interface LibraryCreateFields {
   fetchLibraries: FetchUserType,
   projectData: ProjectDataFields,
   userData: UserData,
-  libraryIdx?: number,
+  library_idx?: number,
 }
 
 export interface DashboardPageType {
@@ -417,25 +417,25 @@ export interface UploadMoleculeSmilesResponse {
 }
 export interface OrderType {
   moleculeId: number;
-  libraryId: number;
-  projectId: number;
-  organizationId: number;
+  library_id: number;
+  project_id: number;
+  organization_id: number;
   userId: number;
 }
 
 export interface DeleteMoleculeCart {
   id: number;
-  libraryId: number;
+  library_id: number;
   moleculeId: number;
-  projectId: number;
+  project_id: number;
   moleculeName: string,
 }
 
 export interface MoleculeOrderParams {
-  projectId?: number;
-  libraryId?: number;
-  organizationId?: number;
-  createdBy?: number;
+  project_id?: number;
+  library_id?: number;
+  organization_id?: number;
+  created_by?: number;
 }
 
 export enum OrganizationType {
@@ -457,9 +457,9 @@ export interface MoleculeObj {
 export interface CartItem {
   id: number;
   moleculeId: number;
-  libraryId: number;
-  projectId: number;
-  organizationId: number;
+  library_id: number;
+  project_id: number;
+  organization_id: number;
   molecule: MoleculeObj;
   moleculeName: string;
 }

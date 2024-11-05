@@ -16,7 +16,8 @@ import { getOrganizationById } from "@/components/Organization/service";
 import EditOrganization from "../Organization/editOrganization";
 import { getDashBoardBreadCrumbs } from "./breadCrumbs";
 
-export default function LandingPage({ userData,
+export default function LandingPage({
+    userData,
     tabsStatus,
     filteredRoles,
     myRoles,
@@ -35,13 +36,15 @@ export default function LandingPage({ userData,
         const organization = await getOrganizationById(
             {
                 withRelation: ['orgUser', 'user_role'],
-                id: userData?.organizationId
+                id: userData?.organization_id
             });
         setOrganization(organization);
     };
 
     useEffect(() => {
-        if (['admin', 'org_admin'].some((role) => myRoles?.includes(role))) fetchOrganizationData();
+        if (['admin', 'org_admin'].some((role) => myRoles?.includes(role))) {
+            fetchOrganizationData();
+        }
     }, []);
 
     useEffect(() => {

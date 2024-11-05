@@ -8,11 +8,11 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const condition = searchParams.get('condition');
-        const organizationId = searchParams.get('organizationId');
+        const organization_id = searchParams.get('organization_id');
 
         if (condition === "count") {
-            const count = organizationId
-                ? await prisma.molecule.count({ where: { library: { project: { organizationId: Number(organizationId) } } } })
+            const count = organization_id
+                ? await prisma.molecule.count({ where: { library: { project: { organization_id: Number(organization_id) } } } })
                 : await prisma.molecule.count();
             return new Response(JSON.stringify(count), {
                 headers: { "Content-Type": "application/json" },

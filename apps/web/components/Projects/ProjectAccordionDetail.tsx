@@ -52,6 +52,11 @@ export default function ProjectAccordionDetail({
         return count + library.molecule.length; // Add the count of molecules in each library
     }, 0);
 
+    const combinedLibrary = data.libraries.reduce((acc, lib) => {
+        acc.molecule.push(...lib.molecule);
+        return acc;
+    }, { molecule: [] });
+
     useEffect(() => {
         const sharedUser = data.sharedUsers.find(u => u.userId === userData.id);
         const owner = data.ownerId === userData.id;
@@ -156,6 +161,27 @@ export default function ProjectAccordionDetail({
                             {moleculeCount !== 1 ? 'Molecules' : 'Molecule'}
                         </span>
                     </div>
+                    <div>
+                        {moleculeCount > 0 && (
+                            <div className='gap-[10px] flex mt-[8px] flex-wrap'>
+                                {/* @ts-expect-error: type mismatch*/}
+                                {Object.entries(fetchMoleculeStatus(combinedLibrary))
+                                    .map(([status, count]) => {
+                                        let type = 'info';
+                                        if (status === 'Failed') {
+                                            type = 'error';
+                                        } else if (status === 'Done') {
+                                            type = 'success';
+                                        }
+                                        return (
+                                            <span key={status} className={`badge ${type}`}>
+                                                <b>{count}</b> {status}
+                                            </span>
+                                        )
+                                    })}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
             <div className='row-details'>
@@ -168,7 +194,7 @@ export default function ProjectAccordionDetail({
                             height={15}
                         />
                         Owner: <span>
-                            {data?.owner?.firstName} {data?.owner?.lastName}
+                            {data?.owner?.first_name} {data?.owner?.last_name}
                         </span>
                     </div>
                     <div className='flex-evenly'>
@@ -196,11 +222,11 @@ export default function ProjectAccordionDetail({
                             if (idx >= 4) return;
                             if (length - 1 !== idx && idx < 3)
                                 return <span key={val.id}>
-                                    {val.firstName},
+                                    {val.first_name},
                                 </span>
                             if (length - 1 === idx || idx < 3)
                                 return <span key={val.id}>
-                                    {val.firstName}
+                                    {val.first_name}
                                 </span>
                             return <span key={val.id}>
                                 and {length - idx} +
@@ -216,7 +242,7 @@ export default function ProjectAccordionDetail({
                                 height={15}
                             />
                             Created on: <span>
-                                {formatDetailedDate(data.createdAt)}
+                                {formatDetailedDate(data.created_at)}
                             </span>
                         </div>
                     </div>
@@ -231,7 +257,7 @@ export default function ProjectAccordionDetail({
                         height={15}
                     />
                     Last Updated by: <span>
-                        {data.updatedBy?.firstName} {data.updatedBy?.lastName}
+                        {data.updated_by?.first_name} {data.updated_by?.last_name}
                     </span>
                 </div>
             </div>
@@ -270,7 +296,7 @@ export default function ProjectAccordionDetail({
                                     className='mb-[20px] cursor-pointer'
                                     onClick={
                                         () => router.push(
-                                            `/projects/${data.id}?libraryId=${item.id}`
+                                            `/projects/${data.id}?library_id=${item.id}`
                                         )
                                     }
                                 >
@@ -280,7 +306,7 @@ export default function ProjectAccordionDetail({
                                     className='cursor-pointer'
                                     onClick={() => {
                                         copyUrl(
-                                            `${urlHost}/projects/${data.id}?libraryId=${item.id}`,
+                                            `${urlHost}/projects/${data.id}?library_id=${item.id}`,
                                             'library',
                                             item.name)
                                     }}

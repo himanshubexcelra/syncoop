@@ -47,9 +47,9 @@ export default function RenderEditUser({
 
     useEffect(() => {
         const formValue = {
-            firstName: tableData.firstName,
-            lastName: tableData.lastName,
-            email: tableData.email,
+            first_name: tableData.first_name,
+            last_name: tableData.last_name,
+            email_id: tableData.email_id,
             organization: tableData.orgUser ? {
                 id: tableData.orgUser.id,
                 name: tableData.orgUser.name
@@ -106,7 +106,7 @@ export default function RenderEditUser({
                 <RequiredRule message={Messages.requiredMessage('Organisation')} />
             </SimpleItem>
             <SimpleItem
-                dataField={"email"}
+                dataField={"email_id"}
                 editorOptions={{
                     placeholder: "User Email Address",
                     disabled: true,
@@ -115,14 +115,14 @@ export default function RenderEditUser({
                 <Label text="User Email Address" />
             </SimpleItem>
             <SimpleItem
-                dataField={"firstName"}
+                dataField={"first_name"}
                 editorOptions={{ placeholder: "First Name" }}
             >
                 <Label text="First Name" />
                 <RequiredRule message={Messages.requiredMessage('First Name')} />
             </SimpleItem>
             <SimpleItem
-                dataField={"lastName"}
+                dataField={"last_name"}
                 editorOptions={{ placeholder: "Last Name" }}
             >
                 <Label text="Last Name" />

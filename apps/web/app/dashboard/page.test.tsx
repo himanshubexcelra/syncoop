@@ -10,7 +10,7 @@ const data = [
   {
     name: 'Fauxbio',
     user: {
-      email: 'max.harrison@fauxbio.com',
+      email_id: 'max.harrison@fauxbio.com',
     },
     status: 'Active',
     projects: 3,
@@ -23,7 +23,7 @@ const data = [
   {
     name: 'BioQuest',
     user: {
-      email: 'elena.garcia@bioquest.com',
+      email_id: 'elena.garcia@bioquest.com',
     },
     status: 'Active',
     projects: 3,
@@ -36,10 +36,13 @@ const data = [
 ];
 
 const testUser = {
-  email: "forum.tanna@external.milliporesigma.com", firstName: "Forum", lastName: "Tanna", user_role: [{ role: { type: "admin" } }]
+  email_id: "forum.tanna@external.milliporesigma.com", 
+  first_name: "Forum", 
+  last_name: "Tanna", 
+  user_role: [{ role: { type: "admin" } }]
 }
 
-const users = [{ id: 1, firstName: 'John', lastName: 'Doe', email: 'jogn@external.millipore.com' }];
+const users = [{ id: 1, first_name: 'John', last_name: 'Doe', email_id: 'jogn@external.millipore.com' }];
 const roles = [1];
 
 describe('OrganizationList should display proper data', () => {
@@ -57,7 +60,7 @@ describe('OrganizationList should display proper data', () => {
 
     // Wrap the render and any state updates in act
     await act(async () => {
-      render(<ListOrganization data={data} roles={roles} />);
+      render(<ListOrganization userData={data} roles={roles} />);
     });
 
     expect(screen.getByText('Organization Name')).toBeInTheDocument();
@@ -80,7 +83,7 @@ describe('OrganizationList should display proper data', () => {
 
 
     await act(async () => {
-      render(<ListOrganization data={data} roles={roles} />);
+      render(<ListOrganization userData={data} roles={roles} />);
     });
 
     const searchInput = screen.getByPlaceholderText('Search...');
@@ -97,7 +100,7 @@ describe('OrganizationList should display proper data', () => {
     (getUsers as jest.Mock).mockResolvedValue(users);
 
     await act(async () => {
-      render(<ListOrganization data={data} />);
+      render(<ListOrganization userData={data} />);
     });
     const creationDateHeader = screen.getByText('Creation Date');
     fireEvent.click(creationDateHeader);

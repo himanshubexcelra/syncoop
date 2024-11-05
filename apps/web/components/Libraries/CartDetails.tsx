@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
@@ -12,13 +13,18 @@ interface CartDetailsProps {
     removeAll: (userId: number, type: string) => void;
 }
 
-export default function CartDetails({ cartData, userId, removeItemFromCart, removeAll }: CartDetailsProps) {
+export default function CartDetails({
+    cartData,
+    userId,
+    removeItemFromCart,
+    removeAll
+}: CartDetailsProps) {
     interface CartDetail {
         id: number;
         moleculeId: number;
-        libraryId: number;
-        organizationId: number;
-        projectId: number;
+        library_id: number;
+        organization_id: number;
+        project_id: number;
         molecular_weight: string;
         projectName: string;
         libraryName: string;
@@ -27,22 +33,29 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
 
     interface OrderDetail {
         moleculeId: number;
-        libraryId: number;
-        projectId: number;
-        organizationId: number;
+        library_id: number;
+        project_id: number;
+        organization_id: number;
         userId: number;
     }
 
     interface GroupedData {
-        [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; libraryId: number, projectId: number }[];
+        [key: string]: {
+            id: number;
+            moleculeId: number;
+            molecularWeight: string;
+            moleculeName: string;
+            library_id: number,
+            project_id: number
+        }[];
     }
 
     const cartDetails: CartDetail[] = cartData.map(item => ({
         id: item.id,
         moleculeId: item.moleculeId,
-        libraryId: item.libraryId,
-        projectId: item.projectId,
-        organizationId: item.organizationId,
+        library_id: item.library_id,
+        project_id: item.project_id,
+        organization_id: item.organization_id,
         molecular_weight: item.molecule.molecular_weight,
         projectName: item.molecule.library.project.name,
         libraryName: item.molecule.library.name,
@@ -51,9 +64,9 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
 
     const orderDetails: OrderDetail[] = cartData.map(item => ({
         moleculeId: item.moleculeId,
-        libraryId: item.libraryId,
-        projectId: item.projectId,
-        organizationId: item.organizationId,
+        library_id: item.library_id,
+        project_id: item.project_id,
+        organization_id: item.organization_id,
         userId: userId
     }));
 
@@ -79,8 +92,8 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
             moleculeId: item.moleculeId,
             molecularWeight: item.molecular_weight,
             moleculeName: item.moleculeName,
-            libraryId: item.libraryId,
-            projectId: item.projectId
+            library_id: item.library_id,
+            project_id: item.project_id
         });
         return acc;
     }, {});
@@ -125,8 +138,16 @@ export default function CartDetails({ cartData, userId, removeItemFromCart, remo
                         </div>
                     ))}
                     <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                        <Btn className='btn-primary' onClick={handleSubmitOrder} text="Submit Order" />
-                        <Link href="#" onClick={() => removeAll(userId, 'RemoveAll')} className='text-themeBlueColor font-bold' style={{ marginLeft: '10px' }}>Remove All</Link>
+                        <Btn
+                            className='btn-primary'
+                            onClick={handleSubmitOrder}
+                            text="Submit Order" />
+                        <Link href="#"
+                            onClick={() =>
+                                removeAll(userId, 'RemoveAll')}
+                            className='text-themeBlueColor font-bold'
+                            style={{ marginLeft: '10px' }
+                            }>Remove All</Link>
                     </div>
                 </div>
             ) : (

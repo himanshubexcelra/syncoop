@@ -6,7 +6,7 @@ const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     const url = new URL(request.url);
     const searchParams = new URLSearchParams(url.searchParams);
-    const projectId = Number(params.id); // Get the project ID from query parameters
+    const project_id = Number(params.id); // Get the project ID from query parameters
     const joins = searchParams.get('with');
     const query: any = {};
 
@@ -19,9 +19,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 owner: {
                     select: {
                         id: true,
-                        firstName: true,
-                        lastName: true,
-                        email: true,
+                        first_name: true,
+                        last_name: true,
+                        email_id: true,
                     },
                 },
                 organization: {
@@ -39,24 +39,24 @@ export async function GET(request: Request, { params }: { params: { id: string }
                         owner: {
                             select: {
                                 id: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true,
+                                first_name: true,
+                                last_name: true,
+                                email_id: true,
                             },
                         },
-                        updatedBy: {
+                        updated_by: {
                             select: {
                                 id: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true,
+                                first_name: true,
+                                last_name: true,
+                                email_id: true,
                             },
                         },
                     }
                 }
             }
         }
-        query.where = { id: Number(projectId) };
+        query.where = { id: Number(project_id) };
     }
 
     try {

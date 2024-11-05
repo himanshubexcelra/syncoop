@@ -28,7 +28,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     const createEnabled = actionsEnabled.includes('create_molecule_order');
     const context: any = useContext(AppContext);
     const searchParams = useSearchParams();
-    const libraryId = searchParams.get('libraryId') ? searchParams.get('libraryId') : 0;
+    const library_id = searchParams.get('library_id') ? searchParams.get('library_id') : 0;
     const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
@@ -43,7 +43,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         };
 
         fetchCartData();
-    }, [libraryId, cartDetail, userData.id]);
+    }, [library_id, cartDetail, userData.id]);
 
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -54,15 +54,15 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
 
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
 
-        const { moleculeId, libraryId, projectId, moleculeName } = obj;
-        deleteMoleculeCart(moleculeId, libraryId, projectId).then((res) => {
+        const { moleculeId, library_id, project_id, moleculeName } = obj;
+        deleteMoleculeCart(moleculeId, library_id, project_id).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
                     !
                     (
                         item.moleculeId === moleculeId &&
-                        item.libraryId === libraryId &&
-                        item.projectId === projectId
+                        item.library_id === library_id &&
+                        item.project_id === project_id
                     )
                 );
                 const message = Messages.deleteMoleculeMessage(moleculeName);
@@ -118,13 +118,13 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     }, []);
     useEffect(() => {
         if (userData) {
-            if (userData.firstName)
-                setShortName(userData.firstName.charAt(0));
+            if (userData.first_name)
+                setShortName(userData.first_name.charAt(0));
 
             setDropdownItems([
                 {
-                    label: userData?.email,
-                    value: 'email',
+                    label: userData?.email_id,
+                    value: 'email_id',
                 },
                 {
                     label: 'Profile',
@@ -239,7 +239,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                         onClick={toggleDropdown}
                     >
                         {shortName}
-                    </div>                    <PopupBox
+                    </div>
+                    <PopupBox
                         isOpen={dropdownOpen}
                         onItemSelected={(item: DropDownItem) => onItemSelected(item)}
                         onClose={toggleDropdown}

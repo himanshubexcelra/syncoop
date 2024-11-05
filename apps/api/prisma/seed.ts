@@ -73,10 +73,10 @@ async function main() {
     // Insert User System Admin
     const sysAdminCreate = await prisma.user.create({
         data: {
-            email: 'sys_admin@external.milliporesigma.com',
-            firstName: 'User System',
-            lastName: 'Admin',
-            password: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
+            email_id: 'sys_admin@external.milliporesigma.com',
+            first_name: 'User System',
+            last_name: 'Admin',
+            password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             status: 'Enabled',
             user_role: {
                 create: {
@@ -91,10 +91,10 @@ async function main() {
     // Insert Organization Admin
     const orgAdminCreate = await prisma.user.create({
         data: {
-            email: 'org_admin@external.milliporesigma.com',
-            firstName: 'User Org',
-            lastName: 'Admin',
-            password: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
+            email_id: 'org_admin@external.milliporesigma.com',
+            first_name: 'User Org',
+            last_name: 'Admin',
+            password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             status: 'Enabled',
             user_role: {
                 create: {
@@ -109,10 +109,10 @@ async function main() {
     // Insert Library Manager
     await prisma.user.create({
         data: {
-            email: 'lib_manager@external.milliporesigma.com',
-            firstName: 'User Library',
-            lastName: 'Manager',
-            password: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
+            email_id: 'lib_manager@external.milliporesigma.com',
+            first_name: 'User Library',
+            last_name: 'Manager',
+            password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             status: 'Enabled',
             user_role: {
                 create: {
@@ -127,10 +127,10 @@ async function main() {
     // Insert Protocol Approver
     await prisma.user.create({
         data: {
-            email: 'protocol_approver@external.milliporesigma.com',
-            firstName: 'User Protocol',
-            lastName: 'Approver',
-            password: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
+            email_id: 'protocol_approver@external.milliporesigma.com',
+            first_name: 'User Protocol',
+            last_name: 'Approver',
+            password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             status: 'Enabled',
             user_role: {
                 create: {
@@ -145,10 +145,10 @@ async function main() {
     // Insert Researcher
     await prisma.user.create({
         data: {
-            email: 'researcher@external.milliporesigma.com',
-            firstName: 'User Researcher',
-            lastName: '',
-            password: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
+            email_id: 'researcher@external.milliporesigma.com',
+            first_name: 'User Researcher',
+            last_name: '',
+            password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             status: 'Enabled',
             user_role: {
                 create: {
@@ -168,7 +168,7 @@ async function main() {
         data: {
             name: 'Organization Management',
             description: '',
-            createdBy: sysAdminCreate.id,
+            created_by: sysAdminCreate.id,
             module_action: {
                 create: [
                     {
@@ -295,8 +295,7 @@ async function main() {
         data: {
             name: 'Project Management',
             description: '',
-            requiredPurchase: true,
-            createdBy: sysAdminCreate.id,
+            created_by: sysAdminCreate.id,
             module_action: {
                 create: [
                     {
@@ -640,7 +639,7 @@ async function main() {
         data: {
             name: 'User Management',
             description: '',
-            createdBy: sysAdminCreate.id,
+            created_by: sysAdminCreate.id,
             module_action: {
                 create: [
                     {
@@ -756,8 +755,8 @@ async function main() {
             name: 'EMD DD',
             status: 'Enabled',
             type: 'Internal',
-            createdAt: new Date(),
-            createdBy: sysAdminCreate.id,
+            created_at: new Date(),
+            created_by: sysAdminCreate.id,
             orgAdminId: sysAdminCreate.id,
             org_module: {
                 create: [ // Fauxbio purchased Project Management Module
@@ -782,8 +781,8 @@ async function main() {
             name: 'Fauxbio',
             status: 'Enabled',
             type: 'External',
-            createdAt: new Date(),
-            createdBy: sysAdminCreate.id,
+            created_at: new Date(),
+            created_by: sysAdminCreate.id,
             orgAdminId: orgAdminCreate.id,
             org_module: {
                 create: [ // Fauxbio purchased Project Management Module
@@ -808,8 +807,8 @@ async function main() {
             name: 'Astra',
             status: 'Enabled',
             type: 'External',
-            createdAt: new Date(),
-            createdBy: sysAdminCreate.id,
+            created_at: new Date(),
+            created_by: sysAdminCreate.id,
             orgAdminId: orgAdminCreate.id
         }
     }); */
@@ -820,41 +819,41 @@ async function main() {
 
     // Update organization Id of System Admin
     await prisma.user.update({
-        where: { email: 'sys_admin@external.milliporesigma.com' },
+        where: { email_id: 'sys_admin@external.milliporesigma.com' },
         data: {
-            organizationId: emddOrgCreate.id
+            organization_id: emddOrgCreate.id
         },
     });
 
     // Update organization Id of Org Admin
     await prisma.user.update({
-        where: { email: 'org_admin@external.milliporesigma.com' },
+        where: { email_id: 'org_admin@external.milliporesigma.com' },
         data: {
-            organizationId: fauxbioOrgCreate.id
+            organization_id: fauxbioOrgCreate.id
         },
     });
 
     // Update organization Id of Library Manager
     await prisma.user.update({
-        where: { email: 'lib_manager@external.milliporesigma.com' },
+        where: { email_id: 'lib_manager@external.milliporesigma.com' },
         data: {
-            organizationId: fauxbioOrgCreate.id
+            organization_id: fauxbioOrgCreate.id
         },
     });
 
     // Update organization Id of Researcher
     await prisma.user.update({
-        where: { email: 'researcher@external.milliporesigma.com' },
+        where: { email_id: 'researcher@external.milliporesigma.com' },
         data: {
-            organizationId: emddOrgCreate.id
+            organization_id: emddOrgCreate.id
         },
     });
 
     // Update organization Id of Protocol Approver
     await prisma.user.update({
-        where: { email: 'protocol_approver@external.milliporesigma.com' },
+        where: { email_id: 'protocol_approver@external.milliporesigma.com' },
         data: {
-            organizationId: fauxbioOrgCreate.id
+            organization_id: fauxbioOrgCreate.id
         },
     });
 }

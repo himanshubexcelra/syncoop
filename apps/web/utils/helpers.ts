@@ -10,8 +10,8 @@ export async function delay(ms: number): Promise<void> {
 
 export function validateAuth(formData: FormData) {
   return LoginFormSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
+    email_id: formData.get('email_id'),
+    password_hash: formData.get('password_hash'),
   })
 }
 
@@ -31,7 +31,7 @@ export function filterUsersByOrgId(users: any, orgID: any) {
   const externalUsers: any = [];
 
   users?.forEach((user: any) => {
-    if (user.organizationId === orgID) {
+    if (user.organization_id === orgID) {
       internalUsers.push(user);
     } else {
       externalUsers.push(user);

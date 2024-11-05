@@ -101,7 +101,7 @@ export default function EditOrganization({
   const primaryContact = {
     key: "id",
     dataSource: userList,
-    displayExpr: (item: userType) => `${item?.firstName} ${item?.lastName || ''}`,
+    displayExpr: (item: userType) => `${item?.first_name} ${item?.last_name || ''}`,
     valueExpr: "id",
     value: primaryContactId, // Bind the value to state
     onValueChanged: handleContactChange,

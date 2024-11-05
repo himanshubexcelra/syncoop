@@ -54,7 +54,7 @@ export default function ListProjects({ data,
             if (Array.isArray(organizationData)) {
                 const filteredUsers = organizationData.filter(
                     (org: OrganizationDataFields) =>
-                        org.id === newItems[0].organizationId)[0]?.orgUser;
+                        org.id === newItems[0].organization_id)[0]?.orgUser;
 
                 if (filteredUsers) {
                     setUsers(filteredUsers?.filter(

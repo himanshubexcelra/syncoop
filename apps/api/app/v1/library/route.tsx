@@ -9,14 +9,14 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const condition = searchParams.get('condition');
-        const organizationId = searchParams.get('organizationId');
-        const libraryId = searchParams.get('id');
+        const organization_id = searchParams.get('organization_id');
+        const library_id = searchParams.get('id');
         const query: any = {};
         const joins = searchParams.get('with');
 
         if (condition === "count") {
-            const count = organizationId
-                ? await prisma.library.count({ where: { project: { organizationId: Number(organizationId) } } })
+            const count = organization_id
+                ? await prisma.library.count({ where: { project: { organization_id: Number(organization_id) } } })
                 : await prisma.library.count();
             return new Response(JSON.stringify(count), {
                 headers: { "Content-Type": "application/json" },
@@ -38,8 +38,8 @@ export async function GET(request: Request) {
             }
         }
 
-        if (libraryId) {
-            query.where = { id: Number(libraryId) }; // Add the where condition to the query
+        if (library_id) {
+            query.where = { id: Number(library_id) }; // Add the where condition to the query
             const library = await prisma.library.findUnique(query);
 
             if (!library) {
@@ -70,11 +70,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { name, target, description, projectId, userId } = req;
+    const { name, target, description, project_id, userId } = req;
 
     try {
         const project = await prisma.project.findUnique({
-            where: { id: Number(projectId) },
+            where: { id: Number(project_id) },
             include: {
                 libraries: true,
             },
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
                     },
                     project: {
                         connect: {
-                            id: projectId, // Associate the project with the organization
+                            id: project_id, // Associate the project with the organization
                         },
                     },
                 },
@@ -127,10 +127,10 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, target, description, projectId, userId, id } = req;
+        const { name, target, description, project_id, userId, id } = req;
 
         const project = await prisma.project.findUnique({
-            where: { id: Number(projectId) },
+            where: { id: Number(project_id) },
             include: {
                 libraries: true,
             },
@@ -151,10 +151,10 @@ export async function PUT(request: Request) {
                 name,
                 description,
                 target,
-                updatedBy: {
+                updated_by: {
                     connect: { id: userId }, // Associate the user who created/updated the project
                 },
-                updatedAt: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
             },
         });
 

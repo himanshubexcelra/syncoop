@@ -34,7 +34,7 @@ interface MoleculeOrder {
   molecularWeight: number;
   organizationName: string;
   molecular_weight: string;
-  smile: string;
+  smiles_string: string;
   status: string;
   yield?: number;
   anlayse?: number;
@@ -78,7 +78,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     },
   ];
 
-  const { organizationId, orgUser, myRoles } = userData;
+  const { organization_id, orgUser, myRoles } = userData;
   const { type } = orgUser;
   const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([]);
   const [synthesisView, setSynthesisView] = useState(false);
@@ -86,13 +86,13 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
   const columns: ColumnConfig<MoleculeOrder>[] = [
     {
-      dataField: 'smile',
+      dataField: 'smiles_string',
       title: 'Structure',
       minWidth: 400,
       customRender: (data) => (
         <span className="flex justify-center items-center gap-[7.5px]">
           <MoleculeStructure height={80} width={80} svgMode={true}
-            structure={data.smile} id={`smiles-${data.id}`} />
+            structure={data.smiles_string} id={`smiles-${data.id}`} />
           <Button onClick={() => handleStructureZoom()}
             render={() => <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
           <Button onClick={() => handleStructureEdit()}
@@ -153,14 +153,14 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
     try {
       if (type === OrganizationType.External) {
-        // External users: fetch records filtered by organizationId
+        // External users: fetch records filtered by organization_id
         let params: MoleculeOrderParams = {
-          organizationId: organizationId
+          organization_id: organization_id
         };
         if (!isAdmin(myRoles) && myRoles.includes('library_manager')) {
           params = {
             ...params,
-            createdBy: userData.id
+            created_by: userData.id
           }
         }
         data = await getMoleculesOrder(params);
@@ -170,7 +170,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       } else {
         toast.error(Messages.USER_ROLE_CHECK);
       }
-      console.log(data);
+      
       // Transform the fetched data if data is available
       transformedData = data?.map((item: any) => {
         const {
@@ -186,7 +186,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           ...rest,
           organizationName: organization.name,
           molecular_weight: molecule.molecular_weight,
-          smile: molecule.smile,
+          smiles_string: molecule.smiles_string,
           status: molecule.status,
           orderName,
           ...(() => {

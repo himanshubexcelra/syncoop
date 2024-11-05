@@ -91,16 +91,16 @@ body {
 
 .content-wrapper {
   padding: 20px;
-  background: #F8F8FC;
+  background: var(--themeSilverGreyColor);
 }
 
 .btn-primary.dx-button {
   border: 2px solid var(--themeBlueColor);
   background-color: var(--themeBlueColor);
-  color: #fff;
+  color: var(--white);
 
   .dx-button-text {
-    color: #fff;
+    color: var(--white);
     font-family: Lato;
     font-size: 14px;
     font-style: normal;

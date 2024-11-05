@@ -3,12 +3,12 @@
 
 type ProjectDBType = {
     withRelation: string[],
-    organizationId: number,
+    organization_id: number,
     withCount: string[]
 }
 export async function getProjects({
     withRelation = [],
-    organizationId, withCount = []
+    organization_id, withCount = []
 }: ProjectDBType) {
     const url = new URL(`${process.env.API_HOST_URL}/v1/project`);
     if (withRelation.length) {
@@ -17,8 +17,8 @@ export async function getProjects({
     if (withCount.length) {
         url.searchParams.append('withCount', JSON.stringify(withCount));
     }
-    if (organizationId) {
-        url.searchParams.append('organizationId', organizationId.toString());
+    if (organization_id) {
+        url.searchParams.append('organization_id', organization_id.toString());
     }
     const response = await fetch(url, {
         mode: "no-cors",

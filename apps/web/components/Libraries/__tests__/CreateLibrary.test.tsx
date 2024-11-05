@@ -47,15 +47,15 @@ const data = {
     type: 'Optimization',
     description: 'Example data',
     rganizationId: 1,
-    createdAt: '2024-10-17T08:18:35.505Z',
-    updatedAt: '2024-10-17T08:18:35.505Z',
+    created_at: '2024-10-17T08:18:35.505Z',
+    updated_at: '2024-10-17T08:18:35.505Z',
     ownerId: 1,
-    updatedById: 1,
+    updated_byId: 1,
     owner: {
         id: 1,
-        firstName: 'System',
-        lastName: 'Admin',
-        email: 'sys_admin@external.milliporesigma.com'
+        first_name: 'System',
+        last_name: 'Admin',
+        email_id: 'sys_admin@external.milliporesigma.com'
     },
     library: { name: 'fauxbio' },
     libraries: [
@@ -64,46 +64,46 @@ const data = {
             name: 'EGFR-v1',
             description: 'Smaple data',
             target: 'Target',
-            projectId: 2,
-            createdAt: '2024-10-17T09:53:33.045Z',
-            updatedAt: null,
+            project_id: 2,
+            created_at: '2024-10-17T09:53:33.045Z',
+            updated_at: null,
             ownerId: 7,
-            updatedById: null,
+            updated_byId: null,
             owner: {
                 id: 1,
-                firstName: 'System',
-                lastName: 'Admin',
-                email: 'sys_admin@external.milliporesigma.com'
+                first_name: 'System',
+                last_name: 'Admin',
+                email_id: 'sys_admin@external.milliporesigma.com'
             },
-            updatedBy: null
+            updated_by: null
         },
         {
             id: 2,
             name: 'Lib3',
             description: 'Smaple data',
             target: 'Target',
-            projectId: 2,
-            createdAt: '2024-10-17T09:53:33.070Z',
-            updatedAt: null,
+            project_id: 2,
+            created_at: '2024-10-17T09:53:33.070Z',
+            updated_at: null,
             ownerId: 7,
-            updatedById: null,
+            updated_byId: null,
             owner: {
                 id: 1,
-                firstName: 'System',
-                lastName: 'Admin',
-                email: 'sys_admin@external.milliporesigma.com'
+                first_name: 'System',
+                last_name: 'Admin',
+                email_id: 'sys_admin@external.milliporesigma.com'
             },
-            updatedBy: null
+            updated_by: null
         }
     ]
 };
 
 const userData = {
     id: 1,
-    organizationId: 1,
-    email: "forum.tanna@external.milliporesigma.com",
-    firstName: "Forum",
-    lastName: "Tanna",
+    organization_id: 1,
+    email_id: "forum.tanna@external.milliporesigma.com",
+    first_name: "Forum",
+    last_name: "Tanna",
     user_role: [{
         role: {
             id: 6,
@@ -115,9 +115,9 @@ const userData = {
         roleId: 6
     }],
     orgUser: {
-        id: 1, name: 'System Admin', firstName: "Forum",
-        lastName: "Tanna",
-        email: "forum.tanna@external.milliporesigma.com",
+        id: 1, name: 'System Admin', first_name: "Forum",
+        last_name: "Tanna",
+        email_id: "forum.tanna@external.milliporesigma.com",
         status: "active",
         user_role: [{
             role: {
@@ -134,9 +134,9 @@ const userData = {
             name: 'Merck',
             description: 'Merck Corporation',
             logo: 'logo.jpg',
-            createdBy: 1,
-            createdAt: '2024-08-05T15:44:09.158Z',
-            updatedAt: '2024-08-05T15:44:09.158Z',
+            created_by: 1,
+            created_at: '2024-08-05T15:44:09.158Z',
+            updated_at: '2024-08-05T15:44:09.158Z',
             status: 'active',
             user_role: [{
                 role: {
@@ -159,9 +159,9 @@ const projectData = {
         name: 'Merck',
         description: 'Merck Corporation',
         logo: 'logo.jpg',
-        createdBy: 1,
-        createdAt: '2024-08-05T15:44:09.158Z',
-        updatedAt: '2024-08-05T15:44:09.158Z',
+        created_by: 1,
+        created_at: '2024-08-05T15:44:09.158Z',
+        updated_at: '2024-08-05T15:44:09.158Z',
         status: 'active',
         user_role: [{
             role: {
@@ -175,7 +175,7 @@ const projectData = {
     },
     user: userData,
     sharedUser: [userData.orgUser],
-    updatedBy: {}
+    updated_by: {}
 }
 
 describe('Create/ Edit Library should work as expected', () => {
@@ -202,7 +202,7 @@ describe('Create/ Edit Library should work as expected', () => {
                     fetchLibraries={fetchLibraries}
                     formRef={mockFormRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
-                    libraryIdx={-1}
+                    library_idx={-1}
                 />);
         });
 

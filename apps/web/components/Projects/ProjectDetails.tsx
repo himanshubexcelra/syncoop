@@ -62,7 +62,7 @@ export default function ProjectDetails({
             const tempOrganization = [];
             organization = await getOrganizationById({
                 withRelation: ['orgUser', 'user_role', 'projects'],
-                id: userData?.organizationId
+                id: userData?.organization_id
             });
             setFilteredData(organization?.projects);
             setOrgProjects(organization?.projects);
@@ -89,16 +89,16 @@ export default function ProjectDetails({
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.type.toLowerCase().includes(value.toLowerCase()) ||
                     item.target?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
+                    item.user?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.user?.last_name?.toLowerCase().includes(value.toLowerCase()));
             } else {
                 filteredValue = orgProj.filter((item: ProjectDataFields) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.type.toLowerCase().includes(value.toLowerCase()) ||
                     item.target?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.firstName?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.lastName?.toLowerCase().includes(value.toLowerCase()));
+                    item.user?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.user?.last_name?.toLowerCase().includes(value.toLowerCase()));
             }
         } else {
             filteredValue = orgProj || [];
@@ -114,7 +114,7 @@ export default function ProjectDetails({
         if (!sort) {
             const tempData = [...filteredData];
             tempData.sort(
-                (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+                (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
             setFilteredData(tempData);
             setSort(true);
         } else {
@@ -172,8 +172,8 @@ export default function ProjectDetails({
                                                 {
                                                     ...userData,
                                                     owner: {
-                                                        firstName: userData.firstName,
-                                                        lastName: userData.lastName
+                                                        first_name: userData.first_name,
+                                                        last_name: userData.last_name
                                                     }
                                                 }}
                                             users={users}
@@ -242,8 +242,8 @@ export default function ProjectDetails({
                                 {
                                     ...userData,
                                     owner: {
-                                        firstName: userData?.firstName,
-                                        lastName: userData?.lastName
+                                        first_name: userData?.first_name,
+                                        last_name: userData?.last_name
                                     }
                                 }}
                             data={filteredData}

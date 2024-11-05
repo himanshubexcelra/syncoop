@@ -19,13 +19,13 @@ import './form.css'
 
 interface ChangePasswordProps {
     onClose: () => void;
-    email?: string;
+    email_id?: string;
 }
-const customPasswordCheck = (password: any) => LoginFormSchema.shape.password.safeParse(password).success;
+const customPasswordCheck = (password: any) => LoginFormSchema.shape.password_hash.safeParse(password).success;
 
 const passwordLabel = { 'aria-label': 'Password' };
 
-export default function ChangePassword({ onClose, email }: ChangePasswordProps) {
+export default function ChangePassword({ onClose, email_id }: ChangePasswordProps) {
     const formRef = useRef<any>(null);
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -62,7 +62,7 @@ export default function ChangePassword({ onClose, email }: ChangePasswordProps) 
         const values = formRef.current!.instance().option("formData");
         const validationCheck = customPasswordCheck(values.newPassword)
         if (validationCheck) {
-            const response = await editUser({ ...values, email });
+            const response = await editUser({ ...values, email_id });
             if (response.status === 200) {
                 setNewPassword('');
                 setOldPassword('')

@@ -33,7 +33,7 @@ type ListOrganizationProps = {
 
 export default function ListOrganization({ userData, actionsEnabled }: ListOrganizationProps) {
   const [editPopup, showEditPopup] = useState(false);
-  const [editField, setEditField] = useState({ name: '', email: '' });
+  const [editField, setEditField] = useState({ name: '', email_id: '' });
   const [createPopupVisible, setCreatePopupVisibility] = useState(false);
   const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
   const [loader, setLoader] = useState(true);
@@ -55,16 +55,20 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
     setLoader(false);
   }
 
+  const fetchRoles = async () => {
+    const roles = await getFilteredRoles();
+    const role = roles.find(
+      (role: UserRole) => role.type === 'org_admin');
+    if (role) {
+      setRole(role.id)
+    }
+  };
+
   useEffect(() => {
     fetchOrganizations();
   }, [appContext?.userCount]);
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      const roles = await getFilteredRoles();
-      setRole(roles.filter((role: UserRole) => role.type === 'org_admin')[0].id)
-    };
-
     fetchRoles();
   }, []);
 
@@ -153,27 +157,27 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             <HeaderFilter dataSource={statusHeaderFilter} />
           </Column>
           <Column
-            dataField="user.email"
+            dataField="user.email_id"
             minWidth={350}
             caption="Organization Admin"
-            cellRender={({ data }: any) => <span>{data.user.email}</span>}
+            cellRender={({ data }: any) => <span>{data.user.email_id}</span>}
             allowHeaderFiltering={false}
           />
           <Column
-            dataField="createdAt"
+            dataField="created_at"
             caption="Creation Date"
             defaultSortIndex={0}
             defaultSortOrder="desc"
             cellRender={({ data }) => (
-              <span>{formatDate(data.createdAt)}</span>
+              <span>{formatDate(data.created_at)}</span>
             )}
             allowHeaderFiltering={false}
           />
           <Column
-            dataField="updatedAt"
+            dataField="updated_at"
             caption="Last Modified Date"
             cellRender={({ data }) => (
-              <span>{formatDate(data.updatedAt)}</span>
+              <span>{formatDate(data.updated_at)}</span>
             )}
             allowHeaderFiltering={false}
           />
@@ -229,7 +233,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     fetchOrganizations={fetchOrganizations}
                     roleId={orgAdminRole}
-                    createdBy={userData.id}
+                    created_by={userData.id}
                   />
                 )}
                 width={477}

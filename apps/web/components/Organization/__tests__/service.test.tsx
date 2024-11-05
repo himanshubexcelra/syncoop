@@ -5,7 +5,7 @@ fdescribe('Organization API Functions', () => {
         {
             name: 'Fauxbio',
             user: {
-                email: 'max.harrison@fauxbio.com',
+                email_id: 'max.harrison@fauxbio.com',
             },
             status: 'Active',
             projects: 3,
@@ -18,7 +18,7 @@ fdescribe('Organization API Functions', () => {
         {
             name: 'BioQuest',
             user: {
-                email: 'elena.garcia@bioquest.com',
+                email_id: 'elena.garcia@bioquest.com',
             },
             status: 'Active',
             projects: 3,

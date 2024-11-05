@@ -406,6 +406,7 @@ export interface DeleteMoleculeCart {
   moleculeId: number;
   project_id: number;
   moleculeName: string,
+  userId: number;
 }
 
 export interface MoleculeOrderParams {
@@ -423,10 +424,10 @@ export enum OrganizationType {
 export interface MoleculeObj {
   molecular_weight: string;
   library: {
+    name: string;
+    project: {
       name: string;
-      project: {
-          name: string;
-      };
+    };
   };
   source_molecule_name: string;
 }
@@ -439,4 +440,31 @@ export interface CartItem {
   organization_id: number;
   molecule: MoleculeObj;
   moleculeName: string;
+}
+
+export interface CartDetail {
+  id: number;
+  moleculeId: number;
+  library_id: number;
+  organization_id: number;
+  project_id: number;
+  molecular_weight: string;
+  projectName: string;
+  libraryName: string;
+  moleculeName: string;
+  userId: number;
+}
+
+export interface OrderDetail {
+  orderId: number;
+  orderName: string;
+  moleculeId: number;
+  library_id: number;
+  project_id: number;
+  organization_id: number;
+  userId: number;
+}
+
+export interface GroupedData {
+  [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
 }

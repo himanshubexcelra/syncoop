@@ -204,7 +204,6 @@ export async function deleteMoleculeCart(
         if (project_id) {
             url.searchParams.append('project_id', String(project_id));
         }
-
         const response = await fetch(url, {
             method: "DELETE",
             headers: {
@@ -259,7 +258,7 @@ export async function submitOrder(orderData: OrderType[]) {
                 body: JSON.stringify(orderData),
             }
         );
-        
+
         if (response.status === 200) {
             const data = await response.json();
             return data;

@@ -2,7 +2,6 @@
 "use client";
 
 import { DeleteMoleculeCart, DropDownItem, UserData } from '@/lib/definition';
-
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -10,14 +9,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Popup as CartPopup, } from "devextreme-react/popup";
+import { Popup as CartPopup } from "devextreme-react/popup";
+import { Popup as OrderPopup } from "devextreme-react/popup";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { Messages } from "@/utils/message";
 import toast from "react-hot-toast";
 import { deleteMoleculeCart, getMoleculeCart } from '../Libraries/libraryService';
 import CartDetails from '../Libraries/CartDetails';
-
+import OrderDetails from '../Libraries/OrderDetails'
 
 type HeaderProps = {
     userData: UserData,
@@ -27,13 +27,16 @@ type HeaderProps = {
 export default function Header({ userData, actionsEnabled }: HeaderProps) {
     const createEnabled = actionsEnabled.includes('create_molecule_order');
     const context: any = useContext(AppContext);
+    const appContext = context.state;
     const searchParams = useSearchParams();
     const library_id = searchParams.get('library_id') ? searchParams.get('library_id') : 0;
     const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
+    const [orderPopupPosition, setOrderPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
+    const [orderPopupVisible, setOrderPopupVisibility] = useState(false);
     const [cartData, setCartData] = useState([]);
 
     useEffect(() => {
@@ -54,8 +57,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
 
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
 
-        const { moleculeId, library_id, project_id, moleculeName } = obj;
-        deleteMoleculeCart(moleculeId, library_id, project_id).then((res) => {
+        const { moleculeId, library_id, project_id, moleculeName, userId } = obj;
+        deleteMoleculeCart(userId, moleculeId, library_id, project_id).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
                     !
@@ -65,6 +68,9 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                         item.project_id === project_id
                     )
                 );
+                context?.addToState({
+                    ...appContext, cartDetail: [...filteredData]
+                })
                 const message = Messages.deleteMoleculeMessage(moleculeName);
                 toast.success(message);
 
@@ -82,11 +88,16 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         deleteMoleculeCart(userId).then((res) => {
             if (res) {
                 setCartData([]);
+                context?.addToState({
+                    ...appContext, cartDetail: []
+                })
                 if (type === 'RemoveAll') {
+                    setCreatePopupVisibility(false)
                     toast.success(Messages.REMOVE_ALL_MESSAGE);
                 }
                 else {
-                    toast.success(Messages.SUBMIT_ORDER);
+                    setCreatePopupVisibility(false)
+                    setOrderPopupVisibility(true)
                 }
 
             }
@@ -116,6 +127,16 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
             });
         }
     }, []);
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setOrderPopupPosition({
+                my: 'center',
+                at: 'center',
+                of: window,
+            });
+        }
+    }, []);
+
     useEffect(() => {
         if (userData) {
             if (userData.first_name)
@@ -160,6 +181,19 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 height="100%"
                 position={popupPosition}
 
+                showCloseButton={true}
+                wrapperAttr={{ class: "create-popup mr-[15px]" }}
+            />
+            <OrderPopup
+                visible={orderPopupVisible}
+                onHiding={() => setOrderPopupVisibility(false)}
+                contentRender={() => (
+                    <OrderDetails />
+                )}
+                width={500}
+                // hideOnOutsideClick={true}
+                height="50%"
+                position={orderPopupPosition}
                 showCloseButton={true}
                 wrapperAttr={{ class: "create-popup mr-[15px]" }}
             />

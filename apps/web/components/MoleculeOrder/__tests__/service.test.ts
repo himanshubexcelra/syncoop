@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { getMoleculesOrder } from "../service";
 import { MoleculeOrderParams } from "@/lib/definition";
 
@@ -8,7 +9,7 @@ describe('getMoleculesOrder', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error in tests
+        jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     it('fetches molecule orders with correct query parameters', async () => {

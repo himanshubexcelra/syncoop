@@ -111,7 +111,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             {data.status.toUpperCase() === "FAILED" &&
               <Image src="/icons/warning.svg" width={14} height={14} alt="Molecule order failed" />}
             {data.status}
-            <StatusMark status={StatusCode[colorKey]} />
+            <StatusMark status={StatusCode["READY"]} />
           </span>
         );
       },
@@ -181,13 +181,13 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           ...rest,
           organizationName: organization?.name || 'Unknown',
           molecular_weight: molecule?.molecular_weight || 0,
-          smile: molecule?.smiles_string || '',
+          smiles_string: molecule?.smiles_string || '',
           status: molecule?.status || 'Unknown',
           orderName,
           ...(() => {
             if (type === OrganizationType.External) {
               return {
-                "project / library": `${project.nam || 'Unknown'} / ${library.name || 'Unknown'}`
+                "project / library": `${project.name || 'Unknown'} / ${library.name || 'Unknown'}`
               }
             } else if (type === OrganizationType.Internal) {
               return {

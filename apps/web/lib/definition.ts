@@ -392,6 +392,29 @@ export interface LibraryDataNode {
   publishedMoleculeCount?: number;
 }
 
+export interface ValidateSmileRequest {
+  smiles: string;
+}
+export interface UploadMoleculeSmilesRequest {
+  smiles: string[];
+  created_by_user_id: number;
+  library_id: string;
+  project_id: string;
+  organization_id: number;
+  source_molecule_name: string;
+}
+
+export interface RejectedSmiles {
+  smiles: string;
+  reason: string;
+}
+export interface UploadMoleculeSmilesResponse {
+  message: string;
+  uploaded_smiles_count: number;
+  rejected_smiles_count: number;
+  uploaded_smiles: string[];
+  rejected_smiles: RejectedSmiles[]
+}
 export interface OrderType {
   moleculeId: number;
   library_id: number;
@@ -440,6 +463,14 @@ export interface CartItem {
   organization_id: number;
   molecule: MoleculeObj;
   moleculeName: string;
+}
+export interface UploadMoleculeFileRequest {
+  file: File;
+  created_by_user_id: string;
+  library_id: string;
+  project_id: string;
+  organization_id: string;
+  updated_by_user_id: string;
 }
 
 export interface CartDetail {

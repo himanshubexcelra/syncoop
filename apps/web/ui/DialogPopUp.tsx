@@ -2,7 +2,7 @@ import { Popup } from 'devextreme-react/popup';
 
 interface ContentProps {
     onClose: () => void;
-    email?: string;
+    email_id?: string;
 }
 interface DialogProperties {
     width?: number;
@@ -17,7 +17,13 @@ interface MyPopupProps {
     contentProps?: ContentProps;
 }
 
-export default function DialogPopUp({ visible, dialogProperties, Content, hidePopup, contentProps }: MyPopupProps) {
+export default function DialogPopUp({
+    visible,
+    dialogProperties,
+    Content,
+    hidePopup,
+    contentProps
+}: MyPopupProps) {
     const { width, height } = dialogProperties;
 
     return (

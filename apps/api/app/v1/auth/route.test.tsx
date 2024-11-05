@@ -10,10 +10,10 @@ describe('Auth API', () => {
             const user = {
                 id: 1,
                 status: 'Enabled',
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'testuser@prisma.io',
-                password: await bcrypt.hash('123456', saltRounds),
+                first_name: 'Test',
+                last_name: 'User',
+                email_id: 'testuser@prisma.io',
+                password_hash: await bcrypt.hash('123456', saltRounds),
                 user_role: [
                     {
                         role: {
@@ -30,8 +30,8 @@ describe('Auth API', () => {
             const request = {
                 json: async () => {
                     return {
-                        email: 'hello@prisma',
-                        password: '123456'
+                        email_id: 'hello@prisma',
+                        password_hash: '123456'
                     }
                 }
             }
@@ -51,8 +51,8 @@ describe('Auth API', () => {
             const request = {
                 json: async () => {
                     return {
-                        email: 'hello@prisma.io',
-                        password: '---'
+                        email_id: 'hello@prisma.io',
+                        password_hash: '---'
                     }
                 }
             }

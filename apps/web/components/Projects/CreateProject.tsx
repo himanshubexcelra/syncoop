@@ -42,7 +42,7 @@ export default function CreateProject({
   const [filteredData, setFilteredData] = useState<User[]>(users);
   const [userList, setUsers] = useState<User[]>([]);
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
-  const [organizationId, setOrganizationId] = useState(userData?.orgUser?.id);
+  const [organization_id, setOrganizationId] = useState(userData?.orgUser?.id);
   const [showIcon, setShowIcon] = useState('arrow-both');
   const dataGridRef = useRef<DataGridRef>(null);
 
@@ -83,8 +83,8 @@ export default function CreateProject({
 
   const searchUser = ({ value, data }: { value: string, data: User[] }) => {
     const filteredValue = data.filter((item) =>
-      item.firstName.toLowerCase().includes(value.toLowerCase()) ||
-      item.lastName.toLowerCase().includes(value.toLowerCase())
+      item.first_name.toLowerCase().includes(value.toLowerCase()) ||
+      item.last_name.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredData(filteredValue);
   }
@@ -131,7 +131,7 @@ export default function CreateProject({
           {
             ...values,
             sharedUsers,
-            organizationId,
+            organization_id,
             userId: userData.id
           })
       }
@@ -139,7 +139,7 @@ export default function CreateProject({
         {
           ...values,
           sharedUsers,
-          organizationId,
+          organization_id,
           userId: userData.id
         });
       if (!response.error) {
@@ -235,7 +235,7 @@ export default function CreateProject({
           {
             placeholder: "Project Owner",
             disabled: true,
-            value: `${userData.owner?.firstName} ${userData.owner?.lastName}`
+            value: `${userData.owner?.first_name} ${userData.owner?.last_name}`
           }
         }
       >
@@ -306,9 +306,9 @@ export default function CreateProject({
               ref={dataGridRef}
             >
               <Column
-                dataField="firstName"
+                dataField="first_name"
                 alignment="center"
-                cellRender={({ data }: any) => <span>{data.firstName} {data.lastName}</span>}
+                cellRender={({ data }: any) => <span>{data.first_name} {data.last_name}</span>}
                 caption="Name"
               />
               <Sorting mode="single" />

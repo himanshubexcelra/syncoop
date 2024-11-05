@@ -8,12 +8,12 @@ export async function POST(request: Request) {
     const user = await prisma.user.findFirst({
       /* relationLoadStrategy: 'join', // or 'query' */
       select: {
-        firstName: true,
-        lastName: true,
-        email: true,
-        organizationId: true,
+        first_name: true,
+        last_name: true,
+        email_id: true,
+        organization_id: true,
         id: true,
-        password: true,
+        password_hash: true,
         user_role: {
           select: {
             role: {
@@ -49,12 +49,12 @@ export async function POST(request: Request) {
         }
       },
       where: {
-        email: req.email,
+        email_id: req.email_id,
       },
     });
 
     if (user) {
-      const isMatch = await bcrypt.compare(req.password, `${user.password}`);
+      const isMatch = await bcrypt.compare(req.password_hash, `${user.password_hash}`);
       if (isMatch) {
         return new Response(JSON.stringify({
           success: true,

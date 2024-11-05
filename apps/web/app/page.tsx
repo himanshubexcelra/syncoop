@@ -16,7 +16,7 @@ export default function Login() {
     router.replace('/dashboard');
     setTimeout(async () => {
       const toastId = toast.success(
-        Messages.userLoggedIn(data.firstName, data.lastName));
+        Messages.userLoggedIn(data.first_name, data.last_name));
       await delay(DELAY);
       toast.remove(toastId);
     }, DELAY);

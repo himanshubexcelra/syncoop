@@ -105,14 +105,14 @@ export async function GET(request: Request) {
               },
               owner: {
                 select: {
-                  firstName: true,
-                  lastName: true,
+                  first_name: true,
+                  last_name: true,
                 },
               },
-              updatedBy: { // Include the user who updated the project
+              updated_by: { // Include the user who updated the project
                 select: {
-                  firstName: true,
-                  lastName: true,
+                  first_name: true,
+                  last_name: true,
                 },
               },
             },
@@ -183,9 +183,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 
   const req = await request.json();
-  const { name, firstName, lastName, email, roleId, createdBy, password } = req;
+  const { name, first_name, last_name, email_id, roleId, created_by, password_hash } = req;
   const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  const hashedPassword = await bcrypt.hash(password_hash, saltRounds);
   // Check if an organization with the same name already exists (case insensitive)
   try {
     const existingOrganization = await prisma.organization.findFirst({
@@ -208,10 +208,10 @@ export async function POST(request: Request) {
       // Step 1: Create the user (admin)
       const adminUser = await prisma.user.create({
         data: {
-          firstName,
-          lastName,
-          email,
-          password: hashedPassword,
+          first_name,
+          last_name,
+          email_id,
+          password_hash: hashedPassword,
           status: 'Enabled',
           user_role: {
             create: {
@@ -230,7 +230,7 @@ export async function POST(request: Request) {
           status: 'Enabled',
           type: "External",
           orgAdminId: adminUser.id, // Link the user as the org admin
-          createdBy,
+          created_by,
           org_module: {
             create: [
               {
@@ -253,7 +253,7 @@ export async function POST(request: Request) {
           id: adminUser.id,
         },
         data: {
-          organizationId: organization.id, // Associate user with the organization
+          organization_id: organization.id, // Associate user with the organization
         },
       });
       return new Response(JSON.stringify(organization), {

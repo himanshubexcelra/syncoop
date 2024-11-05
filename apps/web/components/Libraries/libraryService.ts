@@ -3,8 +3,8 @@
 
 import { addToFavouritesProps, MoleculeType, OrderType } from "@/lib/definition";
 
-export async function getLibraries(withRelation: string[] = [], projectId: string) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/project/${projectId}`);
+export async function getLibraries(withRelation: string[] = [], project_id: string) {
+    const url = new URL(`${process.env.API_HOST_URL}/v1/project/${project_id}`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
     }
@@ -19,8 +19,8 @@ export async function getLibraries(withRelation: string[] = [], projectId: strin
     return data;
 }
 
-export async function getLibraryById(withRelation: string[] = [], libraryId: string) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/library?id=${libraryId}`);
+export async function getLibraryById(withRelation: string[] = [], library_id: string) {
+    const url = new URL(`${process.env.API_HOST_URL}/v1/library?id=${library_id}`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
     }
@@ -35,11 +35,11 @@ export async function getLibraryById(withRelation: string[] = [], libraryId: str
     return data;
 }
 
-export async function getLibraryCountById(organizationId?: number) {
+export async function getLibraryCountById(organization_id?: number) {
     try {
         const url = new URL(`${process.env.API_HOST_URL}/v1/library`);
-        if (organizationId) {
-            url.searchParams.append('organizationId', String(organizationId));
+        if (organization_id) {
+            url.searchParams.append('organization_id', String(organization_id));
         }
         url.searchParams.append('condition', 'count');
         const response = await fetch(url, {
@@ -57,11 +57,11 @@ export async function getLibraryCountById(organizationId?: number) {
     }
 }
 
-export async function geMoleculeCountById(organizationId?: number) {
+export async function geMoleculeCountById(organization_id?: number) {
     try {
         const url = new URL(`${process.env.API_HOST_URL}/v1/molecule`);
-        if (organizationId) {
-            url.searchParams.append('organizationId', String(organizationId));
+        if (organization_id) {
+            url.searchParams.append('organization_id', String(organization_id));
         }
         url.searchParams.append('condition', 'count');
         const response = await fetch(url, {
@@ -156,17 +156,17 @@ export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
     }
 }
 
-export async function getMoleculeCart(userId?: number, libraryId?: number, projectId?: number) {
+export async function getMoleculeCart(userId?: number, library_id?: number, project_id?: number) {
     try {
         const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
-        if (libraryId) {
-            url.searchParams.append('libraryId', String(libraryId));
+        if (library_id) {
+            url.searchParams.append('library_id', String(library_id));
         }
         if (userId) {
             url.searchParams.append('userId', String(userId));
         }
-        if (projectId) {
-            url.searchParams.append('projectId', String(projectId));
+        if (project_id) {
+            url.searchParams.append('project_id', String(project_id));
         }
         const response = await fetch(url, {
             mode: "no-cors",
@@ -187,8 +187,8 @@ export async function getMoleculeCart(userId?: number, libraryId?: number, proje
 export async function deleteMoleculeCart(
     userId?: number,
     moleculeId?: number,
-    libraryId?: number,
-    projectId?: number
+    library_id?: number,
+    project_id?: number
 ) {
     try {
         const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
@@ -198,11 +198,11 @@ export async function deleteMoleculeCart(
         if (moleculeId) {
             url.searchParams.append('moleculeId', String(moleculeId));
         }
-        if (libraryId) {
-            url.searchParams.append('libraryId', String(libraryId));
+        if (library_id) {
+            url.searchParams.append('library_id', String(library_id));
         }
-        if (projectId) {
-            url.searchParams.append('projectId', String(projectId));
+        if (project_id) {
+            url.searchParams.append('project_id', String(project_id));
         }
 
         const response = await fetch(url, {

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
         if (condition === "count") {
             const count = orgId
-                ? await prisma.project.count({ where: { organizationId: Number(orgId) } })
+                ? await prisma.project.count({ where: { organization_id: Number(orgId) } })
                 : await prisma.project.count();
             return new Response(JSON.stringify(count), {
                 headers: { "Content-Type": "application/json" },
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
             });
         }
         if (orgId) {
-            query.where = { organizationId: Number(orgId) };
+            query.where = { organization_id: Number(orgId) };
         }
 
         const projects = await prisma.project.findMany(query);
@@ -39,25 +39,25 @@ export async function GET(request: Request) {
 }
 export async function POST(request: Request) {
     const req = await request.json();
-    const { name, type, target, description, organizationId, userId, sharedUsers } = req;
+    const { name, type, target, description, organization_id, userId, sharedUsers } = req;
 
     try {
         const organization = await prisma.organization.findUnique({
-            where: { id: Number(organizationId) },
+            where: { id: Number(organization_id) },
             include: {
                 projects: { // Include projects related to this organization
                     include: {
                         sharedUsers: true, // Include shared users for each project
                         owner: {
                             select: {
-                                firstName: true,
-                                lastName: true,
+                                first_name: true,
+                                last_name: true,
                             },
                         },
-                        updatedBy: { // Include the user who updated the project
+                        updated_by: { // Include the user who updated the project
                             select: {
-                                firstName: true,
-                                lastName: true,
+                                first_name: true,
+                                last_name: true,
                             },
                         },
                     },
@@ -90,19 +90,19 @@ export async function POST(request: Request) {
                     },
                     organization: {
                         connect: {
-                            id: organizationId, // Associate the project with the organization
+                            id: organization_id, // Associate the project with the organization
                         },
                     },
-                    updatedBy: {
+                    updated_by: {
                         connect: { id: userId }, // Associate the user who created/updated the project
                     },
                     sharedUsers: {
-                        create: sharedUsers?.map(({ id: userId, permission, firstName }: { id: number, permission: string, firstName: string }) => ({
+                        create: sharedUsers?.map(({ id: userId, permission, first_name }: { id: number, permission: string, first_name: string }) => ({
                             user: {
                                 connect: { id: userId }, // Connect the user by ID
                             },
                             role: permission,
-                            firstName,
+                            first_name,
                         })) || [] // If sharedUsers is undefined, default to an empty array
                     }
                 },
@@ -126,25 +126,25 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, type, target, description, organizationId, userId, sharedUsers, id } = req;
+        const { name, type, target, description, organization_id, userId, sharedUsers, id } = req;
 
         // Check if user is associated with another organization
         const organization = await prisma.organization.findUnique({
-            where: { id: Number(organizationId) },
+            where: { id: Number(organization_id) },
             include: {
                 projects: { // Include projects related to this organization
                     include: {
                         sharedUsers: true, // Include shared users for each project
                         owner: {
                             select: {
-                                firstName: true,
-                                lastName: true,
+                                first_name: true,
+                                last_name: true,
                             },
                         },
-                        updatedBy: { // Include the user who updated the project
+                        updated_by: { // Include the user who updated the project
                             select: {
-                                firstName: true,
-                                lastName: true,
+                                first_name: true,
+                                last_name: true,
                             },
                         },
                     },
@@ -180,25 +180,25 @@ export async function PUT(request: Request) {
                 type,
                 description,
                 target,
-                updatedBy: {
+                updated_by: {
                     connect: { id: userId }, // Associate the user who created/updated the project
                 },
                 sharedUsers: {
                     deleteMany: {
                         id: { in: usersToRemove }, // Remove users not in the request
                     },
-                    upsert: sharedUsers?.map(({ id: userId, permission, firstName }: { id: number, permission: string, firstName: string }) => ({
-                        where: { userId_projectId: { userId, projectId: id } }, // Ensure you have a unique constraint on userId and projectId
+                    upsert: sharedUsers?.map(({ id: userId, permission, first_name }: { id: number, permission: string, first_name: string }) => ({
+                        where: { userId_project_id: { userId, project_id: id } }, // Ensure you have a unique constraint on userId and project_id
                         update: {
                             role: permission,
-                            firstName,
+                            first_name,
                         },
                         create: {
                             user: {
                                 connect: { id: userId }, // Connect the user by ID
                             },
                             role: permission,
-                            firstName,
+                            first_name,
                         },
                     })) || []
                 }

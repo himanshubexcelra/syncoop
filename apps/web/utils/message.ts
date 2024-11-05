@@ -1,7 +1,7 @@
 export const Messages = {
     FORGOT_PASSWORD_MESSAGE: `Please contact your organization admin to reset your password.`,
-    userLoggedIn(firstName: string, lastName: string) {
-        return `${firstName} ${lastName} logged in successfully`;
+    userLoggedIn(first_name: string, last_name: string) {
+        return `${first_name} ${last_name} logged in successfully`;
     },
     SOMETHING_WENT_WRONG: `Something went wrong`,
     ROLE_REQUIRED: 'At least one role is required',

@@ -14,13 +14,13 @@ jest.mock("next/navigation", () => ({
 
 const mockUserData: UserData = {
   id: 1,
-  firstName: 'System',
-  lastName: 'Admin',
-  email: 'a@b.com',
+  first_name: 'System',
+  last_name: 'Admin',
+  email_id: 'a@b.com',
   organization: {
     id: 1
   },
-  organizationId: 1,
+  organization_id: 1,
   orgUser: {} as User,
   user_role: [
     {

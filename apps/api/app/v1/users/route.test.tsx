@@ -11,10 +11,10 @@ describe('User API', () => {
             const user = {
                 id: 1,
                 status: 'Enabled',
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'testuser@emdd',
-                password: await bcrypt.hash('Test@123', saltRounds),
+                first_name: 'Test',
+                last_name: 'User',
+                email_id: 'testuser@emdd',
+                password_hash: await bcrypt.hash('Test@123', saltRounds),
                 orgUser: {
                     id: 7,
                     name: "EMD DD"
@@ -44,12 +44,12 @@ describe('User API', () => {
         it('should create a new user when given valid data', async () => {
             const newUser = {
                 id: 1,
-                firstName: 'New',
-                lastName: 'User',
-                email: 'newuser@emdd',
-                password: await bcrypt.hash('Test@123', saltRounds),
+                first_name: 'New',
+                last_name: 'User',
+                email_id: 'newuser@emdd',
+                password_hash: await bcrypt.hash('Test@123', saltRounds),
                 status: 'Enabled',
-                organizationId: 1,
+                organization_id: 1,
                 user_role: [
                     {
                         roleId: 1,
@@ -64,10 +64,10 @@ describe('User API', () => {
             prismaMock.user.create.mockResolvedValue(newUser as any);
 
             const requestBody = {
-                firstName: 'New',
-                lastName: 'User',
-                email: 'newuser@emdd',
-                password: '123456',
+                first_name: 'New',
+                last_name: 'User',
+                email_id: 'newuser@emdd',
+                password_hash: '123456',
                 organization: 1,
                 roles: [1],
             };
@@ -87,14 +87,14 @@ describe('User API', () => {
             expect(data).toEqual(newUser);
         });
 
-        it('should return CONFLICT status when email already exists', async () => {
+        it('should return CONFLICT status when email_id already exists', async () => {
             prismaMock.user.findUnique.mockResolvedValue({ id: 1 } as any);
 
             const requestBody = {
-                firstName: 'New',
-                lastName: 'User',
-                email: 'existinguser@emdd',
-                password: 'Test@123',
+                first_name: 'New',
+                last_name: 'User',
+                email_id: 'existinguser@emdd',
+                password_hash: 'Test@123',
                 organization: 1,
                 roles: [1],
             };
@@ -119,20 +119,20 @@ describe('User API', () => {
         it('should update user data when given valid data', async () => {
             const existingUser = {
                 id: 1,
-                firstName: 'Existing',
-                lastName: 'User',
-                email: 'existinguser@emdd',
-                password: await bcrypt.hash('Test@123', saltRounds),
+                first_name: 'Existing',
+                last_name: 'User',
+                email_id: 'existinguser@emdd',
+                password_hash: await bcrypt.hash('Test@123', saltRounds),
                 status: 'Enabled',
-                organizationId: 1,
+                organization_id: 1,
             };
 
             const updatedUser = {
                 ...existingUser,
-                firstName: 'Updated',
-                lastName: 'User',
-                password: await bcrypt.hash('TestChange@123', saltRounds),
-                organizationId: 2,
+                first_name: 'Updated',
+                last_name: 'User',
+                password_hash: await bcrypt.hash('TestChange@123', saltRounds),
+                organization_id: 2,
                 user_role: [
                     {
                         roleId: 2,
@@ -149,9 +149,9 @@ describe('User API', () => {
             prismaMock.user_role.createMany.mockResolvedValue({ count: 1 });
 
             const requestBody = {
-                email: 'existinguser@emdd',
-                firstName: 'Updated',
-                lastName: 'User',
+                email_id: 'existinguser@emdd',
+                first_name: 'Updated',
+                last_name: 'User',
                 oldPassword: 'Test@123',
                 newPassword: 'TestChange@123',
                 organization: 2,
@@ -177,9 +177,9 @@ describe('User API', () => {
             prismaMock.user.findUnique.mockResolvedValue(null);
 
             const requestBody = {
-                email: 'nonexistentuser@emdd',
-                firstName: 'Updated',
-                lastName: 'User',
+                email_id: 'nonexistentuser@emdd',
+                first_name: 'Updated',
+                last_name: 'User',
             };
 
             const request = new Request('http://example.com/users', {
@@ -197,17 +197,17 @@ describe('User API', () => {
             expect(data).toEqual({ error: MESSAGES.USER_NOT_FOUND });
         });
 
-        it('should return UNAUTHORIZED status when old password is invalid', async () => {
+        it('should return UNAUTHORIZED status when old password_hash is invalid', async () => {
             const existingUser = {
                 id: 1,
-                email: 'existinguser@emdd',
-                password: await bcrypt.hash('correctpassword', saltRounds),
+                email_id: 'existinguser@emdd',
+                password_hash: await bcrypt.hash('correctpassword_hash', saltRounds),
             };
 
             prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
 
             const requestBody = {
-                email: 'existinguser@emdd',
+                email_id: 'existinguser@emdd',
                 oldPassword: 'Wrong@123',
                 newPassword: 'Check@123',
             };

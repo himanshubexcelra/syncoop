@@ -23,33 +23,33 @@ export default function CreateLibrary({
   formRef,
   userData,
   projectData,
-  libraryIdx,
+  library_idx,
 }: LibraryCreateFields) {
 
   const handleSubmit = async () => {
     const values = formRef?.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
       let response;
-      if (libraryIdx !== -1) {
+      if (library_idx !== -1) {
         response = await editLibrary(
           {
             ...values,
             userId: userData.id,
-            projectId: projectData.id
+            project_id: projectData.id
           });
       } else {
         response = await createLibrary(
           {
             ...values,
             userId: userData.id,
-            projectId: projectData.id
+            project_id: projectData.id
           });
       }
       if (!response.error) {
         formRef?.current!.instance().reset();
         fetchLibraries();
         setCreatePopupVisibility(false);
-        const status = `${libraryIdx !== -1 ? 'updated' : 'created'}`;
+        const status = `${library_idx !== -1 ? 'updated' : 'created'}`;
         const message = Messages.libraryAddedUpdated(status);
         const toastId = toast.success(message);
         await delay(DELAY);
@@ -71,7 +71,7 @@ export default function CreateLibrary({
     <Form
       ref={formRef}
       showValidationSummary={true}
-      formData={libraryIdx !== undefined ? projectData.libraries[libraryIdx] : {}
+      formData={library_idx !== undefined ? projectData.libraries[library_idx] : {}
       }>
       <SimpleItem
         dataField="organization"
@@ -89,7 +89,7 @@ export default function CreateLibrary({
         editorOptions={
           {
             placeholder: "Library Owner",
-            disabled: true, value: `${userData.firstName} ${userData.lastName}`
+            disabled: true, value: `${userData.first_name} ${userData.last_name}`
           }
         }
       >
@@ -131,7 +131,7 @@ export default function CreateLibrary({
       <GroupItem cssClass="buttons-group" colCount={2}>
         <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
           <ButtonOptions
-            text={libraryIdx !== -1 ? 'Update' : "Create Library"}
+            text={library_idx !== -1 ? 'Update' : "Create Library"}
             useSubmitBehavior={true}
             onClick={handleSubmit}
           />

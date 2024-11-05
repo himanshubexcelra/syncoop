@@ -149,6 +149,7 @@ type LibraryDetailsProps = {
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
+    const cartEnabled = actionsEnabled.includes('create_molecule_order');
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id: string }>();
@@ -498,7 +499,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             e.cellElement.style.opacity = 0.5;
         }
     };
-    const cartPermission = ['admin', 'org_admin', 'library_manager']
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -1314,8 +1314,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                         )}
                                                     />
                                                 </ToolbarItem>}
-                                            {userData.myRoles.
-                                                some(role => cartPermission.includes(role)) &&
+                                            {cartEnabled &&
                                                 <ToolbarItem location="after">
                                                     <Button
                                                         onClick={addProductToCart}

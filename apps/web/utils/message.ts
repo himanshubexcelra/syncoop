@@ -29,9 +29,13 @@ export const Messages = {
     ADD_MOLECULE_SUCCESS: 'Molecule added successfully',
     ADD_MOLECULE_ERROR: 'Failed to add molecule for reason : ',
     deleteMoleculeMessage(status: string) {
-            return `${status} deleted successfully`;
-        }, 
-    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",       
-    SUBMIT_ORDER: "Order Submitted Successfully",
+        return `${status} deleted successfully`;
+    },
+    addMoleculeCartMessage(totalItem: number) {
+        const response = totalItem === 1 ? 'Molecule is added to cart' : 'Molecules are added to cart';
+        return response;
+    },
+    REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",
+    SUBMIT_ORDER: "Molecules order submitted successfully to Automation Lab",
     USER_ROLE_CHECK: "User role not supported or missing required parameters."
 }

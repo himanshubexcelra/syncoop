@@ -3,9 +3,15 @@ import DataGrid, { Column } from 'devextreme-react/data-grid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
 import Link from 'next/link';
-import { CartItem, DeleteMoleculeCart } from '@/lib/definition';
+import {
+    CartItem,
+    DeleteMoleculeCart,
+    CartDetail,
+    OrderDetail,
+    GroupedData
+} from '@/lib/definition';
 import { submitOrder } from './libraryService';
-
+import { generateRandomDigitNumber } from '@/utils/helpers';
 interface CartDetailsProps {
     cartData: CartItem[];
     userId: number;
@@ -19,36 +25,6 @@ export default function CartDetails({
     removeItemFromCart,
     removeAll
 }: CartDetailsProps) {
-    interface CartDetail {
-        id: number;
-        moleculeId: number;
-        library_id: number;
-        organization_id: number;
-        project_id: number;
-        molecular_weight: string;
-        projectName: string;
-        libraryName: string;
-        moleculeName: string;
-    }
-
-    interface OrderDetail {
-        moleculeId: number;
-        library_id: number;
-        project_id: number;
-        organization_id: number;
-        userId: number;
-    }
-
-    interface GroupedData {
-        [key: string]: {
-            id: number;
-            moleculeId: number;
-            molecularWeight: string;
-            moleculeName: string;
-            library_id: number,
-            project_id: number
-        }[];
-    }
 
     const cartDetails: CartDetail[] = cartData.map(item => ({
         id: item.id,
@@ -59,10 +35,15 @@ export default function CartDetails({
         molecular_weight: item.molecule.molecular_weight,
         projectName: item.molecule.library.project.name,
         libraryName: item.molecule.library.name,
-        moleculeName: item.molecule.source_molecule_name
+        moleculeName: item.molecule.source_molecule_name,
+        userId: userId
     }));
 
+    const orderId = generateRandomDigitNumber();
+    const orderName = `Order${orderId}`
     const orderDetails: OrderDetail[] = cartData.map(item => ({
+        orderId: Number(orderId),
+        orderName: orderName,
         moleculeId: item.moleculeId,
         library_id: item.library_id,
         project_id: item.project_id,
@@ -72,6 +53,7 @@ export default function CartDetails({
 
     const handleSubmitOrder = () => {
         submitOrder(orderDetails).then((res) => {
+
             if (res[0].orderId) {
                 removeAll(userId, 'SubmitOrder')
             }
@@ -93,7 +75,8 @@ export default function CartDetails({
             molecularWeight: item.molecular_weight,
             moleculeName: item.moleculeName,
             library_id: item.library_id,
-            project_id: item.project_id
+            project_id: item.project_id,
+            userId: userId
         });
         return acc;
     }, {});
@@ -155,4 +138,4 @@ export default function CartDetails({
             )}
         </>
     );
-};
+} 

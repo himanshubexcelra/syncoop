@@ -429,6 +429,7 @@ export interface DeleteMoleculeCart {
   moleculeId: number;
   project_id: number;
   moleculeName: string,
+  userId: number;
 }
 
 export interface MoleculeOrderParams {
@@ -470,4 +471,31 @@ export interface UploadMoleculeFileRequest {
   project_id: string;
   organization_id: string;
   updated_by_user_id: string;
+}
+
+export interface CartDetail {
+  id: number;
+  moleculeId: number;
+  library_id: number;
+  organization_id: number;
+  project_id: number;
+  molecular_weight: string;
+  projectName: string;
+  libraryName: string;
+  moleculeName: string;
+  userId: number;
+}
+
+export interface OrderDetail {
+  orderId: number;
+  orderName: string;
+  moleculeId: number;
+  library_id: number;
+  project_id: number;
+  organization_id: number;
+  userId: number;
+}
+
+export interface GroupedData {
+  [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
 }

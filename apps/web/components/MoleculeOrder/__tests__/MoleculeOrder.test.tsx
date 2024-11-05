@@ -22,25 +22,25 @@ jest.mock('@/utils/helpers', () => ({
 
 // Define mockUserData with all required properties
 const mockUserData: UserData = {
-    organizationId: 1,
+    organization_id: 1,
     orgUser: {
         type: 'External',
         id: 0,
-        firstName: '',
-        email: '',
         status: '',
-        lastName: '',
         organization: {
             id: 3,
         },
-        user_role: []
+        user_role: [],
+        first_name: '',
+        email_id: '',
+        last_name: ''
     },
     myRoles: ['user'],
-    email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
     id: 123,
-    user_role: []
+    user_role: [],
+    email_id: '',
+    first_name: '',
+    last_name: ''
 };
 
 // Define mockData to match expected molecule order structure

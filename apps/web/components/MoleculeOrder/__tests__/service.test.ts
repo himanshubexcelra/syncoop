@@ -1,15 +1,14 @@
-/*eslint max-len: ["error", { "code": 100 }]*/
 import { getMoleculesOrder } from "../service";
+import { MoleculeOrderParams } from "@/lib/definition";
 
 global.fetch = jest.fn();
 
 describe('getMoleculesOrder', () => {
-    const mockParams = { organizationId: 1, createdBy: 123 };
+    const mockParams: MoleculeOrderParams = { organization_id: 1, created_by: 123 };
 
-    // In service.test.ts
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, 'error').mockImplementation(() => { }); // Suppress console.error
+        jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error in tests
     });
 
     it('fetches molecule orders with correct query parameters', async () => {
@@ -23,7 +22,7 @@ describe('getMoleculesOrder', () => {
 
         // Verify that fetch was called with the correct URL and headers
         expect(global.fetch).toHaveBeenCalledWith(
-            expect.stringContaining('organizationId=1&createdBy=123'),
+            expect.stringContaining('organization_id=1&created_by=123'),
             {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },

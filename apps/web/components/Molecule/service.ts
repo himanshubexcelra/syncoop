@@ -5,10 +5,6 @@ import {
 } from "../../lib/definition";
 import CustomFile from "../../utils/file";
 
-// const sampleMolecules = {
-//     "smiles": "Cc1ccccc1"
-// }
-
 export async function validateSmiles(smiles: ValidateSmileRequest) {
     try {
         const response: any = await fetch(
@@ -34,11 +30,6 @@ export async function validateSmiles(smiles: ValidateSmileRequest) {
     }
 }
 
-// const sampleMolecules = {
-//     "smiles": ["Cc1ccccc1", "C1=CCC=CC1"],
-//     "created_by_user_id": 1,
-//     "library_id": "LIB001"
-// }
 
 export async function uploadMoleculeSmiles(formData: UploadMoleculeSmilesRequest) {
     try {

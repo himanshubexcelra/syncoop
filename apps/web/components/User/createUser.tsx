@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import toast from "react-hot-toast";
 import {
     Form as CreateForm,
@@ -23,7 +24,8 @@ import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { Messages } from "@/utils/message";
 
-const customPasswordCheck = (password: any) => LoginFormSchema.shape.password_hash.safeParse(password).success
+const customPasswordCheck = (password: any) =>
+    LoginFormSchema.shape.password_hash.safeParse(password).success
 
 export default function RenderCreateUser({
     setCreatePopupVisibility,
@@ -36,11 +38,12 @@ export default function RenderCreateUser({
     organizationData,
     myRoles,
     type,
-    fetchAndFilterData
+    fetchAndFilterData,
 }: any) {
     const passwordLabel = { 'aria-label': 'Password' };
     const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
     const [organization, setOrganization] = useState(organizationData);
+    const [valid, setValid] = useState<any>('valid');
 
     const passwordButton = useMemo<ButtonTypes.Properties>(
         () => ({
@@ -56,7 +59,8 @@ export default function RenderCreateUser({
     );
     const handleSubmit = async () => {
         const values = formRef.current!.instance().option("formData");
-        const validationCheck = customPasswordCheck(values.password_hash) && formRef.current!.instance().validate().isValid
+        const validationCheck = customPasswordCheck(values.password_hash) &&
+            formRef.current!.instance().validate().isValid
         if (validationCheck) {
             const response = await createUser(values);
             if (response.status === 200) {
@@ -66,6 +70,7 @@ export default function RenderCreateUser({
                 setTableData(tempData);
                 setCreatePopupVisibility(false);
                 fetchAndFilterData()
+                setValid('valid')
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);
@@ -73,6 +78,7 @@ export default function RenderCreateUser({
             }
         }
         else {
+            setValid('invalid')
             formRef.current!.instance().validate()
         }
     };
@@ -101,7 +107,9 @@ export default function RenderCreateUser({
         setPassword('');
         formRef.current!.instance().reset();
         setCreatePopupVisibility(false)
+        setValid('valid')
     }
+    
     const passwordEditorRender = (data: any) => {
         return (
             <div className="flex items-center gap-2">
@@ -114,7 +122,8 @@ export default function RenderCreateUser({
                     placeholder="Enter Password"
                     inputAttr={passwordLabel}
                     mode={passwordMode}
-
+                    validationStatus={password_hash !== '' &&
+                        !customPasswordCheck(password_hash) ? 'invalid' : valid}
                 >
                     <TextBoxButton
                         name="password_hash"
@@ -124,7 +133,8 @@ export default function RenderCreateUser({
                     <Validator>
                         <RequiredRule message={Messages.requiredMessage('Password')} />
                         <CustomRule
-                            validationCallback={(options: any) => customPasswordCheck(options.value)}
+                            validationCallback={(options: any) =>
+                                customPasswordCheck(options.value)}
                             message={Messages.PASSWORD_CRITERIA}
                         />
                     </Validator>

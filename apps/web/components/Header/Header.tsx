@@ -54,11 +54,12 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
-
+    const closeOrderPopup = () => {
+        setOrderPopupVisibility(false);
+    }
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
-
-        const { moleculeId, library_id, project_id, moleculeName, userId } = obj;
-        deleteMoleculeCart(userId, moleculeId, library_id, project_id).then((res) => {
+        const { moleculeId, library_id, project_id, moleculeName, created_by } = obj;
+        deleteMoleculeCart(created_by, moleculeId, library_id, project_id).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
                     !
@@ -188,14 +189,17 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 visible={orderPopupVisible}
                 onHiding={() => setOrderPopupVisibility(false)}
                 contentRender={() => (
-                    <OrderDetails />
+                    <OrderDetails
+                        closeOrderPopup={closeOrderPopup}
+                    />
                 )}
                 width={500}
                 // hideOnOutsideClick={true}
                 height="50%"
                 position={orderPopupPosition}
                 showCloseButton={true}
-                wrapperAttr={{ class: "create-popup mr-[15px]" }}
+                wrapperAttr={{ class: "order-popup mr-[15px]" }}
+                style={{ backgroundColor: 'white' }}
             />
             <div className="flex items-center">
                 <Link href="/">

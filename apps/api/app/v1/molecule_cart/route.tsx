@@ -31,6 +31,7 @@ export async function GET(request: Request) {
                         molecular_weight: true,
                         source_molecule_name: true,
                         is_added_to_cart: true,
+                        smiles_string:true,
                         library: {
                             select: {
                                 id: true,

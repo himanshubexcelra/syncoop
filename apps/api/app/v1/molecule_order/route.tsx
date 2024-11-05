@@ -9,9 +9,8 @@ interface OrderData {
     library_id: number;
     project_id: number;
     organization_id: number;
-    userId: string;
+    created_by: string;
 }
-
 
 const { MOLECULE_ORDER_NOT_FOUND } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
@@ -95,8 +94,8 @@ export async function POST(request: Request) {
         project_id: Number(item.project_id),
         library_id: Number(item.library_id),
         batch_detail: {},
-        created_by: Number(item.userId),
-        updated_by: Number(item.userId)
+        created_by: Number(item.created_by),
+        updated_by: Number(item.created_by)
     }));
     try {
         await prisma.molecule_order.createMany({

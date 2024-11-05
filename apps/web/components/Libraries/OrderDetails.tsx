@@ -2,8 +2,10 @@
 import React from 'react'
 import Image from 'next/image';
 import { Messages } from "@/utils/message";
-
-const OrderDetails = () => {
+type OrderDetailsProps = {
+  closeOrderPopup: () => void;
+}
+const OrderDetails = ({ closeOrderPopup }: OrderDetailsProps) => {
   return (
     <div className='flex flex-col md:flex-row bg-white'>
       <div className='flex-shrink-0 md:w-1/2 mb-4 md:mb-0'>
@@ -15,8 +17,16 @@ const OrderDetails = () => {
         />
       </div>
       <div className='md:w-1/2 flex flex-col justify-center'>
-        <p className='mb-4'>{Messages.SUBMIT_ORDER}</p>
+        <p className='mb-4 text-center md:text-left'>{Messages.SUBMIT_ORDER}</p>
       </div>
+      <button className="mt-auto mx-auto px-4 
+      py-2 bg-blue-500 text-white rounded-lg
+       hover:bg-blue-600"
+        onClick={closeOrderPopup}
+      >
+        Close
+      </button>
+
     </div>
   )
 }

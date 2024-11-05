@@ -397,7 +397,7 @@ export interface OrderType {
   library_id: number;
   project_id: number;
   organization_id: number;
-  userId: number;
+  created_by: number;
 }
 
 export interface DeleteMoleculeCart {
@@ -406,7 +406,7 @@ export interface DeleteMoleculeCart {
   moleculeId: number;
   project_id: number;
   moleculeName: string,
-  userId: number;
+  created_by: number;
 }
 
 export interface MoleculeOrderParams {
@@ -452,7 +452,7 @@ export interface CartDetail {
   projectName: string;
   libraryName: string;
   moleculeName: string;
-  userId: number;
+  created_by: number;
 }
 
 export interface OrderDetail {
@@ -462,9 +462,9 @@ export interface OrderDetail {
   library_id: number;
   project_id: number;
   organization_id: number;
-  userId: number;
+  created_by: number;
 }
 
 export interface GroupedData {
-  [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
+  [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, created_by: number }[];
 }

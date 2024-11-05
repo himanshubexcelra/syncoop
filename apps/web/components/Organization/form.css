@@ -3,7 +3,32 @@
         background: var(--themelightGreyColor);
         box-shadow: -18px 0px 18px 0px rgba(0, 0, 0, 0.25);
     }
+    
+    .dx-popup-title {
+        border-bottom: 0;
+    }
 
+    .dx-field-item:not(.dx-field-item-has-group):not(.dx-field-item-has-tabs):not(.dx-first-row):not(.dx-label-v-align) {
+        padding-top: 10px;
+    }
+
+    .dx-toolbar-item-content {
+        color: var(--themeDarkBlueColor);
+        text-align: center;
+        font-family: Lato;
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 42px;
+    }
+}
+
+.order-popup {
+    .dx-popup-normal {
+        background: var(--white);
+        box-shadow: -18px 0px 18px 0px rgba(0, 0, 0, 0.25);
+    }
+    
     .dx-popup-title {
         border-bottom: 0;
     }

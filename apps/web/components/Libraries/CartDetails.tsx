@@ -36,7 +36,7 @@ export default function CartDetails({
         projectName: item.molecule.library.project.name,
         libraryName: item.molecule.library.name,
         moleculeName: item.molecule.source_molecule_name,
-        userId: userId
+        created_by: userId
     }));
 
     const orderId = generateRandomDigitNumber();
@@ -48,7 +48,7 @@ export default function CartDetails({
         library_id: item.library_id,
         project_id: item.project_id,
         organization_id: item.organization_id,
-        userId: userId
+        created_by: userId,
     }));
 
     const handleSubmitOrder = () => {
@@ -76,7 +76,7 @@ export default function CartDetails({
             moleculeName: item.moleculeName,
             library_id: item.library_id,
             project_id: item.project_id,
-            userId: userId
+            created_by: userId
         });
         return acc;
     }, {});

@@ -13,10 +13,14 @@ import DataGrid, {
     HeaderFilter,
     Toolbar,
     Item,
+    DataGridTypes,
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
 import { Button } from 'devextreme-react';
+import StatusMark from './StatusMark';
+import { StatusCodeBg, StatusCodeTextColor, StatusCodeType } from '@/utils/constants';
+import { StatusCode } from '@/lib/definition';
 
 interface ToolbarButtonConfig {
     text: string;
@@ -114,6 +118,15 @@ const CustomDataGrid = <T extends Record<string, any>>({
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
+    const cellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
+        if (e.rowType === "data") {
+            if (e.column.dataField === "status") {
+                const color: StatusCodeType = e.data.status?.toUpperCase();
+                e.cellElement.classList.add(StatusCodeBg[color]);
+            }
+        }
+    }
+
     return (
         <div>
             <DataGrid
@@ -124,6 +137,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 showBorders={true}
                 height="600px"
                 width="100%"
+                onCellPrepared={cellPrepared}
             >
                 {enableGrouping && <GroupPanel visible={true} />}
 
@@ -146,11 +160,30 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         headerCellRender={column.dataField === 'bookmark' ? () => (
                             <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
                         ) : undefined}
+                        caption={column.dataField === 'smiles_string' ?
+                            'Smile' : (typeof column.title === 'string' ? column.title : '')}
                         width={column.width ? String(column.width) : undefined}
-                        cellRender={column.customRender ? ({ data }) =>
+                        cellRender={column.dataField === 'status' ? ({ data }) => {
+                            const statusUpper = data.status.toUpperCase();
+                            const colorKey = statusUpper as keyof typeof StatusCodeBg;
+                            const colorBgClass = StatusCodeBg[colorKey] || "bg-defaultColor";
+                            const textColorClass = StatusCodeTextColor[colorKey] || "#000";
+                            return (
+                                <div className={`flex items-center gap-[5px] ${colorBgClass}`}
+                                    style={{ color: textColorClass }}>
+                                    {statusUpper === "FAILED" && (
+                                        <Image src="/icons/warning.svg" width={14}
+                                            height={14} alt="Molecule order failed" />
+                                    )}
+                                    {data.status}
+                                    <StatusMark status={StatusCode[colorKey]} />
+                                </div>
+                            );
+                        } : column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}
                     />
                 ))}
+
 
                 {groupingColumn && (
                     <Column

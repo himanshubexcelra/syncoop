@@ -7,13 +7,13 @@ import {
   BreadCrumbsObj,
   MoleculeOrderParams,
   OrganizationType,
-  StatusCode,
+  // StatusCode,
   UserData
 } from '@/lib/definition';
 import Image from 'next/image';
-import { StatusCodeAPIType, StatusCodeBg, StatusCodeBgAPI } from '@/utils/constants';
+import { StatusCodeAPIType, StatusCodeBgAPI } from '@/utils/constants';
 import { Popup } from 'devextreme-react';
-import StatusMark from '@/ui/StatusMark';
+// import StatusMark from '@/ui/StatusMark';
 import { getMoleculesOrder } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
@@ -82,7 +82,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const columns: ColumnConfig<MoleculeOrder>[] = [
     {
       dataField: 'smiles_string',
-      title: 'Structure',
+      title: 'Smile',
       minWidth: 400,
       width: 400,
       customRender: (data) => (
@@ -102,19 +102,6 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       dataField: 'status',
       title: 'Status',
       width: 170,
-      customRender: (data: MoleculeOrder) => {
-        const colorKey = data.status.toUpperCase() as keyof typeof StatusCodeBg;
-        const color = StatusCodeBg[colorKey] || StatusCodeBg.READY;
-
-        return (
-          <span className={`flex items-center gap-[5px] ${color}`}>
-            {data.status.toUpperCase() === "FAILED" &&
-              <Image src="/icons/warning.svg" width={14} height={14} alt="Molecule order failed" />}
-            {data.status}
-            <StatusMark status={StatusCode[colorKey]} />
-          </span>
-        );
-      },
     },
     {
       dataField: 'yield', title: 'Yield', width: 100,

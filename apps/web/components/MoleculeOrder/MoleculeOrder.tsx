@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Breadcrumb from '@/components/Breadcrumbs/BreadCrumbs';
-import CustomDataGrid from '@/sharedComponents/table/dataGrid';
+import CustomDataGrid from '@/ui/dataGrid';
 import {
   BreadCrumbsObj,
   MoleculeOrderParams,
@@ -13,21 +12,19 @@ import {
 } from '@/lib/definition';
 import Image from 'next/image';
 import { StatusCodeAPIType, StatusCodeBg, StatusCodeBgAPI } from '@/utils/constants';
-import { Button, Popup } from 'devextreme-react';
+import { Popup } from 'devextreme-react';
 import StatusMark from '@/ui/StatusMark';
-import dynamic from 'next/dynamic';
-import { getMoleculesOrder } from '@/app/molecule_order/service';
+import { getMoleculesOrder } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import { isAdmin, popupPositionValue } from '@/utils/helpers';
-
-const MoleculeStructure = dynamic(() => import('@/utils/MoleculeStructure'), { ssr: false });
+import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
 
 interface MoleculeOrder {
   id: number;
   bookmark: boolean;
-  structure: string;
   orderId: number;
   orderName: string;
   moleculeId: number;
@@ -69,37 +66,33 @@ const customRenderForField = (data: MoleculeOrder, field: keyof MoleculeOrder) =
 };
 
 const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
-
-  const breadcrumbs: BreadCrumbsObj[] = [
-    { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
-    {
-      label: 'Molecule Orders', svgPath: '/icons/molecule-order.svg',
-      svgWidth: 16, svgHeight: 16, href: '/projects'
-    },
-  ];
-
   const { organization_id, orgUser, myRoles } = userData;
   const { type } = orgUser;
   const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([]);
   const [synthesisView, setSynthesisView] = useState(false);
   const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
+  const breadcrumbs: BreadCrumbsObj[] = [
+    { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
+    {
+      label: 'Molecule Orders', svgPath: '/icons/molecule-order.svg',
+      svgWidth: 16, svgHeight: 16, href: '/projects', isActive: true
+    },
+  ];
 
   const columns: ColumnConfig<MoleculeOrder>[] = [
     {
       dataField: 'smiles_string',
       title: 'Structure',
       minWidth: 400,
+      width: 400,
       customRender: (data) => (
-        <span className="flex justify-center items-center gap-[7.5px]">
-          <MoleculeStructure height={80} width={80} svgMode={true}
-            structure={data.smiles_string} id={`smiles-${data.id}`} />
-          <Button onClick={() => handleStructureZoom()}
-            render={() => <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
-          <Button onClick={() => handleStructureEdit()}
-            render={() => <Image src="/icons/edit.svg" width={24} height={24} alt="edit" />} />
-          <Button onClick={() => handleStructureDelete()}
-            render={() => <Image src="/icons/delete.svg" width={24} height={24} alt="delete" />} />
-        </span>
+        <MoleculeStructureActions
+          smilesString={data.smiles_string}
+          moleculeId={data.id}
+          onZoomClick={() => handleStructureZoom()}
+          onEditClick={() => handleStructureEdit()}
+          onDeleteClick={() => handleStructureDelete()}
+        />
       ),
     },
     { dataField: 'orderId', title: 'Order' },
@@ -115,8 +108,10 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
         return (
           <span className={`flex items-center gap-[5px] ${color}`}>
+            {data.status.toUpperCase() === "FAILED" &&
+              <Image src="/icons/warning.svg" width={14} height={14} alt="Molecule order failed" />}
             {data.status}
-            <StatusMark status={StatusCode[colorKey]} />
+            <StatusMark status={StatusCode["READY"]} />
           </span>
         );
       },
@@ -170,7 +165,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       } else {
         toast.error(Messages.USER_ROLE_CHECK);
       }
-      
+
       // Transform the fetched data if data is available
       transformedData = data?.map((item: any) => {
         const {
@@ -184,19 +179,20 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
         return {
           ...rest,
-          organizationName: organization.name,
-          molecular_weight: molecule.molecular_weight,
-          smiles_string: molecule.smiles_string,
-          status: molecule.status,
+          organizationName: organization?.name || 'Unknown',
+          molecular_weight: molecule?.molecular_weight || 0,
+          smiles_string: molecule?.smiles_string || '',
+          status: molecule?.status || 'Unknown',
           orderName,
           ...(() => {
             if (type === OrganizationType.External) {
               return {
-                "project / library": `${project.name} / ${library.name}`
+                "project / library": `${project.name || 'Unknown'} / ${library.name || 'Unknown'}`
               }
             } else if (type === OrganizationType.Internal) {
               return {
-                "organization / order": `${organization.name} / ${orderName}`
+                "organization / order":
+                  `${organization.name || 'Unknown'} / ${orderName || 'Unknown'}`
               }
             }
           })()
@@ -220,25 +216,36 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     setSynthesisPopupPosition(popupPositionValue());
   }, [])
 
+  const handleSendForSynthesis = () => {
+    setSynthesisView(true);
+  };
+
+  const toolbarButtons = [
+    { text: "Send for Synthesis", onClick: handleSendForSynthesis }
+  ];
+
   return (
     <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
-      <div className="p-[20px]">
+      <div className="pt-[20px]">
         <main className="main main-title">
           <Image src="/icons/molecule-order.svg" width={33} height={30} alt="Project logo" />
           <span>Molecule Orders</span>
         </main>
-        <CustomDataGrid
-          columns={columns}
-          data={moleculeOrderData}
-          groupingColumn={rowGroupName()}
-          enableRowSelection
-          enableGrouping
-          enableInfiniteScroll={false}
-          enableSorting
-          enableFiltering={false}
-          enableOptions={false}
-        />
+        <div className="p-[20px]">
+          <CustomDataGrid
+            columns={columns}
+            data={moleculeOrderData}
+            groupingColumn={rowGroupName()}
+            enableRowSelection
+            enableGrouping
+            enableInfiniteScroll={false}
+            enableSorting
+            enableFiltering={false}
+            enableOptions={false}
+            toolbarButtons={toolbarButtons}
+          />
+        </div>
 
         {synthesisView &&
           <Popup

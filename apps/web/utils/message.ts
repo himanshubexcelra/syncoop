@@ -26,6 +26,8 @@ export const Messages = {
     },
     LIBRARY_LIST_EMPTY:
         "Your library list is empty, add a library to import molecules",
+    ADD_MOLECULE_SUCCESS: 'Molecule added successfully',
+    ADD_MOLECULE_ERROR: 'Failed to add molecule for reason : ',
     deleteMoleculeMessage(status: string) {
         return `${status} deleted successfully`;
     },

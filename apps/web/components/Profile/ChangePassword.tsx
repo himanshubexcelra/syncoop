@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import toast from "react-hot-toast";
 import Image from 'next/image';
@@ -21,7 +22,8 @@ interface ChangePasswordProps {
     onClose: () => void;
     email_id?: string;
 }
-const customPasswordCheck = (password: any) => LoginFormSchema.shape.password_hash.safeParse(password).success;
+const customPasswordCheck = (password: any) => 
+    LoginFormSchema.shape.password_hash.safeParse(password).success;
 
 const passwordLabel = { 'aria-label': 'Password' };
 
@@ -31,6 +33,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
     const [newPassword, setNewPassword] = useState('');
     const [newPasswordMode, setNewPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
     const [oldPasswordMode, setOldPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
+    const [valid, setValid] = useState<any>('valid');
 
     const passwordButtonNew = useMemo<ButtonTypes.Properties>(
         () => ({
@@ -71,6 +74,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
                 const toastId = toast.success(Messages.PASSWORD_CHANGE)
                 await delay(DELAY)
                 toast.remove(toastId)
+                setValid('valid')
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);
@@ -78,6 +82,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
             }
         }
         else {
+            setValid('invalid')
             formRef.current!.instance().validate()
         }
     };
@@ -102,6 +107,9 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
 
+    const checkValidationStatus = (password: any) =>
+        password !== '' && !customPasswordCheck(password) ? 'invalid' : valid
+
     const oldPasswordRender = (data: any) => {
         return (
             <TextBox
@@ -113,6 +121,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
                 placeholder="Enter Old Password"
                 inputAttr={passwordLabel}
                 mode={oldPasswordMode}
+                validationStatus={checkValidationStatus(oldPassword)}
             >
                 <TextBoxButton
                     name="oldPassword"
@@ -138,6 +147,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
                     placeholder="Enter New Password"
                     inputAttr={passwordLabel}
                     mode={newPasswordMode}
+                    validationStatus={checkValidationStatus(newPassword)}
                 >
                     <TextBoxButton
                         name="newPassword"
@@ -195,7 +205,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
         setOldPassword('')
         formRef.current!.instance().reset();
         onClose();
-
+        setValid('valid')
     }
     return (
         <>

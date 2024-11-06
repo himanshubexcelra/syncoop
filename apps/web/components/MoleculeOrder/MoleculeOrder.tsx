@@ -88,7 +88,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const columns: ColumnConfig<MoleculeOrder>[] = [
     {
       dataField: 'smiles_string',
-      title: 'Smile',
+      title: 'Structure',
       minWidth: 400,
       width: 400,
       customRender: (data) => (

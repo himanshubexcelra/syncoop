@@ -18,9 +18,7 @@ import DataGrid, {
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
 import { Button } from 'devextreme-react';
-import StatusMark from './StatusMark';
-import { StatusCodeBg, StatusCodeTextColor, StatusCodeType } from '@/utils/constants';
-import { StatusCode } from '@/lib/definition';
+import { StatusCodeBg, StatusCodeType } from '@/utils/constants';
 
 interface ToolbarButtonConfig {
     text: string;
@@ -163,23 +161,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         caption={column.dataField === 'smiles_string' ?
                             'Smile' : (typeof column.title === 'string' ? column.title : '')}
                         width={column.width ? String(column.width) : undefined}
-                        cellRender={column.dataField === 'status' ? ({ data }) => {
-                            const statusUpper = data.status.toUpperCase();
-                            const colorKey = statusUpper as keyof typeof StatusCodeBg;
-                            const colorBgClass = StatusCodeBg[colorKey] || "bg-defaultColor";
-                            const textColorClass = StatusCodeTextColor[colorKey] || "#000";
-                            return (
-                                <div className={`flex items-center gap-[5px] ${colorBgClass}`}
-                                    style={{ color: textColorClass }}>
-                                    {statusUpper === "FAILED" && (
-                                        <Image src="/icons/warning.svg" width={14}
-                                            height={14} alt="Molecule order failed" />
-                                    )}
-                                    {data.status}
-                                    <StatusMark status={StatusCode[colorKey]} />
-                                </div>
-                            );
-                        } : column.customRender ? ({ data }) =>
+                        cellRender={column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}
                     />
                 ))}

@@ -7,13 +7,17 @@ import {
   BreadCrumbsObj,
   MoleculeOrderParams,
   OrganizationType,
-  // StatusCode,
+  StatusCode,
   UserData
 } from '@/lib/definition';
 import Image from 'next/image';
-import { StatusCodeAPIType, StatusCodeBgAPI } from '@/utils/constants';
+import {
+  StatusCodeAPIType,
+  StatusCodeBg,
+  StatusCodeBgAPI,
+  StatusCodeTextColor
+} from '@/utils/constants';
 import { Popup } from 'devextreme-react';
-// import StatusMark from '@/ui/StatusMark';
 import { getMoleculesOrder } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
@@ -21,6 +25,7 @@ import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import { isAdmin, popupPositionValue } from '@/utils/helpers';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
+import StatusMark from '@/ui/StatusMark';
 
 interface MoleculeOrder {
   id: number;
@@ -102,6 +107,23 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       dataField: 'status',
       title: 'Status',
       width: 170,
+      customRender: (data) => {
+        const statusUpper = data.status.toUpperCase();
+        const colorKey = statusUpper as keyof typeof StatusCodeBg;
+        const colorBgClass = StatusCodeBg[colorKey] || "bg-black";
+        const textColorClass = StatusCodeTextColor[colorKey] || "#000";
+        return (
+          <div className={`flex items-center gap-[5px] ${colorBgClass} ${textColorClass}`}
+            style={{ color: textColorClass }}>
+            {statusUpper === "FAILED" && (
+              <Image src="/icons/warning.svg" width={14}
+                height={14} alt="Molecule order failed" />
+            )}
+            {data.status}
+            <StatusMark status={StatusCode[colorKey]} />
+          </div>
+        );
+      }
     },
     {
       dataField: 'yield', title: 'Yield', width: 100,

@@ -112,11 +112,11 @@ export enum StatusCodeBgAPI {
 }
 
 export const StatusCodeTextColor: { [key: string]: string } = {
-  NEW: "themeGreyColor",
-  READY: "themeBlueColor",
-  INPROGRESS: "themeBlueColor",
-  DONE: "background",
-  FAILED: "failedStatusColor"
+  NEW: "text-themeGreyColor",
+  READY: "text-themeBlueColor",
+  INPROGRESS: "text-themeBlueColor",
+  DONE: "text-background",
+  FAILED: "text-failedStatusColor"
 };
 
 export type StatusCodeType = keyof typeof StatusCodeBg;

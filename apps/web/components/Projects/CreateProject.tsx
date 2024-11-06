@@ -223,7 +223,7 @@ export default function CreateProject({
             {
               placeholder: "Organization name",
               disabled: true,
-              value: userData?.orgUser?.name
+              value: projectData?.organization?.name
             }
           }
         >

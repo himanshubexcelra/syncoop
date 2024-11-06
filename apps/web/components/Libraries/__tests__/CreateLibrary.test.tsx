@@ -50,7 +50,7 @@ const data = {
     created_at: '2024-10-17T08:18:35.505Z',
     updated_at: '2024-10-17T08:18:35.505Z',
     ownerId: 1,
-    updated_byId: 1,
+    updated_by: 1,
     owner: {
         id: 1,
         first_name: 'System',
@@ -68,7 +68,7 @@ const data = {
             created_at: '2024-10-17T09:53:33.045Z',
             updated_at: null,
             ownerId: 7,
-            updated_byId: null,
+            updated_by: null,
             owner: {
                 id: 1,
                 first_name: 'System',
@@ -86,7 +86,7 @@ const data = {
             created_at: '2024-10-17T09:53:33.070Z',
             updated_at: null,
             ownerId: 7,
-            updated_byId: null,
+            updated_by: null,
             owner: {
                 id: 1,
                 first_name: 'System',

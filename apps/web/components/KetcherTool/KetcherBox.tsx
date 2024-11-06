@@ -73,10 +73,17 @@ export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxPr
   const [editorKey] = useState('first-editor-key')
 
   useEffect(() => {
-    if ((global as any).KetcherFunctions && reactionString !== '') {
+    if ((global as any).KetcherFunctions && reactionString) {
       (global as any).KetcherFunctions.renderFromCtab(reactionString);
     }
   }, [reactionString]);
+
+  useEffect(() => {
+    return () => {
+      if ((global as any).ketcher) delete (global as any).ketcher;
+      if ((global as any).KetcherFunctions) delete (global as any).KetcherFunctions;
+    };
+  }, []);
 
   return <>
     <Editor
@@ -88,7 +95,7 @@ export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxPr
       onInit={(ketcher: Ketcher) => {
         ; (global as any).ketcher = ketcher
           ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
-        if (reactionString !== '') {
+        if (reactionString) {
           (global as any).KetcherFunctions.renderFromCtab(reactionString);
         }
       }}

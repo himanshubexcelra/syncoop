@@ -27,7 +27,7 @@ interface MoleculeOrder {
   bookmark: boolean;
   orderId: number;
   orderName: string;
-  moleculeId: number;
+  molecule_id: number;
   molecularWeight: number;
   organizationName: string;
   molecular_weight: string;
@@ -88,7 +88,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       customRender: (data) => (
         <MoleculeStructureActions
           smilesString={data.smiles_string}
-          moleculeId={data.id}
+          molecule_id={data.id}
           onZoomClick={() => handleStructureZoom()}
           onEditClick={() => handleStructureEdit()}
           onDeleteClick={() => handleStructureDelete()}
@@ -96,7 +96,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       ),
     },
     { dataField: 'orderId', title: 'Order' },
-    { dataField: 'moleculeId', title: 'Molecule ID' },
+    { dataField: 'molecule_id', title: 'Molecule ID' },
     { dataField: 'molecular_weight', title: 'Molecular Weight' },
     {
       dataField: 'status',

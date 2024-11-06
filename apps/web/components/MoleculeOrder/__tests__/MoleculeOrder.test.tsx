@@ -49,7 +49,7 @@ const mockData = [
         id: 1,
         smile: 'CC(=O)Oc1ccccc1C(=O)O',
         orderId: 101,
-        moleculeId: 2001,
+        molecule_id: 2001,
         molecular_weight: '250',
         status: 'Ready',
         yield: 1,

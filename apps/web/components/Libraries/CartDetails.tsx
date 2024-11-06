@@ -28,7 +28,7 @@ export default function CartDetails({
 
     const cartDetails: CartDetail[] = cartData.map(item => ({
         id: item.id,
-        moleculeId: item.moleculeId,
+        molecule_id: item.molecule_id,
         library_id: item.library_id,
         project_id: item.project_id,
         organization_id: item.organization_id,
@@ -44,7 +44,7 @@ export default function CartDetails({
     const orderDetails: OrderDetail[] = cartData.map(item => ({
         orderId: Number(orderId),
         orderName: orderName,
-        moleculeId: item.moleculeId,
+        molecule_id: item.molecule_id,
         library_id: item.library_id,
         project_id: item.project_id,
         organization_id: item.organization_id,
@@ -71,7 +71,7 @@ export default function CartDetails({
         }
         acc[key].push({
             id: item.id,
-            moleculeId: item.moleculeId,
+            molecule_id: item.molecule_id,
             molecularWeight: item.molecular_weight,
             moleculeName: item.moleculeName,
             library_id: item.library_id,
@@ -98,7 +98,7 @@ export default function CartDetails({
                                 showBorders={true}
                             >
                                 <Column dataField="moleculeName" caption="Molecule Name" />
-                                <Column dataField="moleculeId" caption="MoleculeID" />
+                                <Column dataField="molecule_id" caption="MoleculeID" />
                                 <Column dataField="molecularWeight" caption="MoleculeWeight" />
                                 <Column
                                     width={80}

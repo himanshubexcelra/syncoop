@@ -5,7 +5,7 @@ import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 interface OrderData {
     orderId: number;
     orderName: number;
-    moleculeId: number;
+    molecule_id: number;
     library_id: number;
     project_id: number;
     organization_id: number;
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     const result = req.map((item: OrderData) => ({
         orderId: Number(item.orderId),
         orderName: item.orderName,
-        moleculeId: Number(item.moleculeId),
+        molecule_id: Number(item.molecule_id),
         organization_id: Number(item.organization_id),
         project_id: Number(item.project_id),
         library_id: Number(item.library_id),

@@ -18,7 +18,7 @@ const libraryData = {
     created_at: '2024-10-17T09:53:33.045Z',
     updated_at: null,
     ownerId: 7,
-    updated_byId: null,
+    updated_by: null,
     owner: {
         id: 1,
         first_name: 'System',
@@ -40,7 +40,7 @@ describe('Library API Functions', () => {
         created_at: '2024-10-17T08:18:35.505Z',
         updated_at: '2024-10-17T08:18:35.505Z',
         ownerId: 1,
-        updated_byId: 1,
+        updated_by: 1,
         owner: {
             id: 1,
             first_name: 'System',
@@ -58,7 +58,7 @@ describe('Library API Functions', () => {
                 created_at: '2024-10-17T09:53:33.045Z',
                 updated_at: null,
                 ownerId: 7,
-                updated_byId: null,
+                updated_by: null,
                 owner: {
                     id: 1,
                     first_name: 'System',
@@ -76,7 +76,7 @@ describe('Library API Functions', () => {
                 created_at: '2024-10-17T09:53:33.070Z',
                 updated_at: null,
                 ownerId: 7,
-                updated_byId: null,
+                updated_by: null,
                 owner: {
                     id: 1,
                     first_name: 'System',
@@ -104,7 +104,7 @@ describe('Library API Functions', () => {
         const withRelation = ['libraries'];
         const project_id = '2'
         const result = await getLibraries(withRelation, project_id);
-        const url = new URL(`${process.env.API_HOST_URL}/v1/project/${project_id}`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project/${project_id}`);
         if (withRelation.length) {
             url.searchParams.append('with', JSON.stringify(withRelation));
         }
@@ -132,7 +132,7 @@ describe('Library API Functions', () => {
         const withRelation = ['molecule'];
         const library_id = '2'
         const result = await getLibraryById(withRelation, library_id);
-        const url = new URL(`${process.env.API_HOST_URL}/v1/library?id=${library_id}`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library?id=${library_id}`);
         if (withRelation.length) {
             url.searchParams.append('with', JSON.stringify(withRelation));
         }
@@ -159,7 +159,7 @@ describe('Library API Functions', () => {
 
         const organization_id = 2;
         const result = await getLibraryCountById(organization_id);
-        const url = new URL(`${process.env.API_HOST_URL}/v1/library`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library`);
         if (organization_id) {
             url.searchParams.append('organization_id', String(organization_id));
         }
@@ -186,7 +186,7 @@ describe('Library API Functions', () => {
 
         const organization_id = 2;
         const result = await geMoleculeCountById(organization_id);
-        const url = new URL(`${process.env.API_HOST_URL}/v1/library`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library`);
         if (organization_id) {
             url.searchParams.append('organization_id', String(organization_id));
         }
@@ -216,7 +216,7 @@ describe('Library API Functions', () => {
         const result = await editLibrary(formData);
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/library`, {
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/library`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -256,7 +256,7 @@ describe('Library API Functions', () => {
         const result = await createLibrary(formData);
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/library`, {
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/library`, {
             mode: "no-cors",
             method: "POST",
             headers: {
@@ -269,12 +269,12 @@ describe('Library API Functions', () => {
 
     test('addToFavourites should update favourite molecule successfully', async () => {
         const mockResponse = data;
-        const formData = { moleculeId: 1, userId: 1, favourite: true };
+        const formData = { molecule_id: 1, user_id: 1, favourite: true };
 
         const result = await addToFavourites(formData);
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/molecule`, {
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule`, {
             mode: "no-cors",
             method: "POST",
             headers: {

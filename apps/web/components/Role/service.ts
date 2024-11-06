@@ -1,7 +1,7 @@
 "use server";
 
 export async function getFilteredRoles() {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/roles`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/roles`);
     url.searchParams.append('type', 'admin');
     url.searchParams.append('condition', 'not');
     const response = await fetch(url, {

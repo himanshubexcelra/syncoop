@@ -4,14 +4,14 @@ import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
 interface Item {
-    moleculeId: string; // or number, depending on your data type
+    molecule_id: string; // or number, depending on your data type
     library_id: string; // or number
     organization_id: string; // or number
     project_id: string; // or number
     userId: string; // or number
 }
 interface updatedItem {
-    moleculeId: number; // or number, depending on your data type
+    molecule_id: number; // or number, depending on your data type
 }
 
 export async function GET(request: Request) {
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     const req = await request.json();
 
     const result = req.map((item: Item) => ({
-        moleculeId: Number(item.moleculeId),
+        molecule_id: Number(item.molecule_id),
         library_id: Number(item.library_id),
         organization_id: Number(item.organization_id),
         project_id: Number(item.project_id),
@@ -80,11 +80,11 @@ export async function POST(request: Request) {
     }));
 
 
-    const updatedmoleculeId = result.map((item: updatedItem) => Number(item.moleculeId));
+    const updatedmolecule_id = result.map((item: updatedItem) => Number(item.molecule_id));
 
     const updatedResult = await prisma.molecule.updateMany({
         where: {
-            id: { in: updatedmoleculeId }
+            id: { in: updatedmolecule_id }
         },
         data: {
             is_added_to_cart: true,
@@ -121,13 +121,13 @@ export async function DELETE(request: Request) {
     try {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
-        const moleculeId = Number(searchParams.get('moleculeId'));
+        const molecule_id = Number(searchParams.get('molecule_id'));
         const library_id = Number(searchParams.get('library_id'));
         const project_id = Number(searchParams.get('project_id'));
         const userId = Number(searchParams.get('userId'));
 
 
-        if (!moleculeId && !library_id && !project_id) {
+        if (!molecule_id && !library_id && !project_id) {
             await prisma.molecule_cart.deleteMany({
                 where: {
                     created_by: userId
@@ -137,7 +137,7 @@ export async function DELETE(request: Request) {
 
         await prisma.molecule_cart.deleteMany({
             where: {
-                moleculeId: moleculeId,
+                molecule_id: molecule_id,
                 library_id: library_id,
                 project_id: project_id,
                 created_by: userId

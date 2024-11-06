@@ -34,7 +34,7 @@ export async function validateSmiles(smiles: ValidateSmileRequest) {
 export async function uploadMoleculeSmiles(formData: UploadMoleculeSmilesRequest) {
     try {
         const response: any = await fetch(
-            `${process.env.API_END_POINT}/upload_molecule_smiles`,
+            `${process.env.PYTHON_API_HOST_URL}/upload_molecule_smiles`,
             {
                 method: "POST",
                 headers: {

@@ -56,13 +56,31 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 }
             }
         }
+        if (joins.includes('projects')) {
+            query.include = {
+                ...query.include,
+                sharedUsers: true, // Include shared users for each project
+                owner: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+                updated_by: { // Include the user who updated the project
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+            }
+        }
         query.where = { id: Number(project_id) };
     }
 
     try {
-        const projects = await prisma.project.findUnique(query);
+        const project = await prisma.project.findUnique(query);
 
-        return new Response(JSON.stringify(projects), {
+        return new Response(JSON.stringify(project), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS, // success status code
         });

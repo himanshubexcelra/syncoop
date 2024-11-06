@@ -13,6 +13,8 @@ import {
     FetchUserType,
     UserData
 } from '@/lib/definition';
+import { getLibraries } from '../Libraries/libraryService';
+import { LoadIndicator } from 'devextreme-react';
 
 type ProjectListProps = {
     data: ProjectDataFields[],
@@ -32,13 +34,25 @@ export default function ListProjects({ data,
 }: ProjectListProps) {
     const [selectedItems, setSelectedItems] = useState<ProjectDataFields[]>([]);
     const [userList, setUsers] = useState<User[]>(users);
+    const [loader, setLoader] = useState(false);
     const { myRoles } = userData;
 
+    const fetchLibraryData = async (id: number) => {
+        if (id) {
+            const projectData = await getLibraries(['libraries', 'projects'], id.toString());
+            setSelectedItems([projectData]);
+            setLoader(false);
+        }
+    }
+
     useEffect(() => {
-        setSelectedItems([data[0]]);
+        if (data.length) {
+            fetchLibraryData(data[0].id);
+        }
     }, [data.length]);
 
     const selectionChanged = useCallback((e: AccordionTypes.SelectionChangedEvent) => {
+        setLoader(true);
         let newItems = [...selectedItems];
         e.removedItems.forEach((item) => {
             const index = newItems.indexOf(item);
@@ -48,8 +62,8 @@ export default function ListProjects({ data,
         });
         if (e.addedItems.length) {
             newItems = [...newItems, ...e.addedItems];
+            fetchLibraryData(e.addedItems[0]?.id)
         }
-        setSelectedItems(newItems);
         if (myRoles?.includes("admin")) {
             if (Array.isArray(organizationData)) {
                 const filteredUsers = organizationData.filter(
@@ -69,7 +83,6 @@ export default function ListProjects({ data,
     return (
         <div className='content'>
             {data.length > 0 ? (
-
                 <div className='flex'>
                     <div className="accordion projects">
                         <Accordion
@@ -82,16 +95,20 @@ export default function ListProjects({ data,
                             id="accordion-container"
                         />
                     </div>
-                    {selectedItems[0]?.id && (
-                        <ProjectAccordionDetail
-                            data={selectedItems[0]}
-                            users={userList}
-                            fetchOrganizations={fetchOrganizations}
-                            organizationData={organizationData}
-                            userData={userData}
-                            actionsEnabled={actionsEnabled}
-                            myRoles={myRoles} />
-                    )}
+                    {loader ?
+                        <LoadIndicator
+                            visible={loader}
+                        /> : (
+                            selectedItems[0]?.id && (
+                                <ProjectAccordionDetail
+                                    data={selectedItems[0]}
+                                    users={userList}
+                                    fetchOrganizations={fetchOrganizations}
+                                    organizationData={organizationData}
+                                    userData={userData}
+                                    actionsEnabled={actionsEnabled}
+                                    myRoles={myRoles} />
+                            ))}
                 </div>
             ) : <div className="accordion-no-data">No Data found</div>}
         </div >

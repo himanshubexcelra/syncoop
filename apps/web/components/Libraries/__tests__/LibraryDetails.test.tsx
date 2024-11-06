@@ -40,7 +40,7 @@ const data = {
     created_at: '2024-10-17T08:18:35.505Z',
     updated_at: '2024-10-17T08:18:35.505Z',
     ownerId: 1,
-    updated_byId: 1,
+    updated_by: 1,
     owner: {
         id: 1,
         first_name: 'System',
@@ -58,7 +58,7 @@ const data = {
             created_at: '2024-10-17T09:53:33.045Z',
             updated_at: null,
             ownerId: 7,
-            updated_byId: null,
+            updated_by: null,
             owner: {
                 id: 1,
                 first_name: 'System',
@@ -82,7 +82,7 @@ const data = {
             created_at: '2024-10-17T09:53:33.070Z',
             updated_at: null,
             ownerId: 7,
-            updated_byId: null,
+            updated_by: null,
             owner: {
                 id: 1,
                 first_name: 'System',
@@ -109,7 +109,7 @@ const libraryData = {
     created_at: '2024-10-17T09:53:33.045Z',
     updated_at: null,
     ownerId: 7,
-    updated_byId: null,
+    updated_by: null,
     owner: {
         id: 1,
         first_name: 'System',
@@ -129,7 +129,7 @@ const libraryData1 = {
     created_at: '2024-10-17T09:53:33.045Z',
     updated_at: null,
     ownerId: 7,
-    updated_byId: null,
+    updated_by: null,
     owner: {
         id: 1,
         first_name: 'System',
@@ -247,7 +247,7 @@ describe('LibraryList should display proper data', () => {
         });
         (getLibraries as jest.Mock).mockResolvedValue(data);
         (getLibraryById as jest.Mock).mockResolvedValue(libraryData);
-        (addToFavourites as jest.Mock).mockResolvedValue({ id: 19, moleculeId: 1, userId: 1 });
+        (addToFavourites as jest.Mock).mockResolvedValue({ id: 19, molecule_id: 1, userId: 1 });
         
     });
 

@@ -1,4 +1,4 @@
-import { LibraryFields, LoginFormSchema, MoleculeType, StatusCode } from "@/lib/definition"
+import { CombinedLibraryType, LibraryFields, LoginFormSchema, MoleculeType, StatusCode, StatusType } from "@/lib/definition"
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -141,7 +141,10 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-export function fetchMoleculeStatus(data: LibraryFields) {
+type UnionLibType = LibraryFields | CombinedLibraryType;
+type UnionMoleculeType = MoleculeType | StatusType;
+
+export function fetchMoleculeStatus(data: UnionLibType) {
   let projectStatusCount = {
     [StatusCode.READY]: 0,
     [StatusCode.NEW]: 0,
@@ -150,7 +153,7 @@ export function fetchMoleculeStatus(data: LibraryFields) {
     [StatusCode.DONE]: 0,
   };
 
-  data.molecule.forEach((molecule: MoleculeType) => {
+  data.molecule.forEach((molecule: UnionMoleculeType) => {
     const keys = Object.keys(projectStatusCount);
     const values = Object.values(projectStatusCount);
     const keyIndex = keys.indexOf(molecule.status)

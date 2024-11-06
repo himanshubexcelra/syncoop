@@ -155,18 +155,17 @@ export interface MoleculeType {
   status: string;
   updated_at: Date;
   updated_by: number;
-  userId: number;
 }
 
 export interface MoleculeFavourite {
-  userId: number;
-  moleculeId: number;
+  user_id: number;
+  molecule_id: number;
   id: number;
 }
 
 export type addToFavouritesProps = {
-  moleculeId: number,
-  userId: number,
+  molecule_id: number,
+  user_id: number,
   existingFavourite?: MoleculeFavourite,
   favourite: boolean,
 }
@@ -186,6 +185,14 @@ export interface LibraryFields {
   status?: MoleculeStatus[];
   molecule: [];
 }
+
+export interface StatusType {
+  status: string;
+}
+
+export interface CombinedLibraryType {
+  molecule: StatusType[];
+}
 export interface ProjectDataFields {
   name: string;
   id: number;
@@ -204,6 +211,7 @@ export interface ProjectDataFields {
   orgUser?: OrgUser;
   libraries: LibraryFields[];
   created_at: Date,
+  combinedLibrary?: CombinedLibraryType
 }
 
 export interface UserRole {
@@ -416,7 +424,7 @@ export interface UploadMoleculeSmilesResponse {
   rejected_smiles: RejectedSmiles[]
 }
 export interface OrderType {
-  moleculeId: number;
+  molecule_id: number;
   library_id: number;
   project_id: number;
   organization_id: number;
@@ -426,7 +434,7 @@ export interface OrderType {
 export interface DeleteMoleculeCart {
   id: number;
   library_id: number;
-  moleculeId: number;
+  molecule_id: number;
   project_id: number;
   moleculeName: string,
   userId: number;
@@ -457,7 +465,7 @@ export interface MoleculeObj {
 
 export interface CartItem {
   id: number;
-  moleculeId: number;
+  molecule_id: number;
   library_id: number;
   project_id: number;
   organization_id: number;
@@ -475,7 +483,7 @@ export interface UploadMoleculeFileRequest {
 
 export interface CartDetail {
   id: number;
-  moleculeId: number;
+  molecule_id: number;
   library_id: number;
   organization_id: number;
   project_id: number;
@@ -489,7 +497,7 @@ export interface CartDetail {
 export interface OrderDetail {
   orderId: number;
   orderName: string;
-  moleculeId: number;
+  molecule_id: number;
   library_id: number;
   project_id: number;
   organization_id: number;
@@ -497,5 +505,5 @@ export interface OrderDetail {
 }
 
 export interface GroupedData {
-  [key: string]: { id: number; moleculeId: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
+  [key: string]: { id: number; molecule_id: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
 }

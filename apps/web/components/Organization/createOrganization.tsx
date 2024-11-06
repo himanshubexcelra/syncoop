@@ -157,6 +157,7 @@ export default function RenderCreateOrganization({
               height={16}
               priority
               onClick={handleCopyPassword}
+              className="cursor-pointer"
             />
           </div>
         </Item>

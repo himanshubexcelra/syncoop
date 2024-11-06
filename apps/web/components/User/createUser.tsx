@@ -146,6 +146,7 @@ export default function RenderCreateUser({
                     height={16}
                     priority
                     onClick={handleCopyPassword}
+                    className="cursor-pointer"
                 />
                 <div id="info-container">
                     <Image
@@ -244,6 +245,7 @@ export default function RenderCreateUser({
                 dataField="password_hash"
                 render={passwordEditorRender}
             >
+                <Label text="Password" />
                 <RequiredRule message={Messages.requiredMessage('Password')} />
             </SimpleItem>
             <SimpleItem>

@@ -73,6 +73,7 @@ const customRenderForField = (data: MoleculeOrder, field: keyof MoleculeOrder) =
 const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const { organization_id, orgUser, myRoles } = userData;
   const { type } = orgUser;
+  const [loader, setLoader] = useState(false);
   const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([]);
   const [synthesisView, setSynthesisView] = useState(false);
   const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
@@ -153,7 +154,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const fetchMoleculeOrders = async () => {
     let data = [];
     let transformedData: any[] = [];
-
+    setLoader(true);
     try {
       if (type === OrganizationType.External) {
         // External users: fetch records filtered by organization_id
@@ -212,6 +213,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       console.error(Messages.FETCH_ERROR, error);
       transformedData = []; // Set to an empty array in case of an error
       setMoleculeOrderData([]);
+    } finally {
+      setLoader(false);
     }
   }
 
@@ -252,6 +255,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             enableFiltering={false}
             enableOptions={false}
             toolbarButtons={toolbarButtons}
+            loader={loader}
           />
         </div>
 

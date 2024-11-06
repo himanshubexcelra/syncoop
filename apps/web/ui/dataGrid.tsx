@@ -17,7 +17,7 @@ import DataGrid, {
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
-import { Button } from 'devextreme-react';
+import { Button, LoadIndicator } from 'devextreme-react';
 import { StatusCodeBg, StatusCodeType } from '@/utils/constants';
 
 interface ToolbarButtonConfig {
@@ -48,6 +48,7 @@ interface CustomDataGridProps<T> {
     loadMoreData?: () => void;
     buttonText?: string;
     onButtonClick?: () => void;
+    loader: boolean;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
@@ -63,6 +64,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableFiltering = true,
     enableOptions = true,
     loadMoreData,
+    loader
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -74,7 +76,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
             const { scrollHeight, clientHeight, scrollTop } = instance.scrollable().scrollOffset();
 
             if (scrollTop + clientHeight >= scrollHeight - 50) {
-                console.log('Infinite scroll triggered');
                 loadMoreData && loadMoreData();
             }
         }
@@ -127,76 +128,80 @@ const CustomDataGrid = <T extends Record<string, any>>({
 
     return (
         <div>
-            <DataGrid
-                ref={dataGridRef}
-                dataSource={data}
-                keyExpr="id"
-                allowColumnReordering={false}
-                showBorders={true}
-                height="600px"
-                width="100%"
-                onCellPrepared={cellPrepared}
-            >
-                {enableGrouping && <GroupPanel visible={true} />}
+            {loader ?
+                <LoadIndicator
+                    visible={loader}
+                /> :
+                <DataGrid
+                    ref={dataGridRef}
+                    dataSource={data}
+                    keyExpr="id"
+                    allowColumnReordering={false}
+                    showBorders={true}
+                    height="600px"
+                    width="100%"
+                    onCellPrepared={cellPrepared}
+                >
+                    {enableGrouping && <GroupPanel visible={true} />}
 
-                <HeaderFilter visible={true} />
-                {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
-                {enableFiltering && <FilterRow visible={true} />}
-                {enableSorting && <Sorting mode="multiple" />}
-                <Scrolling mode={enableInfiniteScroll ? 'infinite' : 'standard'} />
-                <LoadPanel enabled={!data.length} />
-                {enableRowSelection && (
-                    <Selection mode="multiple" selectAllMode={'allPages'}
-                        showCheckBoxesMode={'always'} />
-                )}
+                    <HeaderFilter visible={true} />
+                    {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
+                    {enableFiltering && <FilterRow visible={true} />}
+                    {enableSorting && <Sorting mode="multiple" />}
+                    <Scrolling mode={enableInfiniteScroll ? 'infinite' : 'standard'} />
+                    <LoadPanel enabled={!data.length} />
+                    {enableRowSelection && (
+                        <Selection mode="multiple" selectAllMode={'allPages'}
+                            showCheckBoxesMode={'always'} />
+                    )}
 
-                {/* Render columns specified in the configuration passed from the parent */}
-                {columns.map((column) => (
-                    <Column
-                        key={String(column.dataField)}
-                        dataField={String(column.dataField)}
-                        headerCellRender={column.dataField === 'bookmark' ? () => (
-                            <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
-                        ) : undefined}
-                        caption={column.dataField === 'smiles_string' ?
-                            'Smile' : (typeof column.title === 'string' ? column.title : '')}
-                        width={column.width ? String(column.width) : undefined}
-                        cellRender={column.customRender ? ({ data }) =>
-                            column.customRender!(data) : undefined}
-                    />
-                ))}
-
-
-                {groupingColumn && (
-                    <Column
-                        dataField={String(groupingColumn)}
-                        dataType="string"
-                        groupIndex={0}
-                        groupCellRender={groupCellRender}
-                    />
-                )}
-                <Toolbar>
-                    {toolbarButtons.map((button, index) => (
-                        <Item key={index} location="after">
-                            <Button
-                                text={button.text}
-                                onClick={button.onClick}
-                                icon={button.icon}
-                                className="btn-primary"
-                            />
-                        </Item>
+                    {/* Render columns specified in the configuration passed from the parent */}
+                    {columns.map((column) => (
+                        <Column
+                            key={String(column.dataField)}
+                            dataField={String(column.dataField)}
+                            headerCellRender={column.dataField === 'bookmark' ? () => (
+                                <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
+                            ) : undefined}
+                            caption={column.dataField === 'smiles_string' ?
+                                'Smile' : (typeof column.title === 'string' ? column.title : '')}
+                            width={column.width ? String(column.width) : undefined}
+                            cellRender={column.customRender ? ({ data }) =>
+                                column.customRender!(data) : undefined}
+                        />
                     ))}
-                    {groupingColumn &&
-                        <Item location="before" name="groupPanel" />
-                    }
-                    <Item name="searchPanel" locateInMenu="always" location="after" />
-                </Toolbar>
-                <SearchPanel
-                    visible={true}
-                    highlightSearchText={true}
-                />
 
-            </DataGrid>
+
+                    {groupingColumn && (
+                        <Column
+                            dataField={String(groupingColumn)}
+                            dataType="string"
+                            groupIndex={0}
+                            groupCellRender={groupCellRender}
+                        />
+                    )}
+                    <Toolbar>
+                        {toolbarButtons.map((button, index) => (
+                            <Item key={index} location="after">
+                                <Button
+                                    text={button.text}
+                                    onClick={button.onClick}
+                                    icon={button.icon}
+                                    className="btn-primary"
+                                />
+                            </Item>
+                        ))}
+                        {groupingColumn &&
+                            <Item location="before" name="groupPanel" />
+                        }
+                        <Item name="searchPanel" locateInMenu="always" location="after" />
+                    </Toolbar>
+                    <SearchPanel
+                        visible={true}
+                        highlightSearchText={true}
+                    />
+
+                </DataGrid>}
 
             {enableOptions && (
                 <div className="options">

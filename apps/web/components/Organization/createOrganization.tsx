@@ -145,7 +145,9 @@ export default function RenderCreateOrganization({
               message: Messages.PASSWORD_CRITERIA
             }
           ]}
-        />
+        >
+          <Label text={'Password'} />
+        </SimpleItem>
         <Item>
           <div className="ml-[15px] mb-[10px]">
             <Image

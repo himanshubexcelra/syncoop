@@ -103,7 +103,7 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
         const generatedPassword = generatePassword();
         setNewPassword(generatedPassword);
         navigator.clipboard.writeText(generatedPassword)
-            .then(() => toast.success(Messages.PASSWORD_COPY))
+            .then(() => toast.success(Messages.PASSWORD_GENERATE))
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
 

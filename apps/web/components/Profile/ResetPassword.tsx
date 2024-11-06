@@ -87,7 +87,7 @@ export default function ResetPassword({ onClose, email_id }: ChangePasswordProps
         const generatedPassword = generatePassword();
         setNewPassword(generatedPassword);
         navigator.clipboard.writeText(generatedPassword)
-            .then(() => toast.success(Messages.PASSWORD_COPY))
+            .then(() => toast.success(Messages.PASSWORD_GENERATE))
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
 

@@ -72,7 +72,7 @@ export default function RenderCreateOrganization({
     const generatedPassword = generatePassword();
     setPassword(generatedPassword);
     navigator.clipboard.writeText(generatedPassword)
-      .then(() => toast.success(Messages.PASSWORD_COPY))
+      .then(() => toast.success(Messages.PASSWORD_GENERATE))
       .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     formRef.current!.instance().updateData("password_hash", generatedPassword);
   };

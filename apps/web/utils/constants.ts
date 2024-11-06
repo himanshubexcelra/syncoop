@@ -115,7 +115,7 @@ export const StatusCodeTextColor: { [key: string]: string } = {
   NEW: "themeGreyColor",
   READY: "themeBlueColor",
   INPROGRESS: "themeBlueColor",
-  DONE: "white",
+  DONE: "background",
   FAILED: "failedStatusColor"
 };
 

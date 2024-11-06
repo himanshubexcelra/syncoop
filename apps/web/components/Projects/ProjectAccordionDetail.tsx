@@ -164,7 +164,6 @@ export default function ProjectAccordionDetail({
                     <div>
                         {moleculeCount > 0 && (
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {/* @ts-expect-error: type mismatch*/}
                                 {Object.entries(fetchMoleculeStatus(combinedLibrary))
                                     .map(([status, count]) => {
                                         let type = 'info';

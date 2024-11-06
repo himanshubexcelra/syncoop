@@ -16,6 +16,7 @@ import {
     MoleculeFavourite,
     MoleculeType,
     addToFavouritesProps,
+    StatusCode,
 } from '@/lib/definition';
 import DataGrid, {
     Item as ToolbarItem,
@@ -266,12 +267,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const moleculeCart = library_id ?
             await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
-        const moleculeIds = moleculeCart.map((item: any) => item.moleculeId);
-        const moleculeIdsInCart = moleculeCart
+        const molecule_ids = moleculeCart.map((item: any) => item.molecule_id);
+        const molecule_idsInCart = moleculeCart
             .filter((item: any) => item.molecule.is_added_to_cart)
-            .map((item: any) => item.moleculeId);
-        setCartMolecule(moleculeIdsInCart)
-        setSelectedRows(moleculeIds)
+            .map((item: any) => item.molecule_id);
+        setCartMolecule(molecule_idsInCart)
+        setSelectedRows(molecule_ids)
     };
 
 
@@ -301,7 +302,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     }) => {
         setMoleculeLoader(true);
         const dataField: addToFavouritesProps = {
-            moleculeId: data.id, userId: userData.id, favourite: true
+            molecule_id: data.id, user_id: userData.id, favourite: true
         };
         if (existingFavourite) dataField.existingFavourite = existingFavourite;
         const response = await addToFavourites(dataField);
@@ -456,7 +457,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const checkedMolecule = e.selectedRowsData;
         const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
             ...item,
-            moleculeId: item.id,
+            molecule_id: item.id,
             library_id: library_id,
             userId: userData.id,
             organization_id: projects.organization_id,
@@ -466,9 +467,9 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         const moleculeCart = library_id ?
             await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
-        const preselectedIds = moleculeCart.map((item: any) => item.moleculeId);
+        const preselectedIds = moleculeCart.map((item: any) => item.molecule_id);
         const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
-            !preselectedIds.includes(item.moleculeId));
+            !preselectedIds.includes(item.molecule_id));
         // If the check box is unchecked
         if (e.currentDeselectedRowKeys.length > 0) {
             const newmoleculeData = checkedMolecule.filter((
@@ -1046,8 +1047,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 const existingFavourite =
                                                     data.molecule_favorites.find((
                                                         val: MoleculeFavourite) =>
-                                                        val.userId === userData.id &&
-                                                        val.moleculeId === data.id);
+                                                        val.user_id === userData.id &&
+                                                        val.molecule_id === data.id);
                                                 return (
                                                     <span className={`flex
                                                 justify-center
@@ -1149,11 +1150,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             dataField="status"
                                             minWidth={120}
                                             cellRender={({ data }: { data: DataType }) => {
+                                                const colorKey = data.status.toUpperCase() as
+                                                    keyof typeof StatusCode;
                                                 return (
                                                     <span className={`flex items-center gap-[5px]`}>
                                                         {data.status}
-                                                        {/* @ts-expect-error: type mismatch*/}
-                                                        <StatusMark status={data.status} />
+                                                        <StatusMark status={StatusCode[colorKey]} />
                                                     </span>
                                                 )
                                             }} />
@@ -1364,7 +1366,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         visible={viewAddMolecule}
                                         contentRender={() => (
                                             <AddMolecule libraryId={library_id}
-                                                projectId={params.id} />
+                                                projectId={params.id} userData={userData} />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}
@@ -1385,7 +1387,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             }
                                         } />
                                     }
-                                    <Popup
+                                    {viewEditMolecule && <Popup
                                         title="Edit Molecule"
                                         visible={viewEditMolecule}
                                         contentRender={() => (
@@ -1409,6 +1411,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 class: "create-popup mr-[15px]"
                                             }
                                         } />
+                                    }
                                     <div className='flex justify-center mt-[25px]'>
                                         <span className='text-themeGreyColor'>
                                             {tableData.length}

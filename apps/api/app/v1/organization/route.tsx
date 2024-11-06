@@ -93,13 +93,10 @@ export async function GET(request: Request) {
               sharedUsers: true, // Include shared users for each project
               libraries: {
                 select: {
-                  description: true,
-                  name: true,
-                  id: true,
-                  molecule: {
+                  _count: {
                     select: {
-                      status: true,
-                    }
+                      molecule: true, // Count molecules in each library
+                    },
                   },
                 },
               },
@@ -115,7 +112,7 @@ export async function GET(request: Request) {
                   last_name: true,
                 },
               },
-            },
+            }
           }
         }
       }

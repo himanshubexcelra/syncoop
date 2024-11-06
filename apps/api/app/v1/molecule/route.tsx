@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { userId, moleculeId, existingFavourite, favourite } = req;
+    const { user_id, molecule_id, existingFavourite, favourite } = req;
 
     try {
         if (favourite) {
@@ -49,8 +49,8 @@ export async function POST(request: Request) {
             // Create a new favorite entry
             const favorite = await prisma.molecule_favorites.create({
                 data: {
-                    userId,
-                    moleculeId,
+                    user_id,
+                    molecule_id,
                 },
             });
 

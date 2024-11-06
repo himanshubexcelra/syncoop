@@ -11,7 +11,7 @@ const MoleculeStructure = dynamic(
 
 interface MoleculeStructureActionsProps {
     smilesString: string;
-    moleculeId: number;
+    molecule_id: number;
     onZoomClick: () => void;
     onEditClick: () => void;
     onDeleteClick: () => void;
@@ -19,7 +19,7 @@ interface MoleculeStructureActionsProps {
 
 const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
     smilesString,
-    moleculeId,
+    molecule_id,
     onZoomClick,
     onEditClick,
     onDeleteClick,
@@ -27,7 +27,7 @@ const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
     return (
         <span className="flex justify-center items-center gap-[7.5px]">
             <MoleculeStructure height={80} width={80}
-                svgMode={true} structure={smilesString} id={`smiles-${moleculeId}`} />
+                svgMode={true} structure={smilesString} id={`smiles-${molecule_id}`} />
             <Button onClick={onZoomClick} render={() =>
                 <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
             <Button onClick={onEditClick} render={() =>

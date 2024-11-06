@@ -4,7 +4,7 @@
 import { addToFavouritesProps, MoleculeType, OrderType } from "@/lib/definition";
 
 export async function getLibraries(withRelation: string[] = [], project_id: string) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/project/${project_id}`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project/${project_id}`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
     }
@@ -20,7 +20,7 @@ export async function getLibraries(withRelation: string[] = [], project_id: stri
 }
 
 export async function getLibraryById(withRelation: string[] = [], library_id: string) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/library?id=${library_id}`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library?id=${library_id}`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
     }
@@ -37,7 +37,7 @@ export async function getLibraryById(withRelation: string[] = [], library_id: st
 
 export async function getLibraryCountById(organization_id?: number) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/library`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library`);
         if (organization_id) {
             url.searchParams.append('organization_id', String(organization_id));
         }
@@ -59,7 +59,7 @@ export async function getLibraryCountById(organization_id?: number) {
 
 export async function geMoleculeCountById(organization_id?: number) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule`);
         if (organization_id) {
             url.searchParams.append('organization_id', String(organization_id));
         }
@@ -82,7 +82,7 @@ export async function geMoleculeCountById(organization_id?: number) {
 export async function createLibrary(formData: FormData) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/library`,
+            `${process.env.NEXT_API_HOST_URL}/v1/library`,
             {
                 mode: "no-cors",
                 method: "POST",
@@ -108,7 +108,7 @@ export async function createLibrary(formData: FormData) {
 export async function editLibrary(formData: FormData) {
     try {
         const response = await fetch(
-            `${process.env.API_HOST_URL}/v1/library`,
+            `${process.env.NEXT_API_HOST_URL}/v1/library`,
             {
                 // mode: "no-cors",
                 method: "PUT",
@@ -133,7 +133,7 @@ export async function editLibrary(formData: FormData) {
 export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/molecule_cart`,
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule_cart`,
             {
                 mode: "no-cors",
                 method: "POST",
@@ -158,7 +158,7 @@ export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
 
 export async function getMoleculeCart(userId?: number, library_id?: number, project_id?: number) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
         if (library_id) {
             url.searchParams.append('library_id', String(library_id));
         }
@@ -186,17 +186,17 @@ export async function getMoleculeCart(userId?: number, library_id?: number, proj
 
 export async function deleteMoleculeCart(
     userId?: number,
-    moleculeId?: number,
+    molecule_id?: number,
     library_id?: number,
     project_id?: number
 ) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/molecule_cart/`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
         if (userId) {
             url.searchParams.append('userId', String(userId));
         }
-        if (moleculeId) {
-            url.searchParams.append('moleculeId', String(moleculeId));
+        if (molecule_id) {
+            url.searchParams.append('molecule_id', String(molecule_id));
         }
         if (library_id) {
             url.searchParams.append('library_id', String(library_id));
@@ -222,7 +222,7 @@ export async function deleteMoleculeCart(
 export async function addToFavourites(formData: addToFavouritesProps) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/molecule`,
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule`,
             {
                 mode: "no-cors",
                 method: "POST",
@@ -248,7 +248,7 @@ export async function addToFavourites(formData: addToFavouritesProps) {
 export async function submitOrder(orderData: OrderType[]) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/molecule_order`,
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule_order`,
             {
                 mode: "no-cors",
                 method: "POST",

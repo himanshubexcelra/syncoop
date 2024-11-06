@@ -10,7 +10,7 @@ export async function getProjects({
     withRelation = [],
     organization_id, withCount = []
 }: ProjectDBType) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/project`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
     }
@@ -32,7 +32,7 @@ export async function getProjects({
 }
 export async function getProjectsCountById(orgId?: number) {
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/project`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
         if (orgId) {
             url.searchParams.append('orgId', String(orgId));
         }
@@ -54,7 +54,7 @@ export async function getProjectsCountById(orgId?: number) {
 export async function createProjectApi(formData: FormData) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/project`,
+            `${process.env.NEXT_API_HOST_URL}/v1/project`,
             {
                 mode: "no-cors",
                 method: "POST",
@@ -80,7 +80,7 @@ export async function createProjectApi(formData: FormData) {
 export async function editProject(formData: FormData) {
     try {
         const response = await fetch(
-            `${process.env.API_HOST_URL}/v1/project`,
+            `${process.env.NEXT_API_HOST_URL}/v1/project`,
             {
                 // mode: "no-cors",
                 method: "PUT",

@@ -45,7 +45,7 @@ fdescribe('Organization API Functions', () => {
 
         const withRelation = ['orgUser', 'user_role'];
         const result = await getOrganization({ withRelation });
-        const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization`);
         if (withRelation.length) {
             url.searchParams.append('with', JSON.stringify(withRelation));
         }
@@ -75,7 +75,7 @@ fdescribe('Organization API Functions', () => {
         const result = await editOrganization(formData);
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/organization/`, {
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/organization/`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -116,7 +116,7 @@ fdescribe('Organization API Functions', () => {
         const result = await createOrganization(formData, 2);
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.API_HOST_URL}/v1/organization`, {
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/organization`, {
             mode: "no-cors",
             method: "POST",
             headers: {

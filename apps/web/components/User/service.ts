@@ -1,7 +1,7 @@
 "use server";
 
 export async function getUsers(withRelation: string[] = [], orgType: string = '', loggedInUser?: number, orgId?: number) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/users`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/users`);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
     }
@@ -28,7 +28,7 @@ export async function getUsers(withRelation: string[] = [], orgType: string = ''
 export async function createUser(formData: FormData) {
     try {
         const response: any = await fetch(
-            `${process.env.API_HOST_URL}/v1/users`,
+            `${process.env.NEXT_API_HOST_URL}/v1/users`,
             {
                 mode: "no-cors",
                 method: "POST",
@@ -52,7 +52,7 @@ export async function createUser(formData: FormData) {
 export async function editUser(formData: any) {
     try {
         const response = await fetch(
-            `${process.env.API_HOST_URL}/v1/users`,
+            `${process.env.NEXT_API_HOST_URL}/v1/users`,
             {
                 method: "PUT",
                 headers: {
@@ -76,7 +76,7 @@ export async function editUser(formData: any) {
 export async function getUserModulePermissions(userData: any) {
     const { organization_id, roles } = userData;
     try {
-        const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization`);
         url.searchParams.append('with', JSON.stringify(['org_module', 'module_action_role_permission']));
         url.searchParams.append('id', organization_id);
         // roles.push({id: 4, type: 'sd'});

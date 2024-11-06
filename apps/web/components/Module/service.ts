@@ -1,7 +1,7 @@
 "use server"
 
 export async function getModule(orgId?: number) {
-    const url = new URL(`${process.env.API_HOST_URL}/v1/module`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/module`);
     if (orgId) {
         url.searchParams.append('orgId', String(orgId));
     }

@@ -10,7 +10,7 @@ export async function getOrganization(
     withCount?: string[],
     type?: string
   }) {
-  const url = new URL(`${process.env.API_HOST_URL}/v1/organization`);
+  const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));
   }
@@ -40,7 +40,7 @@ export async function getOrganizationById(
     withRelation?: string[],
     id?: number
   }) {
-  const url = new URL(`${process.env.API_HOST_URL}/v1/organization?id=${id}`);
+  const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization?id=${id}`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));
   }
@@ -58,7 +58,7 @@ export async function getOrganizationById(
 export async function editOrganization(formData: any) {
   try {
     const response = await fetch(
-      `${process.env.API_HOST_URL}/v1/organization/`,
+      `${process.env.NEXT_API_HOST_URL}/v1/organization/`,
       {
         // mode: "no-cors",
         method: "PUT",
@@ -84,7 +84,7 @@ export async function editOrganization(formData: any) {
 export async function createOrganization(formData: FormData, roleId: number) {
   try {
     const response: any = await fetch(
-      `${process.env.API_HOST_URL}/v1/organization`,
+      `${process.env.NEXT_API_HOST_URL}/v1/organization`,
       {
         mode: "no-cors",
         method: "POST",

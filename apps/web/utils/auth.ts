@@ -12,7 +12,7 @@ export async function authorize(formData: FormData) {
             password_hash: formData.get('password_hash')
         });
         console.log(body);
-        const response: any = await fetch(`${process.env.API_HOST_URL}/v1/auth`, {
+        const response: any = await fetch(`${process.env.NEXT_API_HOST_URL}/v1/auth`, {
             mode: 'no-cors',
             method: 'POST',
             headers: {

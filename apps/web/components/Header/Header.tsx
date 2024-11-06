@@ -57,13 +57,13 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
 
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
 
-        const { moleculeId, library_id, project_id, moleculeName, userId } = obj;
-        deleteMoleculeCart(userId, moleculeId, library_id, project_id).then((res) => {
+        const { molecule_id, library_id, project_id, moleculeName, userId } = obj;
+        deleteMoleculeCart(userId, molecule_id, library_id, project_id).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
                     !
                     (
-                        item.moleculeId === moleculeId &&
+                        item.molecule_id === molecule_id &&
                         item.library_id === library_id &&
                         item.project_id === project_id
                     )

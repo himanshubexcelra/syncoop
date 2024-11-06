@@ -11,18 +11,24 @@ import toast from 'react-hot-toast';
 import { DELAY } from '@/utils/constants';
 import { delay } from '@/utils/helpers';
 import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
+import { UserData } from '@/lib/definition';
 
 const dialogProperties = {
     width: 455,
     height: 148,
 }
 
-interface AddMoleculeProps {
+type AddMoleculeProps = {
+    userData: UserData;
     libraryId: string | null;
     projectId: string | null;
 }
 
-const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
+export default function AddMolecule({
+    userData,
+    libraryId,
+    projectId
+}: AddMoleculeProps) {
     const [file, setFile] = useState<File | null>(null);
     const [discardvisible, setDiscardVisible] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -32,15 +38,13 @@ const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
         setDiscardVisible(false);
     };
     const saveMolecule = async () => {
-        const sessionData = await getUserData();
-        const userData: any = sessionData?.userData;
         KetcherFunctions.exportSmile().then(async (str) => {
             const result = await uploadMoleculeSmiles({
                 smiles: [str],
                 "created_by_user_id": userData.id,
                 "library_id": libraryId?.toString() || '',
                 "project_id": projectId?.toString() || '',
-                "organization_id": userData.organizationId,
+                "organization_id": userData.organization_id,
                 "source_molecule_name": moleculeName
             })
             if (result.rejected_smiles.length > 0) {
@@ -235,5 +239,3 @@ const AddMolecule: React.FC<AddMoleculeProps> = ({ libraryId, projectId }) => {
         </>
     );
 };
-
-export default AddMolecule;

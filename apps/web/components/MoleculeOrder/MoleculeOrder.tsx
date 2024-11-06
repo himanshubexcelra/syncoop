@@ -113,8 +113,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
         const colorBgClass = StatusCodeBg[colorKey] || "bg-black";
         const textColorClass = StatusCodeTextColor[colorKey] || "#000";
         return (
-          <div className={`flex items-center gap-[5px] ${colorBgClass} ${textColorClass}`}
-            style={{ color: textColorClass }}>
+          <div className={`flex items-center gap-[5px] ${colorBgClass} ${textColorClass}`}>
             {statusUpper === "FAILED" && (
               <Image src="/icons/warning.svg" width={14}
                 height={14} alt="Molecule order failed" />

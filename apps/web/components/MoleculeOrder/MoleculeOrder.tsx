@@ -168,13 +168,13 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           ...rest,
           organizationName: organization?.name || 'Unknown',
           molecular_weight: molecule?.molecular_weight || 0,
-          smile: molecule?.smiles_string || '',
+          smiles_string: molecule?.smiles_string || '',
           status: molecule?.status || 'Unknown',
           orderName,
           ...(() => {
             if (type === OrganizationType.External) {
               return {
-                "project / library": `${project.nam || 'Unknown'} / ${library.name || 'Unknown'}`
+                "project / library": `${project.name || 'Unknown'} / ${library.name || 'Unknown'}`
               }
             } else if (type === OrganizationType.Internal) {
               return {

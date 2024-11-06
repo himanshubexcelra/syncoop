@@ -1,20 +1,20 @@
 type KetcherApiType = {
-    renderFromCtab: (str: string) => void
-    clearSelection: () => void
-    selectAll: () => void
-    selectAtomsById: (arr: number[]) => void
-    exportCtab: () => Promise<string>
-    getSelectedAtomId: () => string | null
-    highlightSelection: (color: string) => {
-      lastHighlightID: number
-      lastHighlight: any
-    }
-    getAllHighlights: () => Array<any>
-    clearHighlights: () => void
+  renderFromCtab: (str: string) => void
+  clearSelection: () => void
+  selectAll: () => void
+  selectAtomsById: (arr: number[]) => void
+  exportCtab: () => Promise<string>
+  getSelectedAtomId: () => string | null
+  highlightSelection: (color: string) => {
+    lastHighlightID: number
+    lastHighlight: any
   }
-  
-  export declare global {
-    const KetcherAPI: (arg) => KetcherApiType
-    const KetcherFunctions: KetcherApiType
-  }
-  
+  getAllHighlights: () => Array<any>
+  clearHighlights: () => void
+  exportSmile: () => Promise<string>
+}
+
+export declare global {
+  const KetcherAPI: (arg) => KetcherApiType
+  const KetcherFunctions: KetcherApiType
+}

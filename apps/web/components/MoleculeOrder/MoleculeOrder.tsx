@@ -256,6 +256,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             enableOptions={false}
             toolbarButtons={toolbarButtons}
             loader={loader}
+            enableHeaderFiltering={false}
+            enableSearchOption={true}
           />
         </div>
 

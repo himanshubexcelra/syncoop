@@ -49,6 +49,8 @@ interface CustomDataGridProps<T> {
     buttonText?: string;
     onButtonClick?: () => void;
     loader: boolean;
+    enableHeaderFiltering?: boolean;
+    enableSearchOption?: boolean;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
@@ -64,7 +66,9 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableFiltering = true,
     enableOptions = true,
     loadMoreData,
-    loader
+    loader,
+    enableHeaderFiltering,
+    enableSearchOption
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -144,7 +148,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 >
                     {enableGrouping && <GroupPanel visible={true} />}
 
-                    <HeaderFilter visible={true} />
+                    {enableHeaderFiltering && <HeaderFilter visible={true} />}
                     {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
                     {enableFiltering && <FilterRow visible={true} />}
                     {enableSorting && <Sorting mode="multiple" />}
@@ -196,10 +200,10 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         }
                         <Item name="searchPanel" locateInMenu="always" location="after" />
                     </Toolbar>
-                    <SearchPanel
+                    {enableSearchOption && <SearchPanel
                         visible={true}
                         highlightSearchText={true}
-                    />
+                    />}
 
                 </DataGrid>}
 

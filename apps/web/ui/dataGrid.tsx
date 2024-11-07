@@ -146,6 +146,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         headerCellRender={column.dataField === 'bookmark' ? () => (
                             <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
                         ) : undefined}
+                        caption={typeof column.title === 'string' ? column.title : undefined}
                         width={column.width ? String(column.width) : undefined}
                         cellRender={column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}

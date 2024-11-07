@@ -177,7 +177,7 @@ export interface LibraryFields {
   project_id?: number;
   project: ProjectDataFields,
   target?: string;
-  updated_by?: userType;
+  userWhoUpdated?: userType;
   updated_at?: Date;
   owner: User;
   ownerId: number;
@@ -203,7 +203,8 @@ export interface ProjectDataFields {
   sharedUsers: sharedUserType[];
   target: string;
   type: string;
-  updated_by: userType;
+  userWhoUpdated: userType;
+  userWhoCreated: userType;
   updated_at: Date;
   userId?: number;
   owner: User;
@@ -408,7 +409,7 @@ export interface UploadMoleculeSmilesRequest {
   created_by_user_id: number;
   library_id: string;
   project_id: string;
-  organization_id: number;
+  organization_id: string;
   source_molecule_name: string;
 }
 
@@ -444,7 +445,25 @@ export interface MoleculeOrderParams {
   project_id?: number;
   library_id?: number;
   organization_id?: number;
-  created_by?: number;
+  userWhoCreated?: number;
+  created_by?: number
+}
+
+export interface MoleculeOrder {
+  id: number;
+  bookmark: boolean;
+  orderId: number;
+  orderName: string;
+  molecule_id: number;
+  molecularWeight: number;
+  organizationName: string;
+  molecular_weight: string;
+  smiles_string: string;
+  status: string;
+  yield?: number;
+  anlayse?: number;
+  herg?: number;
+  caco2?: number;
 }
 
 export enum OrganizationType {
@@ -507,3 +526,8 @@ export interface OrderDetail {
 export interface GroupedData {
   [key: string]: { id: number; molecule_id: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
 }
+
+export interface RejectedMolecules {
+  smiles: string;
+  reason: string;
+};

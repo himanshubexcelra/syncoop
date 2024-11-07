@@ -163,7 +163,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     return (
         <header className="top-0 left-0 w-full h-10 bg-themeBlueColor 
             flex items-center justify-between px-4 shadow-sm">
-            <CartPopup
+            {createPopupVisible && <CartPopup
                 title="Molecule Cart"
                 visible={createPopupVisible}
                 onHiding={() => setCreatePopupVisibility(false)}
@@ -183,8 +183,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
 
                 showCloseButton={true}
                 wrapperAttr={{ class: "create-popup mr-[15px]" }}
-            />
-            <OrderPopup
+            />}
+            {orderPopupVisible && <OrderPopup
                 visible={orderPopupVisible}
                 onHiding={() => setOrderPopupVisibility(false)}
                 contentRender={() => (
@@ -196,7 +196,7 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 position={orderPopupPosition}
                 showCloseButton={true}
                 wrapperAttr={{ class: "create-popup mr-[15px]" }}
-            />
+            />}
             <div className="flex items-center">
                 <Link href="/">
                     <Image

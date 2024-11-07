@@ -106,7 +106,13 @@ export async function GET(request: Request) {
                   last_name: true,
                 },
               },
-              updated_by: { // Include the user who updated the project
+              userWhoCreated: { // Include the user who updated the project
+                select: {
+                  first_name: true,
+                  last_name: true,
+                },
+              },
+              userWhoUpdated: { // Include the user who updated the project
                 select: {
                   first_name: true,
                   last_name: true,

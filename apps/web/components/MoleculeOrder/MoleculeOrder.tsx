@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import CustomDataGrid from '@/ui/dataGrid';
 import {
   BreadCrumbsObj,
+  MoleculeOrder,
   MoleculeOrderParams,
   OrganizationType,
   StatusCode,
@@ -21,23 +22,6 @@ import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import { isAdmin, popupPositionValue } from '@/utils/helpers';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
-
-interface MoleculeOrder {
-  id: number;
-  bookmark: boolean;
-  orderId: number;
-  orderName: string;
-  molecule_id: number;
-  molecularWeight: number;
-  organizationName: string;
-  molecular_weight: string;
-  smiles_string: string;
-  status: string;
-  yield?: number;
-  anlayse?: number;
-  herg?: number;
-  caco2?: number;
-}
 
 interface ColumnConfig<T> {
   dataField: keyof T;
@@ -90,8 +74,6 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           smilesString={data.smiles_string}
           molecule_id={data.id}
           onZoomClick={() => handleStructureZoom()}
-          onEditClick={() => handleStructureEdit()}
-          onDeleteClick={() => handleStructureDelete()}
         />
       ),
     },
@@ -207,9 +189,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     }
   }
 
-  const handleStructureEdit = () => { };
   const handleStructureZoom = () => { };
-  const handleStructureDelete = () => { };
 
   useEffect(() => {
     fetchMoleculeOrders();
@@ -253,7 +233,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             visible={synthesisView}
             contentRender={() => (
               <SendMoleculesForSynthesis
-                moleculeData={[]}
+                moleculeData={moleculeOrderData}
               />
             )}
             width={650}

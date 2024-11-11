@@ -204,6 +204,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
     const { myRoles } = userData;
     const magnifyButtonRef = useRef<HTMLButtonElement | null>(null);
+    const popupRef = useRef<HTMLDivElement>(null);
     const createEnabled = actionsEnabled.includes('create_library');
 
     const fetchLibraries = async () => {
@@ -524,8 +525,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             }
         }
     };
-    const closePopup = (event: any) => {
-        if (event.target === event.currentTarget) {
+    const closeMagnifyPopup = (event: any) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
         }
     };
@@ -544,7 +545,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
-            <div className='p-[20px]'>
+            <div className='p-[20px]' onClick={closeMagnifyPopup}>
                 {loader ?
                     <LoadIndicator
                         visible={loader}
@@ -1407,9 +1408,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                     </DataGrid>
                                     {popupVisible && (
                                         <div
+                                            ref={popupRef}
                                             style={{
                                                 top: `${popupCords.y}px`,
-                                                left: `${popupCords.x + 150}px`,
+                                                left: `${popupCords.x + 200}px`,
                                             }}
                                             className="fixed 
                                                 transform -translate-x-1/2 -translate-y-1/2 
@@ -1418,7 +1420,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 z-50 
                                                 w-[250px] 
                                                 h-[250px]"
-                                            onMouseLeave={closePopup}
                                         >
                                             <div
                                                 className="absolute 

@@ -150,6 +150,10 @@ type LibraryDetailsProps = {
     actionsEnabled: string[],
 }
 
+interface CellData {
+    smiles_string: string;
+}
+
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
@@ -161,6 +165,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
+    const [popupVisible, setPopupVisible] = useState(false);
+    const [cellData, setCellData] = useState<CellData>({ smiles_string: "" });
     const [selectedLibrary, setSelectedLibrary] =
         useState(library_id ? parseInt(library_id, 10) : '');
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
@@ -515,6 +521,11 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 const color: StatusCodeType = e.data.status?.toUpperCase();
                 e.cellElement.classList.add(StatusCodeBg[color]);
             }
+        }
+    };
+    const closePopup = (event: any) => {
+        if (event.target === event.currentTarget) {
+            setPopupVisible(false);
         }
     };
     return (
@@ -1121,16 +1132,20 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
                                                     />
                                                     <Button
-                                                        disabled={true}
+                                                        // disabled={true}
                                                         render={() => (
-                                                            <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setCellData(data);
+                                                                    setPopupVisible(true);
+                                                                }}>
                                                                 <Image
                                                                     src="/icons/zoom.svg"
                                                                     width={24}
                                                                     height={24}
                                                                     alt="zoom"
                                                                 />
-                                                            </>
+                                                            </button>
                                                         )}
                                                     />
                                                     <Button
@@ -1379,6 +1394,33 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             </div>
                                         </div>
                                     </DataGrid>
+                                    {popupVisible && (
+                                        <div
+                                            className="fixed 
+                                                top-1/2 left-1/2 
+                                                transform -translate-x-1/2 -translate-y-1/2 
+                                                bg-gray-100 
+                                                bg-opacity-80 
+                                                z-50 
+                                                w-[500px] 
+                                                h-[500px]"
+                                            onMouseLeave={closePopup}
+                                        >
+                                            <div
+                                                className="absolute 
+                                                    top-1/2 
+                                                    left-1/2 
+                                                    transform -translate-x-1/2 -translate-y-1/2"
+                                            >
+                                                <MoleculeStructure
+                                                    structure={cellData?.smiles_string}
+                                                    width={450}
+                                                    height={450}
+                                                    svgMode={true}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                     {viewAddMolecule && <Popup
                                         title="Add Molecule"
                                         visible={viewAddMolecule}
@@ -1389,7 +1431,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                 userData={userData}
                                                 setViewAddMolecule={setViewAddMolecule}
                                                 callLibraryId={callLibraryId}
-                                                 />
+                                            />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}

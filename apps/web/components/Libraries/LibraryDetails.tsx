@@ -1145,7 +1145,6 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
                                                     />
                                                     <Button
-                                                        // disabled={true}
                                                         render={() => (
                                                             <button ref={magnifyButtonRef}
                                                                 onClick={() =>
@@ -1410,7 +1409,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         <div
                                             style={{
                                                 top: `${popupCords.y}px`,
-                                                left: `${popupCords.x}px`,
+                                                left: `${popupCords.x + 150}px`,
                                             }}
                                             className="fixed 
                                                 transform -translate-x-1/2 -translate-y-1/2 

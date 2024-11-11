@@ -167,6 +167,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
     const [popupVisible, setPopupVisible] = useState(false);
     const [cellData, setCellData] = useState<CellData>({ smiles_string: "" });
+    const [popupCords, setPopupCords] = useState({ x: 0, y: 0 });
     const [selectedLibrary, setSelectedLibrary] =
         useState(library_id ? parseInt(library_id, 10) : '');
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
@@ -202,7 +203,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const formRef = useRef<FormRef>(null);
 
     const { myRoles } = userData;
-
+    const magnifyButtonRef = useRef<HTMLButtonElement | null>(null);
     const createEnabled = actionsEnabled.includes('create_library');
 
     const fetchLibraries = async () => {
@@ -528,6 +529,18 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             setPopupVisible(false);
         }
     };
+    const handleMagnifyClick = (data: any) => {
+        if (magnifyButtonRef.current) {
+            const buttonRect =
+                magnifyButtonRef.current.getBoundingClientRect();
+            setPopupCords({
+                x: buttonRect.bottom + window.scrollY,
+                y: buttonRect.left + window.scrollX,
+            });
+            setPopupVisible(true);
+            setCellData(data);
+        }
+    }
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -1134,11 +1147,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                     <Button
                                                         // disabled={true}
                                                         render={() => (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setCellData(data);
-                                                                    setPopupVisible(true);
-                                                                }}>
+                                                            <button ref={magnifyButtonRef}
+                                                                onClick={() =>
+                                                                    handleMagnifyClick(data)}
+                                                            >
                                                                 <Image
                                                                     src="/icons/zoom.svg"
                                                                     width={24}
@@ -1396,14 +1408,17 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                     </DataGrid>
                                     {popupVisible && (
                                         <div
+                                            style={{
+                                                top: `${popupCords.y}px`,
+                                                left: `${popupCords.x}px`,
+                                            }}
                                             className="fixed 
-                                                top-1/2 left-1/2 
                                                 transform -translate-x-1/2 -translate-y-1/2 
                                                 bg-gray-100 
                                                 bg-opacity-80 
                                                 z-50 
-                                                w-[500px] 
-                                                h-[500px]"
+                                                w-[250px] 
+                                                h-[250px]"
                                             onMouseLeave={closePopup}
                                         >
                                             <div
@@ -1414,8 +1429,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             >
                                                 <MoleculeStructure
                                                     structure={cellData?.smiles_string}
-                                                    width={450}
-                                                    height={450}
+                                                    width={200}
+                                                    height={200}
                                                     svgMode={true}
                                                 />
                                             </div>

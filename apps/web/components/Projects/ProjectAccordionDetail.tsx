@@ -256,7 +256,7 @@ export default function ProjectAccordionDetail({
                         height={15}
                     />
                     Last Updated by: <span>
-                        {data.updated_by?.first_name} {data.updated_by?.last_name}
+                        {data.userWhoUpdated?.first_name} {data.userWhoUpdated?.last_name}
                     </span>
                 </div>
             </div>

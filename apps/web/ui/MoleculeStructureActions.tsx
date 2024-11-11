@@ -13,8 +13,10 @@ interface MoleculeStructureActionsProps {
     smilesString: string;
     molecule_id: number;
     onZoomClick: () => void;
-    onEditClick: () => void;
-    onDeleteClick: () => void;
+    onEditClick?: () => void;
+    onDeleteClick?: () => void;
+    enableEdit?: boolean;
+    enableDelete?: boolean;
 }
 
 const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
@@ -23,6 +25,8 @@ const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
     onZoomClick,
     onEditClick,
     onDeleteClick,
+    enableEdit = false,
+    enableDelete = false
 }) => {
     return (
         <span className="flex justify-center items-center gap-[7.5px]">
@@ -30,10 +34,10 @@ const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
                 svgMode={true} structure={smilesString} id={`smiles-${molecule_id}`} />
             <Button onClick={onZoomClick} render={() =>
                 <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
-            <Button onClick={onEditClick} render={() =>
-                <Image src="/icons/edit.svg" width={24} height={24} alt="edit" />} />
-            <Button onClick={onDeleteClick} render={() =>
-                <Image src="/icons/delete.svg" width={24} height={24} alt="delete" />} />
+            {enableEdit && <Button onClick={onEditClick} render={() =>
+                <Image src="/icons/edit.svg" width={24} height={24} alt="edit" />} />}
+            {enableDelete && <Button onClick={onDeleteClick} render={() =>
+                <Image src="/icons/delete.svg" width={24} height={24} alt="delete" />} />}
         </span>
     );
 };

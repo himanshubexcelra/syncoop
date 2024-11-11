@@ -25,6 +25,9 @@ export const Messages = {
     libraryAddedUpdated(status: string) {
         return `Library ${status} successfully`;
     },
+    projectAddedUpdated(status: string) {
+        return `Project ${status} successfully`;
+    },
     LIBRARY_LIST_EMPTY:
         "Your library list is empty, add a library to import molecules",
     ADD_MOLECULE_SUCCESS: 'Molecule added successfully',

@@ -8,11 +8,17 @@ import DataGrid, {
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Button } from "devextreme-react/button";
-import { MoleculeType } from "@/lib/definition";
+import { MoleculeOrder } from "@/lib/definition";
+import dynamic from 'next/dynamic';
 
 type SendMoleculesForSynthesisProps = {
-    moleculeData: MoleculeType[],
+    moleculeData: MoleculeOrder[],
 }
+
+const MoleculeStructure = dynamic(
+    () => import("@/utils/MoleculeStructure"),
+    { ssr: false }
+);
 
 export default function SendMoleculesForSynthesis({
     moleculeData,
@@ -37,15 +43,32 @@ export default function SendMoleculesForSynthesis({
                     alignment="center"
                 />
                 <Column dataField="Structure"
-                    cellRender={() => (
-                        <span className='flex justify-center gap-[7.5px]'>
-                            <Image
-                                src="/icons/libraries.svg"
-                                width={24}
-                                height={24}
-                                alt="Create"
+                    minWidth={300}
+                    allowHeaderFiltering={false}
+                    cellRender={({ data, rowIndex }) => (
+                        <span className='flex justify-center gap-[7.5px]'
+                        >
+                            <MoleculeStructure
+                                structure={data.smiles_string}
+                                id={`smiles-${rowIndex}`}
+                                width={80}
+                                height={80}
+                                svgMode={true}
                             />
+                            <Button
+                                disabled={true}
+                                render={() => (
+                                    <>
+                                        <Image
+                                            src="/icons/edit.svg"
+                                            width={24}
+                                            height={24}
+                                            alt="edit"
+                                        />
+                                    </>
+                                )}
 
+                            />
                             <Button
                                 disabled={true}
                                 render={() => (
@@ -59,8 +82,23 @@ export default function SendMoleculesForSynthesis({
                                     </>
                                 )}
                             />
+                            <Button
+                                disabled={true}
+                                render={() => (
+                                    <>
+                                        <Image
+                                            src="/icons/delete.svg"
+                                            width={24}
+                                            height={24}
+                                            alt="delete"
+                                        />
+                                    </>
+                                )}
+                            />
+
                         </span>
                     )} />
+
                 <Column
                     dataField="molecular_weight"
                     caption="Weight"

@@ -8,7 +8,7 @@ import CustomFile from "../../utils/file";
 export async function validateSmiles(smiles: ValidateSmileRequest) {
     try {
         const response: any = await fetch(
-            `${process.env.API_END_POINT}/validate_smiles`,
+            `${process.env.PYTHON_API_HOST_URL}/validate_smiles`,
             {
                 method: "POST",
                 headers: {

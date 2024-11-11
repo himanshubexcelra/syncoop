@@ -27,6 +27,7 @@ import DataGrid, { Column, Sorting, DataGridRef } from "devextreme-react/data-gr
 import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
 import { SelectBox } from "devextreme-react";
 import { sortString } from "@/utils/sortString";
+import { Messages } from "@/utils/message";
 
 export default function CreateProject({
   setCreatePopupVisibility,
@@ -146,6 +147,11 @@ export default function CreateProject({
         formRef.current!.instance().reset();
         fetchOrganizations();
         setCreatePopupVisibility(false);
+        const status = `${edit ? 'updated' : 'created'}`;
+        const message = Messages.projectAddedUpdated(status);
+        const toastId = toast.success(message);
+        await delay(DELAY);
+        toast.remove(toastId);
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
@@ -206,6 +212,7 @@ export default function CreateProject({
       }}
     >
       <Label text="Select an Organisation" />
+      <RequiredRule message="Project type is required" />
     </SimpleItem>
   ), [organizationData, myRoles]);
 
@@ -223,7 +230,7 @@ export default function CreateProject({
             {
               placeholder: "Organization name",
               disabled: true,
-              value: projectData?.organization?.name
+              value: edit ? projectData?.organization?.name : userData?.orgUser?.name
             }
           }
         >

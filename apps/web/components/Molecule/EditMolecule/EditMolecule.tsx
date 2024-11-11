@@ -6,7 +6,12 @@ import DiscardMolecule from '../AddMolecule/DiscardMolecule';
 import UpdateMoleculePopup from './UpdateMolecule';
 import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
 import dynamic from "next/dynamic";
-import { MoleculeType } from '@/lib/definition';
+import { MoleculeType, UserData } from '@/lib/definition';
+import { uploadMoleculeSmiles } from '../service';
+import { Messages } from '@/utils/message';
+import toast from 'react-hot-toast';
+import { delay } from '@/utils/helpers';
+import { LoadIndicator } from 'devextreme-react';
 
 const MoleculeStructure = dynamic(
     () => import("../../../utils/MoleculeStructure"),
@@ -18,8 +23,23 @@ const dialogProperties = {
     height: 148,
 }
 
-const EditMolecule = (props: any) => {
-    const { editMolecules } = props
+type EditMoleculeProps = {
+    editMolecules: any[]
+    userData: UserData;
+    libraryId: string | null;
+    projectId: string | null;
+    setViewEditMolecule: (val: boolean) => void;
+    callLibraryId: () => void;
+}
+
+const EditMolecule = ({
+    editMolecules,
+    userData,
+    libraryId,
+    projectId,
+    setViewEditMolecule,
+    callLibraryId
+}: EditMoleculeProps) => {
     const [resetVisible, setResetVisible] = useState(false);
     const [updateVisible, setUpdateVisible] = useState(false)
     const [selectedMolecule, setSelectedMolecule]
@@ -33,8 +53,47 @@ const EditMolecule = (props: any) => {
     const handleMoleculeClick = (molecule: any) => {
         setSelectedMolecule(molecule);
     };
+
+    const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
+    const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');
+
+    const saveMolecule = async () => {
+        setSaveLoadIndicatorVisible(true);
+        setSaveButtonText('');
+        KetcherFunctions.exportSmile().then(async (str) => {
+            const result = await uploadMoleculeSmiles({
+                smiles: [str],
+                "created_by_user_id": userData.id,
+                "library_id": libraryId?.toString() || '',
+                "project_id": projectId?.toString() || '',
+                "organization_id": userData.organization_id?.toString() || '',
+                "source_molecule_name": ''
+            })
+            if (result.rejected_smiles.length) {
+                setSaveLoadIndicatorVisible(false);
+                setSaveButtonText('Save Molecule');
+                const rejectedSmile = result.rejected_smiles[0]
+                const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
+                const toastId = toast.error(message);
+                await delay(4000);
+                toast.remove(toastId);
+            } else {
+                setViewEditMolecule(false);
+                callLibraryId();
+                setSaveLoadIndicatorVisible(false);
+                setSaveButtonText('Save Molecule');
+                const message = Messages.ADD_MOLECULE_SUCCESS;
+                const toastId = toast.success(message);
+                await delay(4000);
+                toast.remove(toastId);
+            }
+        });
+    }
+
     useEffect(() => {
-        setSelectedMolecule(editMolecules?.[0])
+        if (editMolecules.length) {
+            setSelectedMolecule(editMolecules[0])
+        }
     }, [editMolecules])
     return (
         <>
@@ -84,9 +143,15 @@ const EditMolecule = (props: any) => {
                             Update Molecule
                         </button>
                         <button
-                            className={styles.secondaryButton}
-                        >
-                            Add as New Molecule
+                            className={`${styles.secondaryButton}`}
+                            onClick={() => saveMolecule()}
+                        > <LoadIndicator className={
+                            `button-indicator ${styles.white}`
+                        }
+                            visible={loadIndicatorVisibleSave}
+                            height={20}
+                            width={20} />
+                            {saveButtonText}
                         </button>
                         <button
                             className={styles.buttonNoBorder}

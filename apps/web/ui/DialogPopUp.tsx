@@ -1,9 +1,12 @@
+import { RejectedMolecules } from '@/lib/definition';
 import { Popup } from 'devextreme-react/popup';
 
 interface ContentProps {
     onClose: () => void;
     email_id?: string;
+    rejected?: RejectedMolecules[];
 }
+
 interface DialogProperties {
     width?: number;
     height?: number;

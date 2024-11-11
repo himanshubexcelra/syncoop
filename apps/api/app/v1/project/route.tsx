@@ -47,19 +47,12 @@ export async function POST(request: Request) {
             include: {
                 projects: { // Include projects related to this organization
                     include: {
-                        sharedUsers: true, // Include shared users for each project
                         owner: {
                             select: {
                                 first_name: true,
                                 last_name: true,
                             },
-                        },
-                        updated_by: { // Include the user who updated the project
-                            select: {
-                                first_name: true,
-                                last_name: true,
-                            },
-                        },
+                        }
                     },
                 },
             },
@@ -93,8 +86,8 @@ export async function POST(request: Request) {
                             id: organization_id, // Associate the project with the organization
                         },
                     },
-                    updated_by: {
-                        connect: { id: userId }, // Associate the user who created/updated the project
+                    userWhoCreated: {
+                        connect: { id: userId }, // Associate the user who created the project
                     },
                     sharedUsers: {
                         create: sharedUsers?.map(({ id: userId, permission, first_name }: { id: number, permission: string, first_name: string }) => ({
@@ -141,7 +134,7 @@ export async function PUT(request: Request) {
                                 last_name: true,
                             },
                         },
-                        updated_by: { // Include the user who updated the project
+                        userWhoUpdated: { // Include the user who updated the project
                             select: {
                                 first_name: true,
                                 last_name: true,
@@ -180,7 +173,7 @@ export async function PUT(request: Request) {
                 type,
                 description,
                 target,
-                updated_by: {
+                userWhoUpdated: {
                     connect: { id: userId }, // Associate the user who created/updated the project
                 },
                 sharedUsers: {

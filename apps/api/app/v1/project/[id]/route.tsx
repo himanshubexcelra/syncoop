@@ -44,7 +44,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
                                 email_id: true,
                             },
                         },
-                        updated_by: {
+                        userWhoCreated: {
+                            select: {
+                                id: true,
+                                first_name: true,
+                                last_name: true,
+                                email_id: true,
+                            },
+                        },
+                        userWhoUpdated: {
                             select: {
                                 id: true,
                                 first_name: true,
@@ -66,7 +74,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
                         last_name: true,
                     },
                 },
-                updated_by: { // Include the user who updated the project
+                userWhoCreated: { // Include the user who created the project
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+                userWhoUpdated: { // Include the user who updated the project
                     select: {
                         first_name: true,
                         last_name: true,

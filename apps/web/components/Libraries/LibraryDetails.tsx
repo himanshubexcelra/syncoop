@@ -39,7 +39,9 @@ import '../Organization/form.css';
 import {
     DataType,
     StatusCodeBgAPI,
-    StatusCodeAPIType
+    StatusCodeAPIType,
+    StatusCodeType,
+    StatusCodeBg
 } from '@/utils/constants';
 import { FormRef } from "devextreme-react/cjs/form";
 import StatusMark from '@/ui/StatusMark';
@@ -132,7 +134,8 @@ const initialProjectData: ProjectDataFields = {
     sharedUsers: [],
     target: '',
     type: '',
-    updated_by: {} as userType, // Provide a default user object
+    userWhoUpdated: {} as userType, // Provide a default user object
+    userWhoCreated: {} as userType, // Provide a default user object
     updated_at: new Date(),
     userId: undefined,
     owner: {} as User, // Provide a default owner object
@@ -177,7 +180,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
-    const [sortBy, setSortBy] = useState('CreationTime');
+    const [sortBy, setSortBy] = useState('Creation Time');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
     const context: any = useContext(AppContext);
     const appContext = context.state;
@@ -241,7 +244,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 } const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(tempLibraries[0]?.id);
-                setSortBy('CreationTime');
+                setSortBy('Creation Time');
                 setExpanded(true);
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,
@@ -261,6 +264,14 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 router.back();
             }
         }
+    }
+
+    const callLibraryId = async () => {
+        setMoleculeLoader(true);
+        const libraryData =
+            await getLibraryById(['molecule'], selectedLibrary.toString());
+        setMoleculeLoader(false);
+        setTableData(libraryData.molecule || []);
     }
 
     const fetchCartData = async () => {
@@ -498,6 +509,12 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         if (isMoleculeInCart.includes(e.key)) {
             e.cellElement.style.pointerEvents = 'none';
             e.cellElement.style.opacity = 0.5;
+        }
+        if (e.rowType === "data") {
+            if (e.column.dataField === "status") {
+                const color: StatusCodeType = e.data.status?.toUpperCase();
+                e.cellElement.classList.add(StatusCodeBg[color]);
+            }
         }
     };
     return (
@@ -865,13 +882,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                             </span>
                                                         </div>
                                                         <div className='w-[45%] flex justify-start'>
-                                                            {item.updated_by &&
+                                                            {item.userWhoUpdated &&
                                                                 <>
                                                                     Last Updated By:
                                                                     <span>
-                                                                        {`${item.updated_by
+                                                                        {`${item.userWhoUpdated
                                                                             .first_name} 
-                                                                            ${item.updated_by
+                                                                            ${item.userWhoUpdated
                                                                                 .last_name}`}
                                                                     </span>
                                                                 </>
@@ -1081,8 +1098,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                                     <MoleculeStructure
                                                         structure={data.smiles_string}
                                                         id={`smiles-${rowIndex}`}
-                                                        width={120}
-                                                        height={120}
+                                                        width={80}
+                                                        height={80}
                                                         svgMode={true}
                                                     />
                                                     <Button
@@ -1280,6 +1297,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
                                         <GridToolbar>
                                             {actionsEnabled.includes('create_molecule') &&
+                                                selectedLibrary &&
                                                 <ToolbarItem location="after">
                                                     <Button
                                                         text="Add Molecule"
@@ -1365,8 +1383,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         title="Add Molecule"
                                         visible={viewAddMolecule}
                                         contentRender={() => (
-                                            <AddMolecule libraryId={library_id}
-                                                projectId={params.id} userData={userData} />
+                                            <AddMolecule
+                                                libraryId={library_id}
+                                                projectId={params.id}
+                                                userData={userData}
+                                                setViewAddMolecule={setViewAddMolecule}
+                                                callLibraryId={callLibraryId}
+                                                 />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}
@@ -1391,7 +1414,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                         title="Edit Molecule"
                                         visible={viewEditMolecule}
                                         contentRender={() => (
-                                            <EditMolecule editMolecules={editMolecules} />
+                                            <EditMolecule
+                                                editMolecules={editMolecules}
+                                                libraryId={library_id}
+                                                projectId={params.id}
+                                                userData={userData}
+                                                setViewEditMolecule={setViewEditMolecule}
+                                                callLibraryId={callLibraryId} />
                                         )}
                                         resizeEnabled={true}
                                         hideOnOutsideClick={true}

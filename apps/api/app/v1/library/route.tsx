@@ -102,6 +102,11 @@ export async function POST(request: Request) {
                             id: userId, // Associate the project with the organization
                         },
                     },
+                    userWhoCreated: {
+                        connect: {
+                            id: userId, // Associate the project with the organization
+                        }
+                    },
                     project: {
                         connect: {
                             id: project_id, // Associate the project with the organization
@@ -151,7 +156,7 @@ export async function PUT(request: Request) {
                 name,
                 description,
                 target,
-                updated_by: {
+                userWhoUpdated: {
                     connect: { id: userId }, // Associate the user who created/updated the project
                 },
                 updated_at: new Date().toISOString(),

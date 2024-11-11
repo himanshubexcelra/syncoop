@@ -97,7 +97,7 @@ export default function CartDetails({
                                 dataSource={group.values}
                                 showBorders={true}
                             >
-                                <Column dataField="moleculeName" caption="Molecule Name" />
+                                {/* <Column dataField="moleculeName" caption="Molecule Id" /> */}
                                 <Column dataField="molecule_id" caption="MoleculeID" />
                                 <Column dataField="molecularWeight" caption="MoleculeWeight" />
                                 <Column

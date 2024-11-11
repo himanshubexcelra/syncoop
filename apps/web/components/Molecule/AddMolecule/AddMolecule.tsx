@@ -12,6 +12,9 @@ import { DELAY } from '@/utils/constants';
 import { delay } from '@/utils/helpers';
 import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
 import { UserData } from '@/lib/definition';
+import { RejectedMolecules } from '@/lib/definition';
+import RejectedDialog from './RejectedDialog';
+import { LoadIndicator } from 'devextreme-react';
 
 const dialogProperties = {
     width: 455,
@@ -22,45 +25,76 @@ type AddMoleculeProps = {
     userData: UserData;
     libraryId: string | null;
     projectId: string | null;
+    setViewAddMolecule: (val: boolean) => void;
+    callLibraryId: () => void;
 }
 
 export default function AddMolecule({
     userData,
     libraryId,
-    projectId
+    projectId,
+    setViewAddMolecule,
+    callLibraryId
 }: AddMoleculeProps) {
     const [file, setFile] = useState<File | null>(null);
     const [discardvisible, setDiscardVisible] = useState(false);
+    const [rejected, setRejected] = useState<RejectedMolecules[]>([])
+    const [showRejectedDialog, setShowRejectedDialog] = useState(false)
     const [isDragging, setIsDragging] = useState(false);
     const [moleculeName, setMoleculeName] = useState<string>('')
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
+    const [buttonText, setButtonText] = useState('Upload');
+    const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
+    const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
+
     const hidePopup = () => {
         setDiscardVisible(false);
     };
+
+    const hideRejectPopUp = () => {
+        setShowRejectedDialog(false);
+        callLibraryId();
+        removeItem()
+    }
+    const rejectContentProps = {
+        rejected,
+        onClose: hideRejectPopUp
+    }
+
     const saveMolecule = async () => {
+        setSaveLoadIndicatorVisible(true);
+        setSaveButtonText('');
         KetcherFunctions.exportSmile().then(async (str) => {
             const result = await uploadMoleculeSmiles({
                 smiles: [str],
                 "created_by_user_id": userData.id,
                 "library_id": libraryId?.toString() || '',
                 "project_id": projectId?.toString() || '',
-                "organization_id": userData.organization_id,
+                "organization_id": userData.organization_id?.toString() || '',
                 "source_molecule_name": moleculeName
             })
-            if (result.rejected_smiles.length > 0) {
+            if (result.rejected_smiles.length) {
+                setSaveLoadIndicatorVisible(false);
+                setSaveButtonText('Save Molecule');
                 const rejectedSmile = result.rejected_smiles[0]
                 const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
                 const toastId = toast.error(message);
-                await delay(DELAY);
+                await delay(4000);
                 toast.remove(toastId);
             } else {
+                setViewAddMolecule(false);
+                callLibraryId();
+                setSaveLoadIndicatorVisible(false);
+                setSaveButtonText('Save Molecule');
                 const message = Messages.ADD_MOLECULE_SUCCESS;
                 const toastId = toast.success(message);
-                await delay(DELAY);
+                await delay(4000);
                 toast.remove(toastId);
             }
         });
     }
+
     const handleDragOver = (e: any) => {
         e.preventDefault();
         setIsDragging(true);
@@ -111,20 +145,39 @@ export default function AddMolecule({
     };
     const removeItem = () => {
         setFile(null)
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     }
 
     const handleUpload = async () => {
+        setLoadIndicatorVisible(true);
+        setButtonText('');
         const sessionData = await getUserData();
         const userData: any = sessionData?.userData;
         if (file) {
-            uploadMoleculeFile({
+            const result = await uploadMoleculeFile({
                 "file": file,
                 "created_by_user_id": userData?.id.toString() || '',
                 "library_id": libraryId?.toString() || '',
                 "project_id": projectId?.toString() || '',
-                "organization_id": userData?.organizationId.toString() || '',
-                "updated_by_user_id": userData?.id.toString() || '',
+                "organization_id": userData?.organization_id?.toString() || '',
+                "updated_by_user_id": userData?.id?.toString() || '',
             })
+            if (result?.rejected_smiles?.length) {
+                setRejected(result?.rejected_smiles)
+                setShowRejectedDialog(true);
+                setLoadIndicatorVisible(false);
+                setButtonText('Upload');
+            } else {
+                const toastId = toast.success(result?.message);
+                await delay(DELAY);
+                toast.remove(toastId);
+                setLoadIndicatorVisible(false);
+                setButtonText('Upload');                
+                setViewAddMolecule(false);
+                callLibraryId();
+            }
         }
     }
     const downloadTemplate = () => {
@@ -190,8 +243,15 @@ export default function AddMolecule({
                             />
                         </div>
                         <div className="flex gap-2">
-                            <button className={styles.primaryButton}
-                                onClick={() => handleUpload()}>Upload</button>
+                            <button className={`${styles.primaryButton + ' w-24'}`}
+                                onClick={() => handleUpload()}>
+                                <LoadIndicator className={
+                                    `button-indicator ${styles.white}`
+                                }
+                                    visible={loadIndicatorVisible}
+                                    height={20}
+                                    width={20} />
+                                {buttonText}</button>
                             <button
                                 className={styles.secondaryButton}
                                 onClick={removeItem}
@@ -219,7 +279,13 @@ export default function AddMolecule({
                 </div>
                 <div className="flex justify-start gap-2 mt-5 ">
                     <button className={styles.primaryButton}
-                        onClick={() => saveMolecule()}>Save Molecule</button>
+                        onClick={() => saveMolecule()}>
+                        <LoadIndicator className={
+                            `button-indicator ${styles.white}`
+                        }
+                            visible={loadIndicatorVisibleSave}
+                            height={20}
+                            width={20} />{saveButtonText}</button>
                     <button
                         className={styles.secondaryButton}
                         onClick={() => setDiscardVisible(true)}
@@ -234,6 +300,15 @@ export default function AddMolecule({
                     dialogProperties,
                     Content: DiscardMolecule,
                     hidePopup
+                }
+            } />
+            <DialogPopUp {
+                ...{
+                    visible: showRejectedDialog,
+                    dialogProperties,
+                    Content: RejectedDialog,
+                    hidePopup: hideRejectPopUp,
+                    contentProps: rejectContentProps,
                 }
             } />
         </>

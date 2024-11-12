@@ -8,7 +8,7 @@ import CustomFile from "../../utils/file";
 export async function validateSmiles(smiles: ValidateSmileRequest) {
     try {
         const response: any = await fetch(
-            `${process.env.PYTHON_API_HOST_URL}/validate_smiles`,
+            `http://localhost:8000/validate_smiles`,
             {
                 method: "POST",
                 headers: {
@@ -34,7 +34,7 @@ export async function validateSmiles(smiles: ValidateSmileRequest) {
 export async function uploadMoleculeSmiles(formData: UploadMoleculeSmilesRequest) {
     try {
         const response: any = await fetch(
-            `${process.env.PYTHON_API_HOST_URL}/upload_molecule_smiles`,
+            `http://localhost:8000/upload_molecule_smiles`,
             {
                 method: "POST",
                 headers: {
@@ -65,7 +65,7 @@ export async function uploadMoleculeFile(data: UploadMoleculeFileRequest) {
         formData.append('project_id', data.project_id);
         formData.append('organization_id', data.organization_id);
         formData.append('updated_by_user_id', data.updated_by_user_id);
-        const response = await fetch(`${process.env.API_END_POINT}/upload_molecule_files`, {
+        const response = await fetch(`http://localhost:8000/upload_molecule_files`, {
             method: "POST",
             body: formData,
         });

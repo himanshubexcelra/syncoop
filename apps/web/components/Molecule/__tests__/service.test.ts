@@ -110,8 +110,8 @@ describe('Molecules APIs', () => {
         const moleculeFileData: UploadMoleculeFileRequest = {
             file,
             created_by_user_id: '1',
-            library_id: 'LIB001',
-            project_id: 'PROJ001',
+            library_id: '2',
+            project_id: '1',
             organization_id: '1',
             updated_by_user_id: '1',
         };
@@ -136,7 +136,7 @@ describe('Molecules APIs', () => {
             const formData = fetch.mock.calls[0][1].body;
             expect(formData.get('file')).toEqual(file);
             expect(formData.get('created_by_user_id')).toEqual('1');
-            expect(formData.get('library_id')).toEqual('LIB001');
+            expect(formData.get('library_id')).toEqual('2');
         });
 
         it('Handle Internal server error', async () => {

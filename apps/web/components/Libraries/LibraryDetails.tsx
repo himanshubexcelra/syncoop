@@ -535,13 +535,14 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             const buttonRect =
                 magnifyButtonRef.current.getBoundingClientRect();
             setPopupCords({
-                x: buttonRect.bottom + window.scrollY,
-                y: buttonRect.left + window.scrollX,
+                y: buttonRect.bottom + window.scrollY,
+                x: buttonRect.left + window.scrollX,
             });
             setPopupVisible(true);
             setCellData(data);
         }
     }
+
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -1411,7 +1412,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                             ref={popupRef}
                                             style={{
                                                 top: `${popupCords.y}px`,
-                                                left: `${popupCords.x + 200}px`,
+                                                left: `${popupCords.x + 210}px`,
                                             }}
                                             className="fixed 
                                                 transform -translate-x-1/2 -translate-y-1/2 

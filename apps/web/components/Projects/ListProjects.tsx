@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Accordion, { AccordionTypes } from 'devextreme-react/accordion';
 import ProjectTitle from './ProjectTitle';
 import ProjectAccordionDetail from './ProjectAccordionDetail';
-import './projects.css';
 import {
     ProjectDataFields,
     User,
@@ -110,7 +109,7 @@ export default function ListProjects({ data,
                                     myRoles={myRoles} />
                             ))}
                 </div>
-            ) : <div className="accordion-no-data">No Data found</div>}
+            ) : <div className="nodata-project">No Data found</div>}
         </div >
     );
 };

@@ -1,4 +1,9 @@
-import { CombinedLibraryType, LibraryFields, LoginFormSchema, MoleculeType, StatusCode, StatusType } from "@/lib/definition"
+/*eslint max-len: ["error", { "code": 100 }]*/
+import {
+  CombinedLibraryType, LibraryFields, LoginFormSchema,
+  MoleculeStatusCode, MoleculeStatusLabels, MoleculeType,
+  StatusCode, StatusType
+} from "@/lib/definition"
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -17,8 +22,10 @@ export function validateAuth(formData: FormData) {
 
 export function generatePassword() {
   const letters = 'abcdefghijklmnopqrstuvwxyz';
-  const capitalLetter = letters.charAt(Math.floor(Math.random() * letters.length)).toUpperCase();
-  const lowerCaseLetters = Array.from({ length: 5 }, () => letters.charAt(Math.floor(Math.random() * letters.length))).join('');
+  const capitalLetter =
+    letters.charAt(Math.floor(Math.random() * letters.length)).toUpperCase();
+  const lowerCaseLetters = Array.from({ length: 5 }, () =>
+    letters.charAt(Math.floor(Math.random() * letters.length))).join('');
   const number = Math.floor(Math.random() * 10);
   const specialChars = '!@#$%^&*()_+[]{}|;:,.<>?';
   const specialChar = specialChars.charAt(Math.floor(Math.random() * specialChars.length));
@@ -58,7 +65,9 @@ export function formatDate(date: Date) {
   return `${month}/${day}/${year}`;
 }
 
-export function getCountCardsDetails(projectCount: number, libraryCount: number, moleculeCount: number) {
+export function getCountCardsDetails(projectCount: number, libraryCount: number,
+  moleculeCount: number, isCustomerOrg: boolean) {
+
   return [
     {
       name: "Libraries",
@@ -71,7 +80,7 @@ export function getCountCardsDetails(projectCount: number, libraryCount: number,
       svgPath: "/icons/project-icon.svg",
       innerGap: "gap-2",
       count: String(projectCount),
-      href: "./projects"
+      ...(isCustomerOrg ? {} : { href: "./projects" }),
     },
     {
       name: "Molecules",
@@ -111,7 +120,8 @@ export function formatDatetime(date: Date) {
     hour12: false,
   };
   const dateStr = new Date(date);
-  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)}, ${dateStr.toLocaleTimeString('en-GB', optionsTime)}`;
+  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)}, 
+  ${dateStr.toLocaleTimeString('en-GB', optionsTime)}`;
   return formattedDate;
 }
 
@@ -176,4 +186,8 @@ export function generateRandomDigitNumber() {
   // Generate a random number between 10000000 and 99999999
   const randomNum = Math.floor(10000000 + Math.random() * 90000000);
   return randomNum;
+}
+
+export function getStatusLabel(statusCode: number) {
+  return MoleculeStatusLabels[statusCode as MoleculeStatusCode];
 }

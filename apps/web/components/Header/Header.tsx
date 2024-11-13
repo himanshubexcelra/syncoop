@@ -24,8 +24,7 @@ type HeaderProps = {
     actionsEnabled: string[]
 }
 
-export default function Header({ userData, actionsEnabled }: HeaderProps) {
-    const createEnabled = actionsEnabled.includes('create_molecule_order');
+export default function Header({ userData }: HeaderProps) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
     const searchParams = useSearchParams();
@@ -56,9 +55,8 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
     };
 
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
-
-        const { molecule_id, library_id, project_id, moleculeName, userId } = obj;
-        deleteMoleculeCart(userId, molecule_id, library_id, project_id).then((res) => {
+        const { molecule_id, library_id, project_id, moleculeName, created_by } = obj;
+        deleteMoleculeCart(created_by, molecule_id, library_id, project_id).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
                     !
@@ -73,8 +71,10 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                 })
                 const message = Messages.deleteMoleculeMessage(moleculeName);
                 toast.success(message);
-
                 setCartData(filteredData);
+                if (filteredData.length == 0) {
+                    setCreatePopupVisibility(false);
+                  }
             }
         })
             .catch((error) => {
@@ -117,6 +117,9 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
         setDropdownOpen(false)
     }
 
+    const closeOrderPopup = () => {
+        setOrderPopupVisibility(false);
+    }
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -172,31 +175,35 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                     <CartDetails
                         cartData={cartData}
                         userId={userData.id}
+                        orgType={userData.orgUser.type}
                         removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
                         removeAll={(userId: number, type: string) => removeAll(userId, type)}
                     />
                 )}
-                width={470}
+                width={570}
                 // hideOnOutsideClick={true}
-                height="100%"
+                height="auto"
                 position={popupPosition}
 
                 showCloseButton={true}
-                wrapperAttr={{ class: "create-popup mr-[15px]" }}
+                wrapperAttr={{ class: "create-popup" }}
             />}
-            {orderPopupVisible && <OrderPopup
+            <OrderPopup
                 visible={orderPopupVisible}
                 onHiding={() => setOrderPopupVisibility(false)}
                 contentRender={() => (
-                    <OrderDetails />
+                    <OrderDetails
+                        closeOrderPopup={closeOrderPopup}
+                    />
                 )}
-                width={500}
+                width={577}
                 // hideOnOutsideClick={true}
-                height="50%"
+                height={265}
                 position={orderPopupPosition}
-                showCloseButton={true}
-                wrapperAttr={{ class: "create-popup mr-[15px]" }}
-            />}
+                showCloseButton={false}
+                wrapperAttr={{ class: "order-popup mr-[15px]" }}
+                style={{ backgroundColor: 'white' }}
+            />
             <div className="flex items-center">
                 <Link href="/">
                     <Image
@@ -229,8 +236,6 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                     width={20}
                     height={20}
                 />
-                {
-                    createEnabled &&
                     <Link href="#"
                         onClick={() =>
                             setCreatePopupVisibility(
@@ -265,7 +270,6 @@ export default function Header({ userData, actionsEnabled }: HeaderProps) {
                             </div>
                         </div>
                     </Link>
-                }
                 <div>
                     <div
                         className="flex items-center justify-center w-[24px] h-[24px] 

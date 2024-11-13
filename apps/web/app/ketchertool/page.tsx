@@ -1,6 +1,5 @@
 /*eslint max-len: ["error", { "code": 80 }]*/
 import Layout from "@/components/layout";
-import styles from "./page.module.css";
 import { getUserData } from "@/utils/auth";
 import { redirect } from "next/navigation";
 import KetcherBox from "@/components/KetcherTool/KetcherBox";
@@ -14,8 +13,8 @@ export default async function Ketchertool() {
 
   return (
     <Layout>
-      <div className={styles.page}>
-        <main className={styles.main}>
+      <div>
+        <main className="main">
           <KetcherBox></KetcherBox>
         </main>
       </div>

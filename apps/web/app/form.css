@@ -1,0 +1,291 @@
+/* popup css(create/edit form) */
+/* also common for functional assay and heading dashboard */
+.form-title,
+.functional_assay,
+.company,
+.roleType {
+    color: var(--themeHeadingBlue);
+    font-family: Lato;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 42px;
+}
+
+.company {
+    color: var(--themeBlueColor);
+    font-weight: 400;
+}
+
+.order-popup,
+.create-popup {
+    .dx-popup-normal {
+        box-shadow: -18px 0px 18px 0px rgba(0, 0, 0, 0.25);
+    }
+
+    .dx-toolbar-item-content {
+        color: var(--themeHeadingBlue);
+        font-family: Lato;
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 42px;
+    }
+
+    .dx-popup-title {
+        border-bottom: 0;
+    }
+
+    .dx-toolbar-item-content {
+        text-align: center;
+    }
+
+    .dx-field-item:not(.dx-field-item-has-group):not(.dx-field-item-has-tabs):not(.dx-first-row):not(.dx-label-v-align) {
+        padding-top: 10px;
+    }
+}
+
+.create-popup {
+    .dx-popup-normal {
+        background: var(--themelightGreyColor);
+    }
+}
+
+.order-popup {
+    .dx-popup-normal {
+        background: var(--white);
+    }
+
+    .dx-popup-content {
+        overflow-y: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .dx-popup-wrapper {
+        display: flex;
+        justify-content: center;
+        /* Centers the Popup itself horizontally */
+        align-items: center;
+        /* Centers the Popup vertically */
+    }
+}
+
+/* create/edit form css */
+
+.dx-form {
+    .dx-item {
+        font-size: 14px;
+    }
+
+    .dx-field-item-label {
+        padding: 0;
+        font-family: Lato;
+    }
+
+    .dx-field-item-label-text {
+        color: var(--themeLabelGrey);
+        line-height: 14.4px;
+    }
+
+    .disabled-field {
+        .dx-field-item-label-text {
+            color: var(--themeGreyBorder);
+        }
+
+        .dx-state-disabled {
+            border: none;
+            background: transparent;
+        }
+
+        .dx-radiobutton-icon-checked {
+            border-color: var(--themeGreyBorder);
+        }
+
+        .dx-radiobutton-icon-checked .dx-radiobutton-icon-dot {
+            background-color: var(--themeGreyColor)
+        }
+    }
+
+    .dx-texteditor.dx-editor-filled:after {
+        border-bottom: none;
+    }
+
+    .dx-texteditor.dx-editor-filled .dx-placeholder:before,
+    .dx-texteditor.dx-editor-filled .dx-texteditor-input {
+        padding: 10px;
+    }
+
+    .dx-textarea .dx-texteditor-input-container {
+        width: 100%;
+        height: 100%;
+    }
+
+    .custom-tag {
+        .dx-texteditor-input-container {
+            width: 194px;
+            height: auto;
+        }
+    }
+
+    .dx-form-validation-summary {
+        display: block;
+    }
+}
+
+/* radio button to be in same row */
+
+.dx-collection {
+    display: flex !important;
+}
+
+.dx-collection .dx-radiobutton:not(:first-child) {
+    padding-inline-start: 2rem;
+}
+
+/* edit organization delete button css */
+.delete-button-group:last-child {
+    .dx-item-content {
+        justify-content: end !important;
+
+        .dx-button-text {
+            text-transform: initial;
+        }
+
+        .delete-button {
+            margin-bottom: 5px;
+        }
+    }
+}
+
+/* custom password field */
+.password-group {
+    .dx-collection {
+        align-items: center !important;
+    }
+
+    .dx-item {
+        flex: auto !important;
+    }
+
+    .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+        padding-inline-start: 0 !important;
+        padding-inline-end: 10px;
+
+    }
+}
+
+/* multiple buttons in form */
+.buttons-group {
+    .dx-item {
+        flex: none !important;
+    }
+
+    .dx-item-content {
+        display: inline;
+    }
+
+    .dx-field-item-content {
+        width: 100%;
+    }
+
+    .dx-layout-manager .dx-field-item:not(.dx-last-col) {
+        padding-inline-end: 0;
+    }
+}
+
+/* form primary and secondary buttons */
+.form_btn_primary .dx-button,
+.form_btn_secondary .dx-button,
+.primary-button,
+.secondary-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    height: 37px;
+    gap: 10px;
+    border-radius: 0;
+}
+
+.form_btn_primary .dx-button-text,
+.form_btn_secondary .dx-button-text,
+.primary-button,
+.secondary-button,
+.button-no-border,
+.reject-button {
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    text-transform: unset;
+    font-feature-settings: 'liga' off, 'clig' off;
+}
+
+.primary-button,
+.form_btn_primary .dx-button {
+    border: 2px solid var(--themeBlueColor);
+    border-radius: 4px;
+    background: var(--themeBlueColor);
+    padding: 8px;
+}
+
+.button-no-border {
+    color: var(--themeBlueColor);
+}
+
+.form_btn_primary {
+    .dx-button-mode-contained.dx-state-disabled {
+        border: 1px solid var(--themeSecondaryGreyColor);
+        color: var(--black);
+    }
+
+    .dx-button-text {
+        color: var(--white);
+    }
+}
+
+.primary-button {
+    color: var(--white);
+}
+
+.form_btn_secondary {
+    .dx-button-content {
+        padding: 0;
+    }
+
+    .dx-button-text {
+        color: var(--themeBlueColor);
+    }
+}
+
+.form_btn_secondary .dx-button,
+.secondary-button,
+.reject-button {
+    border: 2px solid var(--themeBlueColor);
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.secondary-button {
+    color: var(--themeBlueColor);
+}
+
+.reject-button {
+    border: 2px solid var(--themeDotRedColor);
+    color: var(--themeDotRedColor);
+}
+
+/* textarea in forms */
+.textarea-custom {
+    .dx-texteditor-input {
+        overflow: hidden;
+    }
+}
+
+/* disabled button style throughout */
+.dx-button.dx-state-disabled .dx-button-text {
+    color: var(--black);
+}

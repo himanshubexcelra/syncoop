@@ -3,7 +3,6 @@ import React from 'react';
 import { HeadingObj } from '@/lib/definition';
 import Image from 'next/image';
 import { Button } from 'devextreme-react/button';
-import styles from "./Heading.module.css"
 
 type HeadingProps = {
     heading: HeadingObj[];
@@ -24,9 +23,9 @@ const Heading: React.FC<HeadingProps> = ({ heading, myRoles, showEditPopup }) =>
                             height={item.svgHeight}
                         />
                         {item.label && <div>
-                            <span className={styles.roleType}>{item.type}</span>
+                            <span className="roleType">{item.type}</span>
                             &nbsp;
-                            <span className={styles.company}>{item.label}</span>
+                            <span className="company">{item.label}</span>
                         </div>}
                     </React.Fragment>
                 ))}

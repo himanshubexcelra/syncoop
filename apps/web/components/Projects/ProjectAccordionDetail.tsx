@@ -1,7 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Button } from 'devextreme-react/button';
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Popup, Position } from "devextreme-react/popup";
@@ -99,22 +98,22 @@ export default function ProjectAccordionDetail({
                     </div>
                 </div>
                 <div className='flex gap-[8px]'>
-                    <Button
-                        className='btn-primary accordion-button'
+                    <button
+                        className='primary-button accordion-button'
                         onClick={() => router.push(`/projects/${data.id}`)}
                     >
                         Open
-                    </Button>
+                    </button>
                     {editEnabled &&
-                        <Button
-                            className='btn-primary accordion-button'
+                        <button
+                            className='secondary-button accordion-button'
                             disabled={!editEnabled}
                             onClick={() => setCreatePopupVisibility(true)}>
                             Edit
-                        </Button>
+                        </button>
                     }
-                    <Button
-                        className='btn-secondary accordion-button'
+                    <button
+                        className='secondary-button accordion-button'
                         onClick={
                             () => copyUrl(
                                 `${urlHost}/projects/${data.id}`,
@@ -123,7 +122,7 @@ export default function ProjectAccordionDetail({
                         }
                     >
                         URL
-                    </Button>
+                    </button>
                 </div >
             </div >
             <div className='flex'>
@@ -264,7 +263,7 @@ export default function ProjectAccordionDetail({
                 <div className="flex-container">
                     {data.libraries.map(item => (
                         <div key={item.id} className='box-item library'>
-                            <div className='flex library-name justify-between'>
+                            <div className='flex library-name text-normal justify-between'>
                                 <div>Library: <span>{item.name}</span></div>
                                 <Image
                                     src="/icons/more.svg"
@@ -313,7 +312,7 @@ export default function ProjectAccordionDetail({
                                     URL
                                 </p>
                             </Popup>
-                            <div className='library-name'>
+                            <div className='library-name text-normal'>
                                 {item.description ?
                                     <TextWithToggle
                                         text={item.description}
@@ -347,8 +346,11 @@ export default function ProjectAccordionDetail({
                             </div>
                         </div>
                     ))}
-                    {data.libraries.length == 0 && (
-                        <div className='flex justify-center items-center p-[40px] h-[70px] nodata'>
+                    {data.libraries.length === 0 && (
+                        <div
+                            className={`flex justify-center items-center 
+                            p-[40px] h-[70px] nodata-project`}
+                        >
                             Your library list is empty, add a library to import molecules
                         </div>
                     )}

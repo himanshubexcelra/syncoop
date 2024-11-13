@@ -22,7 +22,6 @@ const config: Config = {
         themeBorderGrey: "var(--themeBorderGrey)",
         themeErrorText: "var(--themeErrorText)",
         tableRoleGrey: "var(--tableRoleGrey)",
-        editTitleBlue: "var(--editTitleBlue)",
         borderLightBlue: "var(--borderLightBlue)",
         buttonBgWhiteBlue: "var(--buttonBgWhiteBlue)",
         themeDotGreenColor: "var(--themeDotGreenColor)",

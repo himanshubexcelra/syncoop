@@ -24,8 +24,6 @@
   --themeErrorColor: #AC153B;
   --themeLightBlueColor: #ECF5FC;
   --themeGreyBorder: #E1E1EA;
-  --themeDarkBlueColor: #0A3B61;
-  --themeDarkBlueBorderColor: #50A0dE;
   --themeBorderGrey: #D1D5DB;
   --themeErrorText: #AC153B;
   --themeLabelGrey: #777788;
@@ -33,7 +31,6 @@
   --themeGreyHeaderColor: #0F1A2E;
   --themeGreyBorderSecondaryColor: #e0e0e0;
   --tableRoleGrey: #616170;
-  --editTitleBlue: #0a3b61;
   --borderLightBlue: #50a0de;
   --buttonBgWhiteBlue: #ecf5fc;
   --themeDotGreenColor: #01884C;
@@ -77,10 +74,10 @@ body {
 
 .main {
   display: inline-flex;
-  padding: 0px 0px 10px 20px;
+  padding: 0px 20px 10px 20px;
   align-items: center;
   gap: 17px;
-  color: var(--themeDarkBlueColor);
+  color: var(--themeHeadingBlue);
   text-align: center;
   font-family: Lato;
   font-size: 28px;
@@ -89,23 +86,43 @@ body {
   line-height: 42px;
 }
 
+.main-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 17px;
+  color: var(--themeHeadingBlue);
+  text-align: left;
+  font-family: Lato;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 42px;
+}
+
+.imageContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
 .content-wrapper {
   padding: 20px;
   background: var(--themeSilverGreyColor);
 }
 
-.btn-primary.dx-button {
+
+/* toolbar buttons(primary) part of data grid */
+.btn-primary.dx-button,
+.btn-primary.dx-button.dx-state-hover,
+.btn-primary.dx-button.dx-state-focused {
   border: 2px solid var(--themeBlueColor);
   background-color: var(--themeBlueColor);
   color: var(--white);
 
   .dx-button-text {
     color: var(--white);
-    font-family: Lato;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 700;
-    text-transform: unset;
   }
 
   .btn-primary.dx-button.dx-button-mode-contained.dx-state-disabled {
@@ -114,18 +131,97 @@ body {
   }
 }
 
-.btn-secondary.dx-button {
+
+/* toolbar buttons(secondary) part of data grid */
+.btn-secondary.dx-button,
+.btn-secondary.dx-button.dx-state-hover,
+.btn-secondary.dx-button.dx-state-focused {
   border: 2px solid var(--themeBlueColor);
   color: var(--themeBlueColor);
+  background-color: transparent;
 
   .dx-button-text {
     color: var(--themeBlueColor);
-    font-family: Lato;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 700;
-    text-transform: unset;
   }
+
+  .btn-seconday.dx-button.dx-button-mode-contained.dx-state-disabled {
+    border: 1px solid var(--themeSecondaryGreyColor);
+    color: var(--black);
+  }
+}
+
+.btn-secondary.dx-button .dx-button-text,
+.btn-primary.dx-button .dx-button-text {
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: unset;
+}
+
+/* custom text normal text*/
+.text-normal,
+.dx-form .dx-field-item-label-text,
+.project-title,
+.project-target,
+.project-type,
+.description,
+.accordion .dx-accordion-item {
+  font-family: Lato;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.header-text,
+.groupItem {
+  font-family: Lato;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+/* profile info add molecule and forgot content */
+.subHeading {
+  color: var(--foreground);
+  text-align: center;
+  font-family: Lato;
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 30.8px;
+}
+
+/* textbox styling */
+.dx-texteditor-container {
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--white);
+  border: 1px solid var(--themeSecondaryGreyColor);
+  color: var(--themeSecondaryGreyColor);
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+/* no data found in accordion for project and library, accordion-header */
+.nodata,
+.nodata-project,
+.accordion-header-text {
+  color: var(--themeGreyColor);
+  font-family: Lato;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin-top: 45px;
+  display: flex;
 }
 
 /* Hide password reveal icon in MS Edge browser */

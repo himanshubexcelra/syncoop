@@ -13,8 +13,6 @@ import DataGrid, {
 import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
-import "./table.css";
-import styles from "./table.module.css";
 import RenderCreateUser from "./createUser";
 import { OrganizationType, UserTableProps } from "@/lib/definition";
 import { getUsers } from "./service";
@@ -38,7 +36,8 @@ export default function UsersTable({
     setInternalCount,
     setExternalCount,
     userId,
-    actionsEnabled
+    actionsEnabled,
+    isCustomerOrg,
 }: UserTableProps) {
     const [editPopup, setEditPopup] = useState(false);
     const [internalUsers, setInternalUsers] = useState<User[]>([]);
@@ -75,7 +74,7 @@ export default function UsersTable({
         setLoader(true);
         try {
 
-            if (myRoles.includes("admin")) {
+            if (myRoles.includes("admin") && !isCustomerOrg) {
                 const [internal, external] = await Promise.all([
                     getUsers(['orgUser', 'user_role'], OrganizationType.Internal, userId),
                     getUsers(['orgUser', 'user_role'], OrganizationType.External, userId)
@@ -130,7 +129,6 @@ export default function UsersTable({
                     dataSource={tableData}
                     showBorders={true}
                     ref={grid}
-                    elementAttr={{ cssClass: styles.table }}
                     className="no-padding-header"
                 >
                     <Paging defaultPageSize={5} defaultPageIndex={0} />
@@ -176,9 +174,10 @@ export default function UsersTable({
                             return <div className="flex gap-5">
                                 {data?.value?.map((item: any, index: number) => {
                                     return (
-                                        <div key={index} className={`
-                                                p-1.5 text-white ${styles.roles}
-                                            `}>
+                                        <div
+                                            key={index}
+                                            className={`p-1.5 text-white roles`}
+                                        >
                                             {item.role.name}
                                         </div>
                                     );
@@ -211,7 +210,7 @@ export default function UsersTable({
                             <Btn
                                 text="Add New User"
                                 icon="plus"
-                                className={`${styles.button_primary_toolbar} mr-[20px]`}
+                                className={`button_primary_toolbar mr-[20px]`}
                                 visible={actionsEnabled.includes('create_user') ||
                                     myRoles.includes('admin')}
                                 render={(buttonData: any) => (
@@ -271,6 +270,7 @@ export default function UsersTable({
                                         type={type}
                                         fetchData={fetchAndFilterData}
                                         isMyProfile={false}
+                                        isCustomerOrg={isCustomerOrg}
                                     />
                                 )}
                                 width={400}
@@ -294,7 +294,7 @@ export default function UsersTable({
                             <Btn
                                 text="Filter"
                                 icon="filter"
-                                elementAttr={{ class: "btn_primary btn-toolbar btn-filter" }}
+                                elementAttr={{ class: "form_btn_primary btn-toolbar btn-filter" }}
                                 disabled={true}
                                 render={() => (
                                     <>

@@ -1,141 +1,167 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import DataGrid, { Column } from 'devextreme-react/data-grid';
+import CustomDataGrid from '@/ui/dataGrid';
 import { Button as Btn } from "devextreme-react/button";
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-    CartItem,
-    DeleteMoleculeCart,
-    CartDetail,
-    OrderDetail,
-    GroupedData
+  CartItem,
+  DeleteMoleculeCart,
+  CartDetail,
+  OrderType,
+  ColumnConfig,
+  OrganizationType
 } from '@/lib/definition';
 import { submitOrder } from './libraryService';
-import { generateRandomDigitNumber } from '@/utils/helpers';
+import dynamic from 'next/dynamic';
 interface CartDetailsProps {
-    cartData: CartItem[];
-    userId: number;
-    removeItemFromCart: (item: DeleteMoleculeCart) => void;
-    removeAll: (userId: number, type: string) => void;
+  cartData: CartItem[];
+  userId: number;
+  orgType: string;
+  removeItemFromCart: (item: DeleteMoleculeCart) => void;
+  removeAll: (userId: number, type: string) => void;
 }
-
 export default function CartDetails({
-    cartData,
-    userId,
-    removeItemFromCart,
-    removeAll
+  cartData,
+  userId,
+  orgType,
+  removeItemFromCart,
+  removeAll
 }: CartDetailsProps) {
+  const MoleculeStructure = dynamic(() => import('@/utils/MoleculeStructure'), { ssr: false });
+  const cartDetails: CartDetail[] = cartData.map(item => ({
+    id: item.id,
+    molecule_id: item.molecule_id,
+    library_id: item.library_id,
+    project_id: item.project_id,
+    organization_id: item.organization_id,
+    molecular_weight: item.molecule.molecular_weight,
+    moleculeName: item.molecule.source_molecule_name,
+    smiles_string: item.molecule.smiles_string,
+    created_by: userId,
+    "project / library": `${item.molecule.library.project.name} / ${item.molecule.library.name}`,
+    "organization / order": `${item.organization.name} / ${item.order_id}`
+  }));
 
-    const cartDetails: CartDetail[] = cartData.map(item => ({
-        id: item.id,
-        molecule_id: item.molecule_id,
-        library_id: item.library_id,
-        project_id: item.project_id,
-        organization_id: item.organization_id,
-        molecular_weight: item.molecule.molecular_weight,
-        projectName: item.molecule.library.project.name,
-        libraryName: item.molecule.library.name,
-        moleculeName: item.molecule.source_molecule_name,
-        userId: userId
-    }));
+  const columns: ColumnConfig<CartDetail>[] = [
+    {
+      dataField: 'molecule_id',
+      title: 'Molecule ID',
+      width: 125,
+      customRender: (data) => (
+        <span className="flex justify-start">
+          {data.molecule_id}
+        </span>
+      ),
+    },
+    {
+      dataField: 'smiles_string',
+      title: 'Structure',
+      width: 110,
+      customRender: (data) => (
+        <span className="flex justify-start items-center">
+          <MoleculeStructure height={80} width={80} svgMode={true}
+            structure={data.smiles_string} id={`smiles-${data.id}`} />
+        </span>
 
-    const orderId = generateRandomDigitNumber();
-    const orderName = `Order${orderId}`
-    const orderDetails: OrderDetail[] = cartData.map(item => ({
-        orderId: Number(orderId),
-        orderName: orderName,
-        molecule_id: item.molecule_id,
-        library_id: item.library_id,
-        project_id: item.project_id,
-        organization_id: item.organization_id,
-        userId: userId
-    }));
-
-    const handleSubmitOrder = () => {
-        submitOrder(orderDetails).then((res) => {
-
-            if (res[0].orderId) {
-                removeAll(userId, 'SubmitOrder')
-            }
-        })
-            .catch((error) => {
-                console.log(error);
-
-            })
+      ),
+    },
+    { dataField: 'molecular_weight', title: 'Weight', width: 100 },
+    {
+      dataField: 'molecular_weight',
+      title: 'Remove',
+      width: 24,
+      customRender: (data) => (
+        <Btn
+          render={() => (
+            <Image
+              src="/icons/delete.svg"
+              width={24}
+              height={24}
+              alt="Remove"
+            />
+          )}
+          onClick={() => removeItemFromCart(data)}
+        />
+      ),
+    },
+  ];
+  const rowGroupName = () => {
+    if (orgType === OrganizationType.External) {
+      return "project / library"
     }
+    else {
+      return "organization / order";
+    }
+  }
 
-    const groupedData = cartDetails.reduce((acc: GroupedData, item) => {
-        const key = `${item.projectName}/${item.libraryName}`;
-        if (!acc[key]) {
-            acc[key] = [];
-        }
-        acc[key].push({
-            id: item.id,
-            molecule_id: item.molecule_id,
-            molecularWeight: item.molecular_weight,
-            moleculeName: item.moleculeName,
-            library_id: item.library_id,
-            project_id: item.project_id,
-            userId: userId
-        });
-        return acc;
-    }, {});
-
-    const formattedData = Object.entries(groupedData).map(([key, values]) => ({
-        key,
-        values
+  const handleSubmitOrder = () => {
+    const orderDetails: OrderType[] = cartData.map(item => ({
+      order_id: Number(item.order_id),
+      order_name: `Order${item.order_id}`,
+      molecule_id: item.molecule_id,
+      library_id: item.library_id,
+      project_id: item.project_id,
+      organization_id: item.organization_id,
+      created_by: userId,
     }));
+    
+    submitOrder(orderDetails).then((res) => {
+      if (res[0].order_id) {
+        removeAll(userId, 'SubmitOrder')
+      }
+    })
+      .catch((error) => {
+        console.log(error);
+      })
+  }
+  return (
+    <>
+      {cartData.length > 0 ? (
+        <div style={{ height: '500px' }}>
+          <div className="popup-content">
+            <div className="popup-grid">
+              <CustomDataGrid
+                columns={columns}
+                data={cartDetails}
+                groupingColumn={rowGroupName()}
+                enableGrouping
+                enableInfiniteScroll={false}
+                enableSorting={false}
+                enableFiltering={false}
+                enableOptions={false}
+                enableRowSelection={false}
+                enableSearchOption={false}
+                loader={false}
+              />
+            </div>
 
-    return (
-        <>
-            {cartData.length > 0 ? (
-                <div>
-                    {formattedData.map((group) => (
-                        <div key={group.key}>
-                            <div className='accordion-title'>{group.key}</div>
-                            <DataGrid
-                                dataSource={group.values}
-                                showBorders={true}
-                            >
-                                {/* <Column dataField="moleculeName" caption="Molecule Id" /> */}
-                                <Column dataField="molecule_id" caption="MoleculeID" />
-                                <Column dataField="molecularWeight" caption="MoleculeWeight" />
-                                <Column
-                                    width={80}
-                                    cellRender={({ data }: any) => (
-                                        <Btn
-                                            render={() => (
-                                                <Image
-                                                    src="/icons/delete.svg"
-                                                    width={24}
-                                                    height={24}
-                                                    alt="Remove"
-                                                />
-                                            )}
-                                            onClick={() => removeItemFromCart(data)}
-                                        />
-                                    )}
-                                    caption="Remove"
-                                />
-                            </DataGrid>
-                        </div>
-                    ))}
-                    <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                        <Btn
-                            className='btn-primary'
-                            onClick={handleSubmitOrder}
-                            text="Submit Order" />
-                        <Link href="#"
-                            onClick={() =>
-                                removeAll(userId, 'RemoveAll')}
-                            className='text-themeBlueColor font-bold'
-                            style={{ marginLeft: '10px' }
-                            }>Remove All</Link>
-                    </div>
-                </div>
-            ) : (
-                <>No Items in the cart</>
-            )}
-        </>
-    );
+            <div className="popup-buttons">
+              <Btn
+                className="btn-primary"
+                onClick={() => {
+                  if (orgType === OrganizationType.External) {
+                    handleSubmitOrder();
+                  }
+                }}
+                disabled={orgType === OrganizationType.External ? false : true}
+                text="Submit Order"
+              />
+              <Link
+                href="#"
+                onClick={() => removeAll(userId, 'RemoveAll')}
+                className="text-themeBlueColor font-bold"
+                style={{ marginLeft: '10px', marginTop: '10px' }}
+              >
+                Remove All
+              </Link>
+            </div>
+          </div>
+        </div>
+
+
+      ) : (
+        <>No Items in the cart</>
+      )}
+    </>
+  );
 } 

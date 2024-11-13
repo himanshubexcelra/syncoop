@@ -1,57 +1,15 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { StatusCode } from "@/lib/definition";
 export const status = ["Enabled", "Disabled"];
 
 export const defaultRoutesEnabled = [
   '/profile',
+  '/organization',
   '/pathways',
-  'ketchertool'
+  'ketchertool',
 ];
-
-export const tableFields = {
-  columns: [
-    "name",
-    "projects",
-    "molecules",
-    "users",
-    "status",
-    "organizationAdmin",
-    "created_at",
-    "updated_at",
-  ],
-  editable: true,
-  editingMode: "popup",
-  editFields: [
-    {
-      dataField: "name",
-      required: "Organization name is required",
-    },
-    { type: "radio", dataField: "status", items: status },
-    // { dataField: "numberAndDateTimeFormat" },
-    { type: "dxSelectBox", dataField: "timezone" },
-    { dataField: "primaryContact" },
-  ],
-  toolbar: true,
-  searchPanel: true,
-  createFields: [
-    { dataField: "name" },
-    { dataField: "organizationAdminFirstName" },
-    { dataField: "organizationAdminLastName" },
-    { dataField: "organizationAdminEmailAddress" },
-    { dataField: "numberAndDateTimeFormat" },
-    { dataField: "timezone" },
-    { dataField: "primaryContact" },
-  ],
-};
 
 export const DELAY = 2000;
-
-export const MOLECULESTATUS = [
-  { name: 'New', count: 2, type: 'info' },
-  { name: 'Ready', count: 3, type: 'info' },
-  { name: 'Progressing', count: 12, type: 'info' },
-  { name: 'Done', count: 4, type: 'success' },
-  { name: 'Failed', count: 0, type: 'error' },
-];
 
 export const PROJECT_TYPES = [
   'Retrosynthesis',
@@ -100,6 +58,7 @@ export enum StatusCodeBg {
   FAILED = 'bg-themeStatsRedColor',
   INPROGRESS = 'bg-themeStatsBlueColor',
   DONE = 'bg-themeStatsGreenColor',
+  INRETROQUEUE = 'bg-themeLightBlueColor',
 }
 
 export enum StatusCodeBgAPI {
@@ -110,6 +69,15 @@ export enum StatusCodeBgAPI {
   DONE = 'bg-themeStatsGreenColor',
   INFO = 'bg-themeStatsYellowColor'
 }
+
+export const StatusCodeTextColor: { [key: string]: string } = {
+  NEW: "text-themeGreyColor",
+  READY: "text-themeBlueColor",
+  INPROGRESS: "text-themeBlueColor",
+  DONE: "text-background",
+  FAILED: "text-failedStatusColor",
+  INRETROQUEUE: "text-themeGreyColor"
+};
 
 export type StatusCodeType = keyof typeof StatusCodeBg;
 

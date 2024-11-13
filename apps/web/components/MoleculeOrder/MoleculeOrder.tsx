@@ -8,26 +8,43 @@ import {
   MoleculeOrder,
   MoleculeOrderParams,
   OrganizationType,
-  StatusCode,
+  MoleculeType,
+  StatusTypes,
   UserData
 } from '@/lib/definition';
 import Image from 'next/image';
-import { StatusCodeAPIType, StatusCodeBg, StatusCodeBgAPI } from '@/utils/constants';
+import {
+  StatusCodeAPIType,
+  StatusCodeBg,
+  StatusCodeBgAPI,
+  StatusCodeTextColor,
+} from '@/utils/constants';
 import { Popup } from 'devextreme-react';
 import StatusMark from '@/ui/StatusMark';
 import { getMoleculesOrder } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
-import { isAdmin, popupPositionValue } from '@/utils/helpers';
+import {
+  generateRandomDigitNumber,
+  getStatusLabel,
+  isAdmin,
+  popupPositionValue
+} from '@/utils/helpers';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
+import { addMoleculeToCart, getMoleculeCart } from '@/components/Libraries/libraryService'
+import { useContext } from "react";
+import { AppContext } from "../../app/AppState";
+import { DataGridTypes } from 'devextreme-react/cjs/data-grid';
 
 interface ColumnConfig<T> {
   dataField: keyof T;
   title?: string | React.ReactNode;
   width?: number;
   minWidth?: number;
+  allowHeaderFiltering: boolean,
+  allowSorting?: boolean,
   customRender?: (data: T) => React.ReactNode;
 }
 
@@ -52,9 +69,19 @@ const customRenderForField = (data: MoleculeOrder, field: keyof MoleculeOrder) =
 const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const { organization_id, orgUser, myRoles } = userData;
   const { type } = orgUser;
+  const [loader, setLoader] = useState(false);
   const [moleculeOrderData, setMoleculeOrderData] = useState<MoleculeOrder[]>([]);
   const [synthesisView, setSynthesisView] = useState(false);
   const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
+  const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
+  const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
+
+  const [moleculeData, setMoleculeData] = useState<MoleculeType[]>([]);
+
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
+
   const breadcrumbs: BreadCrumbsObj[] = [
     { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
     {
@@ -69,6 +96,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       title: 'Structure',
       minWidth: 400,
       width: 400,
+      allowHeaderFiltering: true,
+      allowSorting: true,
       customRender: (data) => (
         <MoleculeStructureActions
           smilesString={data.smiles_string}
@@ -77,41 +106,63 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
         />
       ),
     },
-    { dataField: 'orderId', title: 'Order' },
-    { dataField: 'molecule_id', title: 'Molecule ID' },
-    { dataField: 'molecular_weight', title: 'Molecular Weight' },
+    {
+      dataField: 'order_id', title: 'Order',
+      allowHeaderFiltering: true, allowSorting: true
+    },
+    {
+      dataField: 'molecule_id', title: 'Molecule ID',
+      allowHeaderFiltering: true, allowSorting: true
+    },
+    {
+      dataField: 'molecular_weight', title: 'Molecular Weight',
+      allowHeaderFiltering: true, allowSorting: true
+    },
     {
       dataField: 'status',
       title: 'Status',
       width: 170,
-      customRender: (data: MoleculeOrder) => {
-        const colorKey = data.status.toUpperCase() as keyof typeof StatusCodeBg;
-        const color = StatusCodeBg[colorKey] || StatusCodeBg.READY;
-
+      allowHeaderFiltering: true,
+      allowSorting: true,
+      customRender: (data) => {
+        const statusUpper = getStatusLabel(data.status);
+        const colorKey = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
+        const colorBgClass = StatusCodeBg[colorKey] || "bg-white";
+        const textColorClass = StatusCodeTextColor[colorKey] || "#000";
         return (
-          <span className={`flex items-center gap-[5px] ${color}`}>
-            {data.status.toUpperCase() === "FAILED" &&
-              <Image src="/icons/warning.svg" width={14} height={14} alt="Molecule order failed" />}
-            {data.status}
-            <StatusMark status={StatusCode["READY"]} />
-          </span>
+          <div className={`flex items-center gap-[5px] ${colorBgClass} ${textColorClass}`}>
+            {colorKey === StatusTypes.Failed && (
+              <Image src="/icons/warning.svg" width={14}
+                height={14} alt="Molecule order failed" />
+            )}
+            {colorKey === StatusTypes.InRetroQueue && (
+              <Image src="/icons/queue.svg" width={14}
+                height={14} alt="Molecule order In-retro Queue" />
+            )}
+            {statusUpper}
+            <StatusMark status={statusUpper} />
+          </div>
         );
-      },
+      }
     },
     {
       dataField: 'yield', title: 'Yield', width: 100,
+      allowHeaderFiltering: true, allowSorting: true,
       customRender: (data) => customRenderForField(data, 'yield')
     },
     {
       dataField: 'anlayse', title: 'Analyse', width: 100,
+      allowHeaderFiltering: true, allowSorting: true,
       customRender: (data) => customRenderForField(data, 'anlayse')
     },
     {
       dataField: 'herg', title: 'HERG', width: 100,
+      allowHeaderFiltering: true, allowSorting: true,
       customRender: (data) => customRenderForField(data, 'herg')
     },
     {
       dataField: 'caco2', title: 'Caco-2', width: 100,
+      allowHeaderFiltering: true, allowSorting: true,
       customRender: (data) => customRenderForField(data, 'caco2')
     },
   ];
@@ -127,7 +178,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const fetchMoleculeOrders = async () => {
     let data = [];
     let transformedData: any[] = [];
-
+    setLoader(true);
     try {
       if (type === OrganizationType.External) {
         // External users: fetch records filtered by organization_id
@@ -147,13 +198,18 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       } else {
         toast.error(Messages.USER_ROLE_CHECK);
       }
-
+      const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
+      const moleculeIds = cartDataAvaialable.map((item: any) => item.molecule_id);
+      const selectedMoleculeInCart = data
+        .filter((item: any) => moleculeIds.includes(item.molecule_id))
+        .map((item: any) => item.id);
+      setCartMolecule(selectedMoleculeInCart)
       // Transform the fetched data if data is available
       transformedData = data?.map((item: any) => {
         const {
           molecule,
           organization,
-          orderName,
+          order_name,
           project,
           library,
           ...rest
@@ -165,7 +221,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           molecular_weight: molecule?.molecular_weight || 0,
           smiles_string: molecule?.smiles_string || '',
           status: molecule?.status || 'Unknown',
-          orderName,
+          order_name,
           ...(() => {
             if (type === OrganizationType.External) {
               return {
@@ -174,7 +230,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             } else if (type === OrganizationType.Internal) {
               return {
                 "organization / order":
-                  `${organization.name || 'Unknown'} / ${orderName || 'Unknown'}`
+                  `${organization.name || 'Unknown'} / ${order_name || 'Unknown'}`
               }
             }
           })()
@@ -186,8 +242,12 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       console.error(Messages.FETCH_ERROR, error);
       transformedData = []; // Set to an empty array in case of an error
       setMoleculeOrderData([]);
+    } finally {
+      setLoader(false);
     }
   }
+
+
 
   const handleStructureZoom = () => { };
 
@@ -200,9 +260,62 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     setSynthesisView(true);
   };
 
+  const handleAddtoCart = () => {
+    context?.addToState({
+      ...appContext, cartDetail: [...moleculeData]
+    })
+    addMoleculeToCart(moleculeData)
+      .then((res) => {
+        toast.success(Messages.addMoleculeCartMessage(res.count));
+      })
+      .catch((error) => {
+        toast.success(error);
+      })
+
+  };
+
+
+
+  const onSelectionChanged = async (e: any) => {
+    setSelectedRows(e.selectedRowKeys)
+    if (e.selectedRowKeys.length > 0) {
+      setIsAddToCartEnabled(false)
+    }
+    else {
+      setIsAddToCartEnabled(true)
+
+    }
+    const orderId = generateRandomDigitNumber();
+    const selectedProjectMolecule: MoleculeType[] = e.selectedRowsData.map((item: any) => ({
+      ...item,
+      order_id: orderId,
+      molecule_id: item.molecule_id,
+      library_id: item.libary_id,
+      userId: userData.id,
+      organization_id: item.organization_id,
+      project_id: item.project_id
+    }));
+    setMoleculeData(selectedProjectMolecule);
+  }
+
   const toolbarButtons = [
-    { text: "Send for Synthesis", onClick: handleSendForSynthesis }
+    { text: "Send for Synthesis", onClick: handleSendForSynthesis, disabled: false },
+    { text: "Add to Cart", onClick: handleAddtoCart, disabled: isAddToCartEnabled }
   ];
+
+  const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
+    if (e.rowType === "data") {
+      if (e.column.dataField === "status") {
+        const statusUpper = getStatusLabel(e.data.status);
+        const color = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
+        e.cellElement.classList.add(StatusCodeBg[color]);
+      }
+    }
+    if (isMoleculeInCart.includes(e.key)) {
+      e.cellElement.style.pointerEvents = 'none';
+      e.cellElement.style.opacity = '0.5';
+    }
+  }
 
   return (
     <div className="flex flex-col">
@@ -224,6 +337,12 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             enableFiltering={false}
             enableOptions={false}
             toolbarButtons={toolbarButtons}
+            loader={loader}
+            enableHeaderFiltering
+            enableSearchOption
+            selectedRowKeys={selectedRows}
+            onSelectionChanged={onSelectionChanged}
+            onCellPrepared={onCellPrepared}
           />
         </div>
 

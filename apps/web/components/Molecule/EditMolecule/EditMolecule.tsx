@@ -6,12 +6,12 @@ import DiscardMolecule from '../AddMolecule/DiscardMolecule';
 import UpdateMoleculePopup from './UpdateMolecule';
 import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
 import dynamic from "next/dynamic";
-import { MoleculeType, UserData } from '@/lib/definition';
+import { MoleculeType, SaveMoleculeParams, UserData } from '@/lib/definition';
 import { uploadMoleculeSmiles } from '../service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import { delay } from '@/utils/helpers';
-import { LoadIndicator } from 'devextreme-react';
+import { LoadIndicator, Popup } from 'devextreme-react';
 
 const MoleculeStructure = dynamic(
     () => import("../../../utils/MoleculeStructure"),
@@ -20,7 +20,7 @@ const MoleculeStructure = dynamic(
 
 const dialogProperties = {
     width: 455,
-    height: 148,
+    height: 151,
 }
 
 type EditMoleculeProps = {
@@ -42,6 +42,8 @@ const EditMolecule = ({
 }: EditMoleculeProps) => {
     const [resetVisible, setResetVisible] = useState(false);
     const [updateVisible, setUpdateVisible] = useState(false)
+    const [moleculeName, setMoleculeName] = useState<string>('')
+
     const [selectedMolecule, setSelectedMolecule]
         = useState<MoleculeType | null>();
     const hideResetPopup = () => {
@@ -52,14 +54,21 @@ const EditMolecule = ({
     }
     const handleMoleculeClick = (molecule: any) => {
         setSelectedMolecule(molecule);
+        setMoleculeName(molecule?.source_molecule_name || '')
     };
-
+    const onDiscardSubmit = () => {
+        KetcherFunctions.renderFromCtab(selectedMolecule?.smiles_string || '')
+        setMoleculeName(selectedMolecule?.source_molecule_name || '')
+    }
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');
-
-    const saveMolecule = async () => {
-        setSaveLoadIndicatorVisible(true);
-        setSaveButtonText('');
+    const saveMoleculeCall = (molecule: SaveMoleculeParams) => {
+        const {
+            setLoader,
+            setButtonText,
+        } = molecule;
+        setLoader(true);
+        setButtonText('');
         KetcherFunctions.exportSmile().then(async (str) => {
             const result = await uploadMoleculeSmiles({
                 smiles: [str],
@@ -67,11 +76,11 @@ const EditMolecule = ({
                 "library_id": libraryId?.toString() || '',
                 "project_id": projectId?.toString() || '',
                 "organization_id": userData.organization_id?.toString() || '',
-                "source_molecule_name": ''
+                "source_molecule_name": moleculeName,
             })
             if (result.rejected_smiles.length) {
-                setSaveLoadIndicatorVisible(false);
-                setSaveButtonText('Save Molecule');
+                setLoader(false);
+                setButtonText('Add as New Molecule');
                 const rejectedSmile = result.rejected_smiles[0]
                 const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
                 const toastId = toast.error(message);
@@ -80,8 +89,8 @@ const EditMolecule = ({
             } else {
                 setViewEditMolecule(false);
                 callLibraryId();
-                setSaveLoadIndicatorVisible(false);
-                setSaveButtonText('Save Molecule');
+                setLoader(false);
+                setButtonText('Add as New Molecule');
                 const message = Messages.ADD_MOLECULE_SUCCESS;
                 const toastId = toast.success(message);
                 await delay(4000);
@@ -89,10 +98,15 @@ const EditMolecule = ({
             }
         });
     }
+    const moleculeDetails = {
+        setLoader: setSaveLoadIndicatorVisible,
+        setButtonText: setSaveButtonText,
+    }
 
     useEffect(() => {
         if (editMolecules.length) {
             setSelectedMolecule(editMolecules[0])
+            setMoleculeName(editMolecules?.[0]?.source_molecule_name || '')
         }
     }, [editMolecules])
     return (
@@ -125,7 +139,7 @@ const EditMolecule = ({
                                 editMolecules[0]?.smiles_string} />
                     </div>
                     <div className="flex flex-col gap-2 mt-5">
-                        <label className={styles.moleculeLabel}>
+                        <label className='text-normal text-greyMessage'>
                             Molecule name (optional)
                         </label>
                         <input
@@ -133,18 +147,20 @@ const EditMolecule = ({
                             name="molecule"
                             className={styles.moleculeInput}
                             placeholder="Molecule name"
+                            value={moleculeName}
+                            onChange={(event) => setMoleculeName(event.target.value)}
                         />
                     </div>
                     <div className="flex justify-start gap-2 mt-5 ">
                         <button
-                            className={styles.primaryButton}
+                            className='primary-button'
                             onClick={() => setUpdateVisible(true)}
                         >
                             Update Molecule
                         </button>
                         <button
-                            className={`${styles.secondaryButton}`}
-                            onClick={() => saveMolecule()}
+                            className="secondary-button"
+                            onClick={() => saveMoleculeCall(moleculeDetails)}
                         > <LoadIndicator className={
                             `button-indicator ${styles.white}`
                         }
@@ -154,7 +170,7 @@ const EditMolecule = ({
                             {saveButtonText}
                         </button>
                         <button
-                            className={styles.buttonNoBorder}
+                            className='button-no-border'
                             onClick={() => setResetVisible(true)}>
                             Reset
                         </button>
@@ -167,16 +183,32 @@ const EditMolecule = ({
                     dialogProperties,
                     Content: DiscardMolecule,
                     hidePopup: hideResetPopup,
+                    onSubmit: onDiscardSubmit,
                 }
             } />
-            <DialogPopUp {
-                ...{
-                    visible: updateVisible,
-                    dialogProperties,
-                    Content: UpdateMoleculePopup,
-                    hidePopup: hideUpdateVisible,
-                }
-            } />
+            {updateVisible && <Popup
+                visible={updateVisible}
+                showTitle={false}
+                onHiding={hideUpdateVisible}
+                dragEnabled={false}
+                showCloseButton={true}
+                width={455}
+                height={151}
+                contentRender={() => <UpdateMoleculePopup
+                    {...{
+                        userData,
+                        libraryId,
+                        projectId,
+                        setViewEditMolecule,
+                        callLibraryId,
+                        onClose: hideUpdateVisible,
+                        moleculeName,
+                        onDiscardSubmit,
+                        moleculeId: selectedMolecule?.id,
+                        saveMoleculeCall,
+                    }}
+                />}
+            />}
         </>
     );
 };

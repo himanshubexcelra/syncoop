@@ -1,7 +1,6 @@
 import Layout from "@/components/layout";
 import { redirect } from "next/navigation";
 import { getUserData } from "@/utils/auth";
-import styles from "./page.module.css";
 import PathwayImage from "@/components/PathwayImage/PathwayImage";
 import PathwayAction from "@/components/PathwayImage/PathwayAction";
 import { LibraryDataNode } from "@/lib/definition";
@@ -124,8 +123,8 @@ export default async function Pathway() {
 
   return (
     <Layout>
-      <div className={styles.page}>
-        <main className={styles.main}>
+      <div>
+        <main className="main-heading">
           <PathwayImage pathwayId="pathway-1" nodes={nodes1}
             style={{ position: 'relative' }}>
             <PathwayAction pathwayId="pathway-1"></PathwayAction>

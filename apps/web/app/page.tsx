@@ -1,7 +1,7 @@
 "use client";
+
 import Image from "next/image";
 import LoginForm from "@/components/LoginForm/LoginForm";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
@@ -10,10 +10,7 @@ import { UserData } from "@/lib/definition";
 
 export default function Login() {
 
-  const router = useRouter();
-
   async function onSuccess(data: UserData) {
-    router.replace('/dashboard');
     setTimeout(async () => {
       const toastId = toast.success(
         Messages.userLoggedIn(data.first_name, data.last_name));

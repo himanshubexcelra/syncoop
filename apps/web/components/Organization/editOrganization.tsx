@@ -2,7 +2,6 @@
 "use client";
 import toast from "react-hot-toast";
 import { useContext, useEffect, useState } from "react";
-import "./table.css";
 import {
   Form,
   SimpleItem,
@@ -207,18 +206,18 @@ export default function EditOrganization({
       </SimpleItem>
       <GroupItem cssClass="buttons-group" colCount={2}>
         <GroupItem cssClass="buttons-group" colCount={2}>
-          <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
+          <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
             <ButtonOptions
               text="Update"
               useSubmitBehavior={true}
               onClick={handleSubmit}
             />
           </ButtonItem>
-          <ButtonItem horizontalAlignment="left" cssClass="btn_secondary">
+          <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
             <ButtonOptions text="Cancel" onClick={cancelSave} />
           </ButtonItem>
         </GroupItem>
       </GroupItem>
-    </Form>
+    </Form >
   );
 }

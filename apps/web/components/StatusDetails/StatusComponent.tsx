@@ -8,16 +8,25 @@ import { useEffect, useState } from "react";
 import { getProjectsCountById } from "../Projects/projectService";
 import { getLibraryCountById, geMoleculeCountById } from "../Libraries/libraryService";
 
-export default function StatusComponent({ myRoles, orgUser }: StatusComponentProps) {
+export default function StatusComponent({ myRoles, orgUser, isCustomerOrg }: StatusComponentProps) {
     const { id } = orgUser
     const [projectNumber, setProjectNumber] = useState<number>(0);
     const [libraryNumber, setLibraryNumber] = useState<number>(0);
     const [moleculeNumber, setMoleculeNumber] = useState<number>(0);
-    const countCardsDetails = getCountCardsDetails(projectNumber, libraryNumber, moleculeNumber);
+    const countCardsDetails = getCountCardsDetails(projectNumber, libraryNumber,
+        moleculeNumber, isCustomerOrg);
     const fetchData = async () => {
-        const projectCount = myRoles.includes('admin') ? await getProjectsCountById() : await getProjectsCountById(id)
-        const libraryCount = myRoles.includes('admin') ? await getLibraryCountById() : await getLibraryCountById(id)
-        const moleculeCount = myRoles.includes('admin') ? await geMoleculeCountById() : await geMoleculeCountById(id)
+        let projectCount, libraryCount, moleculeCount;
+
+        if (myRoles.includes('admin') && !isCustomerOrg) {
+            projectCount = await getProjectsCountById();
+            libraryCount = await getLibraryCountById();
+            moleculeCount = await geMoleculeCountById();
+        } else {
+            projectCount = await getProjectsCountById(id);
+            libraryCount = await getLibraryCountById(id);
+            moleculeCount = await geMoleculeCountById(id);
+        }
         setLibraryNumber(libraryCount)
         setProjectNumber(projectCount)
         setMoleculeNumber(moleculeCount)

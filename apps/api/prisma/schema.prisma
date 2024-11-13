@@ -47,6 +47,8 @@ model user {
   createLibrary       library[]            @relation("userWhoCreated")
   updateLibrary       library[]            @relation("userWhoUpdated")
   user_role           user_role[]
+  createContainer     container[]          @relation("userWhoCreated")
+  updateContainer     container[]          @relation("userWhoUpdated")
 }
 
 model user_role {
@@ -73,6 +75,38 @@ model role {
   userWhoCreated                user?                           @relation("userWhoCreated", fields: [created_by], references: [id])
   userWhoUpdated                user?                           @relation("userWhoUpdated", fields: [updated_by], references: [id])
   user_role                     user_role[]
+}
+
+model container {
+  id                Int                @id @default(autoincrement())
+  name              String
+  type              String             // O => 'Internal', CO => 'Client Org', P => 'Project', L => 'Library'
+  description       String
+  parent_id         Int
+  owner_id          Int
+  status            Int
+  config            Json?
+  metadata          Json?              @db.Json
+  created_at        DateTime           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?          @db.Timestamp(6)
+  created_by        Int
+  updated_by        Int?
+  // molecule          molecule[]
+  // molecule_cart     molecule_cart[]
+  // molecule_order    molecule_order[]
+  // org_module        org_module[]       @relation("organizationPurchasedModule")
+  userWhoCreated    user               @relation("userWhoCreated", fields: [created_by], references: [id])
+  // user              user               @relation("organizationAdmin", fields: [orgAdminId], references: [id])
+  userWhoUpdated    user?              @relation("userWhoUpdated", fields: [updated_by], references: [id])
+  // projects          project[]          @relation("OrganizationProjects")
+  // orgUser           user[]             @relation("organizationUser")
+}
+
+enum container_type {
+  Organization       @map("0")
+  Project            @map("1")
+  Library            @map("2")
+  ClientOrganization @map("3")
 }
 
 model organization {
@@ -124,7 +158,7 @@ model molecule {
   inchi_key            String
   molecular_weight     Decimal
   finger_print         Bytes
-  status               molecule_status
+  status               Int
   is_added_to_cart     Boolean              @default(false)
   created_at           DateTime             @default(now()) @db.Timestamp(6)
   created_by           Int
@@ -149,6 +183,7 @@ model molecule_cart {
   id              Int          @id @default(autoincrement())
   molecule_id     Int
   library_id      Int
+  order_id        Int
   created_at      DateTime     @default(now()) @db.Timestamp(6)
   created_by      Int
   updated_at      DateTime?    @db.Timestamp(6)
@@ -165,8 +200,8 @@ model molecule_cart {
 
 model molecule_order {
   id              Int          @id @default(autoincrement())
-  orderId         Int
-  orderName       String
+  order_id        Int
+  order_name      String
   molecule_id     Int
   molecule        molecule     @relation(fields: [molecule_id], references: [id])
   library_id      Int
@@ -417,16 +452,4 @@ enum permission {
 enum organization_type {
   Internal @map("0")
   External @map("1")
-}
-
-enum molecule_status {
-  New          @map("1")
-  Ordered      @map("2")
-  InRetroQueue @map("3")
-  Ready        @map("4")
-  FailedRetro  @map("5")
-  InReview     @map("6")
-  Validated    @map("7")
-  Done         @map("8")
-  Failed       @map("9")
 }

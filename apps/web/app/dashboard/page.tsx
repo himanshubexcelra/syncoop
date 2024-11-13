@@ -1,13 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import styles from "./page.module.css";
-import { HeadingObj } from "@/lib/definition";
 import Layout from "@/components/layout";
 import { getUserData } from "@/utils/auth";
 import { redirect } from "next/navigation";
-import AssayTable from "@/components/AssayTable/AssayTable";
-import Module from "@/components/Module/Module";
-import StatusComponent from "@/components/StatusDetails/StatusComponent";
-import { TabDetail } from "@/lib/definition";
 import { getFilteredRoles } from "@/components/Role/service";
 import LandingPage from "@/components/Dashboard/LandingPage";
 
@@ -22,48 +16,17 @@ export default async function Dashboard() {
   const { myRoles, orgUser } = userData;
   const filteredRoles = await getFilteredRoles();
 
-  const heading: HeadingObj[] = [
-    {
-      svgPath: myRoles.includes('admin') ? "/icons/admin-icon-lg.svg" : "/icons/organization.svg",
-      label: `${orgUser?.name}`,
-      svgWidth: 28,
-      svgHeight: 28,
-      href: "",
-      type: "Admin:"
-    }
-  ];
-
-
-  const tabsStatus: TabDetail[] = [
-    {
-      title: "Overview",
-      Component: StatusComponent,
-      props: { myRoles, orgUser }
-    },
-    {
-      title: "Assays",
-      Component: AssayTable,
-      props: { orgUser },
-    },
-    {
-      title: "Modules",
-      Component: Module,
-      props: { orgUser, myRoles },
-    }
-  ];
-
   return (
     <Layout>
-      <div className={styles.page}>
-        <main className={styles.main}>
+      <div>
+        <main className="main main-heading">
           <LandingPage
             userData={userData}
-            tabsStatus={tabsStatus}
-            heading={heading}
             filteredRoles={filteredRoles}
             myRoles={myRoles}
             orgUser={orgUser}
             actionsEnabled={actionsEnabled}
+            isCustomerOrg={false}
           />
         </main>
       </div>

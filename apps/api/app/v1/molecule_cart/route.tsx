@@ -9,6 +9,7 @@ interface Item {
     organization_id: string; // or number
     project_id: string; // or number
     userId: string; // or number
+    order_id?: number
 }
 interface updatedItem {
     molecule_id: number; // or number, depending on your data type
@@ -21,9 +22,11 @@ export async function GET(request: Request) {
         const library_id = searchParams.get('library_id');
         const userId = searchParams.get('userId');
         const project_id = searchParams.get('project_id');
+        const organization_id = searchParams.get('organization_id');
+
         const query: any = {
             where: {
-                created_by: Number(userId)
+                created_by: Number(userId),
             },
             include: {
                 molecule: {
@@ -31,6 +34,7 @@ export async function GET(request: Request) {
                         molecular_weight: true,
                         source_molecule_name: true,
                         is_added_to_cart: true,
+                        smiles_string: true,
                         library: {
                             select: {
                                 id: true,
@@ -45,16 +49,29 @@ export async function GET(request: Request) {
                         },
                     },
                 },
+                organization: { 
+                    select: {
+                        name: true,
+                    },
+                },
             },
         };
 
         if (library_id && project_id) {
             query.where = {
-                created_by: Number(userId),
+                ...query.where,
                 library_id: Number(library_id),
-                project_id: Number(project_id)
+                project_id: Number(project_id),
             };
         }
+
+        if (organization_id) {
+            query.where = {
+                ...query.where,
+                organization_id: Number(organization_id),
+            };
+        }
+
         const molecule = await prisma.molecule_cart.findMany(query);
         return new Response(JSON.stringify(molecule), {
             headers: { "Content-Type": "application/json" },
@@ -68,17 +85,23 @@ export async function GET(request: Request) {
     }
 }
 
+
+
 export async function POST(request: Request) {
     const req = await request.json();
-
     const result = req.map((item: Item) => ({
         molecule_id: Number(item.molecule_id),
         library_id: Number(item.library_id),
         organization_id: Number(item.organization_id),
         project_id: Number(item.project_id),
         created_by: Number(item.userId),
+        order_id: Number(item.order_id)
     }));
-
+    
+    // return new Response(JSON.stringify(response), {
+    //     headers: { "Content-Type": "application/json" },
+    //     status: SUCCESS,
+    // });
 
     const updatedmolecule_id = result.map((item: updatedItem) => Number(item.molecule_id));
 

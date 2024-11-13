@@ -15,7 +15,6 @@ import Image from 'next/image';
 import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
 import { delay } from "@/utils/helpers";
 import { createProjectApi, editProject } from "./projectService";
-import "./projects.css";
 import {
   ProjectCreateFields,
   OrganizationDataFields,
@@ -212,7 +211,7 @@ export default function CreateProject({
       }}
     >
       <Label text="Select an Organisation" />
-      <RequiredRule message="Project type is required" />
+      <RequiredRule message="Organization name is required" />
     </SimpleItem>
   ), [organizationData, myRoles]);
 
@@ -303,7 +302,7 @@ export default function CreateProject({
       </GroupItem>
       {filteredData.length === 0 ? (
         <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}>
-          <div className="nodata nodata-project">No data</div>
+          <div className="nodata-project">No data</div>
         </GroupItem>
       ) : (
         <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}>

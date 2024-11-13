@@ -12,6 +12,7 @@ type KetcherApiType = {
   getAllHighlights: () => Array<any>
   clearHighlights: () => void
   exportSmile: () => Promise<string>
+  resetMolecule: () => void
 }
 
 export declare global {

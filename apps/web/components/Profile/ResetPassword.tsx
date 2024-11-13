@@ -16,13 +16,12 @@ import { ButtonTypes } from "devextreme-react/cjs/button";
 import { Form, SimpleItem } from "devextreme-react/form";
 import { editUser } from "../User/service";
 import { DELAY } from "@/utils/constants";
-import './form.css'
 
 interface ChangePasswordProps {
     onClose: () => void;
     email_id?: string;
 }
-const customPasswordCheck = (password: any) => 
+const customPasswordCheck = (password: any) =>
     LoginFormSchema.shape.password_hash.safeParse(password).success;
 
 const passwordLabel = { 'aria-label': 'Password' };
@@ -167,7 +166,7 @@ export default function ResetPassword({ onClose, email_id }: ChangePasswordProps
     return (
         <>
             <div className="flex justify-between mb-4">
-                <div className={`${styles.subHeading}`}>Generate Password</div>
+                <div className="subHeading">Generate Password</div>
                 <Image
                     className='cursor-pointer'
                     src="/icons/cross-icon.svg"
@@ -189,12 +188,12 @@ export default function ResetPassword({ onClose, email_id }: ChangePasswordProps
                             onClick={handleSubmit}
                             useSubmitBehavior={true}
                             hoverStateEnabled={false}
-                            elementAttr={{ class: "btn_primary_user" }}
+                            elementAttr={{ class: "btn-primary" }}
                         />
                         <Button
                             text="Cancel"
                             onClick={handleCancel}
-                            className={styles.secondaryButton}
+                            elementAttr={{ class: "btn-secondary" }}
                         />
                     </div>
                 </SimpleItem>

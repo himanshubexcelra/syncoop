@@ -66,7 +66,7 @@ const structServiceProvider = new StandaloneStructServiceProvider();
 //     }
 // })()
 interface KetcherDrawBoxProps {
-  reactionString: string;
+  reactionString?: string;
 }
 export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxProps) {
   const [hiddenButtons] = useState(initiallyHidden)

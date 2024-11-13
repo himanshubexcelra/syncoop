@@ -1,4 +1,3 @@
-import styles from "./page.module.css";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import { BreadCrumbsObj } from "@/lib/definition";
 import Layout from "@/components/layout";
@@ -14,8 +13,8 @@ export default async function Cart() {
     return (
         <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
-            <div className={styles.page}>
-                <main className={styles.main}>
+            <div>
+                <main className="main">
                     <div>
                         Cart page
                     </div>

@@ -4,7 +4,6 @@ import {
     RequiredRule,
     Label,
 } from "devextreme-react/form";
-import styles from './createUser.module.css'
 import { useEffect, useState } from "react";
 import { Messages } from "@/utils/message";
 import { editUser } from "./service";
@@ -25,6 +24,7 @@ export default function RenderEditUser({
     type,
     myRoles,
     isMyProfile,
+    isCustomerOrg
 }: any) {
 
     const [formData, setFormData] = useState(tableData);
@@ -98,7 +98,7 @@ export default function RenderEditUser({
                     displayExpr: "name",
                     valueExpr: "id",
                     value: tableData.orgUser.id,
-                    disabled: isMyProfile || !myRoles.includes('admin') ||
+                    disabled: isMyProfile || isCustomerOrg || !myRoles.includes('admin') ||
                         type === OrganizationType.Internal,
                 }}
             >
@@ -155,12 +155,12 @@ export default function RenderEditUser({
                         onClick={handleSubmit}
                         useSubmitBehavior={true}
                         hoverStateEnabled={false}
-                        elementAttr={{ class: "btn_primary_user" }}
+                        elementAttr={{ class: "btn-primary" }}
                     />
                     <Button
                         text="Cancel"
                         onClick={handleCancel}
-                        className={styles.secondaryButton}
+                        elementAttr={{ class: "btn-secondary" }}
                     />
                 </div>
             </SimpleItem>

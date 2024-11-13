@@ -2,6 +2,7 @@
 import prisma from "@/lib/prisma";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 import bcrypt from "bcrypt";
+import { SALT_ROUNDS } from "@/utils/constants";
 
 const { ORGANIZATION_ALREADY_EXISTS, USER_BELONGS_TO_ANOTHER_ORG } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
@@ -187,8 +188,7 @@ export async function POST(request: Request) {
 
   const req = await request.json();
   const { name, first_name, last_name, email_id, roleId, created_by, password_hash } = req;
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password_hash, saltRounds);
+  const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
   // Check if an organization with the same name already exists (case insensitive)
   try {
     const existingOrganization = await prisma.organization.findFirst({

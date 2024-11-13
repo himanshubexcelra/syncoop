@@ -1,7 +1,6 @@
 "use client";
 import DataGrid, { Column, Paging } from "devextreme-react/data-grid";
 import { useState, useEffect, useContext } from 'react';
-import "./assayTable.css"
 import { AssayTableProps, Assay } from "@/lib/definition";
 import { getOrganizationById } from "../Organization/service";
 import { LoadIndicator } from "devextreme-react";
@@ -38,13 +37,13 @@ export default function AssayTable({ orgUser }: AssayTableProps) {
                 dataSource={metaData}
                 showBorders={false}
                 showColumnHeaders={false}
-                className="custom-row-height bordered-rows"
+                className="custom-row-height"
                 rowAlternationEnabled={false}
                 columnAutoWidth={false}
             >
                 <Column dataField="name" caption="Assay" width="30%" />
                 <Column dataField="description" caption="Description" width="70%" />
-                <Paging defaultPageSize={4} />
+                <Paging defaultPageSize={5} defaultPageIndex={0} />
             </DataGrid>}
         </div>
     );

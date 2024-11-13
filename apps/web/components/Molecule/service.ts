@@ -55,6 +55,30 @@ export async function uploadMoleculeSmiles(formData: UploadMoleculeSmilesRequest
         return error;
     }
 }
+export async function updateMoleculeSmiles(formData: UploadMoleculeSmilesRequest) {
+    try {
+        const response: any = await fetch(
+            `${process.env.PYTHON_API_HOST_URL}/update_molecule`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            }
+        );
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else if (response.status === 500) {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
 
 export async function uploadMoleculeFile(data: UploadMoleculeFileRequest) {
     try {
@@ -65,7 +89,7 @@ export async function uploadMoleculeFile(data: UploadMoleculeFileRequest) {
         formData.append('project_id', data.project_id);
         formData.append('organization_id', data.organization_id);
         formData.append('updated_by_user_id', data.updated_by_user_id);
-        const response = await fetch(`${process.env.API_END_POINT}/upload_molecule_files`, {
+        const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/upload_molecule_files`, {
             method: "POST",
             body: formData,
         });

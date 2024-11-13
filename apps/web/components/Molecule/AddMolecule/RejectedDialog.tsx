@@ -1,11 +1,10 @@
 import Image from 'next/image';
-import styles from './AddMolecule.module.css'
-import { RejectedMolecules } from '@/lib/definition';
+import { RejectedSmiles } from '@/lib/definition';
 import { downloadCSV } from '../service';
 
 interface RejectedDialogProps {
     onClose: () => void;
-    rejected?: RejectedMolecules[];
+    rejected?: RejectedSmiles[];
 }
 export default function RejectedDialog({ onClose, rejected }: RejectedDialogProps) {
 
@@ -24,16 +23,16 @@ export default function RejectedDialog({ onClose, rejected }: RejectedDialogProp
                 height={22.5}
                 onClick={onClose} />
         </div>
-            <div className={styles.discardText}>
+            <div className="header-text text-messageDarkBlue">
                 Rejected Molecules
             </div>
             <div className="flex justify-start gap-2 mt-5">
                 <button
-                    className={styles.secondaryButton}
+                    className='secondary-button'
                     onClick={() => downloadTemplate()}
                 >Download List
                 </button>
-                <button className={styles.rejectButton} onClick={onClose}>Close</button>
+                <button className='reject-button' onClick={onClose}>Close</button>
             </div>
         </>
     );

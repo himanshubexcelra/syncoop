@@ -14,7 +14,6 @@ import { delay } from "@/utils/helpers";
 import { createLibrary, editLibrary } from "./libraryService";
 import { LibraryCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
-import TextArea from "devextreme/ui/text_area";
 import { Messages } from "@/utils/message";
 
 export default function CreateLibrary({
@@ -117,8 +116,7 @@ export default function CreateLibrary({
       </SimpleItem>
       <SimpleItem
         dataField="description"
-        // @ts-expect-error: TypeScript is not recognizing TextArea as a valid component type.
-        editorType={TextArea}
+        editorType="dxTextArea"
         cssClass='textarea-field'
         editorOptions={{
           height: "90px",

@@ -1,6 +1,6 @@
 import { StatusCode } from "@/lib/definition";
 
-export default function StatusMark({ status }: { status: StatusCode }) {
+export default function StatusMark({ status }: { status: string | StatusCode }) {
     return (
         <>
             {status === StatusCode.NEW && <div className="flex gap-1 bg-white">

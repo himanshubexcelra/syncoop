@@ -10,8 +10,6 @@ import {
 } from "devextreme-react/form";
 import { delay, generatePassword } from "@/utils/helpers";
 import { createUser } from "./service";
-import "./table.css";
-import styles from './createUser.module.css'
 import { Button, TextBox, Tooltip, Validator } from "devextreme-react";
 import { Button as TextBoxButton } from 'devextreme-react/text-box';
 import { useMemo, useState } from "react";
@@ -109,7 +107,7 @@ export default function RenderCreateUser({
         setCreatePopupVisibility(false)
         setValid('valid')
     }
-    
+
     const passwordEditorRender = (data: any) => {
         return (
             <div className="flex items-center gap-2">
@@ -169,7 +167,7 @@ export default function RenderCreateUser({
                 <Button
                     text="Generate"
                     onClick={handleGeneratePassword}
-                    className={styles.secondaryButton}
+                    className="btn-secondary"
                 />
             </div>
         );
@@ -253,12 +251,12 @@ export default function RenderCreateUser({
                         onClick={handleSubmit}
                         useSubmitBehavior={true}
                         hoverStateEnabled={false}
-                        elementAttr={{ class: "btn_primary_user" }}
+                        elementAttr={{ class: "btn-primary" }}
                     />
                     <Button
                         text="Cancel"
                         onClick={handleCancel}
-                        className={styles.secondaryButton}
+                        elementAttr={{ class: "btn-secondary" }}
                     />
                 </div>
             </SimpleItem>

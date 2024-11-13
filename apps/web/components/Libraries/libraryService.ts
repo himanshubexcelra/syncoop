@@ -185,15 +185,15 @@ export async function getMoleculeCart(userId?: number, library_id?: number, proj
 }
 
 export async function deleteMoleculeCart(
-    userId?: number,
+    created_by?: number,
     molecule_id?: number,
     library_id?: number,
     project_id?: number
 ) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
-        if (userId) {
-            url.searchParams.append('userId', String(userId));
+        if (created_by) {
+            url.searchParams.append('userId', String(created_by));
         }
         if (molecule_id) {
             url.searchParams.append('molecule_id', String(molecule_id));

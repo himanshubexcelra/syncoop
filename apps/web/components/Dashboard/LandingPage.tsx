@@ -1,9 +1,12 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 import Image from "next/image";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Popup } from "devextreme-react/popup";
-import { BreadCrumbsObj, DashboardPageType, OrganizationDataFields } from "@/lib/definition";
+import {
+    BreadCrumbsObj, DashboardPageType,
+    HeadingObj, OrganizationDataFields, TabDetail
+} from "@/lib/definition";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import UsersTable from "@/components/User/UsersTable";
 import ListOrganization from "@/components/Organization/ListOrganization";
@@ -11,32 +14,70 @@ import Heading from "@/components/Heading/Heading";
 import Tabs from "@/ui/Tab/Tabs";
 import TabUsersTable from "@/components/Organization/TabUsersTable";
 import { popupPositionValue } from "@/utils/helpers";
-import styles from "./page.module.css";
 import { getOrganizationById } from "@/components/Organization/service";
 import EditOrganization from "../Organization/editOrganization";
 import { getDashBoardBreadCrumbs } from "./breadCrumbs";
+import StatusComponent from "../StatusDetails/StatusComponent";
+import AssayTable from "../AssayTable/AssayTable";
+import Module from "../Module/Module";
 
 export default function LandingPage({
     userData,
-    tabsStatus,
     filteredRoles,
     myRoles,
     orgUser,
-    heading,
     actionsEnabled,
+    customerOrgId,
+    isCustomerOrg,
 }: DashboardPageType) {
     const [organizationData, setOrganization] = useState<OrganizationDataFields>({});
     const [editPopup, showEditPopup] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<any>(null);
     const { id, } = userData;
-    const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgUser)
+    const orgDetail = useMemo(() =>
+        customerOrgId
+            ? { id: customerOrgId, name: organizationData.name || '' }
+            : orgUser,
+        [customerOrgId, organizationData.name, orgUser]
+    );
+    const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgDetail, isCustomerOrg)
+    const heading: HeadingObj[] = [
+        {
+            svgPath: myRoles.includes('admin') && !customerOrgId ?
+                "/icons/admin-icon-lg.svg" :
+                "/icons/organization.svg",
+            label: customerOrgId ? `${orgDetail?.name}` || '' : `${orgUser?.name}` || '',
+            svgWidth: 28,
+            svgHeight: 28,
+            href: "",
+            type: customerOrgId ? "Customer Organizations:" : "Admin:"
+        }
+    ];
 
+
+    const tabsStatus: TabDetail[] = [
+        {
+            title: "Overview",
+            Component: StatusComponent,
+            props: { myRoles, orgUser: orgDetail, isCustomerOrg }
+        },
+        {
+            title: "Assays",
+            Component: AssayTable,
+            props: { orgUser: orgDetail, },
+        },
+        {
+            title: "Modules",
+            Component: Module,
+            props: { orgUser: orgDetail, myRoles, },
+        }
+    ];
     const fetchOrganizationData = async () => {
         const organization = await getOrganizationById(
             {
                 withRelation: ['orgUser', 'user_role'],
-                id: userData?.organization_id
+                id: customerOrgId ? customerOrgId : userData?.organization_id
             });
         setOrganization(organization);
     };
@@ -52,7 +93,7 @@ export default function LandingPage({
     }, []);
 
     const renderTitleField = () => {
-        return <p className={styles.edit_title}>{`Edit ${organizationData?.name}`}</p>;
+        return <p className='form-title'>{`Edit ${organizationData?.name}`}</p>;
     };
 
 
@@ -62,17 +103,17 @@ export default function LandingPage({
             <Breadcrumb breadcrumbs={breadcrumbs} />
             <Heading {...{ heading }} myRoles={myRoles} showEditPopup={showEditPopup} />
             <Tabs tabsDetails={tabsStatus} />
-            {myRoles.includes('admin') &&
+            {myRoles.includes('admin') && !customerOrgId &&
                 <>
                     <TabUsersTable
-                        orgUser={orgUser}
+                        orgUser={orgDetail}
                         filteredRoles={filteredRoles}
                         myRoles={myRoles}
                         userId={id}
                         actionsEnabled={actionsEnabled}
                     />
                     <div>
-                        <div className={styles.imageContainer}>
+                        <div className="imageContainer">
                             <Image
                                 src="/icons/organization.svg"
                                 width={33}
@@ -81,14 +122,14 @@ export default function LandingPage({
                             />
                             <span>Customer Organizations</span>
                         </div>
-                        <div className={styles.table}>
+                        <div className="table">
                             <ListOrganization userData={userData} actionsEnabled={actionsEnabled} />
                         </div>
                     </div>
                 </>
             }
-            {!myRoles.includes('admin') && <div className='p-5'>
-                <div className={`${styles.imageContainer} pt-5 pb-2.5`}>
+            {(!myRoles.includes('admin') || customerOrgId) && <div>
+                <div className={`imageContainer pt-5 pb-2.5`}>
                     <Image
                         src="/icons/Users-icon-lg.svg"
                         width={40}
@@ -97,12 +138,13 @@ export default function LandingPage({
                     />
                     <span>Users</span>
                 </div>
-                <div className={styles.table}>
+                <div className="table">
                     <UsersTable
-                        orgUser={orgUser}
+                        orgUser={orgDetail}
                         filteredRoles={filteredRoles}
                         myRoles={myRoles}
                         userId={id}
+                        isCustomerOrg={isCustomerOrg}
                         actionsEnabled={actionsEnabled} />
                 </div>
             </div>

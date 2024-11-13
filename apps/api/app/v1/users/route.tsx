@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 import bcrypt from "bcrypt";
+import { SALT_ROUNDS } from "@/utils/constants";
 
 const { EMAIL_ALREADY_EXIST, } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST } = STATUS_TYPE;
@@ -94,8 +95,7 @@ export async function POST(request: Request) {
         const existingUser = await prisma.user.findUnique({
             where: { email_id: email_id },
         });
-        const saltRounds = 10;
-        const password_hash = await bcrypt.hash(req.password_hash, saltRounds);
+        const password_hash = await bcrypt.hash(req.password_hash, SALT_ROUNDS);
         if (existingUser) {
             return new Response(JSON.stringify({ error: EMAIL_ALREADY_EXIST }), {
                 headers: { "Content-Type": "application/json" },
@@ -186,8 +186,7 @@ export async function PUT(request: Request) {
         }
 
         if (newPassword) {
-            const saltRounds = 10;
-            updatedData.password_hash = await bcrypt.hash(newPassword, saltRounds);
+            updatedData.password_hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
         }
         if (organization) {
             updatedData.organization_id = organization;

@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import styles from './ProfileInfo.module.css'
 import { HeadingObj, OrgUser, UserData, } from '@/lib/definition';
 import { Popup as MainPopup, } from "devextreme-react/popup";
-import './form.css'
+import { Button } from "devextreme-react/button";
 import { getUsersById } from './service';
 import DialogPopUp from '@/ui/DialogPopUp';
 import ChangePassword from './ChangePassword';
@@ -89,41 +89,41 @@ export default function ProfileInfo({ id,
             <main className={styles.main}>
                 <div className={styles.box}>
                     <div className="flex justify-between items-center mb-4">
-                        <div className={styles.title}>My Profile</div>
+                        <div className="groupItem">My Profile</div>
                         {(isMyProfile || actionsEnabled.includes('edit_user') || myRoles.includes('admin')) &&
                             <div className="space-x-2">
-                                <button className={styles.primaryButton} onClick={() => setPasswordPopupVisible(true)}>
+                                <Button className="btn-primary" onClick={() => setPasswordPopupVisible(true)}>
                                     {isMyProfile ? "Change Password" : "Reset Password"}
-                                </button>
-                                <button className={styles.secondaryButton} onClick={() => setFormVisible(true)}>
+                                </Button>
+                                <Button className="btn-secondary" onClick={() => setFormVisible(true)}>
                                     Edit
-                                </button>
+                                </Button>
                             </div>}
                     </div>
                     <div className={`${styles.grid} gap-y-5`}>
                         <div>
-                            <span className={styles.type}>Organization:</span>
-                            <span className={styles.output}> {orgUser?.name}</span>
+                            <span className={`subHeading ${styles.type}`}>Organization:</span>
+                            <span className={`subHeading ${styles.output}`}> {orgUser?.name}</span>
                         </div>
                         <div>
-                            <span className={styles.type}>Roles:</span>
-                            <span className={styles.output}> {userRoleNames}</span>
+                            <span className={`subHeading ${styles.type}`}>Roles:</span>
+                            <span className={`subHeading ${styles.output}`}> {userRoleNames}</span>
                         </div>
                         <div>
-                            <span className={styles.type}>First Name:</span>
-                            <span className={styles.output}> {first_name}</span>
+                            <span className={`subHeading ${styles.type}`}>First Name:</span>
+                            <span className={`subHeading ${styles.output}`}> {first_name}</span>
                         </div>
                         <div>
-                            <span className={styles.type}>email_id:</span>
-                            <span className={styles.output}> {email_id}</span>
+                            <span className={`subHeading ${styles.type}`}>email_id:</span>
+                            <span className={`subHeading ${styles.output}`}> {email_id}</span>
                         </div>
                         <div>
-                            <span className={styles.type}>Last Name:</span>
-                            <span className={styles.output}> {last_name}</span>
+                            <span className={`subHeading ${styles.type}`}>Last Name:</span>
+                            <span className={`subHeading ${styles.output}`}> {last_name}</span>
                         </div>
                         {!isMyProfile && <div>
-                            <span className={styles.type}>Status:</span>
-                            <span className={styles.output}> {status}</span>
+                            <span className={`subHeading ${styles.type}`}>Status:</span>
+                            <span className={`subHeading ${styles.output}`}> {status}</span>
                         </div>}
                     </div>
                 </div>

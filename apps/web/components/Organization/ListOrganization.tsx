@@ -15,9 +15,6 @@ import Image from "next/image";
 import { Popup } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
-import "./table.css";
-import './form.css';
-import styles from "./table.module.css";
 import { OrganizationDataFields, OrganizationType, UserData, UserRole } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
@@ -76,7 +73,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const formRef = useRef<any>(null);
 
   const renderTitleField = () => {
-    return <p className={styles.edit_title}>{`Edit ${editField?.name}`}</p>;
+    return <p className='form-title'>{`Edit ${editField?.name}`}</p>;
   };
 
   const showEditPopupForm = (data: any) => {
@@ -119,13 +116,26 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           dataSource={tableData}
           showBorders={true}
           ref={grid}
-          elementAttr={{ cssClass: styles.table }}
           className="no-padding-header"
         >
           <Paging defaultPageSize={5} defaultPageIndex={0} />
           <Sorting mode="single" />
           <HeaderFilter visible={true} />
-          <Column dataField="name" caption="Organization Name" allowHeaderFiltering={false} />
+          <Column
+            dataField="name"
+            caption="Organization Name"
+            allowHeaderFiltering={false}
+            cellRender={(data: any) => {
+              const orgId = data?.data?.id;
+              return (
+                <a
+                  href={`/organization/${orgId}`}
+                  className="text-themeBlueColor underline"
+                >
+                  {data?.value}
+                </a>
+              );
+            }} />
           <Column
             dataField="_count.projects"
             width={90}
@@ -215,7 +225,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                 <Btn
                   text="Create Organization"
                   icon="plus"
-                  className={`${styles.button_primary_toolbar} mr-[20px]`}
+                  className={`button_primary_toolbar mr-[20px]`}
                   render={(buttonData: any) => (
                     <>
                       <Image
@@ -243,7 +253,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                     created_by={userData.id}
                   />
                 )}
-                width={477}
+                width={550}
                 hideOnOutsideClick={true}
                 height="100%"
                 position={popupPosition}

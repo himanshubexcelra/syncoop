@@ -3,15 +3,14 @@ import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 interface OrderData {
-    orderId: number;
-    orderName: number;
+    order_id: number;
+    order_name: number;
     molecule_id: number;
     library_id: number;
     project_id: number;
     organization_id: number;
-    userId: string;
+    created_by: string;
 }
-
 
 const { MOLECULE_ORDER_NOT_FOUND } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
@@ -44,6 +43,7 @@ export async function GET(request: Request) {
                         molecular_weight: true,
                         smiles_string: true,
                         status: true,
+                        source_molecule_name:true,
                     },
                 },
                 project: {
@@ -88,15 +88,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const req = await request.json();
     const result = req.map((item: OrderData) => ({
-        orderId: Number(item.orderId),
-        orderName: item.orderName,
+        order_id: Number(item.order_id),
+        order_name: item.order_name,
         molecule_id: Number(item.molecule_id),
         organization_id: Number(item.organization_id),
         project_id: Number(item.project_id),
         library_id: Number(item.library_id),
         batch_detail: {},
-        created_by: Number(item.userId),
-        updated_by: Number(item.userId)
+        created_by: Number(item.created_by),
+        updated_by: Number(item.created_by)
     }));
     try {
         await prisma.molecule_order.createMany({

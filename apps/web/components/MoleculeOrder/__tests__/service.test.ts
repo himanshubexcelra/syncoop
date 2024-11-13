@@ -13,7 +13,7 @@ describe('getMoleculesOrder', () => {
     });
 
     it('fetches molecule orders with correct query parameters', async () => {
-        const mockResponse = [{ id: 1, orderName: 'Test Order' }];
+        const mockResponse = [{ id: 1, order_name: 'Test Order' }];
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: true,
             json: async () => mockResponse,

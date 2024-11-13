@@ -8,10 +8,14 @@ import { Popup } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import ListProjects from "@/components/Projects/ListProjects";
-import { UserData, OrganizationDataFields, ProjectDataFields } from '@/lib/definition';
+import {
+    UserData,
+    OrganizationDataFields,
+    ProjectDataFields,
+    OrganizationType
+} from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { getOrganizationById, getOrganization } from "@/components/Organization/service";
-import '../Organization/form.css';
 import { debounce } from '@/utils/helpers';
 
 type ProjectDetailsProps = {
@@ -123,7 +127,6 @@ export default function ProjectDetails({
         }
     }
 
-
     return (
         <div className='p-[20px] projects'>
             {loader ?
@@ -132,29 +135,31 @@ export default function ProjectDetails({
                 /> :
                 <div>
                     <div className="flex justify-between projects">
-                        <main className="main main-title">
+                        <main className="main">
                             <Image
                                 src="/icons/project-logo.svg"
                                 width={33}
                                 height={30}
                                 alt="Project logo"
                             />
-                            <span>{`Projects: ${userData?.orgUser?.name}`}</span>
+                            {userData.orgUser.type === OrganizationType.Internal ?
+                                <span>Projects</span>
+                                : <span>{`Projects: ${userData?.orgUser?.name}`}</span>}
                         </main>
                         <div className='flex'>
                             {createEnabled && <Button
                                 text="Filter"
                                 icon="filter"
-                                elementAttr={{ class: "button_primary_toolbar mr-[20px]" }}
+                                elementAttr={{ class: "btn-primary mr-[20px]" }}
                                 render={() => (
                                     <>
                                         <Image
-                                            src="/icons/plus.svg"
+                                            src="/icons/plus-white.svg"
                                             width={24}
                                             height={24}
                                             alt="Add"
                                         />
-                                        <span>Add Project</span>
+                                        <span className='pl-[5px]'>Add Project</span>
                                     </>
                                 )}
                                 onClick={() => setCreatePopupVisibility(true)}
@@ -196,7 +201,7 @@ export default function ProjectDetails({
                             <Button
                                 text="Filter"
                                 icon="filter"
-                                elementAttr={{ class: "button_primary_toolbar mr-[20px]" }}
+                                elementAttr={{ class: "btn-secondary mr-[20px]" }}
                                 disabled={true}
                                 render={() => (
                                     <>
@@ -212,7 +217,7 @@ export default function ProjectDetails({
                             />
                             <Button
                                 text="Sort"
-                                elementAttr={{ class: "button_primary_toolbar mr-[20px]" }}
+                                elementAttr={{ class: "btn-secondary mr-[20px]" }}
                                 onClick={sortData}
                                 render={() => (
                                     <>Sort</>

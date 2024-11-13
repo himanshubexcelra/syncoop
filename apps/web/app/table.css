@@ -1,0 +1,74 @@
+/* table css */
+.table {
+    background: var(--tableBackground);
+    box-shadow:
+        0px 8px 12px 0px var(--tabBoxShadow),
+        0px 0px 4px 0px var(--tabBoxShadow);
+    padding-top: 10px;
+}
+
+.dx-datagrid-search-panel,
+.dx-datagrid-search-panel .dx-texteditor-container {
+    width: 300px !important;
+    height: 32px;
+}
+
+.dx-datagrid-search-panel.dx-texteditor.dx-editor-filled:after {
+    border-bottom: none;
+}
+
+/* roles in user table */
+.roles {
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 12px;
+    border-radius: 6px;
+    background-color: var(--tableRoleGrey);
+}
+
+.btn-toolbar {
+    height: 40px;
+}
+
+.button_primary_toolbar {
+    padding: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    border: 1px solid var(--borderLightBlue);
+    border-radius: 0;
+    background: var(--themeLightBlueColor) !important;
+    color: var(--themeHeadingBlue) !important;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    text-transform: unset;
+    height: 40px;
+
+    span {
+        padding-left: 5px;
+    }
+}
+
+.dx-button-mode-contained {
+    box-shadow: none !important;
+}
+
+.dx-datagrid .dx-row>td {
+    padding: 8px !important;
+    align-items: center;
+    gap: 7.5px;
+}
+
+.dx-toolbar-after .dx-toolbar-item {
+    padding: 0;
+}
+
+/* assays table */
+.custom-row-height .dx-datagrid-rowsview .dx-row {
+    height: 60px;
+    max-height: 60px;
+}

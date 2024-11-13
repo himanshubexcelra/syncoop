@@ -1,7 +1,16 @@
 import Image from 'next/image';
-import styles from './AddMolecule.module.css'
 
-export default function DiscardMolecule({ onClose }: { onClose: () => void }) {
+interface DiscardMoleculeProps {
+    onClose: () => void;
+    onSubmit?: () => void;
+}
+export default function DiscardMolecule({ onClose, onSubmit }: DiscardMoleculeProps) {
+    const reset = () => {
+        if (onSubmit) {
+            onSubmit();
+        }
+        onClose()
+    }
     return (
         <><div className="flex justify-end">
             <Image
@@ -12,12 +21,12 @@ export default function DiscardMolecule({ onClose }: { onClose: () => void }) {
                 height={22.5}
                 onClick={onClose} />
         </div>
-            <div className={styles.discardText}>
+            <div className="header-text text-messageDarkBlue">
                 Discard uploaded file / drawn molecule?
             </div>
             <div className="flex justify-start gap-2 mt-5">
-                <button className={styles.secondaryButton}>Yes</button>
-                <button className={styles.rejectButton} onClick={onClose}>No</button>
+                <button className='secondary-button' onClick={reset}>Yes</button>
+                <button className='reject-button' onClick={onClose}>No</button>
             </div>
         </>
     );

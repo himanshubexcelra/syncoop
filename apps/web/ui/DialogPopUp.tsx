@@ -1,10 +1,11 @@
-import { RejectedMolecules } from '@/lib/definition';
+import { RejectedSmiles } from '@/lib/definition';
 import { Popup } from 'devextreme-react/popup';
 
 interface ContentProps {
     onClose: () => void;
+    onSubmit?: () => void;
     email_id?: string;
-    rejected?: RejectedMolecules[];
+    rejected?: RejectedSmiles[];
 }
 
 interface DialogProperties {
@@ -25,7 +26,8 @@ export default function DialogPopUp({
     dialogProperties,
     Content,
     hidePopup,
-    contentProps
+    contentProps,
+    onSubmit,
 }: MyPopupProps) {
     const { width, height } = dialogProperties;
 
@@ -39,7 +41,10 @@ export default function DialogPopUp({
                 showCloseButton={true}
                 width={width}
                 height={height}
-                contentRender={() => <Content onClose={hidePopup} {...contentProps} />}
+                contentRender={() => <Content
+                    onClose={hidePopup}
+                    onSubmit={onSubmit}
+                    {...contentProps} />}
             />
         </>
     );

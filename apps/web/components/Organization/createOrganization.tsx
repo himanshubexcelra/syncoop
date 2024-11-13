@@ -13,7 +13,6 @@ import {
 } from "devextreme-react/form";
 import { delay, generatePassword } from "@/utils/helpers";
 import { createOrganization } from "./service";
-import "./table.css";
 import { LoginFormSchema, OrganizationCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { AppContext } from "@/app/AppState";
@@ -149,7 +148,7 @@ export default function RenderCreateOrganization({
           <Label text={'Password'} />
         </SimpleItem>
         <Item>
-          <div className="ml-[15px] mb-[10px]">
+          <div className="mt-[12px]">
             <Image
               src="/icons/copy-icon.svg"
               alt="copy"
@@ -161,7 +160,7 @@ export default function RenderCreateOrganization({
           </div>
         </Item>
         <Item>
-          <div id="info-box" className="mb-[10px]">
+          <div className="mt-[12px]" id="info-box">
             <Image
               src="/icons/info-icon.svg"
               alt="info"
@@ -181,14 +180,14 @@ export default function RenderCreateOrganization({
             </Tooltip>
           </div>
         </Item>
-        <ButtonItem >
+        <ButtonItem cssClass="pt-[20px]">
           <ButtonOptions
             text={`Generate`}
             onClick={handleGeneratePassword}
-            elementAttr={{ class: 'secondaryButton' }} />
+            elementAttr={{ class: 'btn-secondary' }} />
         </ButtonItem>
       </GroupItem>
-      <ButtonItem horizontalAlignment="left" cssClass="btn_primary">
+      <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
         <ButtonOptions
           text="Create Organization"
           useSubmitBehavior={true}

@@ -20,13 +20,13 @@ export default function PopupContent({ onClose }: { onClose: () => void }) {
                     width={178}
                     height={164} />
                 <div className='gap-4'>
-                    <div className={`${styles.subHeading}`}>Forgot Password?</div>
+                    <div className="subHeading">Forgot Password?</div>
                     <div className={`${styles.message}`}>
                         {Messages.FORGOT_PASSWORD_MESSAGE}
                     </div>
                 </div>
 
-                <button className={`p-2 ${styles.closeButton}`}
+                <button className={`p-2 secondary-button rounded`}
                     onClick={onClose}
                 >
                     Close

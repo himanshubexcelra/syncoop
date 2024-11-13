@@ -146,15 +146,22 @@ export interface MoleculeType {
   created_at: Date;
   created_by: number;
   finger_print: string;
-  id: number;
+  molecule_id: number;
   inchi_key: string;
   library_id: number;
   molecular_weight: number;
   smiles_string: string;
   source_molecule_name: string;
-  status: string;
+  "project / library": string;
+  "organization / order": string;
+  status: number;
   updated_at: Date;
   updated_by: number;
+  molecule_favorites?: MoleculeFavourite[];
+  yield?: number;
+  anlayse?: number;
+  herg?: number;
+  caco2?: number;
 }
 
 export interface MoleculeFavourite {
@@ -261,7 +268,7 @@ export interface UserData {
   id: number;
   owner?: OwnerType;
   status?: string;
-  myRoles: string[]
+  myRoles: string[];
 }
 export interface projectType {
   id: number,
@@ -311,6 +318,7 @@ export interface CountCard {
 export interface StatusComponentProps {
   myRoles: string[];
   orgUser: OrgUser;
+  isCustomerOrg: boolean;
 }
 
 export type UserTableProps = {
@@ -321,7 +329,8 @@ export type UserTableProps = {
   setExternalCount?: any,
   setInternalCount?: any,
   userId: number,
-  actionsEnabled: string[]
+  actionsEnabled: string[],
+  isCustomerOrg?: boolean,
 }
 
 export interface TabDetail {
@@ -341,7 +350,32 @@ export enum StatusCode {
   FAILED = 'Failed',
   INPROGRESS = 'In Progress',
   DONE = 'Done',
+  INRETROQUEUE = 'In-retro Queue'
 }
+
+export enum MoleculeStatusCode {
+  New = 1,
+  Ordered = 2,
+  InRetroQueue = 3,
+  Ready = 4,
+  FailedRetro = 5,
+  InReview = 6,
+  Validated = 7,
+  Done = 8,
+  Failed = 9
+}
+
+export const MoleculeStatusLabels: Record<MoleculeStatusCode, string> = {
+  [MoleculeStatusCode.New]: "New",
+  [MoleculeStatusCode.Ordered]: "Ordered",
+  [MoleculeStatusCode.InRetroQueue]: "In-retro Queue",
+  [MoleculeStatusCode.Ready]: "Ready",
+  [MoleculeStatusCode.FailedRetro]: "Failed Retro",
+  [MoleculeStatusCode.InReview]: "In Review",
+  [MoleculeStatusCode.Validated]: "Validated",
+  [MoleculeStatusCode.Done]: "Done",
+  [MoleculeStatusCode.Failed]: "Failed"
+};
 
 export interface UserCountModel {
   internalUsers: number;
@@ -377,12 +411,12 @@ export interface LibraryCreateFields {
 
 export interface DashboardPageType {
   userData: UserData,
-  tabsStatus: TabDetail[],
   filteredRoles: UserRole[],
   myRoles: string[],
   orgUser: OrgUser,
-  heading: HeadingObj[],
   actionsEnabled: string[],
+  customerOrgId?: number,
+  isCustomerOrg: boolean,
 }
 
 export interface LibraryDataNode {
@@ -411,6 +445,7 @@ export interface UploadMoleculeSmilesRequest {
   project_id: string;
   organization_id: string;
   source_molecule_name: string;
+  id?: number;
 }
 
 export interface RejectedSmiles {
@@ -425,11 +460,13 @@ export interface UploadMoleculeSmilesResponse {
   rejected_smiles: RejectedSmiles[]
 }
 export interface OrderType {
+  order_id: number;
+  order_name: string;
   molecule_id: number;
   library_id: number;
   project_id: number;
   organization_id: number;
-  userId: number;
+  created_by: number;
 }
 
 export interface DeleteMoleculeCart {
@@ -438,7 +475,7 @@ export interface DeleteMoleculeCart {
   molecule_id: number;
   project_id: number;
   moleculeName: string,
-  userId: number;
+  created_by: number;
 }
 
 export interface MoleculeOrderParams {
@@ -452,14 +489,14 @@ export interface MoleculeOrderParams {
 export interface MoleculeOrder {
   id: number;
   bookmark: boolean;
-  orderId: number;
-  orderName: string;
+  order_id: number;
+  order_name: string;
   molecule_id: number;
   molecularWeight: number;
   organizationName: string;
   molecular_weight: string;
   smiles_string: string;
-  status: string;
+  status: number;
   yield?: number;
   anlayse?: number;
   herg?: number;
@@ -473,6 +510,7 @@ export enum OrganizationType {
 
 export interface MoleculeObj {
   molecular_weight: string;
+  smiles_string: string;
   library: {
     name: string;
     project: {
@@ -481,7 +519,9 @@ export interface MoleculeObj {
   };
   source_molecule_name: string;
 }
-
+interface Organization {
+  name: string;
+}
 export interface CartItem {
   id: number;
   molecule_id: number;
@@ -490,6 +530,10 @@ export interface CartItem {
   organization_id: number;
   molecule: MoleculeObj;
   moleculeName: string;
+  smiles_string: string;
+  order_id: number,
+  orderName: string,
+  organization: Organization;
 }
 export interface UploadMoleculeFileRequest {
   file: File;
@@ -507,15 +551,15 @@ export interface CartDetail {
   organization_id: number;
   project_id: number;
   molecular_weight: string;
-  projectName: string;
-  libraryName: string;
   moleculeName: string;
-  userId: number;
+  created_by: number;
+  smiles_string: string;
+  "project / library": string;
+  "organization / order": string;
 }
-
 export interface OrderDetail {
-  orderId: number;
-  orderName: string;
+  order_id: number;
+  order_name: string;
   molecule_id: number;
   library_id: number;
   project_id: number;
@@ -523,11 +567,29 @@ export interface OrderDetail {
   userId: number;
 }
 
-export interface GroupedData {
-  [key: string]: { id: number; molecule_id: number; molecularWeight: string; moleculeName: string; library_id: number, project_id: number, userId: number }[];
-}
-
 export interface RejectedMolecules {
   smiles: string;
   reason: string;
 };
+export interface ColumnConfig<T> {
+  dataField: keyof T;
+  title?: string | React.ReactNode;
+  width?: number;
+  minWidth?: number;
+  visible?: boolean;
+  type?: string;
+  alignment?: "center" | "left" | "right" | undefined,
+  allowSorting?: boolean,
+  allowHeaderFiltering?: boolean,
+  customRender?: (data: T) => React.ReactNode;
+}
+
+export enum StatusTypes {
+  Failed = "FAILED",
+  InRetroQueue = "INRETROQUEUE"
+}
+
+export interface SaveMoleculeParams {
+  setLoader: (loading: boolean) => void;
+  setButtonText: (text: string) => void;
+}

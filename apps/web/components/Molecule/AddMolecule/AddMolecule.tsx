@@ -1,10 +1,14 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import React, { useRef, useState } from 'react';
+"use client";
+import React, { useRef, useState, useTransition } from 'react';
 import styles from './AddMolecule.module.css'
 import Image from 'next/image';
 import DiscardMolecule from './DiscardMolecule';
 import DialogPopUp from '@/ui/DialogPopUp';
-import { downloadCSV, uploadMoleculeFile, uploadMoleculeSmiles } from '../service';
+import {
+    downloadCSV
+} from '../file';
+import { uploadMoleculeSmiles, uploadMoleculeFile } from '../service'
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import { DELAY } from '@/utils/constants';
@@ -46,6 +50,7 @@ export default function AddMolecule({
     const [buttonText, setButtonText] = useState('Upload');
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
+    const [isPending, startTransition] = useTransition()
 
     const hidePopup = () => {
         setDiscardVisible(false);
@@ -65,37 +70,37 @@ export default function AddMolecule({
         KetcherFunctions.resetMolecule()
         setMoleculeName('')
     }
-    const saveMolecule = async () => {
+    const saveMolecule = () => {
         KetcherFunctions.exportSmile().then(async (str) => {
             if (str) {
                 setSaveLoadIndicatorVisible(true);
                 setSaveButtonText('');
-                const result = await uploadMoleculeSmiles({
-                    smiles: [str],
-                    "created_by_user_id": userData.id,
-                    "library_id": libraryId?.toString() || '',
-                    "project_id": projectId?.toString() || '',
-                    "organization_id": userData.organization_id?.toString() || '',
-                    "source_molecule_name": moleculeName
-                })
-                if (result?.rejected_smiles?.length) {
+                const formData = new FormData();
+                formData.append('smiles', str);
+                formData.append('created_by_user_id', userData?.id.toString() || '');
+                formData.append('library_id', libraryId?.toString() || '');
+                formData.append('project_id', projectId?.toString() || '');
+                formData.append('organization_id', userData?.organization_id?.toString() || '');
+                formData.append('source_molecule_name', moleculeName);
+                startTransition(async () => {
+                    const result = await uploadMoleculeSmiles(formData)
+                    if (result?.rejected_smiles?.length) {
+                        const rejectedSmile = result.rejected_smiles[0]
+                        const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
+                        const toastId = toast.error(message);
+                        await delay(DELAY);
+                        toast.remove(toastId);
+                    } else {
+                        setViewAddMolecule(false);
+                        callLibraryId();
+                        const message = Messages.ADD_MOLECULE_SUCCESS;
+                        const toastId = toast.success(message);
+                        await delay(DELAY);
+                        toast.remove(toastId);
+                    }
                     setSaveLoadIndicatorVisible(false);
                     setSaveButtonText('Save Molecule');
-                    const rejectedSmile = result.rejected_smiles[0]
-                    const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
-                    const toastId = toast.error(message);
-                    await delay(4000);
-                    toast.remove(toastId);
-                } else {
-                    setViewAddMolecule(false);
-                    callLibraryId();
-                    setSaveLoadIndicatorVisible(false);
-                    setSaveButtonText('Save Molecule');
-                    const message = Messages.ADD_MOLECULE_SUCCESS;
-                    const toastId = toast.success(message);
-                    await delay(4000);
-                    toast.remove(toastId);
-                }
+                });
             }
         });
     }
@@ -155,32 +160,39 @@ export default function AddMolecule({
         }
     }
 
-    const handleUpload = async () => {
+    const handleUpload = () => {
         setLoadIndicatorVisible(true);
         setButtonText('');
         if (file) {
-            const result = await uploadMoleculeFile({
-                "file": file,
-                "created_by_user_id": userData?.id.toString() || '',
-                "library_id": libraryId?.toString() || '',
-                "project_id": projectId?.toString() || '',
-                "organization_id": userData?.organization_id?.toString() || '',
-                "updated_by_user_id": userData?.id?.toString() || '',
-            })
-            if (result?.rejected_smiles?.length) {
-                setRejected(result?.rejected_smiles)
-                setShowRejectedDialog(true);
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('created_by_user_id', userData?.id.toString() || '');
+            formData.append('library_id', libraryId?.toString() || '');
+            formData.append('project_id', projectId?.toString() || '');
+            formData.append('organization_id', userData?.organization_id?.toString() || '');
+            formData.append('updated_by_user_id', userData?.id?.toString() || '');
+            startTransition(async () => {
+                const result = await uploadMoleculeFile(formData)
+                if (result.error) {
+                    const toastId = toast.error(result.error);
+                    await delay(DELAY);
+                    toast.remove(toastId);
+                } else {
+                    if (result?.rejected_smiles?.length) {
+                        setRejected(result?.rejected_smiles)
+                        setShowRejectedDialog(true);
+
+                    } else {
+                        const toastId = toast.success(result?.message);
+                        await delay(DELAY);
+                        toast.remove(toastId);
+                        setViewAddMolecule(false);
+                        callLibraryId();
+                    }
+                }
                 setLoadIndicatorVisible(false);
                 setButtonText('Upload');
-            } else {
-                const toastId = toast.success(result?.message);
-                await delay(DELAY);
-                toast.remove(toastId);
-                setLoadIndicatorVisible(false);
-                setButtonText('Upload');
-                setViewAddMolecule(false);
-                callLibraryId();
-            }
+            });
         }
     }
     const downloadTemplate = () => {

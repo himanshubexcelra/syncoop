@@ -18,6 +18,7 @@ type UpdateMoleculeProps = {
     onDiscardSubmit: () => void;
     moleculeId: number | undefined;
     saveMoleculeCall: (moleculeDetails: SaveMoleculeParams) => void;
+    editedMolecules: any[];
 }
 
 export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
@@ -32,6 +33,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
         onDiscardSubmit,
         moleculeId,
         saveMoleculeCall,
+        editedMolecules
     } = props;
     const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
@@ -42,18 +44,25 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
         onClose()
     }
     const updateSubmit = async () => {
-        setSubmitLoadIndicatorVisible(true);
-        setSubmitText('');
-        KetcherFunctions.exportSmile().then(async (str) => {
-            const result = await updateMoleculeSmiles({
-                smiles: [str],
-                "created_by_user_id": userData.id,
-                "library_id": libraryId?.toString() || '',
-                "project_id": projectId?.toString() || '',
-                "organization_id": userData.organization_id?.toString() || '',
-                "source_molecule_name": moleculeName || '',
-                "id": moleculeId,
-            })
+        const molecules: any[] = []
+        editedMolecules.forEach((molecule: any) => {
+            const moleculeObj = {
+                id: molecule.id,
+                smile: molecule.smiles_string,
+                source_molecule_name: molecule.source_molecule_name
+            }
+            molecules.push(moleculeObj)
+        })
+        console.log('molecules', molecules);
+        const formData = new FormData();
+        formData.set('molecules', JSON.stringify(molecules));
+        formData.set('updated_by_user_id', userData?.id?.toString() || '')
+        const result = await updateMoleculeSmiles(formData);
+        if (result.error) {
+            const toastId = toast.error(result.error);
+            await delay(4000);
+            toast.remove(toastId);
+        } else {
             if (result.rejected_smiles.length) {
                 setSubmitLoadIndicatorVisible(false);
                 setSubmitText('Yes');
@@ -72,7 +81,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                 await delay(4000);
                 toast.remove(toastId);
             }
-        });
+        }
     }
     const moleculeDetails = {
         setLoader: setSaveLoadIndicatorVisible,

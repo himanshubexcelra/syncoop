@@ -8,9 +8,9 @@ import {
   MoleculeOrder,
   MoleculeOrderParams,
   OrganizationType,
+  UserData,
   MoleculeType,
   StatusTypes,
-  UserData
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
@@ -290,7 +290,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       ...item,
       order_id: orderId,
       molecule_id: item.molecule_id,
-      library_id: item.libary_id,
+      library_id: item.library_id,
       userId: userData.id,
       organization_id: item.organization_id,
       project_id: item.project_id

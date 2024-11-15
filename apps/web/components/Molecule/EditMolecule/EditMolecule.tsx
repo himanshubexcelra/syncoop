@@ -43,6 +43,7 @@ const EditMolecule = ({
     const [resetVisible, setResetVisible] = useState(false);
     const [updateVisible, setUpdateVisible] = useState(false)
     const [moleculeName, setMoleculeName] = useState<string>('')
+    const [editedMolecules, setEditedMolecules] = useState<any[]>([])
 
     const [selectedMolecule, setSelectedMolecule]
         = useState<MoleculeType | null>();
@@ -52,13 +53,36 @@ const EditMolecule = ({
     const hideUpdateVisible = () => {
         setUpdateVisible(false)
     }
-    const handleMoleculeClick = (molecule: any) => {
+    const saveChanges = async (update = false) => {
+        if (selectedMolecule) {
+            KetcherFunctions.exportSmile().then(async (str) => {
+                editedMolecules.map(mol => {
+                    if (mol.id === selectedMolecule?.id) {
+                        mol.smiles_string = str
+                    }
+                })
+                if (update) {
+                    setUpdateVisible(true)
+                }
+            })
+        }
+        setEditedMolecules(editedMolecules);
+    }
+
+    const handleMoleculeClick = async (molecule: any) => {
+        await saveChanges();
         setSelectedMolecule(molecule);
         setMoleculeName(molecule?.source_molecule_name || '')
     };
+    const resetEditedList = () => {
+        const molList = JSON.stringify(editMolecules);
+        setEditedMolecules(JSON.parse(molList))
+    }
     const onDiscardSubmit = () => {
-        KetcherFunctions.renderFromCtab(selectedMolecule?.smiles_string || '')
-        setMoleculeName(selectedMolecule?.source_molecule_name || '')
+        resetEditedList();
+        const actualMol = editMolecules.filter((mol) => mol.id === selectedMolecule?.id)
+        KetcherFunctions.renderFromCtab(actualMol.length ? actualMol[0].smiles_string : '')
+        setMoleculeName(actualMol.length ? actualMol[0].source_molecule_name : '')
     }
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');
@@ -107,13 +131,14 @@ const EditMolecule = ({
         if (editMolecules.length) {
             setSelectedMolecule(editMolecules[0])
             setMoleculeName(editMolecules?.[0]?.source_molecule_name || '')
+            resetEditedList();
         }
     }, [editMolecules])
     return (
         <>
             <div className="flex gap-2">
-                <div className='w-1/5'>
-                    {editMolecules?.map((molecule: any) => (
+                {editedMolecules?.length > 1 ? <div className='w-1/5'>
+                    {editedMolecules?.map((molecule: any) => (
                         <div
                             key={molecule.id}
                             onClick={() => handleMoleculeClick(molecule)}
@@ -131,8 +156,8 @@ const EditMolecule = ({
                             </div>
                         </div>
                     ))}
-                </div>
-                <div className='w-4/5'>
+                </div> : null}
+                <div className={editMolecules?.length > 1 ? 'w-4/5' : 'w-full'}>
                     <div className={styles.ketcherContainer}>
                         <KetcherDrawBox
                             reactionString={selectedMolecule?.smiles_string ||
@@ -154,7 +179,7 @@ const EditMolecule = ({
                     <div className="flex justify-start gap-2 mt-5 ">
                         <button
                             className='primary-button'
-                            onClick={() => setUpdateVisible(true)}
+                            onClick={() => saveChanges(true)}
                         >
                             Update Molecule
                         </button>
@@ -206,6 +231,8 @@ const EditMolecule = ({
                         onDiscardSubmit,
                         moleculeId: selectedMolecule?.id,
                         saveMoleculeCall,
+                        editedMolecules,
+                        editMolecules
                     }}
                 />}
             />}

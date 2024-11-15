@@ -326,3 +326,37 @@
     width: 100%;
     padding-bottom: 10px;
   }
+
+  .order-popup {
+    .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        max-width: 100%;
+        height: 100%; 
+        box-sizing: border-box;
+    }
+    .image-column img {
+        max-width: 100%;
+        height: auto;
+    }
+    .text-column {
+        flex: 1; 
+        padding-bottom: 80px;
+    }
+    .btn-primary {
+        right:275px;
+        top:20px;
+    }
+    .text-column p {
+        font-size: 20px;
+        color: #000;
+        font-weight: 400;
+    }
+    .action-button {
+        padding: 10px 20px;
+        right: 232px;
+        top:10px;
+    }
+  }

@@ -354,6 +354,7 @@ export default function MoleculeList({
     }, [selectedRowsData]);
 
     const addProductToCart = () => {
+        
         context?.addToState({
             ...appContext, cartDetail: [...moleculeData]
         })

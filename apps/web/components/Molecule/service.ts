@@ -9,7 +9,7 @@ export async function uploadMoleculeSmiles(formData: FormData) {
         "organizationId": formData.get('organization_id'),
         "sourceMoleculeName": formData.get('source_molecule_name')
     }
-    const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_smiles`,
+    const response = await fetch(`https://qzwtozwp3b.execute-api.us-east-1.amazonaws.com/molecule/upload_molecule_smiles`,
         {
             method: "POST",
             headers: {
@@ -26,7 +26,7 @@ export async function uploadMoleculeSmiles(formData: FormData) {
 export async function uploadMoleculeFile(formData: FormData) {
     try {
 
-        const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_files`, {
+        const response = await fetch(`https://qzwtozwp3b.execute-api.us-east-1.amazonaws.com/molecule/upload_molecule_files`, {
             method: "POST",
             body: formData,
         });
@@ -49,7 +49,7 @@ export async function updateMoleculeSmiles(formData: FormData) {
             "updatedBy": formData.get('updatedBy'),
         }
         const response: any = await fetch(
-            `${process.env.PYTHON_API_HOST_URL}/molecule/update_molecule`,
+            `https://qzwtozwp3b.execute-api.us-east-1.amazonaws.com/molecule/update_molecule`,
             {
                 method: "PUT",
                 headers: {

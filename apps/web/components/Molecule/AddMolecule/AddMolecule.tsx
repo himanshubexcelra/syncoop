@@ -166,15 +166,14 @@ export default function AddMolecule({
         if (file) {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('created_by_user_id', userData?.id.toString() || '');
-            formData.append('library_id', libraryId?.toString() || '');
-            formData.append('project_id', projectId?.toString() || '');
-            formData.append('organization_id', userData?.organization_id?.toString() || '');
-            formData.append('updated_by_user_id', userData?.id?.toString() || '');
+            formData.append('createdBy', userData?.id.toString() || '');
+            formData.append('libraryId', libraryId?.toString() || '');
+            formData.append('projectId', projectId?.toString() || '');
+            formData.append('organizationId', userData?.organization_id?.toString() || '');
             startTransition(async () => {
                 const result = await uploadMoleculeFile(formData)
-                if (result.error) {
-                    const toastId = toast.error(result.error);
+                if (result.detail) {
+                    const toastId = toast.error(result.detail?.msg);
                     await delay(DELAY);
                     toast.remove(toastId);
                 } else {

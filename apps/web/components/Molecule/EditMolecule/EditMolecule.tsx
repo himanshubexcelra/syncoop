@@ -82,7 +82,7 @@ const EditMolecule = ({
         resetEditedList();
         const actualMol = editMolecules.filter((mol) => mol.id === selectedMolecule?.id)
         KetcherFunctions.renderFromCtab(actualMol.length ? actualMol[0].smiles_string : '')
-        setMoleculeName(actualMol.length ? actualMol[0] : '')
+        setMoleculeName(actualMol.length ? actualMol[0].source_molecule_name : '')
     }
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');

@@ -2,12 +2,12 @@
 
 export async function uploadMoleculeSmiles(formData: FormData) {
     const requestBody = {
-        smiles: formData.get('smiles'),
-        "created_by_user_id": formData.get('created_by_user_id'),
-        "library_id": formData.get('library_id'),
-        "project_id": formData.get('project_id'),
-        "organization_id": formData.get('organization_id'),
-        "source_molecule_name": formData.get('source_molecule_name')
+        "smiles": formData.get('smiles'),
+        "createdBy": formData.get('created_by_user_id'),
+        "libraryId": formData.get('library_id'),
+        "projectId": formData.get('project_id'),
+        "organizationId": formData.get('organization_id'),
+        "sourceMoleculeName": formData.get('source_molecule_name')
     }
     const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_smiles`,
         {
@@ -17,14 +17,10 @@ export async function uploadMoleculeSmiles(formData: FormData) {
             },
             body: JSON.stringify(requestBody),
         })
-    if (response.status === 200) {
+    if (response) {
         const data = await response.json();
         return data;
-    } else {
-        const error = await response.json();
-        return { status: response.status, error };
     }
-
 }
 
 export async function uploadMoleculeFile(formData: FormData) {
@@ -49,8 +45,8 @@ export async function uploadMoleculeFile(formData: FormData) {
 export async function updateMoleculeSmiles(formData: FormData) {
     try {
         const requestBody = {
-            molecules: formData.get('molecules'),
-            "updated_by_user_id": formData.get('updated_by_user_id'),
+            molecules: JSON.parse(formData.get('molecules') as string),
+            "updatedBy": formData.get('updatedBy'),
         }
         const response: any = await fetch(
             `${process.env.PYTHON_API_HOST_URL}/molecule/update_molecule`,
@@ -63,12 +59,9 @@ export async function updateMoleculeSmiles(formData: FormData) {
             }
         );
 
-        if (response.status === 200) {
+        if (response) {
             const data = await response.json();
             return data;
-        } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
         }
     } catch (error: any) {
         return error;

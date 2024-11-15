@@ -49,39 +49,38 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
             const moleculeObj = {
                 id: molecule.id,
                 smile: molecule.smiles_string,
-                source_molecule_name: molecule.source_molecule_name
+                sourceMoleculeName: molecule.source_molecule_name
             }
             molecules.push(moleculeObj)
         })
-        console.log('molecules', molecules);
         const formData = new FormData();
         formData.set('molecules', JSON.stringify(molecules));
-        formData.set('updated_by_user_id', userData?.id?.toString() || '')
+        formData.set('updatedBy', userData?.id?.toString() || '')
         const result = await updateMoleculeSmiles(formData);
-        if (result.error) {
+        if (result.detail) {
             const toastId = toast.error(result.error);
             await delay(4000);
             toast.remove(toastId);
         } else {
-            if (result.rejected_smiles.length) {
-                setSubmitLoadIndicatorVisible(false);
+            if (result?.status) {
+                setViewEditMolecule(false);
+                callLibraryId();
+                setSubmitText('Yes');
+                const message = Messages.UPDATE_MOLECULE_SUCCESS;
+                const toastId = toast.success(message);
+                await delay(4000);
+                toast.remove(toastId);
+            } else if (result) {
                 setSubmitText('Yes');
                 const rejectedSmile = result.rejected_smiles[0]
                 const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
                 const toastId = toast.error(message);
                 await delay(4000);
                 toast.remove(toastId);
-            } else {
-                setViewEditMolecule(false);
-                callLibraryId();
-                setSubmitLoadIndicatorVisible(false);
-                setSubmitText('Yes');
-                const message = Messages.ADD_MOLECULE_SUCCESS;
-                const toastId = toast.success(message);
-                await delay(4000);
-                toast.remove(toastId);
             }
         }
+        setSubmitLoadIndicatorVisible(false);
+        onClose();
     }
     const moleculeDetails = {
         setLoader: setSaveLoadIndicatorVisible,

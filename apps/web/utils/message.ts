@@ -40,5 +40,6 @@ export const Messages = {
     },
     REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",
     SUBMIT_ORDER: "Molecules order submitted successfully.",
-    USER_ROLE_CHECK: "User role not supported or missing required parameters."
+    USER_ROLE_CHECK: "User role not supported or missing required parameters.",
+    UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully"
 }

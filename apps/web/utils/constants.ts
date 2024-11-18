@@ -9,7 +9,7 @@ export const defaultRoutesEnabled = [
   'ketchertool',
 ];
 
-export const DELAY = 2000;
+export const DELAY = 4000;
 
 export const PROJECT_TYPES = [
   'Retrosynthesis',
@@ -53,21 +53,13 @@ export const stats = [
 ];
 
 export enum StatusCodeBg {
-  READY = 'bg-themeSilverGreyColor',
-  NEW = 'bg-themeSilverGreyColor',
-  FAILED = 'bg-themeStatsRedColor',
+  READY, NEW = 'bg-themeSilverGreyColor',
   INPROGRESS = 'bg-themeStatsBlueColor',
   DONE = 'bg-themeStatsGreenColor',
+  INFO = 'bg-themeStatsYellowColor',
+  FAILED = 'bg-themeStatsRedColor',
   INRETROQUEUE = 'bg-themeLightBlueColor',
-}
-
-export enum StatusCodeBgAPI {
-  READY = 'bg-themeSilverGreyColor',
-  NEW = 'bg-themeSilverGreyColor',
-  FAILED = 'bg-themeStatsRedColor',
-  INPROGRESS = 'bg-themeStatsBlueColor',
-  DONE = 'bg-themeStatsGreenColor',
-  INFO = 'bg-themeStatsYellowColor'
+  
 }
 
 export const StatusCodeTextColor: { [key: string]: string } = {
@@ -81,7 +73,6 @@ export const StatusCodeTextColor: { [key: string]: string } = {
 
 export type StatusCodeType = keyof typeof StatusCodeBg;
 
-export type StatusCodeAPIType = keyof typeof StatusCodeBgAPI;
 export interface DataType {
   status: StatusCodeType;
 }

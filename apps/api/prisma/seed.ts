@@ -71,7 +71,7 @@ async function main() {
      */
 
     // Insert User System Admin
-    const sysAdminCreate = await prisma.user.create({
+    const sysAdminCreate = await prisma.users.create({
         data: {
             email_id: 'sys_admin@external.milliporesigma.com',
             first_name: 'User System',
@@ -89,7 +89,7 @@ async function main() {
     });
 
     // Insert Organization Admin
-    const orgAdminCreate = await prisma.user.create({
+    const orgAdminCreate = await prisma.users.create({
         data: {
             email_id: 'org_admin@external.milliporesigma.com',
             first_name: 'User Org',
@@ -107,7 +107,7 @@ async function main() {
     });
 
     // Insert Library Manager
-    await prisma.user.create({
+    await prisma.users.create({
         data: {
             email_id: 'lib_manager@external.milliporesigma.com',
             first_name: 'User Library',
@@ -125,7 +125,7 @@ async function main() {
     });
 
     // Insert Protocol Approver
-    await prisma.user.create({
+    await prisma.users.create({
         data: {
             email_id: 'protocol_approver@external.milliporesigma.com',
             first_name: 'User Protocol',
@@ -143,7 +143,7 @@ async function main() {
     });
 
     // Insert Researcher
-    await prisma.user.create({
+    await prisma.users.create({
         data: {
             email_id: 'researcher@external.milliporesigma.com',
             first_name: 'User Researcher',
@@ -164,24 +164,27 @@ async function main() {
      * Insert all modules
      */
     // Insert Module Organization management
-    const orgManagementModule = await prisma.module.create({
+    const orgManagementModule = await prisma.product_module.create({
         data: {
             name: 'Organization Management',
             description: '',
+            created_at: new Date(),
             created_by: sysAdminCreate.id,
-            module_action: {
+            product_module_action: {
                 create: [
                     {
                         name: 'Edit Own Organization',
                         type: 'edit_own_org',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 }
                             ]
                         }
@@ -190,22 +193,24 @@ async function main() {
                         name: 'View Own Organization',
                         type: 'view_own_org',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -214,10 +219,12 @@ async function main() {
                         name: 'Create Client Organization',
                         type: 'create',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 }
                             ]
                         }
@@ -226,13 +233,15 @@ async function main() {
                         name: 'Edit Client Organization',
                         type: 'create_client_org',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 }
                             ]
                         }
@@ -241,22 +250,24 @@ async function main() {
                         name: 'View Client Organization',
                         type: 'view_client_org',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -265,10 +276,12 @@ async function main() {
                         name: 'Disable Client Organization',
                         type: 'disable_client_org',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 }
                             ]
                         }
@@ -277,10 +290,12 @@ async function main() {
                         name: 'Delete Client Organization',
                         type: 'delete_client_org',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 }
                             ]
                         }
@@ -291,27 +306,30 @@ async function main() {
     });
 
     // Insert Module Project management
-    const projectMangementModule = await prisma.module.create({
+    const projectMangementModule = await prisma.product_module.create({
         data: {
             name: 'Project Management',
             description: '',
+            created_at: new Date(),
             created_by: sysAdminCreate.id,
-            module_action: {
+            product_module_action: {
                 create: [
                     {
                         name: 'Create Project',
                         type: 'create_project',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -320,16 +338,18 @@ async function main() {
                         name: 'Edit Project',
                         type: 'edit_project',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -338,22 +358,24 @@ async function main() {
                         name: 'View Project',
                         type: 'view_project',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -362,16 +384,18 @@ async function main() {
                         name: 'Delete Project',
                         type: 'delete_project',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -380,16 +404,18 @@ async function main() {
                         name: 'Create Library',
                         type: 'create_library',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -398,16 +424,18 @@ async function main() {
                         name: 'Edit Library',
                         type: 'edit_library',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -416,22 +444,24 @@ async function main() {
                         name: 'View Library',
                         type: 'view_library',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -440,16 +470,18 @@ async function main() {
                         name: 'Delete Library',
                         type: 'delete_library',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -459,16 +491,18 @@ async function main() {
                         name: 'Create Molecule',
                         type: 'create_molecule',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -477,16 +511,18 @@ async function main() {
                         name: 'Edit Molecule',
                         type: 'edit_molecule',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -495,22 +531,24 @@ async function main() {
                         name: 'View Molecule',
                         type: 'view_molecule',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -519,16 +557,18 @@ async function main() {
                         name: 'Delete Molecule',
                         type: 'delete_molecule',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -537,16 +577,18 @@ async function main() {
                         name: 'Create Molecule Order',
                         type: 'create_molecule_order',
                         route: '/molecule_order',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -555,16 +597,18 @@ async function main() {
                         name: 'Edit Molecule Order',
                         type: 'edit_molecule_order',
                         route: '/molecule_order',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -573,22 +617,24 @@ async function main() {
                         name: 'View Molecule Order',
                         type: 'view_molecule_order',
                         route: '/molecule_order',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -597,16 +643,18 @@ async function main() {
                         name: 'Delete Molecule Order',
                         type: 'delete_molecule_order',
                         route: '/molecule_order',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -615,16 +663,18 @@ async function main() {
                         name: 'Submit Molecule Order',
                         type: 'submit_molecule_order',
                         route: '/projects',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 }
                             ]
                         }
@@ -635,24 +685,27 @@ async function main() {
     });
 
     // Insert Module User management
-    const userManagementModule = await prisma.module.create({
+    const userManagementModule = await prisma.product_module.create({
         data: {
             name: 'User Management',
             description: '',
+            created_at: new Date(),
             created_by: sysAdminCreate.id,
-            module_action: {
+            product_module_action: {
                 create: [
                     {
                         name: 'Create User',
                         type: 'create_user',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 }
                             ]
                         }
@@ -661,13 +714,15 @@ async function main() {
                         name: 'Edit User',
                         type: 'edit_user',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 }
                             ]
                         }
@@ -676,13 +731,15 @@ async function main() {
                         name: 'Invite User',
                         type: 'invite_user',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 }
                             ]
                         }
@@ -691,13 +748,15 @@ async function main() {
                         name: 'Disable User',
                         type: 'disable_user',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 }
                             ]
                         }
@@ -706,22 +765,24 @@ async function main() {
                         name: 'View User',
                         type: 'view_user',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 },
                                 {
-                                    roleId: oARoleCreate.id
+                                    role_id: oARoleCreate.id
                                 },
                                 {
-                                    roleId: lmRoleCreate.id
+                                    role_id: lmRoleCreate.id
                                 },
                                 {
-                                    roleId: paRoleCreate.id
+                                    role_id: paRoleCreate.id
                                 },
                                 {
-                                    roleId: resRoleCreate.id
+                                    role_id: resRoleCreate.id
                                 }
                             ]
                         }
@@ -730,10 +791,12 @@ async function main() {
                         name: 'Delete User',
                         type: 'delete_user',
                         route: '/dashboard',
-                        module_action_role_permission: {
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+                        product_module_action_role_permission: {
                             create: [
                                 {
-                                    roleId: sARoleCreate.id
+                                    role_id: sARoleCreate.id
                                 }
                             ]
                         }
@@ -758,18 +821,26 @@ async function main() {
             created_at: new Date(),
             created_by: sysAdminCreate.id,
             orgAdminId: sysAdminCreate.id,
-            org_module: {
+            org_product_module: {
                 create: [ // Fauxbio purchased Project Management Module
                     {
-                        moduleId: orgManagementModule.id
+                        product_module_id: orgManagementModule.id,
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
+
                     },
                     {
-                        moduleId: userManagementModule.id
+                        product_module_id: userManagementModule.id,
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
                     },
                     {
-                        moduleId: projectMangementModule.id
+                        product_module_id: projectMangementModule.id,
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
                     }
-                ]
+                ],
+
             }
         }
     });
@@ -784,16 +855,22 @@ async function main() {
             created_at: new Date(),
             created_by: sysAdminCreate.id,
             orgAdminId: orgAdminCreate.id,
-            org_module: {
+            org_product_module: {
                 create: [ // Fauxbio purchased Project Management Module
                     {
-                        moduleId: orgManagementModule.id
+                        product_module_id: orgManagementModule.id,
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
                     },
                     {
-                        moduleId: userManagementModule.id
+                        product_module_id: userManagementModule.id,
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
                     },
                     {
-                        moduleId: projectMangementModule.id
+                        product_module_id: projectMangementModule.id,
+                        created_at: new Date(),
+                        created_by: sysAdminCreate.id,
                     }
                 ]
             }
@@ -818,7 +895,7 @@ async function main() {
      */
 
     // Update organization Id of System Admin
-    await prisma.user.update({
+    await prisma.users.update({
         where: { email_id: 'sys_admin@external.milliporesigma.com' },
         data: {
             organization_id: emddOrgCreate.id
@@ -826,7 +903,7 @@ async function main() {
     });
 
     // Update organization Id of Org Admin
-    await prisma.user.update({
+    await prisma.users.update({
         where: { email_id: 'org_admin@external.milliporesigma.com' },
         data: {
             organization_id: fauxbioOrgCreate.id
@@ -834,7 +911,7 @@ async function main() {
     });
 
     // Update organization Id of Library Manager
-    await prisma.user.update({
+    await prisma.users.update({
         where: { email_id: 'lib_manager@external.milliporesigma.com' },
         data: {
             organization_id: fauxbioOrgCreate.id
@@ -842,7 +919,7 @@ async function main() {
     });
 
     // Update organization Id of Researcher
-    await prisma.user.update({
+    await prisma.users.update({
         where: { email_id: 'researcher@external.milliporesigma.com' },
         data: {
             organization_id: emddOrgCreate.id
@@ -850,7 +927,7 @@ async function main() {
     });
 
     // Update organization Id of Protocol Approver
-    await prisma.user.update({
+    await prisma.users.update({
         where: { email_id: 'protocol_approver@external.milliporesigma.com' },
         data: {
             organization_id: fauxbioOrgCreate.id

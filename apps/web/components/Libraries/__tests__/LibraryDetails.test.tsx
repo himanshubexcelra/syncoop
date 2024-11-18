@@ -69,7 +69,7 @@ const data = {
             molecule: [{
                 id: 1,
                 molecular_weight: 12,
-                userId: 1,
+                user_id: 1,
                 library_id: 2,
             }],
         },
@@ -93,7 +93,7 @@ const data = {
             molecule: [{
                 id: 1,
                 molecular_weight: 12,
-                userId: 1,
+                user_id: 1,
                 library_id: 2,
             }],
         }
@@ -139,9 +139,9 @@ const libraryData1 = {
     molecule: [{
         id: 1,
         molecular_weight: 12,
-        userId: 1,
+        user_id: 1,
         library_id: 2,
-        molecule_favorites: [],
+        user_favourite_molecule: [],
     }],
     updated_by: null
 }
@@ -167,7 +167,7 @@ const userData = {
                 number: 1,
                 name: "admin"
             },
-            roleId: 1
+            role_id: 1
         }],
         organization: {
             id: 1,
@@ -186,7 +186,7 @@ const userData = {
                     number: 1,
                     name: "admin"
                 },
-                roleId: 1
+                role_id: 1
             }]
         }
     },
@@ -198,7 +198,7 @@ const userData = {
             number: 1,
             name: "admin"
         },
-        roleId: 1
+        role_id: 1
     }],
 }
 
@@ -247,7 +247,7 @@ describe('LibraryList should display proper data', () => {
         });
         (getLibraries as jest.Mock).mockResolvedValue(data);
         (getLibraryById as jest.Mock).mockResolvedValue(libraryData);
-        (addToFavourites as jest.Mock).mockResolvedValue({ id: 19, molecule_id: 1, userId: 1 });
+        (addToFavourites as jest.Mock).mockResolvedValue({ id: 19, molecule_id: 1, user_id: 1 });
         
     });
 

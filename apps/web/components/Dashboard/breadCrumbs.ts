@@ -3,8 +3,9 @@ import { BreadCrumbsObj } from "@/lib/definition";
 export const getDashBoardBreadCrumbs = (
     myRoles: string[],
     orgDetailLoggedIn: { name: string } | null,
-    isCustomerOrg: boolean,
+    customerOrgId?: number,
 ): BreadCrumbsObj[] => {
+    const admin = myRoles.includes("admin")
     return [
         {
             label: "Home",
@@ -13,17 +14,22 @@ export const getDashBoardBreadCrumbs = (
             svgHeight: 16,
             href: "/",
         },
-        {
-            label: `Admin: EMDD`,
-            svgPath: "/icons/admin-inactive-icon.svg",
-            svgWidth: 16,
-            svgHeight: 16,
-            href: "/",
-            isActive: (myRoles.includes("admin") && !isCustomerOrg) ? true : false,
-        },
-        ...((!myRoles.includes("admin") || isCustomerOrg) && orgDetailLoggedIn
+        ...((admin) ?
+            [{
+                label: `Admin: EMDD`,
+                svgPath: (!customerOrgId)
+                    ? "/icons/admin-icon.svg"
+                    : "/icons/admin-inactive-icon.svg",
+                svgWidth: 16,
+                svgHeight: 16,
+                href: "/",
+                isActive: !customerOrgId
+            }] : []),
+        ...((!admin || customerOrgId) && orgDetailLoggedIn
             ? [{
-                label: orgDetailLoggedIn.name,
+                label: customerOrgId
+                    ? orgDetailLoggedIn.name
+                    : `Admin: ${orgDetailLoggedIn.name}`,
                 svgPath: "/icons/organization.svg",
                 svgWidth: 16,
                 svgHeight: 16,

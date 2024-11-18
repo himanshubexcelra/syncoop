@@ -7,8 +7,10 @@ import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import { UserData } from "@/lib/definition";
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
+  const router = useRouter();
 
   async function onSuccess(data: UserData) {
     setTimeout(async () => {
@@ -17,6 +19,7 @@ export default function Login() {
       await delay(DELAY);
       toast.remove(toastId);
     }, DELAY);
+    router.refresh()
   }
 
   return (

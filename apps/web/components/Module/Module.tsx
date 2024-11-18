@@ -22,7 +22,9 @@ export default function Module({ orgUser, myRoles }: ModuleTableProps) {
     }, [orgId])
     return (
         <>
-            <LoadIndicator visible={loader} />
+            {loader && <div className="center">
+                <LoadIndicator visible={loader} />
+            </div>}
             {!loader && (
                 <div className="grid grid-cols-2 p-4 gap-x-10">
                     {features.map((feature) => (
@@ -39,7 +41,8 @@ export default function Module({ orgUser, myRoles }: ModuleTableProps) {
                         </div>
                     ))}
                 </div>
-            )}
+            )
+            }
         </>
     );
 };

@@ -21,14 +21,14 @@ describe('User API', () => {
                 },
                 user_role: [
                     {
-                        roleId: 1,
+                        role_id: 1,
                         role: {
                             name: "System Admin"
                         }
                     }
                 ]
             } as any;
-            prismaMock.user.findMany.mockResolvedValue([user]);
+            prismaMock.users.findMany.mockResolvedValue([user]);
 
             const request = new Request("http://localhost:3000/api/users?id=1&with=[user_role,orgUser]");
 
@@ -52,7 +52,7 @@ describe('User API', () => {
                 organization_id: 1,
                 user_role: [
                     {
-                        roleId: 1,
+                        role_id: 1,
                         role: {
                             name: 'user',
                         },
@@ -60,8 +60,8 @@ describe('User API', () => {
                 ],
             };
 
-            prismaMock.user.findUnique.mockResolvedValue(null);
-            prismaMock.user.create.mockResolvedValue(newUser as any);
+            prismaMock.users.findUnique.mockResolvedValue(null);
+            prismaMock.users.create.mockResolvedValue(newUser as any);
 
             const requestBody = {
                 first_name: 'New',
@@ -88,7 +88,7 @@ describe('User API', () => {
         });
 
         it('should return CONFLICT status when email_id already exists', async () => {
-            prismaMock.user.findUnique.mockResolvedValue({ id: 1 } as any);
+            prismaMock.users.findUnique.mockResolvedValue({ id: 1 } as any);
 
             const requestBody = {
                 first_name: 'New',
@@ -135,16 +135,16 @@ describe('User API', () => {
                 organization_id: 2,
                 user_role: [
                     {
-                        roleId: 2,
+                        role_id: 2,
                         role: {
-                            name: 'Organisation Admin',
+                            name: 'Organization Admin',
                         },
                     },
                 ],
             };
 
-            prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
-            prismaMock.user.update.mockResolvedValue(updatedUser as any);
+            prismaMock.users.findUnique.mockResolvedValue(existingUser as any);
+            prismaMock.users.update.mockResolvedValue(updatedUser as any);
             prismaMock.user_role.deleteMany.mockResolvedValue({ count: 1 });
             prismaMock.user_role.createMany.mockResolvedValue({ count: 1 });
 
@@ -174,7 +174,7 @@ describe('User API', () => {
         });
 
         it('should return NOT_FOUND status when user does not exist', async () => {
-            prismaMock.user.findUnique.mockResolvedValue(null);
+            prismaMock.users.findUnique.mockResolvedValue(null);
 
             const requestBody = {
                 email_id: 'nonexistentuser@emdd',
@@ -204,7 +204,7 @@ describe('User API', () => {
                 password_hash: await bcrypt.hash('correctpassword_hash', saltRounds),
             };
 
-            prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
+            prismaMock.users.findUnique.mockResolvedValue(existingUser as any);
 
             const requestBody = {
                 email_id: 'existinguser@emdd',

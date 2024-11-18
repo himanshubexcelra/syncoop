@@ -3,9 +3,10 @@ import prisma from "@/lib/prisma";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
+import json from "@/utils/helper";
 
-const { ORGANIZATION_ALREADY_EXISTS, USER_BELONGS_TO_ANOTHER_ORG } = MESSAGES;
-const { SUCCESS, CONFLICT, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
+const { ORGANIZATION_ALREADY_EXISTS, } = MESSAGES;
+const { SUCCESS, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
 
 export async function GET(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
     const type = searchParams.get("type");
     const joins = searchParams.get('with');
     const count = searchParams.get('withCount');
-    const roleIds = searchParams.get('roleIds');
+    const role_ids = searchParams.get('role_ids');
     const query: any = {};
 
     if (joins && joins.length) {
@@ -62,20 +63,20 @@ export async function GET(request: Request) {
           },
         }
       }
-      if (joins.includes('org_module')
-        && joins.includes('module_action_role_permission')
-        && roleIds) {
+      if (joins.includes('org_product_module')
+        && joins.includes('product_module_action_role_permission')
+        && role_ids) {
         query.include = {
           ...query.include,
-          org_module: {
+          org_product_module: {
             include: {
-              module: {
+              product_module: {
                 include: {
-                  module_action: {
+                  product_module_action: {
                     where: {
-                      module_action_role_permission: {
+                      product_module_action_role_permission: {
                         some: {
-                          roleId: { in: JSON.parse(roleIds) }
+                          role_id: { in: JSON.parse(role_ids) }
                         }
                       }
                     }
@@ -146,7 +147,7 @@ export async function GET(request: Request) {
         });
       }
 
-      return new Response(JSON.stringify(organization), {
+      return new Response(json(organization), {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS, // success status code
       });
@@ -162,7 +163,7 @@ export async function GET(request: Request) {
         });
       }
 
-      return new Response(JSON.stringify(organization), {
+      return new Response(json(organization), {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS, // success status code
       });
@@ -171,7 +172,7 @@ export async function GET(request: Request) {
       // If no ID is present, fetch all organizations, users, and projects
       const organizations = await prisma.organization.findMany(query);
 
-      return new Response(JSON.stringify(organizations), {
+      return new Response(json(organizations), {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS, // success status code
       });
@@ -187,7 +188,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 
   const req = await request.json();
-  const { name, first_name, last_name, email_id, roleId, created_by, password_hash } = req;
+  const { name, first_name, last_name, email_id, role_id, created_by, password_hash } = req;
   const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
   // Check if an organization with the same name already exists (case insensitive)
   try {
@@ -209,7 +210,7 @@ export async function POST(request: Request) {
 
     try {
       // Step 1: Create the user (admin)
-      const adminUser = await prisma.user.create({
+      const adminUser = await prisma.users.create({
         data: {
           first_name,
           last_name,
@@ -218,7 +219,7 @@ export async function POST(request: Request) {
           status: 'Enabled',
           user_role: {
             create: {
-              roleId: roleId,
+              role_id: role_id,
             },
           },
         },
@@ -234,16 +235,22 @@ export async function POST(request: Request) {
           type: "External",
           orgAdminId: adminUser.id, // Link the user as the org admin
           created_by,
-          org_module: {
+          org_product_module: {
             create: [
               {
-                moduleId: 1
+                product_module_id: 1,
+                created_at: new Date(),
+                created_by: adminUser.id,
               },
               {
-                moduleId: 2
+                product_module_id: 2,
+                created_at: new Date(),
+                created_by: adminUser.id,
               },
               {
-                moduleId: 3
+                product_module_id: 3,
+                created_at: new Date(),
+                created_by: adminUser.id,
               }
             ]
           }
@@ -251,7 +258,7 @@ export async function POST(request: Request) {
       });
 
       // Step 3: Link the admin user as an organization user
-      await prisma.user.update({
+      await prisma.users.update({
         where: {
           id: adminUser.id,
         },
@@ -259,7 +266,7 @@ export async function POST(request: Request) {
           organization_id: organization.id, // Associate user with the organization
         },
       });
-      return new Response(JSON.stringify(organization), {
+      return new Response(json(organization), {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS,
       });
@@ -276,31 +283,13 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, name, user: { id: orgAdminId }, status, metadata } = req;
-
-    // Check if user is associated with another organization
-    const existingUser = await prisma.organization.findFirst({
-      where: {
-        orgAdminId,
-        NOT: {
-          id,
-        },
-      },
-    });
-
-    if (existingUser) {
-      return new Response(JSON.stringify(USER_BELONGS_TO_ANOTHER_ORG), {
-        headers: { "Content-Type": "application/json" },
-        status: CONFLICT,
-      });
-    }
+    const { id, primaryContactId, status, metadata } = req;
 
     // Update the organization and user details
     const updatedOrganization = await prisma.organization.update({
       where: { id },
       data: {
-        name,
-        orgAdminId,
+        orgAdminId: primaryContactId,
         metadata,
         status,
       },
@@ -317,7 +306,7 @@ export async function PUT(request: Request) {
       },
     });
 
-    return new Response(JSON.stringify(updatedOrganization), {
+    return new Response(json(updatedOrganization), {
       headers: { "Content-Type": "application/json" },
       status: SUCCESS,
     });

@@ -1,46 +1,13 @@
 "use client"
-// import styled from '@emotion/styled'
 import { useEffect, useState } from 'react'
 import { ButtonsConfig, Editor } from 'ketcher-react'
-import { Ketcher, /* RemoteStructServiceProvider */ } from 'ketcher-core'
+import { Ketcher } from 'ketcher-core'
+// @ts-expect-error Missing declaration types
 import { StandaloneStructServiceProvider } from 'ketcher-standalone'
 import 'ketcher-react/dist/index.css'
-/* import { Panel } from '../../components/KetcherTool/Panel'
-import { OutputArea } from '../../components/KetcherTool/OutputArea' */
 import { initiallyHidden } from './constants/buttons'
 import { KetcherAPI } from '../../utils/ketcherFunctions'
 
-/* const GridWrapper = styled('div')`
-    height: 85vh;
-    width: 90vw;
-    overflow: visible;
-    display: grid;
-    grid-template-columns: 1fr 270px 320px;
-    grid-template-rows: 1fr;
-    gap: 0px 0px;
-    grid-template-areas: 'Ketcher Panel Output';
-    & > div {
-      border: 1px solid grey;
-    }
-  `
-
-const KetcherBox = styled('div')`
-    grid-area: Ketcher;
-    
-  `
-
-const OutputBox = styled('div')`
-    grid-area: Output;
-  `
-
-const PanelBox = styled('div')`
-    grid-area: Panel;
-    overflow: auto;
-    padding-right: 8px;
-    padding-left: 8px;
-  `
-
- */
 const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
   return btnArr.reduce((acc: any, button: any) => {
     if (button) acc[button] = { hidden: true }
@@ -49,22 +16,8 @@ const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
   }, {})
 }
 
-// const structServiceProvider = new RemoteStructServiceProvider(
-//     process.env.REACT_APP_API_PATH!,
-//     {
-//         'custom header': 'value' // optionally you can add custom headers object 
-//     }
-// )
-
 const structServiceProvider = new StandaloneStructServiceProvider();
 
-// const getUniqueKey = (() => {
-//     let count = 0
-//     return () => {
-//         count += 1
-//         return `editor-key-${count}`
-//     }
-// })()
 interface KetcherDrawBoxProps {
   reactionString?: string;
 }
@@ -99,5 +52,6 @@ export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxPr
           (global as any).KetcherFunctions.renderFromCtab(reactionString);
         }
       }}
-    /></>
+    />
+  </>
 }

@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 
 // export const dynamic = "force-static";
 
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
         }
         const data = await prisma.role.findMany(query);
 
-        return new Response(JSON.stringify(data), {
+        return new Response(json(data), {
             headers: { "Content-Type": "application/json" },
             status: 200,
         });

@@ -156,14 +156,14 @@ export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
     }
 }
 
-export async function getMoleculeCart(userId?: number, library_id?: number, project_id?: number) {
+export async function getMoleculeCart(user_id?: number, library_id?: number, project_id?: number) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
         if (library_id) {
             url.searchParams.append('library_id', String(library_id));
         }
-        if (userId) {
-            url.searchParams.append('userId', String(userId));
+        if (user_id) {
+            url.searchParams.append('user_id', String(user_id));
         }
         if (project_id) {
             url.searchParams.append('project_id', String(project_id));
@@ -193,7 +193,7 @@ export async function deleteMoleculeCart(
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
         if (created_by) {
-            url.searchParams.append('userId', String(created_by));
+            url.searchParams.append('user_id', String(created_by));
         }
         if (molecule_id) {
             url.searchParams.append('molecule_id', String(molecule_id));

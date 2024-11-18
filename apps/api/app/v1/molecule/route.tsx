@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
@@ -36,25 +37,25 @@ export async function POST(request: Request) {
             // Check if the favorite exists
             if (existingFavourite) {
                 // If it exists, remove it
-                const favorite = await prisma.molecule_favorites.delete({
+                const favorite = await prisma.user_favourite_molecule.delete({
                     where: {
                         id: existingFavourite.id,
                     },
                 });
-                return new Response(JSON.stringify(favorite), {
+                return new Response(json(favorite), {
                     headers: { "Content-Type": "application/json" },
                     status: SUCCESS,
                 });
             }
             // Create a new favorite entry
-            const favorite = await prisma.molecule_favorites.create({
+            const favorite = await prisma.user_favourite_molecule.create({
                 data: {
                     user_id,
                     molecule_id,
                 },
             });
 
-            return new Response(JSON.stringify(favorite), {
+            return new Response(json(favorite), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });

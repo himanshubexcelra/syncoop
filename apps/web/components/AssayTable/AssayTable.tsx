@@ -1,7 +1,7 @@
 "use client";
 import DataGrid, { Column, Paging } from "devextreme-react/data-grid";
 import { useState, useEffect, useContext } from 'react';
-import { AssayTableProps, Assay } from "@/lib/definition";
+import { AssayTableProps, Assay, AssayLabel } from "@/lib/definition";
 import { getOrganizationById } from "../Organization/service";
 import { LoadIndicator } from "devextreme-react";
 import { AppContext } from "@/app/AppState";
@@ -13,12 +13,12 @@ export default function AssayTable({ orgUser }: AssayTableProps) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
     const fetchData = async () => {
-        const orgData = await getOrganizationById({ withRelation: [], id: orgId })
+        const orgData = await getOrganizationById({ withRelation: [], id: orgId });
         const processedData = orgData?.metadata && typeof orgData.metadata === 'object'
             ? Object.keys(orgData.metadata).map((key) => ({
-                name: key,
+                name: AssayLabel[key as keyof typeof AssayLabel] || key,
                 description: orgData.metadata[key]
-            }))
+            }))?.filter(item => item.description)
             : [];
 
         setMetaData(processedData);
@@ -30,9 +30,9 @@ export default function AssayTable({ orgUser }: AssayTableProps) {
     }, [orgId, appContext?.refreshAssayTable])
     return (
         <div className="p-5">
-            <LoadIndicator
-                visible={loader}
-            />
+            {loader && <div className="center">
+                <LoadIndicator visible={loader} />
+            </div>}
             {!loader && <DataGrid
                 dataSource={metaData}
                 showBorders={false}

@@ -33,14 +33,14 @@ export default function CreateLibrary({
         response = await editLibrary(
           {
             ...values,
-            userId: userData.id,
+            user_id: userData.id,
             project_id: projectData.id
           });
       } else {
         response = await createLibrary(
           {
             ...values,
-            userId: userData.id,
+            user_id: userData.id,
             project_id: projectData.id
           });
       }

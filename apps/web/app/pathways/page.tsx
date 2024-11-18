@@ -119,8 +119,6 @@ export default async function Pathway() {
     },
   ];
 
-  console.log(nodes2);
-
   return (
     <Layout>
       <div>

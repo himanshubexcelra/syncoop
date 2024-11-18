@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import {
     Form as CreateForm,
     SimpleItem,
@@ -24,7 +25,7 @@ export default function RenderEditUser({
     type,
     myRoles,
     isMyProfile,
-    isCustomerOrg
+    customerOrgId
 }: any) {
 
     const [formData, setFormData] = useState(tableData);
@@ -34,7 +35,9 @@ export default function RenderEditUser({
         const fetchDropdown = async () => {
             try {
                 const rolesDropdown = await getFilteredRoles();
-                const organizationDropdown = type ? await getOrganization({ type: type }) : await getOrganization({});
+                const organizationDropdown = type ?
+                    await getOrganization({ type: type }) :
+                    await getOrganization({});
                 setOrganizationSelect(organizationDropdown);
                 setRolesSelect(rolesDropdown);
             } catch (error) {
@@ -55,7 +58,7 @@ export default function RenderEditUser({
                 name: tableData.orgUser.name
             } : null,
             roles: tableData.user_role.map((userRole: any) => ({
-                id: userRole.roleId,
+                id: userRole.role_id,
                 name: userRole.role.name
             }))
         };
@@ -93,17 +96,19 @@ export default function RenderEditUser({
                 dataField={"organization"}
                 editorType="dxSelectBox"
                 editorOptions={{
-                    dataSource: organizationSelect.length > 0 ? organizationSelect : [tableData.orgUser],
+                    dataSource: organizationSelect.length > 0 ?
+                        organizationSelect :
+                        [tableData.orgUser],
                     placeholder: "Select Organization",
                     displayExpr: "name",
                     valueExpr: "id",
                     value: tableData.orgUser.id,
-                    disabled: isMyProfile || isCustomerOrg || !myRoles.includes('admin') ||
+                    disabled: isMyProfile || customerOrgId || !myRoles.includes('admin') ||
                         type === OrganizationType.Internal,
                 }}
             >
                 <Label text="Organization" />
-                <RequiredRule message={Messages.requiredMessage('Organisation')} />
+                <RequiredRule message={Messages.requiredMessage('Organization')} />
             </SimpleItem>
             <SimpleItem
                 dataField={"email_id"}
@@ -140,8 +145,10 @@ export default function RenderEditUser({
                     showSelectionControls: true,
                     applyValueMode: "useButtons",
                     maxDisplayedTags: 5,
-                    disabled: isMyProfile || !myRoles.some((roleType: string) => ["admin", "org_admin"].includes(roleType)),
-                    value: tableData.user_role?.map((item: any) => item.roleId),
+                    disabled: isMyProfile ||
+                        !myRoles.some(
+                            (roleType: string) => ["admin", "org_admin"].includes(roleType)),
+                    value: tableData.user_role?.map((item: any) => item.role_id),
 
                 }}
             >

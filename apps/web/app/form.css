@@ -17,10 +17,13 @@
     font-weight: 400;
 }
 
-.order-popup,
 .create-popup {
     .dx-popup-normal {
         box-shadow: -18px 0px 18px 0px rgba(0, 0, 0, 0.25);
+    }
+
+    .dx-popup-normal {
+        background: var(--themelightGreyColor) !important;
     }
 
     .dx-toolbar-item-content {
@@ -42,34 +45,6 @@
 
     .dx-field-item:not(.dx-field-item-has-group):not(.dx-field-item-has-tabs):not(.dx-first-row):not(.dx-label-v-align) {
         padding-top: 10px;
-    }
-}
-
-.create-popup {
-    .dx-popup-normal {
-        background: var(--themelightGreyColor);
-    }
-}
-
-.order-popup {
-    .dx-popup-normal {
-        background: var(--white);
-    }
-
-    .dx-popup-content {
-        overflow-y: auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
-
-    .dx-popup-wrapper {
-        display: flex;
-        justify-content: center;
-        /* Centers the Popup itself horizontally */
-        align-items: center;
-        /* Centers the Popup vertically */
     }
 }
 

@@ -9,7 +9,7 @@ export default function TabUsersTable({
     filteredRoles,
     myRoles,
     orgUser,
-    userId,
+    user_id,
     actionsEnabled
 }: UserTableProps) {
     const [externalCount, setExternalCount] = useState<number | null>(null);
@@ -23,7 +23,7 @@ export default function TabUsersTable({
             props: {
                 filteredRoles,
                 myRoles, orgUser,
-                userId, actionsEnabled,
+                user_id, actionsEnabled,
                 type: OrganizationType.Internal,
                 setInternalCount, setExternalCount
             }
@@ -35,7 +35,7 @@ export default function TabUsersTable({
                 filteredRoles,
                 myRoles,
                 orgUser,
-                userId,
+                user_id,
                 actionsEnabled,
                 type: OrganizationType.External,
                 setExternalCount, setInternalCount

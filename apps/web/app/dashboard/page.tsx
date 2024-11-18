@@ -26,7 +26,6 @@ export default async function Dashboard() {
             myRoles={myRoles}
             orgUser={orgUser}
             actionsEnabled={actionsEnabled}
-            isCustomerOrg={false}
           />
         </main>
       </div>

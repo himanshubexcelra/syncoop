@@ -1,5 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
@@ -8,7 +9,7 @@ interface Item {
     library_id: string; // or number
     organization_id: string; // or number
     project_id: string; // or number
-    userId: string; // or number
+    user_id: string; // or number
     order_id?: number
 }
 interface updatedItem {
@@ -20,13 +21,13 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const library_id = searchParams.get('library_id');
-        const userId = searchParams.get('userId');
+        const user_id = searchParams.get('user_id');
         const project_id = searchParams.get('project_id');
         const organization_id = searchParams.get('organization_id');
 
         const query: any = {
             where: {
-                created_by: Number(userId),
+                created_by: Number(user_id),
             },
             include: {
                 molecule: {
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
         }
 
         const molecule = await prisma.molecule_cart.findMany(query);
-        return new Response(JSON.stringify(molecule), {
+        return new Response(json(molecule), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
         library_id: Number(item.library_id),
         organization_id: Number(item.organization_id),
         project_id: Number(item.project_id),
-        created_by: Number(item.userId),
+        created_by: Number(item.user_id),
         order_id: Number(item.order_id)
     }));
     
@@ -118,7 +119,7 @@ export async function POST(request: Request) {
             const response = await prisma.molecule_cart.createMany({
                 data: result
             })
-            return new Response(JSON.stringify(response), {
+            return new Response(json(response), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
@@ -147,13 +148,13 @@ export async function DELETE(request: Request) {
         const molecule_id = Number(searchParams.get('molecule_id'));
         const library_id = Number(searchParams.get('library_id'));
         const project_id = Number(searchParams.get('project_id'));
-        const userId = Number(searchParams.get('userId'));
+        const user_id = Number(searchParams.get('user_id'));
 
 
         if (!molecule_id && !library_id && !project_id) {
             await prisma.molecule_cart.deleteMany({
                 where: {
-                    created_by: userId
+                    created_by: user_id
                 }
             });
         }
@@ -163,7 +164,7 @@ export async function DELETE(request: Request) {
                 molecule_id: molecule_id,
                 library_id: library_id,
                 project_id: project_id,
-                created_by: userId
+                created_by: user_id
             }
         });
 

@@ -15,14 +15,14 @@ import { submitOrder } from './libraryService';
 import dynamic from 'next/dynamic';
 interface CartDetailsProps {
   cartData: CartItem[];
-  userId: number;
+  user_id: number;
   orgType: string;
   removeItemFromCart: (item: DeleteMoleculeCart) => void;
-  removeAll: (userId: number, type: string) => void;
+  removeAll: (user_id: number, type: string) => void;
 }
 export default function CartDetails({
   cartData,
-  userId,
+  user_id,
   orgType,
   removeItemFromCart,
   removeAll
@@ -37,7 +37,7 @@ export default function CartDetails({
     molecular_weight: item.molecule.molecular_weight,
     moleculeName: item.molecule.source_molecule_name,
     smiles_string: item.molecule.smiles_string,
-    created_by: userId,
+    created_by: user_id,
     "project / library": `${item.molecule.library.project.name} / ${item.molecule.library.name}`,
     "organization / order": `${item.organization.name} / ${item.order_id}`
   }));
@@ -102,12 +102,12 @@ export default function CartDetails({
       library_id: item.library_id,
       project_id: item.project_id,
       organization_id: item.organization_id,
-      created_by: userId,
+      created_by: user_id,
     }));
     
     submitOrder(orderDetails).then((res) => {
       if (res[0].order_id) {
-        removeAll(userId, 'SubmitOrder')
+        removeAll(user_id, 'SubmitOrder')
       }
     })
       .catch((error) => {
@@ -148,7 +148,7 @@ export default function CartDetails({
               />
               <Link
                 href="#"
-                onClick={() => removeAll(userId, 'RemoveAll')}
+                onClick={() => removeAll(user_id, 'RemoveAll')}
                 className="text-themeBlueColor font-bold"
                 style={{ marginLeft: '10px', marginTop: '10px' }}
               >

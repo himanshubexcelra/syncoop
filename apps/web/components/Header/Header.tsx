@@ -84,8 +84,8 @@ export default function Header({ userData }: HeaderProps) {
 
     }
 
-    const removeAll = (userId: number, type: string) => {
-        deleteMoleculeCart(userId).then((res) => {
+    const removeAll = (user_id: number, type: string) => {
+        deleteMoleculeCart(user_id).then((res) => {
             if (res) {
                 setCartData([]);
                 context?.addToState({
@@ -174,10 +174,10 @@ export default function Header({ userData }: HeaderProps) {
                 contentRender={() => (
                     <CartDetails
                         cartData={cartData}
-                        userId={userData.id}
+                        user_id={userData.id}
                         orgType={userData.orgUser.type}
                         removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
-                        removeAll={(userId: number, type: string) => removeAll(userId, type)}
+                        removeAll={(user_id: number, type: string) => removeAll(user_id, type)}
                     />
                 )}
                 width={570}
@@ -188,7 +188,7 @@ export default function Header({ userData }: HeaderProps) {
                 showCloseButton={true}
                 wrapperAttr={{ class: "create-popup" }}
             />}
-            <OrderPopup
+            {orderPopupVisible && <OrderPopup
                 visible={orderPopupVisible}
                 onHiding={() => setOrderPopupVisibility(false)}
                 contentRender={() => (
@@ -203,7 +203,7 @@ export default function Header({ userData }: HeaderProps) {
                 showCloseButton={false}
                 wrapperAttr={{ class: "order-popup" }}
                 style={{ backgroundColor: 'white' }}
-            />
+            />}
             <div className="flex items-center">
                 <Link href="/">
                     <Image

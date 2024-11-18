@@ -1,5 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 interface OrderData {
@@ -70,7 +71,7 @@ export async function GET(request: Request) {
             );
         }
 
-        return new Response(JSON.stringify(data), {
+        return new Response(json(data), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
         await prisma.molecule_order.createMany({
             data: result
         })
-        return new Response(JSON.stringify(result), {
+        return new Response(json(result), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });

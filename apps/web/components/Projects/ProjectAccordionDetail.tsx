@@ -57,7 +57,7 @@ export default function ProjectAccordionDetail({
     }, { molecule: [] });
 
     useEffect(() => {
-        const sharedUser = data.sharedUsers.find(u => u.userId === userData.id);
+        const sharedUser = data.sharedUsers.find(u => u.user_id === userData.id);
         const owner = data.ownerId === userData.id;
         const admin = ['admin', 'org_admin'].some(
             (role) => myRoles?.includes(role));

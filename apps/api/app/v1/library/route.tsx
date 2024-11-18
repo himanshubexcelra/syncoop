@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
                     ...query.include,
                     molecule: {
                         include: {
-                            molecule_favorites: true
+                            user_favourite_molecule: true
                         }
                     },
                 }
@@ -49,14 +50,14 @@ export async function GET(request: Request) {
                 });
             }
 
-            return new Response(JSON.stringify(library), {
+            return new Response(json(library), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS, // success status code
             });
         }
 
         const libraries = await prisma.library.findMany(query);
-        return new Response(JSON.stringify(libraries), {
+        return new Response(json(libraries), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });
@@ -70,7 +71,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { name, target, description, project_id, userId } = req;
+    const { name, target, description, project_id, user_id } = req;
 
     try {
         const project = await prisma.project.findUnique({
@@ -99,12 +100,12 @@ export async function POST(request: Request) {
                     target,
                     owner: {
                         connect: {
-                            id: userId, // Associate the project with the organization
+                            id: user_id, // Associate the project with the organization
                         },
                     },
                     userWhoCreated: {
                         connect: {
-                            id: userId, // Associate the project with the organization
+                            id: user_id, // Associate the project with the organization
                         }
                     },
                     project: {
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
                 },
             });
 
-            return new Response(JSON.stringify(newLibrary), {
+            return new Response(json(newLibrary), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, target, description, project_id, userId, id } = req;
+        const { name, target, description, project_id, user_id, id } = req;
 
         const project = await prisma.project.findUnique({
             where: { id: Number(project_id) },
@@ -157,13 +158,13 @@ export async function PUT(request: Request) {
                 description,
                 target,
                 userWhoUpdated: {
-                    connect: { id: userId }, // Associate the user who created/updated the project
+                    connect: { id: user_id }, // Associate the user who created/updated the project
                 },
                 updated_at: new Date().toISOString(),
             },
         });
 
-        return new Response(JSON.stringify(updatedLibrary), {
+        return new Response(json(updatedLibrary), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });

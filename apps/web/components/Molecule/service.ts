@@ -1,105 +1,39 @@
-import {
-    UploadMoleculeFileRequest,
-    UploadMoleculeSmilesRequest,
-    ValidateSmileRequest
-} from "../../lib/definition";
-import CustomFile from "../../utils/file";
+"use server";
 
-export async function validateSmiles(smiles: ValidateSmileRequest) {
-    try {
-        const response: any = await fetch(
-            `${process.env.PYTHON_API_HOST_URL}/validate_smiles`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(smiles),
-            }
-        );
-
-        if (response.status === 200) {
-            const data = await response.json();
-            return data;
-        } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
-        }
-    } catch (error: any) {
-        return error;
+export async function uploadMoleculeSmiles(formData: FormData) {
+    const requestBody = {
+        "smiles": formData.get('smiles'),
+        "createdBy": formData.get('created_by_user_id'),
+        "libraryId": formData.get('library_id'),
+        "projectId": formData.get('project_id'),
+        "organizationId": formData.get('organization_id'),
+        "sourceMoleculeName": formData.get('source_molecule_name')
+    }
+    const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_smiles`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+        })
+    if (response) {
+        const data = await response.json();
+        return data;
     }
 }
 
-
-export async function uploadMoleculeSmiles(formData: UploadMoleculeSmilesRequest) {
+export async function uploadMoleculeFile(formData: FormData) {
     try {
-        const response: any = await fetch(
-            `${process.env.PYTHON_API_HOST_URL}/upload_molecule_smiles`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            }
-        );
 
-        if (response.status === 200) {
-            const data = await response.json();
-            return data;
-        } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
-        }
-    } catch (error: any) {
-        return error;
-    }
-}
-export async function updateMoleculeSmiles(formData: UploadMoleculeSmilesRequest) {
-    try {
-        const response: any = await fetch(
-            `${process.env.PYTHON_API_HOST_URL}/update_molecule`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            }
-        );
-
-        if (response.status === 200) {
-            const data = await response.json();
-            return data;
-        } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
-        }
-    } catch (error: any) {
-        return error;
-    }
-}
-
-export async function uploadMoleculeFile(data: UploadMoleculeFileRequest) {
-    try {
-        const formData = new FormData();
-        formData.append('file', data.file);
-        formData.append('created_by_user_id', data.created_by_user_id);
-        formData.append('library_id', data.library_id);
-        formData.append('project_id', data.project_id);
-        formData.append('organization_id', data.organization_id);
-        formData.append('updated_by_user_id', data.updated_by_user_id);
-        const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/upload_molecule_files`, {
+        const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_files`, {
             method: "POST",
             body: formData,
         });
         if (response.status === 200) {
             const data = await response.json();
-            // Can use following code to download rejected Smiles
-            // const header = {smiles: "SMILE", reason: "Reason"}
-            // downloadCSV(header, data.rejected_smiles, 'rejected_smiles')
             return data;
-        } else if (response.status === 500) {
+        } else {
             const error = await response.json();
             return { status: response.status, error };
         }
@@ -108,12 +42,28 @@ export async function uploadMoleculeFile(data: UploadMoleculeFileRequest) {
     }
 }
 
-export const downloadCSV = (
-    header: any,
-    data: any,
-    filename: string) => {
+export async function updateMoleculeSmiles(formData: FormData) {
+    try {
+        const requestBody = {
+            molecules: JSON.parse(formData.get('molecules') as string),
+            "updatedBy": formData.get('updatedBy'),
+        }
+        const response: any = await fetch(
+            `${process.env.PYTHON_API_HOST_URL}/molecule/update_molecule`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            }
+        );
 
-    const rows: any = [header, ...data];
-    const csvData = CustomFile.convertToCSV(rows);
-    return CustomFile.downLoad(csvData, filename, 'csv');
+        if (response) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error: any) {
+        return error;
+    }
 }

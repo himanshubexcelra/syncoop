@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { Messages } from "./message";
 import { getUserModulePermissions } from "@/components/User/service";
 import { defaultRoutesEnabled } from "./constants";
+import { UserAction } from "@/lib/definition";
 
 export async function authorize(formData: FormData) {
     try {
@@ -11,7 +12,6 @@ export async function authorize(formData: FormData) {
             email_id: formData.get('email_id'),
             password_hash: formData.get('password_hash')
         });
-        console.log(body);
         const response: any = await fetch(`${process.env.NEXT_API_HOST_URL}/v1/auth`, {
             mode: 'no-cors',
             method: 'POST',
@@ -22,6 +22,7 @@ export async function authorize(formData: FormData) {
         });
         if (response.status === 200) {
             const output = await response.json();
+            console.log(output);
             const {
                 id,
                 first_name,
@@ -50,10 +51,10 @@ export async function authorize(formData: FormData) {
             const { data } = getModulePermissions;
             let enabledRoutes: string[] = defaultRoutesEnabled;
             let enabledActions: string[] = [];
-            data.org_module.forEach((elem: any) => {
-                const { module_action } = elem.module;
+            data.org_product_module.forEach((elem: any) => {
+                const { product_module_action } = elem.product_module;
                 const allActions: string[] =
-                    Array.from(new Set(module_action.map((action: any) => action.route)));
+                    Array.from(new Set(product_module_action.map((action: any) => action.route)));
                 enabledRoutes = [
                     ...enabledRoutes,
                     ...allActions
@@ -61,7 +62,7 @@ export async function authorize(formData: FormData) {
 
                 enabledActions = [
                     ...enabledActions,
-                    ...module_action.map((action: any) => action.type)
+                    ...product_module_action.map((action: any) => action.type)
                 ]
             });
             enabledRoutes = Array.from(new Set(enabledRoutes));
@@ -101,7 +102,7 @@ export async function clearSession() {
     cookies().delete('routes_enabled');
 }
 
-export async function getUserData() {
+export async function getUserData(): Promise<UserAction | null> {
     const sessionData: any = cookies().get('session')?.value;
     const actionsEnabled: any = cookies().get('actions_enabled')?.value;
     const routesEnabled: any = cookies().get('routes_enabled')?.value;

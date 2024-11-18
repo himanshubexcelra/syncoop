@@ -14,9 +14,7 @@ import {
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
-  StatusCodeAPIType,
   StatusCodeBg,
-  StatusCodeBgAPI,
   StatusCodeTextColor,
 } from '@/utils/constants';
 import { Popup } from 'devextreme-react';
@@ -26,6 +24,7 @@ import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import {
+  colorSchemeADME,
   generateRandomDigitNumber,
   getStatusLabel,
   isAdmin,
@@ -47,24 +46,6 @@ interface ColumnConfig<T> {
   allowSorting?: boolean,
   customRender?: (data: T) => React.ReactNode;
 }
-
-// Custom renderer function
-const customRenderForField = (data: MoleculeOrder, field: keyof MoleculeOrder) => {
-  let color: StatusCodeAPIType = 'READY';
-  const value = data[field]; // Dynamic field access based on the `field` parameter
-
-  if (typeof value === 'number') {
-    if (value <= 0.5) color = 'FAILED';
-    else if (value > 0.5 && value < 1) color = 'INFO';
-    else if (value >= 1) color = 'DONE';
-  }
-
-  return (
-    <span className={`flex items-center gap-[5px] ${StatusCodeBgAPI[color]}`}>
-      {value}
-    </span>
-  );
-};
 
 const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const { organization_id, orgUser, myRoles } = userData;
@@ -148,22 +129,50 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     {
       dataField: 'yield', title: 'Yield', width: 100,
       allowHeaderFiltering: true, allowSorting: true,
-      customRender: (data) => customRenderForField(data, 'yield')
+      customRender: (data) => {
+        const color = colorSchemeADME(data, 'yield')
+        return (
+          <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+            {`${data['yield']} || ''`}
+          </span>
+        )
+      }
     },
     {
       dataField: 'anlayse', title: 'Analyse', width: 100,
       allowHeaderFiltering: true, allowSorting: true,
-      customRender: (data) => customRenderForField(data, 'anlayse')
+      customRender: (data) => {
+        const color = colorSchemeADME(data, 'anlayse')
+        return (
+          <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+            {`${data['anlayse']} || ''`}
+          </span>
+        )
+      }
     },
     {
       dataField: 'herg', title: 'HERG', width: 100,
       allowHeaderFiltering: true, allowSorting: true,
-      customRender: (data) => customRenderForField(data, 'herg')
+      customRender: (data) => {
+        const color = colorSchemeADME(data, 'herg')
+        return (
+          <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+            {`${data['herg']} || ''`}
+          </span>
+        )
+      }
     },
     {
       dataField: 'caco2', title: 'Caco-2', width: 100,
       allowHeaderFiltering: true, allowSorting: true,
-      customRender: (data) => customRenderForField(data, 'caco2')
+      customRender: (data) => {
+        const color = colorSchemeADME(data, 'caco2')
+        return (
+          <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+            {`${data['caco2']} || ''`}
+          </span>
+        )
+      }
     },
   ];
 
@@ -291,7 +300,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       order_id: orderId,
       molecule_id: item.molecule_id,
       library_id: item.library_id,
-      userId: userData.id,
+      user_id: userData.id,
       organization_id: item.organization_id,
       project_id: item.project_id
     }));
@@ -306,9 +315,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
     if (e.rowType === "data") {
       if (e.column.dataField === "status") {
-        const statusUpper = getStatusLabel(e.data.status);
-        const color = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
-        e.cellElement.classList.add(StatusCodeBg[color]);
+        const status = getStatusLabel(e.data.status);
+        e.cellElement.classList.add(status);
       }
     }
     if (isMoleculeInCart.includes(e.key)) {

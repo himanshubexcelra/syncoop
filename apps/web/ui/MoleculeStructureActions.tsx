@@ -9,7 +9,7 @@ const MoleculeStructure = dynamic(
     { ssr: false }
 );
 
-interface MoleculeStructureActionsProps {
+type MoleculeStructureActionsProps = {
     smilesString: string;
     molecule_id: number;
     onZoomClick: () => void;
@@ -17,6 +17,7 @@ interface MoleculeStructureActionsProps {
     onDeleteClick?: () => void;
     enableEdit?: boolean;
     enableDelete?: boolean;
+    enableZoomAction?: boolean;
 }
 
 const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
@@ -26,19 +27,20 @@ const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
     onEditClick,
     onDeleteClick,
     enableEdit = false,
-    enableDelete = false
+    enableDelete = false,
+    enableZoomAction = true
 }) => {
     return (
-        <span className="flex justify-center items-center gap-[7.5px]">
+        <div className="flex justify-center items-center">
             <MoleculeStructure height={80} width={80}
                 svgMode={true} structure={smilesString} id={`smiles-${molecule_id}`} />
-            <Button onClick={onZoomClick} render={() =>
-                <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />
+            {enableZoomAction && <Button onClick={onZoomClick} render={() =>
+                <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />}
             {enableEdit && <Button onClick={onEditClick} render={() =>
                 <Image src="/icons/edit.svg" width={24} height={24} alt="edit" />} />}
             {enableDelete && <Button onClick={onDeleteClick} render={() =>
                 <Image src="/icons/delete.svg" width={24} height={24} alt="delete" />} />}
-        </span>
+        </div>
     );
 };
 

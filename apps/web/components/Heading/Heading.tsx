@@ -2,7 +2,6 @@
 import React from 'react';
 import { HeadingObj } from '@/lib/definition';
 import Image from 'next/image';
-import { Button } from 'devextreme-react/button';
 
 type HeadingProps = {
     heading: HeadingObj[];
@@ -31,12 +30,12 @@ const Heading: React.FC<HeadingProps> = ({ heading, myRoles, showEditPopup }) =>
                 ))}
             </div>
             {['admin', 'org_admin'].some((role) => myRoles?.includes(role)) && showEditPopup && (
-                <Button
-                    className='btn-secondary'
+                <button
+                    className='secondary-button'
                     onClick={() => showEditPopup(true)}
                 >
                     Edit
-                </Button>
+                </button>
             )}
         </div >
     );

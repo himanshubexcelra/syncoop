@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AddMolecule from '../AddMolecule/AddMolecule';
 import { UserData } from '@/lib/definition';
-import { downloadCSV } from '../service';
+import { downloadCSV } from '@/utils/helpers';
 
 jest.mock('../service', () => ({
     downloadCSV: jest.fn(),
@@ -13,9 +13,14 @@ jest.mock('../service', () => ({
 
 jest.mock('@/utils/auth', () => ({
     getUserData: jest.fn().mockResolvedValue({
-        userData: { id: 'user123', organization_id: 'org123' },
+        userData: { id: '1', organization_id: '1' },
     }),
 }));
+
+jest.mock('@/utils/helpers', () => ({
+    downloadCSV: jest.fn(),
+}));
+
 // eslint-disable-next-line react/display-name
 jest.mock('@/components/KetcherTool/KetcherBox', () => () => <div>KetcherDrawBox Mock</div>);
 
@@ -26,7 +31,7 @@ const mockUserData: UserData = {
         id: 0,
         status: '',
         organization: {
-            id: 3,
+            id: 1,
         },
         user_role: [],
         first_name: '',
@@ -34,7 +39,7 @@ const mockUserData: UserData = {
         last_name: ''
     },
     myRoles: ['user'],
-    id: 123,
+    id: 1,
     user_role: [],
     email_id: '',
     first_name: '',
@@ -104,7 +109,7 @@ describe('AddMolecule Component', () => {
         fireEvent.click(downloadButton);
 
         expect(downloadCSV).toHaveBeenCalledWith(
-            { col1: 'ID (optional)', col2: 'SMILES (mandatory)' },
+            { col1: "ID (optional)", col2: "SMILES (mandatory)" },
             [],
             'molecule_template'
         );

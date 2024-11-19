@@ -52,7 +52,7 @@ export default function CreateProject({
     if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.ownerId)
       const updatedAllUsers = filteredUser.map(user => {
-        const updatedUser = projectData.sharedUsers.find(u => u.userId === user.id);
+        const updatedUser = projectData.sharedUsers.find(u => u.user_id === user.id);
         return { ...user, permission: updatedUser ? updatedUser.role : 'View' };
       });
       setFilteredData(updatedAllUsers);
@@ -113,9 +113,9 @@ export default function CreateProject({
 
   }
 
-  const handlePermissionChange = (userId: number, permission: string) => {
+  const handlePermissionChange = (user_id: number, permission: string) => {
     const data = [...filteredData];
-    data[userId].permission = permission;
+    data[user_id].permission = permission;
 
     setFilteredData(data);
     setShowIcon('arrow-both');
@@ -132,7 +132,7 @@ export default function CreateProject({
             ...values,
             sharedUsers,
             organization_id,
-            userId: userData.id
+            user_id: userData.id
           })
       }
       else response = await createProjectApi(
@@ -140,7 +140,7 @@ export default function CreateProject({
           ...values,
           sharedUsers,
           organization_id,
-          userId: userData.id
+          user_id: userData.id
         });
       if (!response.error) {
         formRef.current!.instance().reset();
@@ -210,7 +210,7 @@ export default function CreateProject({
         onValueChanged: fetchUserList
       }}
     >
-      <Label text="Select an Organisation" />
+      <Label text="Select an Organization" />
       <RequiredRule message="Organization name is required" />
     </SimpleItem>
   ), [organizationData, myRoles]);

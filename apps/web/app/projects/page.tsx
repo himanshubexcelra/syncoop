@@ -5,7 +5,10 @@ import Layout from "@/components/layout";
 import { redirect } from "next/navigation";
 import ProjectDetails from "@/components/Projects/ProjectDetails";
 
-export default async function Projects() {
+type ProjectsProps = {
+    organizationId: string;
+}
+export default async function Projects({ organizationId }: ProjectsProps) {
 
     const breadcrumbs: BreadCrumbsObj[] = [
         {
@@ -25,7 +28,7 @@ export default async function Projects() {
         }
     ];
 
-    const sessionData: any = await getUserData();
+    const sessionData = await getUserData();
     if (!sessionData) {
         redirect('/');
     }
@@ -35,7 +38,7 @@ export default async function Projects() {
     return (
         <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
-            <ProjectDetails userData={userData} actionsEnabled={actionsEnabled} />
+            <ProjectDetails userData={userData} actionsEnabled={actionsEnabled} organizationId={organizationId} />
         </Layout>
     );
 }

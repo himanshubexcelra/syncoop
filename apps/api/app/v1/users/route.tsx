@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
+import json from "@/utils/helper";
 
 const { EMAIL_ALREADY_EXIST, } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST } = STATUS_TYPE;
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const joins = searchParams.get('with');
-        const userId = searchParams.get('id');
+        const user_id = searchParams.get('id');
         const orgId = searchParams.get('orgId');
         const orgType = searchParams.get('orgType');
         const loggedInUser = searchParams.get('loggedInUser')
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
                     ...query.include,
                     user_role: {
                         select: {
-                            roleId: true,
+                            role_id: true,
                             role: {
                                 select: {
                                     name: true,
@@ -47,9 +48,9 @@ export async function GET(request: Request) {
                 }
             }
         }
-        if (userId) {
+        if (user_id) {
             query.where = {
-                id: Number(userId),
+                id: Number(user_id),
             };
         }
         if (orgId) {
@@ -74,9 +75,9 @@ export async function GET(request: Request) {
                 },
             }
         }
-        const users = await prisma.user.findMany(query);
+        const users = await prisma.users.findMany(query);
 
-        return new Response(JSON.stringify(users), {
+        return new Response(json(users), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
     try {
         const req = await request.json();
         const { first_name, last_name, roles, email_id, organization } = req
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.users.findUnique({
             where: { email_id: email_id },
         });
         const password_hash = await bcrypt.hash(req.password_hash, SALT_ROUNDS);
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
                 status: CONFLICT,
             });
         }
-        const newUser = await prisma.user.create({
+        const newUser = await prisma.users.create({
             data: {
                 first_name,
                 last_name,
@@ -111,15 +112,15 @@ export async function POST(request: Request) {
                 status: 'Enabled',
                 organization_id: organization,
                 user_role: {
-                    create: roles.map((roleId: number) => ({
-                        role: { connect: { id: roleId } }
+                    create: roles.map((role_id: number) => ({
+                        role: { connect: { id: role_id } }
                     })),
                 },
             },
             include: {
                 user_role: {
                     select: {
-                        roleId: true,
+                        role_id: true,
                         role: {
                             select: {
                                 name: true,
@@ -129,7 +130,7 @@ export async function POST(request: Request) {
                 },
             },
         });
-        return new Response(JSON.stringify(newUser), {
+        return new Response(json(newUser), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });
@@ -147,7 +148,7 @@ export async function PUT(request: Request) {
         const { email_id, first_name, last_name,
             oldPassword, newPassword, organization, roles } = req;
 
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.users.findUnique({
             where: { email_id: email_id },
         });
 
@@ -193,25 +194,25 @@ export async function PUT(request: Request) {
         }
         if (roles && Array.isArray(roles)) {
             await prisma.user_role.deleteMany({
-                where: { userId: existingUser.id },
+                where: { user_id: existingUser.id },
             });
 
-            const userRolesData = roles.map((roleId: number) => ({
-                userId: existingUser.id,
-                roleId: roleId,
+            const userRolesData = roles.map((role_id: number) => ({
+                user_id: existingUser.id,
+                role_id: role_id,
             }));
 
             await prisma.user_role.createMany({
                 data: userRolesData,
             });
         }
-        const updatedUser = await prisma.user.update({
+        const updatedUser = await prisma.users.update({
             where: { email_id: email_id },
             data: updatedData,
             include: {
                 user_role: {
                     select: {
-                        roleId: true,
+                        role_id: true,
                         role: {
                             select: {
                                 name: true,
@@ -222,7 +223,7 @@ export async function PUT(request: Request) {
             },
         });
 
-        return new Response(JSON.stringify(updatedUser), {
+        return new Response(json(updatedUser), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });

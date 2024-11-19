@@ -81,7 +81,7 @@ const initialProjectData: ProjectDataFields = {
     userWhoUpdated: {} as userType, // Provide a default user object
     userWhoCreated: {} as userType, // Provide a default user object
     updated_at: new Date(),
-    userId: undefined,
+    user_id: undefined,
     owner: {} as User, // Provide a default owner object
     ownerId: 0,
     orgUser: undefined,
@@ -90,8 +90,10 @@ const initialProjectData: ProjectDataFields = {
 };
 
 type LibraryDetailsProps = {
-    userData: UserData,
-    actionsEnabled: string[],
+    userData: UserData;
+    actionsEnabled: string[];
+    organizationId?: string;
+    projectId?: string;
 }
 
 export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
@@ -103,7 +105,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
     const [selectedLibrary, setSelectedLibrary] =
-        useState(library_id ? parseInt(library_id, 10) : -1);
+        useState(library_id ? Number(library_id) : -1);
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
     const [loader, setLoader] = useState(true);
     const [moleculeLoader, setMoleculeLoader] = useState(false);
@@ -128,10 +130,10 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
 
     const fetchLibraries = async () => {
         const projectData = await getLibraries(['libraries'], params.id);
-        let selectedLib = { name: '' };
+        let selectedLib = null;
         if (library_id && projectData) {
             selectedLib = projectData.libraries.find(
-                (library: LibraryFields) => library.id === parseInt(library_id, 10));
+                (library: LibraryFields) => Number(library.id) === Number(library_id));
         }
         if (projectData && !!selectedLib) {
             const sortKey = 'created_at';
@@ -227,7 +229,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                             </main>
                         </div>
                         <div className='flex gap-[20px]'>
-                            {expanded && (<div className='w-[40vw] projects'>
+                            {expanded && (<div className='w-2/5 projects'>
                                 <LibraryAccordion
                                     projects={projects}
                                     setLoader={setLoader}

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { RejectedSmiles } from '@/lib/definition';
-import { downloadCSV } from '../service';
+import { downloadCSV } from '@/utils/helpers';
 
 interface RejectedDialogProps {
     onClose: () => void;

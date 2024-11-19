@@ -193,8 +193,8 @@ export default function RenderCreateUser({
                 },
             }}
         >
-            <Label text="Select an Organisation" />
-            <RequiredRule message={Messages.requiredMessage('Organisation')} />
+            <Label text="Select an Organization" />
+            <RequiredRule message={Messages.requiredMessage('Organization')} />
         </SimpleItem>
     ), [organization, myRoles, type]);
     return (

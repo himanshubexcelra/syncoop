@@ -8,17 +8,17 @@ import { useEffect, useState } from "react";
 import { getProjectsCountById } from "../Projects/projectService";
 import { getLibraryCountById, geMoleculeCountById } from "../Libraries/libraryService";
 
-export default function StatusComponent({ myRoles, orgUser, isCustomerOrg }: StatusComponentProps) {
+export default function StatusComponent({ myRoles, orgUser, customerOrgId }: StatusComponentProps) {
     const { id } = orgUser
     const [projectNumber, setProjectNumber] = useState<number>(0);
     const [libraryNumber, setLibraryNumber] = useState<number>(0);
     const [moleculeNumber, setMoleculeNumber] = useState<number>(0);
     const countCardsDetails = getCountCardsDetails(projectNumber, libraryNumber,
-        moleculeNumber, isCustomerOrg);
+        moleculeNumber, customerOrgId);
     const fetchData = async () => {
         let projectCount, libraryCount, moleculeCount;
 
-        if (myRoles.includes('admin') && !isCustomerOrg) {
+        if (myRoles.includes('admin') && !customerOrgId) {
             projectCount = await getProjectsCountById();
             libraryCount = await getLibraryCountById();
             moleculeCount = await geMoleculeCountById();

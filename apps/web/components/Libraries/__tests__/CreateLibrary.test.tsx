@@ -112,7 +112,7 @@ const userData = {
             number: 1,
             name: "admin"
         },
-        roleId: 6
+        role_id: 6
     }],
     orgUser: {
         id: 1, name: 'System Admin', first_name: "Forum",
@@ -127,7 +127,7 @@ const userData = {
                 number: 1,
                 name: "admin"
             },
-            roleId: 6
+            role_id: 6
         }],
         organization: {
             id: 1,
@@ -146,7 +146,7 @@ const userData = {
                     number: 1,
                     name: "admin"
                 },
-                roleId: 6
+                role_id: 6
             }]
         }
     }

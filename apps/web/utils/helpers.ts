@@ -1,9 +1,12 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
   CombinedLibraryType, LibraryFields, LoginFormSchema,
+  MoleculeOrder,
   MoleculeStatusCode, MoleculeStatusLabels, MoleculeType,
   StatusCode, StatusType
 } from "@/lib/definition"
+import CustomFile from "./file";
+import { StatusCodeType } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -65,8 +68,11 @@ export function formatDate(date: Date) {
   return `${month}/${day}/${year}`;
 }
 
-export function getCountCardsDetails(projectCount: number, libraryCount: number,
-  moleculeCount: number, isCustomerOrg: boolean) {
+export function getCountCardsDetails(
+  projectCount: number,
+  libraryCount: number,
+  moleculeCount: number,
+  customerOrgId?: number) {
 
   return [
     {
@@ -80,7 +86,9 @@ export function getCountCardsDetails(projectCount: number, libraryCount: number,
       svgPath: "/icons/project-icon.svg",
       innerGap: "gap-2",
       count: String(projectCount),
-      ...(isCustomerOrg ? {} : { href: "./projects" }),
+      ...(customerOrgId ?
+        { href: `/organization/${customerOrgId}/projects` } :
+        { href: "/projects" }),
     },
     {
       name: "Molecules",
@@ -191,3 +199,25 @@ export function generateRandomDigitNumber() {
 export function getStatusLabel(statusCode: number) {
   return MoleculeStatusLabels[statusCode as MoleculeStatusCode];
 }
+
+export const downloadCSV = (
+  header: any,
+  data: any,
+  filename: string) => {
+
+  const rows: any = [header, ...data];
+  const csvData = CustomFile.convertToCSV(rows);
+  return CustomFile.downLoad(csvData, filename, 'csv');
+}
+
+export const colorSchemeADME = (data: MoleculeType | MoleculeOrder, field: keyof MoleculeType) => {
+  let color: StatusCodeType = 'READY';
+  const value = data[field]; // Dynamic field access based on the `field` parameter
+
+  if (typeof value === 'number') {
+    if (value <= 0.5) color = 'FAILED';
+    else if (value > 0.5 && value < 1) color = 'INFO';
+    else if (value >= 1) color = 'DONE';
+  }
+  return color;
+};

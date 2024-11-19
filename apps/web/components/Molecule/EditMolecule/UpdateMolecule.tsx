@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import { delay } from '@/utils/helpers';
-import { SaveMoleculeParams, UserData } from '@/lib/definition';
+import { MoleculeType, RejectedSmiles, SaveMoleculeParams, UserData } from '@/lib/definition';
 import { updateMoleculeSmiles } from '../service';
 import { LoadIndicator } from 'devextreme-react';
+import { DELAY } from '@/utils/constants';
 type UpdateMoleculeProps = {
     userData: UserData;
     libraryId: string | null;
@@ -14,24 +15,24 @@ type UpdateMoleculeProps = {
     setViewEditMolecule: (val: boolean) => void;
     callLibraryId: () => void;
     onClose: () => void;
-    moleculeName: string | null;
     onDiscardSubmit: () => void;
-    moleculeId: number | undefined;
-    saveMoleculeCall: (moleculeDetails: SaveMoleculeParams) => void;
+    saveMoleculeCall: (moleculeDetails: SaveMoleculeParams, inPopup: boolean) => void;
+    editMolecules: MoleculeType[];
+    editedMolecules: MoleculeType[];
+    onSmilesRejected: (smiles: RejectedSmiles[]) => void
+
 }
 
 export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
     const {
         userData,
-        libraryId,
-        projectId,
         setViewEditMolecule,
         callLibraryId,
         onClose,
-        moleculeName,
         onDiscardSubmit,
-        moleculeId,
         saveMoleculeCall,
+        onSmilesRejected,
+        editedMolecules
     } = props;
     const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
@@ -42,37 +43,55 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
         onClose()
     }
     const updateSubmit = async () => {
+        const molecules: any[] = [];
+        editedMolecules.forEach((molecule: any) => {
+            const moleculeObj = {
+                id: molecule.id,
+                smile: molecule.smiles_string,
+                sourceMoleculeName: molecule.source_molecule_name,
+            }
+            molecules.push(moleculeObj)
+        });
         setSubmitLoadIndicatorVisible(true);
         setSubmitText('');
-        KetcherFunctions.exportSmile().then(async (str) => {
-            const result = await updateMoleculeSmiles({
-                smiles: [str],
-                "created_by_user_id": userData.id,
-                "library_id": libraryId?.toString() || '',
-                "project_id": projectId?.toString() || '',
-                "organization_id": userData.organization_id?.toString() || '',
-                "source_molecule_name": moleculeName || '',
-                "id": moleculeId,
-            })
-            if (result.rejected_smiles.length) {
-                setSubmitLoadIndicatorVisible(false);
-                setSubmitText('Yes');
-                const rejectedSmile = result.rejected_smiles[0]
-                const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
-                const toastId = toast.error(message);
-                await delay(4000);
+        const formData = new FormData();
+        formData.set('molecules', JSON.stringify(molecules));
+        formData.set('updatedBy', userData?.id?.toString())
+        await updateMoleculeSmiles(formData).then(async (result) => {
+            if (result.detail) {
+                const toastId = toast.error(result.error);
+                await delay(DELAY);
                 toast.remove(toastId);
             } else {
-                setViewEditMolecule(false);
-                callLibraryId();
-                setSubmitLoadIndicatorVisible(false);
-                setSubmitText('Yes');
-                const message = Messages.ADD_MOLECULE_SUCCESS;
-                const toastId = toast.success(message);
-                await delay(4000);
-                toast.remove(toastId);
+                if (result?.status) {
+                    if (result?.rejected_smiles?.length) {
+                        onSmilesRejected(result.rejected_smiles);
+                        onClose();
+                    } else {
+                        setViewEditMolecule(false);
+                        callLibraryId();
+                        setSubmitText('Yes');
+                        const message = Messages.UPDATE_MOLECULE_SUCCESS;
+                        const toastId = toast.success(message);
+                        await delay(DELAY);
+                        toast.remove(toastId);
+                    }
+                } else if (result) {
+                    setSubmitText('Yes');
+                    const rejectedSmile = result.rejected_smiles[0]
+                    const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
+                    const toastId = toast.error(message);
+                    await delay(DELAY);
+                    toast.remove(toastId);
+                }
             }
-        });
+        }, async (error) => {
+            const toastId = toast.error(error?.message);
+            await delay(DELAY);
+            toast.remove(toastId);
+        })
+        setSubmitLoadIndicatorVisible(false);
+        onClose();
     }
     const moleculeDetails = {
         setLoader: setSaveLoadIndicatorVisible,
@@ -101,9 +120,9 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                         visible={submitLoadIndicatorVisible}
                         height={20}
                         width={20} />{submitText}</button>
-                <button
+                {editedMolecules.length === 1 && <button
                     className='secondary-button'
-                    onClick={() => saveMoleculeCall(moleculeDetails)}
+                    onClick={() => saveMoleculeCall(moleculeDetails, true)}
                 > <LoadIndicator className={
                     `button-indicator ${styles.white}`
                 }
@@ -111,7 +130,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                     height={20}
                     width={20} />
                     {saveButtonText}
-                </button>
+                </button>}
                 <button
                     className='reject-button'
                     onClick={reset}

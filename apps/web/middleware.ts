@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
         let route = '/dashboard';
         if (['admin', 'org_admin'].some((role) => userData?.myRoles?.includes(role))) {
             route = '/dashboard';
-        } else if (['researcher', 'protocol_aproover'].some((role) =>
+        } else if (['researcher', 'protocol_approver'].some((role) =>
             userData?.myRoles?.includes(role))
         ) {
             route = '/molecule_order';

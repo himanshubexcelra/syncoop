@@ -10,30 +10,21 @@ import DataGrid, {
     Sorting,
     FilterRow,
     LoadPanel,
-    HeaderFilter,
-    Toolbar,
-    Item,
-    DataGridTypes,
+    HeaderFilter
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
-import { Button, LoadIndicator } from 'devextreme-react';
-import { ColumnConfig } from '@/lib/definition';
 
-interface ToolbarButtonConfig {
-    text: string;
-    onClick: () => void;
-    icon?: string;
-    class?: string;
-    disabled?: boolean;
-    visible?: boolean;
-
+interface ColumnConfig<T> {
+    dataField: keyof T;
+    title?: string | React.ReactNode;
+    width?: number;
+    customRender?: (data: T) => React.ReactNode;
 }
 
 interface CustomDataGridProps<T> {
-    data: any[];
+    data: T[];
     columns: ColumnConfig<T>[];
-    toolbarButtons?: ToolbarButtonConfig[];
     groupingColumn?: string;
     enableRowSelection?: boolean;
     enableGrouping?: boolean;
@@ -43,23 +34,11 @@ interface CustomDataGridProps<T> {
     enableFiltering?: boolean;
     enableOptions?: boolean;
     loadMoreData?: () => void;
-    buttonText?: string;
-    onButtonClick?: () => void;
-    loader: boolean;
-    enableHeaderFiltering?: boolean;
-    handleSelectionChange?: (selectedRowsData: any) => void;
-    handleSelectedRows?: (e: any) => void;
-
-    enableSearchOption?: boolean;
-    selectedRowKeys?: any[];
-    onSelectionChanged?: (e: any) => void;
-    onCellPrepared?: (e: DataGridTypes.CellPreparedEvent) => void;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
     data,
     columns,
-    toolbarButtons = [],
     groupingColumn,
     enableRowSelection = true,
     enableGrouping = true,
@@ -67,14 +46,8 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableAutoScroll = false,
     enableSorting = true,
     enableFiltering = true,
-    enableSearchOption = true,
     enableOptions = true,
     loadMoreData,
-    loader = true,
-    enableHeaderFiltering = true,
-    selectedRowKeys,
-    onSelectionChanged,
-    onCellPrepared
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -86,6 +59,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
             const { scrollHeight, clientHeight, scrollTop } = instance.scrollable().scrollOffset();
 
             if (scrollTop + clientHeight >= scrollHeight - 50) {
+                console.log('Infinite scroll triggered');
                 loadMoreData && loadMoreData();
             }
         }
@@ -98,7 +72,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
     const onGroupingEnabledChanged = useCallback(() => {
         setGroupingEnabled((prev) => !prev);
     }, []);
-
 
     useEffect(() => {
         if (enableAutoScroll && dataGridRef.current) {
@@ -128,12 +101,8 @@ const CustomDataGrid = <T extends Record<string, any>>({
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
-
     return (
         <div>
-            {loader && <div className="center">
-                <LoadIndicator visible={loader} />
-            </div>}
             <DataGrid
                 ref={dataGridRef}
                 dataSource={data}
@@ -142,13 +111,10 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 showBorders={true}
                 height="600px"
                 width="100%"
-                onCellPrepared={onCellPrepared}
-                selectedRowKeys={selectedRowKeys}
-                onSelectionChanged={onSelectionChanged}
             >
                 {enableGrouping && <GroupPanel visible={true} />}
 
-                {enableHeaderFiltering && <HeaderFilter visible={true} />}
+                <HeaderFilter visible={true} />
                 {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
@@ -164,20 +130,15 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     <Column
                         key={String(column.dataField)}
                         dataField={String(column.dataField)}
-                        visible={column.visible !== undefined ? column.visible : true}
-                        headerCellRender={column.type === 'bookmark' ? () => (
-                            <Image src="/icons/star.svg" width={24}
-                                height={24} alt="Bookmark" />) : undefined}
-                        caption={typeof column.title === 'string' ? column.title : undefined}
+                        // caption={column?.dataField !== 'bookmark' ? column.title : undefined}
+                        headerCellRender={column.dataField === 'bookmark' ? () => (
+                            <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
+                        ) : undefined}
                         width={column.width ? String(column.width) : undefined}
-                        allowHeaderFiltering={column?.allowHeaderFiltering}
-                        allowSorting={column?.allowSorting}
-                        alignment={column.alignment !== undefined ? column.alignment : "left"}
                         cellRender={column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}
                     />
                 ))}
-
 
                 {groupingColumn && (
                     <Column
@@ -187,29 +148,17 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         groupCellRender={groupCellRender}
                     />
                 )}
-                <Toolbar>
-                    {groupingColumn &&
-                        <Item location="before" name="groupPanel" />
-                    }
-                    {toolbarButtons.map((button, index) => (
-                        <Item key={index} location="after">
-                            <Button
-                                text={button.text}
-                                onClick={() => button.onClick()}
-                                icon={button.icon}
-                                disabled={button.disabled}
-                                className={button.class || "btn-primary"}
-                                visible={button.visible !== undefined ? button.visible : true}
-                            />
-                        </Item>
-                    ))}
-                    <Item name="searchPanel" location="after" />
-                </Toolbar>
-                {enableSearchOption && <SearchPanel
+
+                {/* <Toolbar>
+                    {groupingColumn && <Item name="groupPanel"></Item>}
+                    <Item name="searchPanel" locateInMenu='always' location='after'></Item>
+
+                </Toolbar> */}
+
+                <SearchPanel
                     visible={true}
                     highlightSearchText={true}
-                />}
-
+                />
             </DataGrid>
 
             {enableOptions && (

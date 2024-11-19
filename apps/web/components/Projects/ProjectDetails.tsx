@@ -21,6 +21,7 @@ import { debounce } from '@/utils/helpers';
 type ProjectDetailsProps = {
     userData: UserData,
     actionsEnabled: string[]
+    organizationId: string
 }
 
 export default function ProjectDetails({

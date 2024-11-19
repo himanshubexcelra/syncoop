@@ -74,7 +74,7 @@ export default function Header({ userData }: HeaderProps) {
                 setCartData(filteredData);
                 if (filteredData.length == 0) {
                     setCreatePopupVisibility(false);
-                  }
+                }
             }
         })
             .catch((error) => {
@@ -84,8 +84,8 @@ export default function Header({ userData }: HeaderProps) {
 
     }
 
-    const removeAll = (userId: number, type: string) => {
-        deleteMoleculeCart(userId).then((res) => {
+    const removeAll = (user_id: number, type: string) => {
+        deleteMoleculeCart(user_id).then((res) => {
             if (res) {
                 setCartData([]);
                 context?.addToState({
@@ -174,21 +174,21 @@ export default function Header({ userData }: HeaderProps) {
                 contentRender={() => (
                     <CartDetails
                         cartData={cartData}
-                        userId={userData.id}
+                        user_id={userData.id}
                         orgType={userData.orgUser.type}
                         removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
-                        removeAll={(userId: number, type: string) => removeAll(userId, type)}
+                        removeAll={(user_id: number, type: string) => removeAll(user_id, type)}
                     />
                 )}
                 width={570}
                 // hideOnOutsideClick={true}
-                height="auto"
+                height="100vh"
                 position={popupPosition}
 
                 showCloseButton={true}
                 wrapperAttr={{ class: "create-popup" }}
             />}
-            <OrderPopup
+            {orderPopupVisible && <OrderPopup
                 visible={orderPopupVisible}
                 onHiding={() => setOrderPopupVisibility(false)}
                 contentRender={() => (
@@ -198,12 +198,12 @@ export default function Header({ userData }: HeaderProps) {
                 )}
                 width={577}
                 // hideOnOutsideClick={true}
-                height={265}
+                height={236}
                 position={orderPopupPosition}
                 showCloseButton={false}
-                wrapperAttr={{ class: "order-popup mr-[15px]" }}
+                wrapperAttr={{ class: "order-popup" }}
                 style={{ backgroundColor: 'white' }}
-            />
+            />}
             <div className="flex items-center">
                 <Link href="/">
                     <Image
@@ -236,40 +236,40 @@ export default function Header({ userData }: HeaderProps) {
                     width={20}
                     height={20}
                 />
-                    <Link href="#"
-                        onClick={() =>
-                            setCreatePopupVisibility(
-                                cartData.length > 0 ? !createPopupVisible : createPopupVisible
-                            )
-                        }
+                <Link href="#"
+                    onClick={() =>
+                        setCreatePopupVisibility(
+                            cartData.length > 0 ? !createPopupVisible : createPopupVisible
+                        )
+                    }
 
-                    >
-                        <div className="relative flex items-center justify-center">
-                            <Image priority
-                                className="icon-cart"
-                                src={"/icons/cart-icon.svg"}
-                                alt="Cart"
-                                width={33}
-                                height={22}
-                            />
-                            <div className="absolute flex items-center 
+                >
+                    <div className="relative flex items-center justify-center">
+                        <Image priority
+                            className="icon-cart"
+                            src={"/icons/cart-icon.svg"}
+                            alt="Cart"
+                            width={33}
+                            height={22}
+                        />
+                        <div className="absolute flex items-center 
                             justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0"
+                        >
+                            <span
+                                className="text-black text-sm"
+                                onClick={() =>
+                                    setCreatePopupVisibility(
+                                        cartData.length > 0 ?
+                                            !createPopupVisible : createPopupVisible
+                                    )
+                                }
                             >
-                                <span
-                                    className="text-black text-sm"
-                                    onClick={() =>
-                                        setCreatePopupVisibility(
-                                            cartData.length > 0 ?
-                                                !createPopupVisible : createPopupVisible
-                                        )
-                                    }
-                                >
-                                    {cartData.length}
-                                </span>
+                                {cartData.length}
+                            </span>
 
-                            </div>
                         </div>
-                    </Link>
+                    </div>
+                </Link>
                 <div>
                     <div
                         className="flex items-center justify-center w-[24px] h-[24px] 

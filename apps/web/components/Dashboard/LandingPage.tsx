@@ -4,8 +4,13 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Popup } from "devextreme-react/popup";
 import {
-    BreadCrumbsObj, DashboardPageType,
-    HeadingObj, OrganizationDataFields, TabDetail
+    BreadCrumbsObj,
+    HeadingObj, 
+    OrganizationDataFields, 
+    OrgUser, 
+    TabDetail,
+    UserData,
+    UserRole
 } from "@/lib/definition";
 import Breadcrumb from "@/components/Breadcrumbs/BreadCrumbs";
 import UsersTable from "@/components/User/UsersTable";
@@ -21,6 +26,16 @@ import StatusComponent from "../StatusDetails/StatusComponent";
 import AssayTable from "../AssayTable/AssayTable";
 import Module from "../Module/Module";
 
+
+type DashboardPageTypeProps = {
+    userData: UserData,
+    filteredRoles: UserRole[],
+    myRoles: string[],
+    orgUser: OrgUser,
+    actionsEnabled: string[],
+    customerOrgId?: number,
+  }
+
 export default function LandingPage({
     userData,
     filteredRoles,
@@ -28,8 +43,7 @@ export default function LandingPage({
     orgUser,
     actionsEnabled,
     customerOrgId,
-    isCustomerOrg,
-}: DashboardPageType) {
+}: DashboardPageTypeProps) {
     const [organizationData, setOrganization] = useState<OrganizationDataFields>({});
     const [editPopup, showEditPopup] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
@@ -41,7 +55,7 @@ export default function LandingPage({
             : orgUser,
         [customerOrgId, organizationData.name, orgUser]
     );
-    const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgDetail, isCustomerOrg)
+    const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgDetail, customerOrgId)
     const heading: HeadingObj[] = [
         {
             svgPath: myRoles.includes('admin') && !customerOrgId ?
@@ -60,7 +74,7 @@ export default function LandingPage({
         {
             title: "Overview",
             Component: StatusComponent,
-            props: { myRoles, orgUser: orgDetail, isCustomerOrg }
+            props: { myRoles, orgUser: orgDetail, customerOrgId }
         },
         {
             title: "Assays",
@@ -109,10 +123,10 @@ export default function LandingPage({
                         orgUser={orgDetail}
                         filteredRoles={filteredRoles}
                         myRoles={myRoles}
-                        userId={id}
+                        user_id={id}
                         actionsEnabled={actionsEnabled}
                     />
-                    <div>
+                    <div className="w-full">
                         <div className="imageContainer">
                             <Image
                                 src="/icons/organization.svg"
@@ -122,7 +136,7 @@ export default function LandingPage({
                             />
                             <span>Customer Organizations</span>
                         </div>
-                        <div className="table">
+                        <div className="table w-full">
                             <ListOrganization userData={userData} actionsEnabled={actionsEnabled} />
                         </div>
                     </div>
@@ -138,13 +152,13 @@ export default function LandingPage({
                     />
                     <span>Users</span>
                 </div>
-                <div className="table">
+                <div className="table w-full">
                     <UsersTable
                         orgUser={orgDetail}
                         filteredRoles={filteredRoles}
                         myRoles={myRoles}
-                        userId={id}
-                        isCustomerOrg={isCustomerOrg}
+                        user_id={id}
+                        customerOrgId={customerOrgId}
                         actionsEnabled={actionsEnabled} />
                 </div>
             </div>

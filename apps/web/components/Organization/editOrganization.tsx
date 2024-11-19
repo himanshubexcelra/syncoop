@@ -19,7 +19,8 @@ import {
   OrganizationEditField,
   userType,
   OrganizationDataFields,
-  OrganizationType
+  OrganizationType,
+  AssayLabel
 } from "@/lib/definition";
 import { TextBoxTypes } from 'devextreme-react/text-box';
 import { User } from "@/lib/definition";
@@ -39,7 +40,6 @@ export default function EditOrganization({
   formRef,
   myRoles,
   loggedInUser,
-  orgAdminRole
 }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.orgAdminId);
@@ -62,7 +62,7 @@ export default function EditOrganization({
   const handleSubmit = async () => {
     if (formRef.current!.instance().validate().isValid) {
       const metadata = metaData;
-      const finalData = { ...formData, metadata: metadata, orgAdminRole };
+      const finalData = { ...formData, metadata: metadata, primaryContactId };
       const response = await editOrganization(finalData);
       if (!response.error) {
         formRef.current!.instance().reset();
@@ -157,8 +157,7 @@ export default function EditOrganization({
       </GroupItem>
       <SimpleItem
         editorType="dxSelectBox"
-        editorOptions={primaryContact}
-      >
+        editorOptions={primaryContact}      >
         <Label text="Primary Contact" />
       </SimpleItem>
       <GroupItem caption="Functional Assay" cssClass="groupItem" colCount={1}></GroupItem>
@@ -171,7 +170,7 @@ export default function EditOrganization({
             value: metaData.functionalAssay1
           }
         }>
-        <Label text="Functional Assay 1" />
+        <Label text={AssayLabel.functionalAssay1} />
       </SimpleItem>
       <SimpleItem
         dataField="functionalAssay2"
@@ -182,7 +181,7 @@ export default function EditOrganization({
             value: metaData.functionalAssay2
           }
         }>
-        <Label text="Functional Assay 2" />
+        <Label text={AssayLabel.functionalAssay2} />
       </SimpleItem>
       <SimpleItem dataField="functionalAssay3" editorOptions={
         {
@@ -191,7 +190,7 @@ export default function EditOrganization({
           value: metaData.functionalAssay3
         }
       }>
-        <Label text="Functional Assay 3" />
+        <Label text={AssayLabel.functionalAssay3} />
       </SimpleItem>
       <SimpleItem
         dataField="functionalAssay4"
@@ -202,7 +201,7 @@ export default function EditOrganization({
             value: metaData.functionalAssay4
           }
         }>
-        <Label text="Functional Assay 4" />
+        <Label text={AssayLabel.functionalAssay4} />
       </SimpleItem>
       <GroupItem cssClass="buttons-group" colCount={2}>
         <GroupItem cssClass="buttons-group" colCount={2}>

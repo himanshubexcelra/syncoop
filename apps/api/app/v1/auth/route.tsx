@@ -1,11 +1,12 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
+import json from "@/utils/helper";
 
 export async function POST(request: Request) {
   try {
     const req = await request.json();
-    const user = await prisma.user.findFirst({
+    const user = await prisma.users.findFirst({
       /* relationLoadStrategy: 'join', // or 'query' */
       select: {
         first_name: true,
@@ -30,14 +31,14 @@ export async function POST(request: Request) {
             id: true,
             name: true,
             type: true,
-            /* org_module: {
+            /* org_product_module: {
               include: {
-                module: {
+                product_module: {
                   include: {
-                    module_action: {
+                    product_module_action: {
                       include: {
-                        module_action_role_permission: {
-                          where: { roleId:  16}
+                        product_module_action_role_permission: {
+                          where: { role_id:  16}
                         }
                       }
                     }
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     if (user) {
       const isMatch = await bcrypt.compare(req.password_hash, `${user.password_hash}`);
       if (isMatch) {
-        return new Response(JSON.stringify({
+        return new Response(json({
           success: true,
           data: user
         }), {

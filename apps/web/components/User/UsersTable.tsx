@@ -9,6 +9,7 @@ import DataGrid, {
     DataGridRef,
     Paging,
     Sorting,
+    HeaderFilter
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
@@ -28,6 +29,18 @@ const resetDialogProperties = {
     width: 480,
     height: 260,
 }
+const getRoleOptions = (tableData: User[]) => {
+    const uniqueRoles = new Set<string>();
+    tableData.forEach(user => {
+        user.user_role?.forEach(roleItem => {
+            if (roleItem.role?.name) {
+                uniqueRoles.add(roleItem.role.name);
+            }
+        });
+    });
+    return Array.from(uniqueRoles).map(role => ({ text: role, value: role }));
+};
+
 export default function UsersTable({
     orgUser,
     filteredRoles,
@@ -35,9 +48,9 @@ export default function UsersTable({
     type,
     setInternalCount,
     setExternalCount,
-    userId,
+    user_id,
     actionsEnabled,
-    isCustomerOrg,
+    customerOrgId,
 }: UserTableProps) {
     const [editPopup, setEditPopup] = useState(false);
     const [internalUsers, setInternalUsers] = useState<User[]>([]);
@@ -74,10 +87,10 @@ export default function UsersTable({
         setLoader(true);
         try {
 
-            if (myRoles.includes("admin") && !isCustomerOrg) {
+            if (myRoles.includes("admin") && !customerOrgId) {
                 const [internal, external] = await Promise.all([
-                    getUsers(['orgUser', 'user_role'], OrganizationType.Internal, userId),
-                    getUsers(['orgUser', 'user_role'], OrganizationType.External, userId)
+                    getUsers(['orgUser', 'user_role'], OrganizationType.Internal, user_id),
+                    getUsers(['orgUser', 'user_role'], OrganizationType.External, user_id)
                 ])
                 setInternalUsers(internal)
                 setExternalUsers(external)
@@ -97,7 +110,7 @@ export default function UsersTable({
                 })
             }
             else {
-                const users = await getUsers(['orgUser', 'user_role'], "", userId, orgUser?.id);
+                const users = await getUsers(['orgUser', 'user_role'], "", user_id, orgUser?.id);
                 setTableData(users);
             }
         } catch (error) {
@@ -119,12 +132,27 @@ export default function UsersTable({
         fetchAndFilterData();
     }, [myRoles, type, orgUser, appContext?.refreshUsersTable]);
 
+    const calculateCellValue = (data: any) => {
+        return data?.user_role?.map((item: any) => item.role?.name).join(', ') || '';
+    };
+
+
+    const calculateFilterExpression = (filterValue: any) => {
+        return [
+            calculateCellValue,
+            "contains",
+            filterValue
+        ];
+    };
     return (
         <>
-            <LoadIndicator
-                visible={loader}
-            />
-            {!loader &&
+            {loader ? (
+                <div className="center">
+                    <LoadIndicator
+                        visible={loader}
+                    />
+                </div>
+            ) :
                 <DataGrid
                     dataSource={tableData}
                     showBorders={true}
@@ -133,15 +161,17 @@ export default function UsersTable({
                 >
                     <Paging defaultPageSize={5} defaultPageIndex={0} />
                     <Sorting mode="single" />
+                    <HeaderFilter visible={true} />
                     <Column
                         dataField="email_id"
                         caption="Email Address"
                         width={350}
+                        allowHeaderFiltering={false}
                         cellRender={(data: any) => {
-                            const userId = data?.data?.id;
+                            const user_id = data?.data?.id;
                             return (
                                 <a
-                                    href={`/profile/${userId}`}
+                                    href={`/profile/${user_id}`}
                                     className="text-themeBlueColor underline"
                                 >
                                     {data.value}
@@ -156,23 +186,32 @@ export default function UsersTable({
                         alignment="left"
                         defaultSortIndex={0}
                         defaultSortOrder="asc"
+                        allowHeaderFiltering={false}
                     />
                     <Column
                         dataField="last_name"
                         width={140}
                         caption="Last Name"
+                        allowHeaderFiltering={false}
                     />
                     {type === OrganizationType.External && <Column
+                        allowHeaderFiltering={false}
                         dataField="orgUser.name"
                         caption="Organization"
                         width={130}
                     />}
                     <Column
                         dataField="user_role"
+                        calculateFilterExpression={calculateFilterExpression}
+
                         caption="Roles"
+                        headerFilter={{
+                            dataSource: getRoleOptions(tableData)
+                        }}
+                        calculateCellValue={calculateCellValue}
                         cellRender={(data: any) => {
                             return <div className="flex gap-5">
-                                {data?.value?.map((item: any, index: number) => {
+                                {data?.data?.user_role?.map((item: any, index: number) => {
                                     return (
                                         <div
                                             key={index}
@@ -181,11 +220,13 @@ export default function UsersTable({
                                             {item.role.name}
                                         </div>
                                     );
-                                })}</div>;
+                                })}
+                            </div>;
                         }}
                     />
                     {(actionsEnabled.includes('edit_user') || myRoles.includes('admin')) && <Column
                         width={80}
+                        allowHeaderFiltering={false}
                         cellRender={({ data }: any) => (
                             <div className="flex gap-2 cursor-pointer">
                                 <Image
@@ -270,7 +311,7 @@ export default function UsersTable({
                                         type={type}
                                         fetchData={fetchAndFilterData}
                                         isMyProfile={false}
-                                        isCustomerOrg={isCustomerOrg}
+                                        customerOrgId={customerOrgId}
                                     />
                                 )}
                                 width={400}
@@ -289,25 +330,6 @@ export default function UsersTable({
                                 hidePopup: hidePasswordPopup,
                                 contentProps
                             }} />
-                        </Item>
-                        <Item location="after">
-                            <Btn
-                                text="Filter"
-                                icon="filter"
-                                elementAttr={{ class: "form_btn_primary btn-toolbar btn-filter" }}
-                                disabled={true}
-                                render={() => (
-                                    <>
-                                        <Image
-                                            src="/icons/filter.svg"
-                                            width={24}
-                                            height={24}
-                                            alt="Filter"
-                                        />
-                                        <span>Filter</span>
-                                    </>
-                                )}
-                            />
                         </Item>
                         <Item name="searchPanel" location="before" />
                     </GridToolbar>

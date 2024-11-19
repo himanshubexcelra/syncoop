@@ -32,7 +32,7 @@ export default function RenderCreateOrganization({
   setCreatePopupVisibility,
   formRef,
   fetchOrganizations,
-  roleId,
+  role_id,
   created_by,
 }: OrganizationCreateFields) {
   const context: any = useContext(AppContext);
@@ -42,7 +42,7 @@ export default function RenderCreateOrganization({
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
-      const response = await createOrganization({ ...values, created_by }, roleId);
+      const response = await createOrganization({ ...values, created_by }, role_id);
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();

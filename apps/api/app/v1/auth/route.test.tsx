@@ -19,13 +19,13 @@ describe('Auth API', () => {
                         role: {
                             type: 'admin',
                             module_permission: [],
-                            module_action_role_permission: []
+                            product_module_action_role_permission: []
                         }
                     }
                 ]
             } as any;
 
-            prismaMock.user.findFirst.mockResolvedValue(user);
+            prismaMock.users.findFirst.mockResolvedValue(user);
 
             const request = {
                 json: async () => {
@@ -46,7 +46,7 @@ describe('Auth API', () => {
         })
 
         it('should throw error when user does not exist', async () => {
-            prismaMock.user.findFirst.mockImplementation();
+            prismaMock.users.findFirst.mockImplementation();
 
             const request = {
                 json: async () => {
@@ -67,7 +67,7 @@ describe('Auth API', () => {
         });
 
         it('should throw webhook error for bad request', async () => {
-            prismaMock.user.findFirst.mockImplementation();
+            prismaMock.users.findFirst.mockImplementation();
 
             const request = {};
 

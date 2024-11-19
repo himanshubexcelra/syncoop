@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 
 
 export async function GET(request: Request) {
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
         if (orgId) {
             query = {
                 where: {
-                    org_module: {
+                    org_product_module: {
                         some: {
                             organization_id: Number(orgId),
                         },
@@ -18,9 +19,9 @@ export async function GET(request: Request) {
                 },
             };
         }
-        const data = await prisma.module.findMany(query);
+        const data = await prisma.product_module.findMany(query);
 
-        return new Response(JSON.stringify(data), {
+        return new Response(json(data), {
             headers: { "Content-Type": "application/json" },
             status: 200,
         });

@@ -122,7 +122,7 @@ fdescribe('Organization API Functions', () => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ ...formData, roleId: 2 }),
+            body: JSON.stringify({ ...formData, role_id: 2 }),
         });
         expect(result).toEqual(mockResponse);
     });

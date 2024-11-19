@@ -5,12 +5,9 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
-import { Button } from "devextreme-react/button";
 import { AppContext } from "../../app/AppState";
 import {
-    StatusCodeAPIType,
     StatusCodeBg,
-    StatusCodeBgAPI,
     StatusCodeTextColor,
 } from '@/utils/constants';
 import {
@@ -29,7 +26,7 @@ import {
     getMoleculeCart
 } from './libraryService';
 import { DELAY } from "@/utils/constants";
-import { delay, getStatusLabel, generateRandomDigitNumber } from "@/utils/helpers";
+import { delay, getStatusLabel, generateRandomDigitNumber, colorSchemeADME } from "@/utils/helpers";
 import StatusMark from '@/ui/StatusMark';
 import { Popup } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
@@ -76,41 +73,24 @@ export default function MoleculeList({
     const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
     const [moleculeData, setMoleculeData] = useState([]);
     const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
+    const [reloadMolecules, setReloadMolecules] = useState(false);
 
     const handleStructureZoom = () => { };
 
-    // Custom renderer function
-    const customRenderForField = (data: MoleculeType, field: keyof MoleculeType) => {
-        let color: StatusCodeAPIType = 'READY';
-        const value = data[field]; // Dynamic field access based on the `field` parameter
-
-        if (typeof value === 'number') {
-            if (value <= 0.5) color = 'FAILED';
-            else if (value > 0.5 && value < 1) color = 'INFO';
-            else if (value >= 1) color = 'DONE';
-        }
-
-        return (
-            <span className={`flex items-center gap-[5px] ${StatusCodeBgAPI[color]}`}>
-                {`${value} || ''`}
-            </span>
-        );
-    };
-
     const columns: ColumnConfig<MoleculeType>[] = [
         {
-            dataField: "molecule_favorites",
+            dataField: "user_favourite_molecule",
             type: "bookmark",
-            width: 90,
+            width: 60,
             alignment: "center",
             allowSorting: false,
             allowHeaderFiltering: false,
             customRender: (data) => {
                 const existingFavourite =
-                    data.molecule_favorites?.find((
+                    data.user_favourite_molecule?.find((
                         val: MoleculeFavourite) =>
                         val.user_id === userData.id &&
-                        val.molecule_id === data.molecule_id);
+                        val.molecule_id === data.id);
                 return (
                     <span className={`flex
                                     justify-center
@@ -137,73 +117,33 @@ export default function MoleculeList({
         {
             dataField: 'smiles_string',
             title: 'Structure',
-            minWidth: 300,
-            width: 300,
+            minWidth: 180,
+            width: 180,
             allowSorting: false,
             allowHeaderFiltering: false,
             customRender: (data) => (
-                <span className='flex justify-center gap-[7.5px]'
-                >
-                    <MoleculeStructureActions
-                        smilesString={data.smiles_string}
-                        molecule_id={data.molecule_id}
-                        onZoomClick={() => handleStructureZoom()}
-                    />
-                    <Button
-                        disabled=
-                        {!actionsEnabled.includes('edit_molecule')}
-                        render={() => (
-                            <>
-                                <Image
-                                    src="/icons/edit.svg"
-                                    width={24}
-                                    height={24}
-                                    alt="edit"
-                                    onClick={
-                                        () =>
-                                            showEditMolecule(data)}
-                                />
-                            </>
-                        )}
-
-                    />
-                    <Button
-                        disabled={true}
-                        render={() => (
-                            <>
-                                <Image
-                                    src="/icons/zoom.svg"
-                                    width={24}
-                                    height={24}
-                                    alt="zoom"
-                                />
-                            </>
-                        )}
-                    />
-                    <Button
-                        disabled={true}
-                        render={() => (
-                            <>
-                                <Image
-                                    src="/icons/delete.svg"
-                                    width={24}
-                                    height={24}
-                                    alt="delete"
-                                />
-                            </>
-                        )}
-                    />
-
-                </span>
+                <MoleculeStructureActions
+                    smilesString={data.smiles_string}
+                    molecule_id={data.id}
+                    onZoomClick={() => handleStructureZoom()}
+                    enableEdit={actionsEnabled.includes('edit_molecule')}
+                    enableDelete={actionsEnabled.includes('delete_molecule')}
+                    onEditClick={() => showEditMolecule(data)}
+                />
             ),
         },
         {
-            dataField: 'molecule_id', title: 'Molecule ID', minWidth: 150,
+            dataField: 'id', title: 'Molecule ID',
+            allowHeaderFiltering: false, alignment: "center"
+        },
+        {
+            dataField: 'source_molecule_name', title: 'Molecule Name',
             allowHeaderFiltering: false, alignment: "center"
         },
         {
             dataField: 'molecular_weight', title: 'Molecular Weight',
-            alignment: "center", allowHeaderFiltering: false
+            alignment: "center", allowHeaderFiltering: false,
+            customRender: (data) => Number(data.molecular_weight).toPrecision(2)
         },
         {
             dataField: 'status',
@@ -234,22 +174,50 @@ export default function MoleculeList({
         {
             dataField: 'yield', title: 'Yield', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => customRenderForField(data, 'yield')
+            customRender: (data) => {
+                const color = colorSchemeADME(data, 'yield')
+                return (
+                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+                        {`${data['yield']} || ''`}
+                    </span>
+                )
+            }
         },
         {
             dataField: 'anlayse', title: 'Analyse', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => customRenderForField(data, 'anlayse')
+            customRender: (data) => {
+                const color = colorSchemeADME(data, 'anlayse')
+                return (
+                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+                        {`${data['anlayse']} || ''`}
+                    </span>
+                )
+            }
         },
         {
             dataField: 'herg', title: 'HERG', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => customRenderForField(data, 'herg')
+            customRender: (data) => {
+                const color = colorSchemeADME(data, 'herg')
+                return (
+                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+                        {`${data['herg']} || ''`}
+                    </span>
+                )
+            }
         },
         {
             dataField: 'caco2', title: 'Caco-2', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => customRenderForField(data, 'caco2')
+            customRender: (data) => {
+                const color = colorSchemeADME(data, 'caco2')
+                return (
+                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
+                        {`${data['caco2']} || ''`}
+                    </span>
+                )
+            }
         },
     ];
 
@@ -290,7 +258,7 @@ export default function MoleculeList({
     }) => {
         setMoleculeLoader(true);
         const dataField: addToFavouritesProps = {
-            molecule_id: data.molecule_id, user_id: userData.id, favourite: true
+            molecule_id: data.id, user_id: userData.id, favourite: true
         };
         if (existingFavourite) dataField.existingFavourite = existingFavourite;
         const response = await addToFavourites(dataField);
@@ -324,7 +292,7 @@ export default function MoleculeList({
             order_id: orderId,
             molecule_id: item.id,
             library_id: library_id,
-            userId: userData.id,
+            user_id: userData.id,
             organization_id: projects.organization_id,
             project_id: projects.id
         }));
@@ -347,13 +315,14 @@ export default function MoleculeList({
         }
     };
 
-    const showEditMolecule = useCallback((data: any | null = null) => {
+    const showEditMolecule = useCallback((data?: MoleculeType) => {
         const moleculesToEdit = data ? [data] : selectedRowsData;
         setEditMolecules(moleculesToEdit);
         setViewEditMolecule(true);
     }, [selectedRowsData]);
 
     const addProductToCart = () => {
+
         context?.addToState({
             ...appContext, cartDetail: [...moleculeData]
         })
@@ -367,12 +336,23 @@ export default function MoleculeList({
             })
     }
 
+    useEffect(() => {
+        if (reloadMolecules) {
+            (async () => {
+                setEditMolecules([]);
+                setSelectedRowsData([]);
+                setSelectedRows([]);
+                setMoleculeLoader(true);
+                const libraryData =
+                    await getLibraryById(['molecule'], selectedLibrary.toString());
+                setMoleculeLoader(false);
+                setTableData(libraryData.molecule || []);
+            })();
+        }
+    }, [reloadMolecules])
+
     const callLibraryId = async () => {
-        setMoleculeLoader(true);
-        const libraryData =
-            await getLibraryById(['molecule'], selectedLibrary.toString());
-        setMoleculeLoader(false);
-        setTableData(libraryData.molecule || []);
+        setReloadMolecules(true);
     }
 
     const addMolecule = () => {
@@ -408,8 +388,7 @@ export default function MoleculeList({
                     visible={moleculeLoader}
                 /> :
                 <div className={
-                    `table pb-[10px]
-                                ${expanded ? 'w-[60vw]' : 'w-100vw'}`}>
+                    `table pb-[10px] ${expanded ? 'w-3/5' : 'w-full'}`}>
                     <CustomDataGrid
                         columns={columns}
                         data={tableData}

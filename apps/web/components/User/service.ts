@@ -77,10 +77,10 @@ export async function getUserModulePermissions(userData: any) {
     const { organization_id, roles } = userData;
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization`);
-        url.searchParams.append('with', JSON.stringify(['org_module', 'module_action_role_permission']));
+        url.searchParams.append('with', JSON.stringify(['org_product_module', 'product_module_action_role_permission']));
         url.searchParams.append('id', organization_id);
         // roles.push({id: 4, type: 'sd'});
-        url.searchParams.append('roleIds', JSON.stringify(roles.map((role: any) => role.id)));
+        url.searchParams.append('role_ids', JSON.stringify(roles.map((role: any) => role.id)));
         const response: any = await fetch(url, {
             method: 'GET',
             headers: {

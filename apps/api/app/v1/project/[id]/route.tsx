@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import json from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
@@ -94,7 +95,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     try {
         const project = await prisma.project.findUnique(query);
 
-        return new Response(JSON.stringify(project), {
+        return new Response(json(project), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS, // success status code
         });

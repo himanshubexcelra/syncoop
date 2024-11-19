@@ -58,7 +58,7 @@ export interface userType {
 }
 
 export interface sharedUserType {
-  userId: number,
+  user_id: number,
   id: number,
   name: string,
   last_name: string,
@@ -104,7 +104,7 @@ export interface OrganizationCreateFields {
   organizationData?: OrganizationDataFields[],
   roleType?: string,
   edit?: boolean,
-  roleId: number,
+  role_id: number,
   data?: UserData,
   created_by: number
 }
@@ -146,7 +146,7 @@ export interface MoleculeType {
   created_at: Date;
   created_by: number;
   finger_print: string;
-  molecule_id: number;
+  id: number;
   inchi_key: string;
   library_id: number;
   molecular_weight: number;
@@ -157,7 +157,7 @@ export interface MoleculeType {
   status: number;
   updated_at: Date;
   updated_by: number;
-  molecule_favorites?: MoleculeFavourite[];
+  user_favourite_molecule?: MoleculeFavourite[];
   yield?: number;
   anlayse?: number;
   herg?: number;
@@ -213,7 +213,7 @@ export interface ProjectDataFields {
   userWhoUpdated: userType;
   userWhoCreated: userType;
   updated_at: Date;
-  userId?: number;
+  user_id?: number;
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
@@ -249,7 +249,7 @@ export interface User {
 
 export interface UserRoleType {
   role: UserRole
-  roleId: number
+  role_id: number
 }
 
 export interface OwnerType {
@@ -318,7 +318,7 @@ export interface CountCard {
 export interface StatusComponentProps {
   myRoles: string[];
   orgUser: OrgUser;
-  isCustomerOrg: boolean;
+  customerOrgId?: number;
 }
 
 export type UserTableProps = {
@@ -328,9 +328,9 @@ export type UserTableProps = {
   type?: string;
   setExternalCount?: any,
   setInternalCount?: any,
-  userId: number,
+  user_id: number,
   actionsEnabled: string[],
-  isCustomerOrg?: boolean,
+  customerOrgId?: number,
 }
 
 export interface TabDetail {
@@ -350,7 +350,8 @@ export enum StatusCode {
   FAILED = 'Failed',
   INPROGRESS = 'In Progress',
   DONE = 'Done',
-  INRETROQUEUE = 'In-retro Queue'
+  INRETROQUEUE = 'In-retro Queue',
+  INFO = 'Info'
 }
 
 export enum MoleculeStatusCode {
@@ -407,16 +408,6 @@ export interface LibraryCreateFields {
   projectData: ProjectDataFields,
   userData: UserData,
   library_idx?: number,
-}
-
-export interface DashboardPageType {
-  userData: UserData,
-  filteredRoles: UserRole[],
-  myRoles: string[],
-  orgUser: OrgUser,
-  actionsEnabled: string[],
-  customerOrgId?: number,
-  isCustomerOrg: boolean,
 }
 
 export interface LibraryDataNode {
@@ -495,6 +486,7 @@ export interface MoleculeOrder {
   molecularWeight: number;
   organizationName: string;
   molecular_weight: string;
+  source_molecule_name: string;
   smiles_string: string;
   status: number;
   yield?: number;
@@ -564,7 +556,7 @@ export interface OrderDetail {
   library_id: number;
   project_id: number;
   organization_id: number;
-  userId: number;
+  user_id: number;
 }
 
 export interface RejectedMolecules {
@@ -593,3 +585,16 @@ export interface SaveMoleculeParams {
   setLoader: (loading: boolean) => void;
   setButtonText: (text: string) => void;
 }
+
+export type UserAction = {
+  userData: UserData,
+  actionsEnabled: string[],
+  routesEnabled: string[]
+}
+
+export enum AssayLabel {
+  functionalAssay1 = 'Functional Assay 1',
+  functionalAssay2 = 'Functional Assay 2',
+  functionalAssay3 = 'Functional Assay 3',
+  functionalAssay4 = 'Functional Assay 4',
+};

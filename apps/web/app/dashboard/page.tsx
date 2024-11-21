@@ -19,15 +19,13 @@ export default async function Dashboard() {
   return (
     <Layout>
       <div>
-        <main className="main main-heading">
-          <LandingPage
-            userData={userData}
-            filteredRoles={filteredRoles}
-            myRoles={myRoles}
-            orgUser={orgUser}
-            actionsEnabled={actionsEnabled}
-          />
-        </main>
+        <LandingPage
+          userData={userData}
+          filteredRoles={filteredRoles}
+          myRoles={myRoles}
+          orgUser={orgUser}
+          actionsEnabled={actionsEnabled}
+        />
       </div>
     </Layout>
   );

@@ -246,11 +246,13 @@ export default function LibraryAccordion({
                     <div className='library-name no-border text-normal'>
                         Target: <span>{projects.target}</span>
                     </div>
-                    <div className='library-name no-border text-normal'>
-                        Last Modified: <span>
-                            {formatDetailedDate(projects.updated_at)}
-                        </span>
-                    </div>
+                    {projects.updated_at &&
+                        <div className='library-name no-border text-normal'>
+
+                            Last Modified: <span>
+                                {formatDetailedDate(projects.updated_at)}
+                            </span>
+                        </div>}
                     <div className='library-name no-border text-normal'>
                         {projects.description ?
                             <TextWithToggle

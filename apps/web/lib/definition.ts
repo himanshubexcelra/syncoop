@@ -120,6 +120,7 @@ export interface ProjectCreateFields {
   edit?: boolean,
   /* role: number, */
   userData: UserData,
+  clickedOrg?: number,
 }
 
 export type FetchUserType = (value?: boolean) => void;

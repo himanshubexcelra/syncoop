@@ -8,7 +8,7 @@ import { Highlighting } from './Highlighting';
 import { ButtonsSelect } from './ButtonsSelect';
 import { FileInputForm } from './FileInputForm';
 import { ControlsCard } from './ControlsCard';
-import getAPIData from './service';
+import { getAromatizeSmile } from './service';
 
 const FlexBox = styled('div')`
   display: flex;
@@ -58,8 +58,7 @@ export const Panel = ({
       printToTerminal(message);
     });
 
-    const url = process.env.NEXT_PUBLIC_INDIGO_SERVICE_API!;
-    const response = await getAPIData(url);
+    const response = await getAromatizeSmile('C1=CC=CC=C1');
     return (response as any).data;
   };
 

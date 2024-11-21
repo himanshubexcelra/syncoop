@@ -5,9 +5,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Popup } from "devextreme-react/popup";
 import {
     BreadCrumbsObj,
-    HeadingObj, 
-    OrganizationDataFields, 
-    OrgUser, 
+    HeadingObj,
+    OrganizationDataFields,
+    OrgUser,
     TabDetail,
     UserData,
     UserRole
@@ -34,7 +34,7 @@ type DashboardPageTypeProps = {
     orgUser: OrgUser,
     actionsEnabled: string[],
     customerOrgId?: number,
-  }
+}
 
 export default function LandingPage({
     userData,
@@ -114,77 +114,82 @@ export default function LandingPage({
 
     return (
         <>
-            <Breadcrumb breadcrumbs={breadcrumbs} />
-            <Heading {...{ heading }} myRoles={myRoles} showEditPopup={showEditPopup} />
-            <Tabs tabsDetails={tabsStatus} />
-            {myRoles.includes('admin') && !customerOrgId &&
-                <>
-                    <TabUsersTable
-                        orgUser={orgDetail}
-                        filteredRoles={filteredRoles}
-                        myRoles={myRoles}
-                        user_id={id}
-                        actionsEnabled={actionsEnabled}
-                    />
-                    <div className="w-full">
-                        <div className="imageContainer">
-                            <Image
-                                src="/icons/organization.svg"
-                                width={33}
-                                height={30}
-                                alt="organization"
-                            />
-                            <span>Customer Organizations</span>
-                        </div>
-                        <div className="table w-full">
-                            <ListOrganization userData={userData} actionsEnabled={actionsEnabled} />
-                        </div>
-                    </div>
-                </>
-            }
-            {(!myRoles.includes('admin') || customerOrgId) && <div>
-                <div className={`imageContainer pt-5 pb-2.5`}>
-                    <Image
-                        src="/icons/Users-icon-lg.svg"
-                        width={40}
-                        height={32}
-                        alt="organization"
-                    />
-                    <span>Users</span>
-                </div>
-                <div className="table w-full">
-                    <UsersTable
-                        orgUser={orgDetail}
-                        filteredRoles={filteredRoles}
-                        myRoles={myRoles}
-                        user_id={id}
-                        customerOrgId={customerOrgId}
-                        actionsEnabled={actionsEnabled} />
-                </div>
+            <div className="space-y-2 mb-2">
+                <Breadcrumb breadcrumbs={breadcrumbs} />
+                <Heading {...{ heading }} myRoles={myRoles} showEditPopup={showEditPopup} />
             </div>
-            }
-            <Popup
-                titleRender={renderTitleField}
-                showTitle={true}
-                visible={editPopup}
-                showCloseButton={true}
-                hideOnOutsideClick={true}
-                contentRender={() => (
-                    <EditOrganization
-                        formRef={formRef}
-                        organizationData={organizationData}
-                        showEditPopup={showEditPopup}
-                        fetchOrganizations={fetchOrganizationData}
-                        myRoles={myRoles}
-                        loggedInUser={userData.id}
-                    />
-                )}
-                width={477}
-                height="100%"
-                position={popupPosition}
-                onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}
-                wrapperAttr={{ class: "create-popup" }}
-            />
+            <main className="main main-heading main-padding">
+                <Tabs tabsDetails={tabsStatus} />
+                {myRoles.includes('admin') && !customerOrgId &&
+                    <>
+                        <TabUsersTable
+                            orgUser={orgDetail}
+                            filteredRoles={filteredRoles}
+                            myRoles={myRoles}
+                            user_id={id}
+                            actionsEnabled={actionsEnabled}
+                        />
+                        <div className="w-full">
+                            <div className="imageContainer">
+                                <Image
+                                    src="/icons/organization.svg"
+                                    width={33}
+                                    height={30}
+                                    alt="organization"
+                                />
+                                <span>Customer Organizations</span>
+                            </div>
+                            <div className="table w-full">
+                                <ListOrganization userData={userData}
+                                    actionsEnabled={actionsEnabled} />
+                            </div>
+                        </div>
+                    </>
+                }
+                {(!myRoles.includes('admin') || customerOrgId) && <div className="w-full">
+                    <div className={`imageContainer pt-5 pb-2.5`}>
+                        <Image
+                            src="/icons/Users-icon-lg.svg"
+                            width={40}
+                            height={32}
+                            alt="organization"
+                        />
+                        <span>Users</span>
+                    </div>
+                    <div className="table w-full">
+                        <UsersTable
+                            orgUser={orgDetail}
+                            filteredRoles={filteredRoles}
+                            myRoles={myRoles}
+                            user_id={id}
+                            customerOrgId={customerOrgId}
+                            actionsEnabled={actionsEnabled} />
+                    </div>
+                </div>
+                }
+                <Popup
+                    titleRender={renderTitleField}
+                    showTitle={true}
+                    visible={editPopup}
+                    showCloseButton={true}
+                    hideOnOutsideClick={true}
+                    contentRender={() => (
+                        <EditOrganization
+                            formRef={formRef}
+                            organizationData={organizationData}
+                            showEditPopup={showEditPopup}
+                            fetchOrganizations={fetchOrganizationData}
+                            myRoles={myRoles}
+                            loggedInUser={userData.id}
+                        />
+                    )}
+                    width={477}
+                    height="100%"
+                    position={popupPosition}
+                    onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}
+                    wrapperAttr={{ class: "create-popup" }}
+                />
+            </main>
         </>
     );
 }

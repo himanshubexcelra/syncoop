@@ -5,7 +5,6 @@ import {
   MoleculeStatusCode, MoleculeStatusLabels, MoleculeType,
   StatusCode, StatusType
 } from "@/lib/definition"
-import CustomFile from "./file";
 import { StatusCodeType } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
@@ -174,7 +173,7 @@ export function fetchMoleculeStatus(data: UnionLibType) {
   data.molecule.forEach((molecule: UnionMoleculeType) => {
     const keys = Object.keys(projectStatusCount);
     const values = Object.values(projectStatusCount);
-    const keyIndex = keys.indexOf(molecule.status)
+    const keyIndex = keys.indexOf(molecule.status as any)
     if (keyIndex > -1) {
       const key = keys[keyIndex];
       projectStatusCount = {
@@ -190,6 +189,7 @@ export function fetchMoleculeStatus(data: UnionLibType) {
 export function isAdmin(myRoles: string[]) {
   return ['admin', 'org_admin'].some((role) => myRoles.includes(role));
 }
+
 export function generateRandomDigitNumber() {
   // Generate a random number between 10000000 and 99999999
   const randomNum = Math.floor(10000000 + Math.random() * 90000000);
@@ -200,19 +200,9 @@ export function getStatusLabel(statusCode: number) {
   return MoleculeStatusLabels[statusCode as MoleculeStatusCode];
 }
 
-export const downloadCSV = (
-  header: any,
-  data: any,
-  filename: string) => {
-
-  const rows: any = [header, ...data];
-  const csvData = CustomFile.convertToCSV(rows);
-  return CustomFile.downLoad(csvData, filename, 'csv');
-}
-
 export const colorSchemeADME = (data: MoleculeType | MoleculeOrder, field: keyof MoleculeType) => {
   let color: StatusCodeType = 'READY';
-  const value = data[field]; // Dynamic field access based on the `field` parameter
+  const value = (data as any)[field]; // Dynamic field access based on the `field` parameter
 
   if (typeof value === 'number') {
     if (value <= 0.5) color = 'FAILED';
@@ -221,3 +211,13 @@ export const colorSchemeADME = (data: MoleculeType | MoleculeOrder, field: keyof
   }
   return color;
 };
+
+export const getUTCTime = (dateTimeString: string) => {
+  const dt = new Date(dateTimeString);
+  const dtNumber = dt.getTime();
+  const dtOffset = dt.getTimezoneOffset() * 60000;
+  const dtUTC = new Date();
+  dtUTC.setTime(dtNumber - dtOffset);
+
+  return dtUTC;
+}

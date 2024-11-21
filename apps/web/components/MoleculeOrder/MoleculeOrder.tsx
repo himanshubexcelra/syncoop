@@ -32,7 +32,7 @@ import {
 } from '@/utils/helpers';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
-import { addMoleculeToCart, getMoleculeCart } from '@/components/Libraries/libraryService'
+import { addMoleculeToCart, getMoleculeCart } from '@/components/Libraries/service'
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { DataGridTypes } from 'devextreme-react/cjs/data-grid';
@@ -328,8 +328,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   return (
     <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
-      <div className="pt-[20px]">
-        <main className="main main-title">
+      <div className="pt-[10px]">
+        <main className="main main-title pl-[20px]">
           <Image src="/icons/molecule-order.svg" width={33} height={30} alt="Project logo" />
           <span>Molecule Orders</span>
         </main>

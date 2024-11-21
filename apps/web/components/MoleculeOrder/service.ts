@@ -4,6 +4,7 @@
 import { MoleculeOrderParams } from "@/lib/definition";
 
 export async function getMoleculesOrder(params: MoleculeOrderParams) {
+
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_order`);
 
     // Add query parameters based on provided params
@@ -15,19 +16,23 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
     }
 
     try {
-        const response = await fetch(url.toString(), {
+        const response = await fetch(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
             },
         });
+        
 
-        if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        }
+        else {
+            const data = await response.json();
+            throw new Error(`Error: ${data.errorMessage}`);
         }
 
-        const data = await response.json();
-        return data;
     } catch (error) {
         console.error("Error fetching molecule_order data:", error);
         throw error;

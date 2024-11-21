@@ -11,7 +11,7 @@ import {
   ColumnConfig,
   OrganizationType
 } from '@/lib/definition';
-import { submitOrder } from './libraryService';
+import { submitOrder } from './service';
 import dynamic from 'next/dynamic';
 interface CartDetailsProps {
   cartData: CartItem[];

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;

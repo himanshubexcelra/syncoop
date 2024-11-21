@@ -28,6 +28,7 @@ type ProjectAccordionDetailProps = {
     userData: UserData,
     actionsEnabled: string[],
     myRoles?: string[],
+    clickedOrg?: number,
 }
 
 export default function ProjectAccordionDetail({
@@ -37,7 +38,8 @@ export default function ProjectAccordionDetail({
     organizationData,
     myRoles,
     userData,
-    actionsEnabled
+    actionsEnabled,
+    clickedOrg,
 }: ProjectAccordionDetailProps) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -100,7 +102,9 @@ export default function ProjectAccordionDetail({
                 <div className='flex gap-[8px]'>
                     <button
                         className='primary-button accordion-button'
-                        onClick={() => router.push(`/projects/${data.id}`)}
+                        onClick={() => clickedOrg ?
+                            router.push(`/organization/${clickedOrg}/projects/${data.id}`)
+                            : router.push(`/projects/${data.id}`)}
                     >
                         Open
                     </button>
@@ -356,35 +360,38 @@ export default function ProjectAccordionDetail({
                     )}
                 </div>
             </div>
-            {actionsEnabled.includes('edit_project') && createPopupVisible && (
-                <Popup
-                    title="Edit Project"
-                    visible={createPopupVisible}
-                    contentRender={() => (
-                        <CreateProject
-                            formRef={formRef}
-                            setCreatePopupVisibility={setCreatePopupVisibility}
-                            fetchOrganizations={fetchOrganizations}
-                            userData={userData}
-                            projectData={data}
-                            users={users}
-                            organizationData={organizationData}
-                            myRoles={myRoles}
-                            edit={true}
-                        />
-                    )}
-                    width={477}
-                    hideOnOutsideClick={true}
-                    height="100%"
-                    position={popupPosition}
-                    onHiding={() => {
-                        formRef.current?.instance().reset();
-                        setCreatePopupVisibility(false);
-                    }}
-                    showCloseButton={true}
-                    wrapperAttr={{ class: "create-popup mr-[15px]" }}
-                />
-            )}
+            {
+                actionsEnabled.includes('edit_project') && createPopupVisible && (
+                    <Popup
+                        title="Edit Project"
+                        visible={createPopupVisible}
+                        contentRender={() => (
+                            <CreateProject
+                                formRef={formRef}
+                                setCreatePopupVisibility={setCreatePopupVisibility}
+                                fetchOrganizations={fetchOrganizations}
+                                userData={userData}
+                                projectData={data}
+                                users={users}
+                                organizationData={organizationData}
+                                myRoles={myRoles}
+                                edit={true}
+                                clickedOrg={clickedOrg}
+                            />
+                        )}
+                        width={477}
+                        hideOnOutsideClick={true}
+                        height="100%"
+                        position={popupPosition}
+                        onHiding={() => {
+                            formRef.current?.instance().reset();
+                            setCreatePopupVisibility(false);
+                        }}
+                        showCloseButton={true}
+                        wrapperAttr={{ class: "create-popup mr-[15px]" }}
+                    />
+                )
+            }
         </div >
     );
 }

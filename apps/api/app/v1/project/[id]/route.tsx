@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
@@ -9,10 +9,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const searchParams = new URLSearchParams(url.searchParams);
     const project_id = Number(params.id); // Get the project ID from query parameters
     const joins = searchParams.get('with');
-    const query: any = {};
+    const query: any = {
+        where: { id: Number(project_id) }
+    };
 
     if (joins && joins.length) {
-        query.include = {};
 
         if (joins.includes('libraries')) {
             query.include = {
@@ -89,7 +90,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 },
             }
         }
-        query.where = { id: Number(project_id) };
+
+        if (joins.includes('organization')) {
+            query.include = {
+                ...query.include,
+                organization: true
+            }
+        }
+
+
     }
 
     try {

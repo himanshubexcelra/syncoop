@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 
 // export const dynamic = "force-static";
 

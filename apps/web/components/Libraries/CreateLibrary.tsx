@@ -11,7 +11,7 @@ import {
   GroupItem,
 } from "devextreme-react/form";
 import { delay } from "@/utils/helpers";
-import { createLibrary, editLibrary } from "./libraryService";
+import { createLibrary, editLibrary } from "./service";
 import { LibraryCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";

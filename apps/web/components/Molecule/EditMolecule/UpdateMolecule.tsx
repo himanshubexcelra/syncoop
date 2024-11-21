@@ -8,10 +8,9 @@ import { MoleculeType, RejectedSmiles, SaveMoleculeParams, UserData } from '@/li
 import { updateMoleculeSmiles } from '../service';
 import { LoadIndicator } from 'devextreme-react';
 import { DELAY } from '@/utils/constants';
+
 type UpdateMoleculeProps = {
     userData: UserData;
-    libraryId: string | null;
-    projectId: string | null;
     setViewEditMolecule: (val: boolean) => void;
     callLibraryId: () => void;
     onClose: () => void;

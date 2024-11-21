@@ -19,11 +19,11 @@ import { useRouter } from "next/navigation";
 import {
     getLibraries,
     getLibraryById,
-} from './libraryService';
+} from './service';
 import { sortByDate } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
-import { delay } from "@/utils/helpers";
+import { delay, getUTCTime } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import MoleculeList from './MoleculeList';
 import LibraryAccordion from './LibraryAccordion';
@@ -34,13 +34,15 @@ type breadCrumbParams = {
     projectHref?: string,
     projectSvg?: string,
     projectState?: boolean,
+    orgData?: OrganizationDataFields
 }
 
 const breadcrumbArr = ({
     projectTitle = '',
     projectHref = '',
     projectSvg = '',
-    projectState = false
+    projectState = false,
+    orgData,
 }: breadCrumbParams) => {
     return [
         {
@@ -50,19 +52,33 @@ const breadcrumbArr = ({
             svgHeight: 16,
             href: "/",
         },
+        ...(orgData
+            ? [{
+                label: orgData?.name || '',
+                svgPath: "/icons/org-icon-inactive.svg",
+                svgWidth: 16,
+                svgHeight: 16,
+                href: `/organization/${orgData?.id}`,
+                isActive: false,
+            }]
+            : []),
         {
             label: 'Projects',
             svgPath: '/icons/project-inactive.svg',
             svgWidth: 16,
             svgHeight: 16,
-            href: '/projects',
+            href: orgData ?
+                `/organization/${orgData?.id}/projects/`
+                : '/projects',
         },
         {
             label: `Project: ${projectTitle}`,
             svgPath: projectSvg || "/icons/project-icon.svg",
             svgWidth: 16,
             svgHeight: 16,
-            href: `/projects${projectHref}`,
+            href: orgData
+                ? `/organization/${orgData?.id}/projects${projectHref}`
+                : `/projects${projectHref}`,
             isActive: projectState
         },
     ];
@@ -85,8 +101,8 @@ const initialProjectData: ProjectDataFields = {
     owner: {} as User, // Provide a default owner object
     ownerId: 0,
     orgUser: undefined,
-    created_at: new Date(),
-    libraries: [] as unknown as LibraryFields[],
+    created_at: getUTCTime(new Date().toISOString()),
+    libraries: [] as LibraryFields[],
 };
 
 type LibraryDetailsProps = {
@@ -96,11 +112,14 @@ type LibraryDetailsProps = {
     projectId?: string;
 }
 
-export default function LibraryDetails({ userData, actionsEnabled }: LibraryDetailsProps) {
+export default function LibraryDetails(props: LibraryDetailsProps) {
+    const { userData, actionsEnabled, organizationId } = props;
     const router = useRouter();
     const searchParams = useSearchParams();
-    const params = useParams<{ id: string }>();
+    const params = useParams<{ id?: string, projectId?: string }>();
     const [library_id, setLibraryId] = useState(searchParams.get('library_id') || '');
+    const [project_id, setProjectId] = useState(params.id || params.projectId!);
+    const [organization_id, setOrganizationId] = useState(organizationId);
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
     const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
     const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
@@ -127,10 +146,11 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
         setTableData(libraryData.molecule || []);
         setMoleculeLoader(false)
     }
-
     const fetchLibraries = async () => {
-        const projectData = await getLibraries(['libraries'], params.id);
-        let selectedLib = null;
+        const projectData = await getLibraries(['libraries', 'organization'], project_id);
+
+        // let selectedLib = null;
+        let selectedLib = { name: '' };
         if (library_id && projectData) {
             selectedLib = projectData.libraries.find(
                 (library: LibraryFields) => Number(library.id) === Number(library_id));
@@ -141,9 +161,11 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
             const tempLibraries = sortByDate(projectData.libraries, sortKey, sortBy);
             setProjects({ ...projectData, libraries: tempLibraries });
             setInitProjects({ ...projectData, libraries: tempLibraries });
+            setOrganizationId(projectData.organization_id);
             let breadcrumbTemp = breadcrumbArr({
                 projectTitle: `${projectData.name}`,
-                projectHref: `/${params.id}`
+                projectHref: `/${project_id}`,
+                orgData: projectData.organization,
             });
             if (library_id) {
                 const libraryData = await getLibraryById(['molecule'], library_id);
@@ -153,7 +175,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 setSelectedLibrary(parseInt(library_id));
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,
-                    projectHref: `/${params.id}`, projectSvg: "/icons/project-inactive.svg"
+                    projectHref: `/${project_id}`, projectSvg: "/icons/project-inactive.svg",
+                    orgData: projectData.organization,
                 });
                 breadcrumbTemp = [
                     ...breadcrumbTemp,
@@ -162,14 +185,19 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                         svgPath: "/icons/library-active.svg",
                         svgWidth: 16,
                         svgHeight: 16,
-                        href: `/projects/${params.id}?library_id=${library_id}`,
+                        href: projectData.organization
+                            ? `/organization/${projectData.organization?.id}`
+                            + `/projects/${project_id}/library_id/${library_id}`
+                            : `/projects/${project_id}?library_id/${library_id}`,
                         isActive: true,
                     }];
             } else {
                 if (tempLibraries.length) {
                     const libraryData = await getLibraryById(['molecule'], tempLibraries[0]?.id);
-                    setTableData(libraryData.molecule || []);
-                    setLibraryId(libraryData.id);
+                    if (libraryData) {
+                        setTableData(libraryData.molecule || []);
+                        setLibraryId(libraryData.id);
+                    }
                 } const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(tempLibraries[0]?.id);
@@ -177,8 +205,9 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 setExpanded(true);
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,
-                    projectHref: `/${params.id}`,
-                    projectSvg: '/icons/project-icon.svg', projectState: true
+                    projectHref: `/${project_id}`,
+                    projectSvg: '/icons/project-icon.svg', projectState: true,
+                    orgData: projectData.organization,
                 });
             }
             setBreadCrumbs(breadcrumbTemp);
@@ -193,11 +222,13 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                 router.back();
             }
         }
+
     }
 
     useEffect(() => {
+        setProjectId(params.id || params.projectId!)
         fetchLibraries();
-    }, [params.id, library_id]);
+    }, [params.id, params.projectId, library_id]);
 
 
     return (
@@ -210,7 +241,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                     /> :
                     <div>
                         <div className="flex justify-between">
-                            <main className="main">
+                            <main className="main padding-sub-heading">
                                 <Image
                                     src="/icons/libraries.svg"
                                     width={33}
@@ -236,7 +267,7 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                     setSortBy={setSortBy}
                                     setProjects={setProjects}
                                     initProjects={initProjects}
-                                    projectId={params.id}
+                                    projectId={project_id}
                                     sortBy={sortBy}
                                     actionsEnabled={actionsEnabled}
                                     fetchLibraries={fetchLibraries}
@@ -260,7 +291,8 @@ export default function LibraryDetails({ userData, actionsEnabled }: LibraryDeta
                                 selectedLibrary={selectedLibrary}
                                 library_id={library_id}
                                 projects={projects}
-                                projectId={params.id}
+                                projectId={project_id}
+                                organizationId={organization_id || ''}
                             />
                         </div >
                     </div >

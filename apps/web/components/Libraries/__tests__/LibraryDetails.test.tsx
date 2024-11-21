@@ -5,7 +5,7 @@ import {
     getLibraries,
     getLibraryById,
     addToFavourites
-} from '@/components/Libraries/libraryService';
+} from '@/components/Libraries/service';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 // import CreateLibrary from '../CreateLibrary';
 
@@ -21,7 +21,7 @@ jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
 }));
 
-jest.mock('@/components/Libraries/libraryService', () => ({
+jest.mock('@/components/Libraries/service', () => ({
     getLibraries: jest.fn(),
     getLibraryById: jest.fn(),
     editLieditLibrary: jest.fn(),
@@ -65,7 +65,6 @@ const data = {
                 last_name: 'Admin',
                 email_id: 'sys_admin@external.milliporesigma.com'
             },
-            updated_by: null,
             molecule: [{
                 id: 1,
                 molecular_weight: 12,
@@ -89,7 +88,6 @@ const data = {
                 last_name: 'Admin',
                 email_id: 'sys_admin@external.milliporesigma.com'
             },
-            updated_by: null,
             molecule: [{
                 id: 1,
                 molecular_weight: 12,
@@ -116,8 +114,7 @@ const libraryData = {
         last_name: 'Admin',
         email_id: 'sys_admin@external.milliporesigma.com'
     },
-    molecule: [],
-    updated_by: null
+    molecule: []
 }
 
 const libraryData1 = {
@@ -142,8 +139,7 @@ const libraryData1 = {
         user_id: 1,
         library_id: 2,
         user_favourite_molecule: [],
-    }],
-    updated_by: null
+    }]
 }
 
 const userData = {
@@ -155,10 +151,12 @@ const userData = {
     myRoles: ['admin'],
     roles: [{ id: 1, type: 'admin' }],
     orgUser: {
-        id: 1, name: 'System Admin', first_name: "Forum",
+        id: 1,
+        name: 'System Admin',
+        first_name: "Forum",
         last_name: "Tanna",
         email_id: "forum.tanna@external.milliporesigma.com",
-        status: "active",
+        status: 'Active',
         user_role: [{
             role: {
                 id: 6,
@@ -178,6 +176,7 @@ const userData = {
             created_at: '2024-08-05T15:44:09.158Z',
             updated_at: '2024-08-05T15:44:09.158Z',
             status: 'active',
+            type: 'Internal',
             user_role: [{
                 role: {
                     id: 6,
@@ -200,7 +199,7 @@ const userData = {
         },
         role_id: 1
     }],
-}
+} as any;
 
 describe('LibraryList should display loader initially', () => {
     let backMock;
@@ -248,7 +247,7 @@ describe('LibraryList should display proper data', () => {
         (getLibraries as jest.Mock).mockResolvedValue(data);
         (getLibraryById as jest.Mock).mockResolvedValue(libraryData);
         (addToFavourites as jest.Mock).mockResolvedValue({ id: 19, molecule_id: 1, user_id: 1 });
-        
+
     });
 
     test('renders the DataGrid with correct data', async () => {

@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 
 const { EMAIL_ALREADY_EXIST, } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST } = STATUS_TYPE;

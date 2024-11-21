@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const prePareMolecule = (moleculeData: []) => {
@@ -11,7 +11,7 @@ const prePareMolecule = (moleculeData: []) => {
         source: 'IN',
         inventory_id: item.inventoryID,
         created_by: 1,
-        created_at: new Date()
+        created_at: getUTCTime(new Date().toISOString())
     }));
     return moleculeInsert;
 }
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
                 product_type: "F",
                 status: 1,
                 created_by: 1,
-                created_at: new Date(),
+                created_at: getUTCTime(new Date().toISOString()),
                 reaction_compound: {
                     create: reactionMolecule
                 }

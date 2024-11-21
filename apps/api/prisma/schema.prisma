@@ -29,24 +29,24 @@ model users {
   user_favourite_molecule                                 user_favourite_molecule[]
   createMoleculeOrder                                     molecule_order[]          @relation("userWhoCreated")
   updateMoleculeOrder                                     molecule_order[]          @relation("userWhoUpdated")
-  createOrganization                                      organization[]            @relation("userWhoCreated")
-  orgAdmin                                                organization?             @relation("organizationAdmin")
-  updateOrganization                                      organization[]            @relation("userWhoUpdated")
+  createOrganization                                      container[]            @relation("userWhoCreated")
+  orgAdmin                                                container?             @relation("organizationAdmin")
+  updateOrganization                                      container[]            @relation("userWhoUpdated")
   ownedProjects                                           project[]                 @relation("ProjectOwner")
-  createRole                                              role[]                    @relation("userWhoCreated")
-  updateRole                                              role[]                    @relation("userWhoUpdated")
+  // createRole                                              role[]                    @relation("userWhoCreated")
+  // updateRole                                              role[]                    @relation("userWhoUpdated")
+  role_role_created_byTousers                             role[]                    @relation("role_created_byTousers")
+  role_role_updated_byTousers                             role[]                    @relation("role_updated_byTousers")
   userWhoCreated                                          users?                    @relation("userWhoCreated", fields: [created_by], references: [id])
   createUser                                              users[]                   @relation("userWhoCreated")
-  orgUser                                                 organization?             @relation("organizationUser", fields: [organization_id], references: [id])
+  orgUser                                                 container?             @relation("organizationUser", fields: [organization_id], references: [id])
   userWhoUpdated                                          users?                    @relation("userWhoUpdated", fields: [updated_by], references: [id])
   updateUser                                              users[]                   @relation("userWhoUpdated")
   createProject                                           project[]                 @relation("userWhoCreated")
   updateProject                                           project[]                 @relation("userWhoUpdated")
   createLibrary                                           library[]                 @relation("userWhoCreated")
   updateLibrary                                           library[]                 @relation("userWhoUpdated")
-  user_role                                               user_role[]
-  createContainer                                         container[]               @relation("userWhoCreated")
-  updateContainer                                         container[]               @relation("userWhoUpdated")
+  user_role                                               user_role[]               @relation("user_role_user_idTousers")
   reaction_detail_reaction_detail_created_byTousers       reaction_detail[]         @relation("reaction_detail_created_byTousers")
   reaction_detail_reaction_detail_updated_byTousers       reaction_detail[]         @relation("reaction_detail_updated_byTousers")
   reaction_compound_reaction_compound_created_byTousers   reaction_compound[]       @relation("reaction_compound_created_byTousers")
@@ -62,69 +62,81 @@ model users {
   org_product_module_org_product_module_updated_byTousers org_product_module[]      @relation("org_product_module_updated_byTousers")
   product_module_product_module_created_byTousers         product_module[]          @relation("product_module_created_byTousers")
   product_module_product_module_updated_byTousers         product_module[]          @relation("product_module_updated_byTousers")
+  user_role_user_role_created_byTousers                   user_role[]               @relation("user_role_created_byTousers")
+  user_role_user_role_updated_byTousers                   user_role[]               @relation("user_role_updated_byTousers")
 
   product_module_action product_module_action[] @relation(map: "con_fk_product_module_actn_created_by")
 }
 
+// model user_role {
+//   id      Int   @id @default(autoincrement())
+//   user_id Int
+//   role_id Int
+//   role    role  @relation(fields: [role_id], references: [id])
+//   user    users @relation(fields: [user_id], references: [id])
+// }
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model user_role {
-  id      Int   @id @default(autoincrement())
-  user_id Int
-  role_id Int
-  role    role  @relation(fields: [role_id], references: [id])
-  user    users @relation(fields: [user_id], references: [id])
+  id                                Int       @id(map: "con_pk_user_role_id") @default(autoincrement())
+  user_id                           Int
+  role_id                           Int
+  created_at                        DateTime? @db.Timestamptz(6)
+  created_by                        Int?
+  updated_at                        DateTime? @db.Timestamptz(6)
+  updated_by                        Int?
+  users_user_role_created_byTousers users?    @relation("user_role_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_role_created_by")
+  role                              role      @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_role_id")
+  users_user_role_updated_byTousers users?    @relation("user_role_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_role_updated_by")
+  users_user_role_user_idTousers    users     @relation("user_role_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_role_user_id")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model role {
-  id                                    Int                                     @id @default(autoincrement())
-  type                                  String
-  name                                  String
-  status                                status_type
+  id                                    Int                                     @id(map: "con_pk_role_id") @default(autoincrement())
+  name                                  String                                  @unique(map: "con_uk_role_name") @db.VarChar(255)
+  definition                            String?
+  type                                  String                                  @db.VarChar(30)
   priority                              Int
-  created_at                            DateTime                                @default(now()) @db.Timestamp(6)
-  updated_at                            DateTime?                               @db.Timestamp(6)
+  is_active                             Boolean                                 @default(true)
+  created_at                            DateTime?                               @db.Timestamptz(6)
   created_by                            Int?
-  definition                            String
-  orgType                               organization_type?
+  updated_at                            DateTime?                               @db.Timestamptz(6)
   updated_by                            Int?
   product_module_action_role_permission product_module_action_role_permission[]
-  userWhoCreated                        users?                                  @relation("userWhoCreated", fields: [created_by], references: [id])
-  userWhoUpdated                        users?                                  @relation("userWhoUpdated", fields: [updated_by], references: [id])
+  users_role_created_byTousers          users?                                  @relation("role_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_role_created_by")
+  users_role_updated_byTousers          users?                                  @relation("role_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_role_updated_by")
   user_role                             user_role[]
+
+  @@index([is_active], map: "idx_role_is_active")
 }
+
+// model container {
+//   id             Int       @id @default(autoincrement())
+//   name           String
+//   type           String // O => 'Internal', CO => 'Client Org', P => 'Project', L => 'Library'
+//   description    String
+//   parent_id      Int
+//   owner_id       Int
+//   status         Int
+//   config         Json?
+//   metadata       Json?     @db.Json
+//   created_at     DateTime  @default(now()) @db.Timestamp(6)
+//   updated_at     DateTime? @db.Timestamp(6)
+//   created_by     Int
+//   updated_by     Int?
+//   // molecule          molecule[]
+//   // molecule_cart     molecule_cart[]
+//   // molecule_order    molecule_order[]
+//   // org_product_module        org_product_module[]       @relation("organizationPurchasedModule")
+//   userWhoCreated users     @relation("userWhoCreated", fields: [created_by], references: [id])
+//   // user              user               @relation("organizationAdmin", fields: [orgAdminId], references: [id])
+//   userWhoUpdated users?    @relation("userWhoUpdated", fields: [updated_by], references: [id])
+//   // projects          project[]          @relation("OrganizationProjects")
+//   // orgUser           users[]             @relation("organizationUser")
+// }
 
 model container {
-  id             Int       @id @default(autoincrement())
-  name           String
-  type           String // O => 'Internal', CO => 'Client Org', P => 'Project', L => 'Library'
-  description    String
-  parent_id      Int
-  owner_id       Int
-  status         Int
-  config         Json?
-  metadata       Json?     @db.Json
-  created_at     DateTime  @default(now()) @db.Timestamp(6)
-  updated_at     DateTime? @db.Timestamp(6)
-  created_by     Int
-  updated_by     Int?
-  // molecule          molecule[]
-  // molecule_cart     molecule_cart[]
-  // molecule_order    molecule_order[]
-  // org_product_module        org_product_module[]       @relation("organizationPurchasedModule")
-  userWhoCreated users     @relation("userWhoCreated", fields: [created_by], references: [id])
-  // user              user               @relation("organizationAdmin", fields: [orgAdminId], references: [id])
-  userWhoUpdated users?    @relation("userWhoUpdated", fields: [updated_by], references: [id])
-  // projects          project[]          @relation("OrganizationProjects")
-  // orgUser           users[]             @relation("organizationUser")
-}
-
-enum container_type {
-  Organization       @map("0")
-  Project            @map("1")
-  Library            @map("2")
-  ClientOrganization @map("3")
-}
-
-model organization {
   id                 BigInt               @id @default(autoincrement())
   name               String
   orgAdminId         Int                  @unique
@@ -184,7 +196,7 @@ model molecule {
   project_id                       BigInt
   project                          project                   @relation(fields: [project_id], references: [id])
   organization_id                  BigInt
-  organization                     organization              @relation(fields: [organization_id], references: [id])
+  organization                     container              @relation(fields: [organization_id], references: [id])
   smiles_string                    String
   inchi_key                        String?                   @db.VarChar(27)
   molecular_weight                 Decimal                   @db.Decimal(10, 2)
@@ -237,7 +249,7 @@ model molecule_cart {
   userWhoCreated  users        @relation("userWhoCreated", fields: [created_by], references: [id])
   library         library      @relation(fields: [library_id], references: [id])
   molecule        molecule     @relation(fields: [molecule_id], references: [id])
-  organization    organization @relation(fields: [organization_id], references: [id])
+  organization    container @relation(fields: [organization_id], references: [id])
   project         project      @relation(fields: [project_id], references: [id])
   userWhoUpdated  users?       @relation("userWhoUpdated", fields: [updated_by], references: [id])
 }
@@ -252,7 +264,7 @@ model molecule_order {
   library         library      @relation(fields: [library_id], references: [id])
   batch_detail    Json
   organization_id BigInt
-  organization    organization @relation(fields: [organization_id], references: [id])
+  organization    container @relation(fields: [organization_id], references: [id])
   project_id      BigInt
   project         project      @relation(fields: [project_id], references: [id])
   created_at      DateTime     @default(now()) @db.Timestamp(6)
@@ -318,7 +330,7 @@ model org_product_module {
   updated_at                                 DateTime?      @db.Timestamptz(6)
   updated_by                                 Int?
   users_org_product_module_created_byTousers users          @relation("org_product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_org_product_module_created_by")
-  organization                               organization   @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_org_product_module_org_id")
+  organization                               container   @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_org_product_module_org_id")
   product_module                             product_module @relation(fields: [product_module_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_org_product_module_prod_module_id")
   users_org_product_module_updated_byTousers users?         @relation("org_product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_org_product_module_updated_by")
 
@@ -338,7 +350,7 @@ model project {
   molecule        molecule[]
   molecule_cart   molecule_cart[]
   molecule_order  molecule_order[]
-  organization    organization        @relation("OrganizationProjects", fields: [organization_id], references: [id])
+  organization    container        @relation("OrganizationProjects", fields: [organization_id], references: [id])
   owner           users               @relation("ProjectOwner", fields: [ownerId], references: [id])
   created_at      DateTime            @default(now()) @db.Timestamp(6)
   created_by      Int
@@ -587,15 +599,15 @@ model reaction_template_master {
   name             String            @unique(map: "con_uk_reaction_template_name") @db.VarChar(255)
   type             String            @db.VarChar(255)
   version          Int
-  chemaical_1      String?           @db.VarChar(50)
-  chemaical_2      String?           @db.VarChar(50)
-  chemaical_3      String?           @db.VarChar(50)
-  chemaical_4      String?           @db.VarChar(50)
-  chemaical_5      String?           @db.VarChar(50)
-  chemaical_6      String?           @db.VarChar(50)
+  chemical_1       String?           @db.VarChar(100)
+  chemical_2       String?           @db.VarChar(100)
+  chemical_3       String?           @db.VarChar(100)
+  chemical_4       String?           @db.VarChar(100)
+  chemical_5       String?           @db.VarChar(100)
+  chemical_6       String?           @db.VarChar(100)
   no_of_components Int?
-  solvent          String?           @db.VarChar(50)
-  temperature      String?           @db.VarChar(10)
+  solvent          String?           @db.VarChar(100)
+  temperature      String?           @db.VarChar(50)
   is_active        Boolean           @default(true)
   last_synced_at   DateTime          @db.Timestamptz(6)
   reaction_detail  reaction_detail[]

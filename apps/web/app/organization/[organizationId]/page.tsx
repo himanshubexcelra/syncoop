@@ -21,16 +21,14 @@ export default async function Organization({ params }: OrgProjectsProps) {
     return (
         <Layout>
             <div>
-                <main className="main main-heading">
-                    <LandingPage
-                        userData={userData}
-                        filteredRoles={filteredRoles}
-                        myRoles={myRoles}
-                        orgUser={orgUser}
-                        actionsEnabled={actionsEnabled}
-                        customerOrgId={Number(organizationId)}
-                    />
-                </main>
+                <LandingPage
+                    userData={userData}
+                    filteredRoles={filteredRoles}
+                    myRoles={myRoles}
+                    orgUser={orgUser}
+                    actionsEnabled={actionsEnabled}
+                    customerOrgId={Number(organizationId)}
+                />
             </div>
         </Layout >
     );

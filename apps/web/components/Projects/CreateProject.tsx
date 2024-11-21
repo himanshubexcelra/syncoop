@@ -37,12 +37,16 @@ export default function CreateProject({
   users,
   organizationData,
   myRoles,
-  edit
+  edit,
+  clickedOrg
 }: ProjectCreateFields) {
   const [filteredData, setFilteredData] = useState<User[]>(users);
   const [userList, setUsers] = useState<User[]>([]);
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
-  const [organization_id, setOrganizationId] = useState(userData?.orgUser?.id);
+  const [organization_id, setOrganizationId] = useState(
+    clickedOrg
+      ? clickedOrg
+      : userData?.orgUser?.id);
   const [showIcon, setShowIcon] = useState('arrow-both');
   const dataGridRef = useRef<DataGridRef>(null);
 
@@ -222,14 +226,17 @@ export default function CreateProject({
 
   return (
     <Form ref={formRef} showValidationSummary={true} formData={projectData}>
-      {myRoles?.includes('admin') && !edit ? OrganizationSelectBox :
+      {myRoles?.includes('admin') && !edit && !clickedOrg ? OrganizationSelectBox :
         <SimpleItem
           dataField="organization"
           editorOptions={
             {
               placeholder: "Organization name",
               disabled: true,
-              value: edit ? projectData?.organization?.name : userData?.orgUser?.name
+              value: edit ? projectData?.organization?.name : (
+                clickedOrg ?
+                  organizationData[0]?.name
+                  : userData?.orgUser?.name)
             }
           }
         >

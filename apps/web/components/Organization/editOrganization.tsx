@@ -128,6 +128,7 @@ export default function EditOrganization({
   const cancelSave = () => {
     formRef?.current!.instance().reset();
     showEditPopup(false);
+    setMetaData(meta)
   }
 
   return (

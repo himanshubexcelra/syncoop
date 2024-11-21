@@ -30,6 +30,7 @@ type EditMoleculeProps = {
     userData: UserData;
     libraryId: string;
     projectId: string;
+    organizationId: string;
     setViewEditMolecule: (val: boolean) => void;
     callLibraryId: () => void;
 }
@@ -39,6 +40,7 @@ const EditMolecule = ({
     userData,
     libraryId,
     projectId,
+    organizationId,
     setViewEditMolecule,
     callLibraryId
 }: EditMoleculeProps) => {
@@ -70,7 +72,6 @@ const EditMolecule = ({
 
     const updateSmileChange = (update = false) => {
         KetcherFunctions.exportSmile().then(async (str) => {
-            console.log(editedMolecules[moleculeIndex], moleculeIndex)
             editedMolecules[moleculeIndex].smiles_string = str;
             setEditedMolecules(editedMolecules);
         })
@@ -117,7 +118,7 @@ const EditMolecule = ({
                 formData.append('created_by_user_id', userData?.id.toString());
                 formData.append('library_id', libraryId?.toString());
                 formData.append('project_id', projectId?.toString());
-                formData.append('organization_id', userData?.organization_id?.toString());
+                formData.append('organization_id', organizationId?.toString());
                 formData.append('source_molecule_name', moleculeName);
                 startTransition(async () => {
                     await uploadMoleculeSmiles(formData).then(async (result) => {
@@ -171,43 +172,41 @@ const EditMolecule = ({
     }, [editMolecules]);
 
     const onSmilesRejected = (rejectedSmiles: RejectedSmiles[]) => {
-        console.log(rejectedSmiles);
         setRejected(rejectedSmiles)
         setShowRejectedDialog(true);
     }
 
     const onMoleculeNameChanged = (event: any) => {
         setMoleculeName(event.target.value)
-        console.log(event.target.value, moleculeIndex);
         editedMolecules[moleculeIndex].source_molecule_name = event.target.value;
-        console.log(editedMolecules);
         setEditedMolecules(editedMolecules);
     }
 
     return (
         <>
             <div className="flex gap-2">
-                {editedMolecules?.length > 1 ? <div className='w-1/5'>
-                    {editedMolecules?.map((molecule: any, index: number) => (
-                        <div
-                            key={molecule.id}
-                            onClick={() => handleMoleculeClick(index)}
-                            className={`${index === moleculeIndex
-                                ? styles.moleculeViewBoxHighlighted
-                                : styles.moleculeViewBox} mb-4`}
-                        >
-                            <div className='flex justify-center items-center'>
-                                <MoleculeStructure
-                                    structure={molecule.smiles_string}
-                                    id={molecule.id}
-                                    width={140}
-                                    height={120}
-                                />
+                {editedMolecules?.length > 1 ?
+                    <div className='w-[30%] max-h-96 overflow-y-auto overflow-x-hidden'>
+                        {editedMolecules?.map((molecule: any, index: number) => (
+                            <div
+                                key={molecule.id}
+                                onClick={() => handleMoleculeClick(index)}
+                                className={`${index === moleculeIndex
+                                    ? styles.moleculeViewBoxHighlighted
+                                    : styles.moleculeViewBox} mb-4`}
+                            >
+                                <div className='flex justify-center items-center'>
+                                    <MoleculeStructure
+                                        structure={molecule.smiles_string}
+                                        id={molecule.id}
+                                        width={140}
+                                        height={120}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div> : null}
-                <div className={editMolecules?.length > 1 ? 'w-4/5' : 'w-full'}>
+                        ))}
+                    </div> : null}
+                <div className={editMolecules?.length > 1 ? 'w-[70%]' : 'w-full'}>
                     <div className={styles.ketcherContainer}>
                         <KetcherDrawBox
                             reactionString={editMolecules[moleculeIndex]?.smiles_string ||

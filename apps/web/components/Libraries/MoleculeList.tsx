@@ -24,7 +24,7 @@ import {
     getLibraryById,
     addMoleculeToCart,
     getMoleculeCart
-} from './libraryService';
+} from './service';
 import { DELAY } from "@/utils/constants";
 import { delay, getStatusLabel, generateRandomDigitNumber, colorSchemeADME } from "@/utils/helpers";
 import StatusMark from '@/ui/StatusMark';
@@ -47,6 +47,7 @@ type MoleculeListType = {
     library_id: string,
     projects: ProjectDataFields,
     projectId: string,
+    organizationId: string,
 }
 
 export default function MoleculeList({
@@ -60,7 +61,8 @@ export default function MoleculeList({
     selectedLibrary,
     library_id,
     projects,
-    projectId
+    projectId,
+    organizationId
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
@@ -347,6 +349,7 @@ export default function MoleculeList({
                     await getLibraryById(['molecule'], selectedLibrary.toString());
                 setMoleculeLoader(false);
                 setTableData(libraryData.molecule || []);
+                setReloadMolecules(false);
             })();
         }
     }, [reloadMolecules])
@@ -370,6 +373,7 @@ export default function MoleculeList({
             text: `Edit (${selectedRows?.length})`,
             onClick: showEditMolecule,
             class: 'btn-secondary',
+            disabled: selectedRows?.length < 1,
             visible: actionsEnabled.includes('edit_molecule') && !!library_id
         },
         {
@@ -413,6 +417,7 @@ export default function MoleculeList({
                             <AddMolecule
                                 libraryId={library_id}
                                 projectId={projectId}
+                                organizationId={organizationId}
                                 userData={userData}
                                 setViewAddMolecule={setViewAddMolecule}
                                 callLibraryId={callLibraryId}
@@ -420,7 +425,7 @@ export default function MoleculeList({
                         )}
                         resizeEnabled={true}
                         hideOnOutsideClick={true}
-                        defaultWidth={700}
+                        defaultWidth={710}
                         defaultHeight={'100%'}
                         position={{
                             my: { x: 'right', y: 'top' },
@@ -445,13 +450,16 @@ export default function MoleculeList({
                                 editMolecules={editMolecules}
                                 libraryId={library_id}
                                 projectId={projectId}
+                                organizationId={organizationId}
                                 userData={userData}
                                 setViewEditMolecule={setViewEditMolecule}
                                 callLibraryId={callLibraryId} />
                         )}
                         resizeEnabled={true}
                         hideOnOutsideClick={true}
-                        defaultWidth={900}
+                        defaultWidth=
+                        {editMolecules.length > 1
+                            ? 896 : 710}
                         defaultHeight={'100%'}
                         position={{
                             my: { x: 'right', y: 'top' },

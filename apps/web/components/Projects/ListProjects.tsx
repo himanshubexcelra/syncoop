@@ -12,7 +12,7 @@ import {
     FetchUserType,
     UserData
 } from '@/lib/definition';
-import { getLibraries } from '../Libraries/libraryService';
+import { getLibraries } from '../Libraries/service';
 import { LoadIndicator } from 'devextreme-react';
 
 type ProjectListProps = {
@@ -21,7 +21,8 @@ type ProjectListProps = {
     fetchOrganizations: FetchUserType,
     organizationData: OrganizationDataFields[],
     userData: UserData,
-    actionsEnabled: string[]
+    actionsEnabled: string[],
+    clickedOrg?: number,
 }
 
 export default function ListProjects({ data,
@@ -29,7 +30,8 @@ export default function ListProjects({ data,
     fetchOrganizations,
     organizationData,
     userData,
-    actionsEnabled
+    actionsEnabled,
+    clickedOrg
 }: ProjectListProps) {
     const [selectedItems, setSelectedItems] = useState<ProjectDataFields[]>([]);
     const [userList, setUsers] = useState<User[]>(users);
@@ -106,7 +108,8 @@ export default function ListProjects({ data,
                                     organizationData={organizationData}
                                     userData={userData}
                                     actionsEnabled={actionsEnabled}
-                                    myRoles={myRoles} />
+                                    myRoles={myRoles}
+                                    clickedOrg={clickedOrg} />
                             ))}
                 </div>
             ) : <div className="nodata-project">No Data found</div>}

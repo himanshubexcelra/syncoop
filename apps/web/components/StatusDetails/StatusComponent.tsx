@@ -6,7 +6,7 @@ import { getCountCardsDetails } from "@/utils/helpers";
 import { stats } from "@/utils/constants";
 import { useEffect, useState } from "react";
 import { getProjectsCountById } from "../Projects/projectService";
-import { getLibraryCountById, geMoleculeCountById } from "../Libraries/libraryService";
+import { getLibraryCountById, geMoleculeCountById } from "../Libraries/service";
 
 export default function StatusComponent({ myRoles, orgUser, customerOrgId }: StatusComponentProps) {
     const { id } = orgUser

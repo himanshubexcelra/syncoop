@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import { render, screen, act, fireEvent } from '@testing-library/react';
-import { editLibrary, createLibrary } from '@/components/Libraries/libraryService';
+import { editLibrary, createLibrary } from '@/components/Libraries/service';
 import { useParams, useSearchParams } from 'next/navigation';
 import CreateLibrary from '../CreateLibrary';
 
@@ -15,7 +15,7 @@ jest.mock('next/navigation', () => ({
     useParams: jest.fn(),
 }));
 
-jest.mock('@/components/Libraries/libraryService', () => ({
+jest.mock('@/components/Libraries/service', () => ({
     getLibraries: jest.fn(),
     editLibrary: jest.fn(),
     createLibrary: jest.fn(),
@@ -74,8 +74,7 @@ const data = {
                 first_name: 'System',
                 last_name: 'Admin',
                 email_id: 'sys_admin@external.milliporesigma.com'
-            },
-            updated_by: null
+            }
         },
         {
             id: 2,
@@ -92,8 +91,7 @@ const data = {
                 first_name: 'System',
                 last_name: 'Admin',
                 email_id: 'sys_admin@external.milliporesigma.com'
-            },
-            updated_by: null
+            }
         }
     ]
 };
@@ -104,6 +102,7 @@ const userData = {
     email_id: "forum.tanna@external.milliporesigma.com",
     first_name: "Forum",
     last_name: "Tanna",
+    myRoles: [],
     user_role: [{
         role: {
             id: 6,
@@ -138,6 +137,7 @@ const userData = {
             created_at: '2024-08-05T15:44:09.158Z',
             updated_at: '2024-08-05T15:44:09.158Z',
             status: 'active',
+            type: 'Internal',
             user_role: [{
                 role: {
                     id: 6,
@@ -150,7 +150,7 @@ const userData = {
             }]
         }
     }
-}
+} as any;
 
 const projectData = {
     ...data,

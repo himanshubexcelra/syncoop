@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
-
+import { json } from "@/utils/helper";
+import { STATUS_TYPE } from "@/utils/message";
 
 export async function GET(request: Request) {
     try {
@@ -23,11 +23,11 @@ export async function GET(request: Request) {
 
         return new Response(json(data), {
             headers: { "Content-Type": "application/json" },
-            status: 200,
+            status: STATUS_TYPE.SUCCESS,
         });
     } catch (error: any) {
         return new Response(`Webhook error: ${error.message}`, {
-            status: 400,
+            status: STATUS_TYPE.BAD_REQUEST,
         });
     }
 }

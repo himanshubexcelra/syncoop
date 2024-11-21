@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 const { PROJECT_EXISTS } = MESSAGES;
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const { name, type, target, description, organization_id, user_id, sharedUsers } = req;
 
     try {
-        const organization = await prisma.organization.findUnique({
+        const organization = await prisma.container.findUnique({
             where: { id: Number(organization_id) },
             include: {
                 projects: { // Include projects related to this organization
@@ -123,7 +123,7 @@ export async function PUT(request: Request) {
         const { name, type, target, description, organization_id, user_id, sharedUsers, id } = req;
 
         // Check if user is associated with another organization
-        const organization = await prisma.organization.findUnique({
+        const organization = await prisma.container.findUnique({
             where: { id: Number(organization_id) },
             include: {
                 projects: { // Include projects related to this organization

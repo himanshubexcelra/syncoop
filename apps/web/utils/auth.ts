@@ -102,7 +102,7 @@ export async function clearSession() {
     cookies().delete('routes_enabled');
 }
 
-export async function getUserData(): Promise<UserAction | null> {
+export async function getUserData() {
     const sessionData: any = cookies().get('session')?.value;
     const actionsEnabled: any = cookies().get('actions_enabled')?.value;
     const routesEnabled: any = cookies().get('routes_enabled')?.value;

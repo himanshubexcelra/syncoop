@@ -9,12 +9,13 @@ import { uploadMoleculeSmiles, uploadMoleculeFile } from '../service'
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import { DELAY } from '@/utils/constants';
-import { delay, downloadCSV } from '@/utils/helpers';
+import { delay } from '@/utils/helpers';
 import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
 import { UserData } from '@/lib/definition';
 import { RejectedSmiles } from '@/lib/definition';
 import RejectedDialog from './RejectedDialog';
 import { LoadIndicator } from 'devextreme-react';
+import { downloadCSV } from '../file';
 
 const dialogProperties = {
     width: 455,
@@ -25,6 +26,7 @@ type AddMoleculeProps = {
     userData: UserData;
     libraryId: string;
     projectId: string;
+    organizationId: string;
     setViewAddMolecule: (val: boolean) => void;
     callLibraryId: () => void;
 }
@@ -33,6 +35,7 @@ export default function AddMolecule({
     userData,
     libraryId,
     projectId,
+    organizationId,
     setViewAddMolecule,
     callLibraryId
 }: AddMoleculeProps) {
@@ -77,11 +80,10 @@ export default function AddMolecule({
                 formData.append('created_by_user_id', userData?.id.toString());
                 formData.append('library_id', libraryId?.toString());
                 formData.append('project_id', projectId?.toString());
-                formData.append('organization_id', userData?.organization_id?.toString());
+                formData.append('organization_id', organizationId?.toString());
                 formData.append('source_molecule_name', moleculeName);
                 startTransition(async () => {
                     await uploadMoleculeSmiles(formData).then(async (result) => {
-                        console.log(result);
                         if (result?.rejected_smiles?.length) {
                             const rejectedSmile = result.rejected_smiles[0]
                             const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
@@ -104,7 +106,6 @@ export default function AddMolecule({
                             toast.remove(toastId);
                         }
                     }, async (error) => {
-                        console.log(error);
                         const toastId = toast.error(error.message);
                         await delay(DELAY);
                         toast.remove(toastId);
@@ -185,7 +186,7 @@ export default function AddMolecule({
             formData.append('createdBy', userData?.id.toString());
             formData.append('libraryId', libraryId?.toString());
             formData.append('projectId', projectId?.toString());
-            formData.append('organizationId', userData?.organization_id?.toString());
+            formData.append('organizationId', organizationId?.toString());
             startTransition(async () => {
                 await uploadMoleculeFile(formData).then(async (result) => {
                     if (result.detail) {

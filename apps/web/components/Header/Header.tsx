@@ -15,7 +15,7 @@ import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { Messages } from "@/utils/message";
 import toast from "react-hot-toast";
-import { deleteMoleculeCart, getMoleculeCart } from '../Libraries/libraryService';
+import { deleteMoleculeCart, getMoleculeCart } from '../Libraries/service';
 import CartDetails from '../Libraries/CartDetails';
 import OrderDetails from '../Libraries/OrderDetails'
 
@@ -202,6 +202,7 @@ export default function Header({ userData }: HeaderProps) {
                 position={orderPopupPosition}
                 showCloseButton={false}
                 wrapperAttr={{ class: "order-popup" }}
+                showTitle={false}
                 style={{ backgroundColor: 'white' }}
             />}
             <div className="flex items-center">

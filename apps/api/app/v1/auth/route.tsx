@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 
 export async function POST(request: Request) {
   try {

@@ -14,7 +14,7 @@ export default async function Ketchertool() {
   return (
     <Layout>
       <div>
-        <main className="main">
+        <main className="main main-padding">
           <KetcherBox></KetcherBox>
         </main>
       </div>

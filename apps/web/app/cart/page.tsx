@@ -14,7 +14,7 @@ export default async function Cart() {
         <Layout>
             <Breadcrumb breadcrumbs={breadcrumbs} />
             <div>
-                <main className="main">
+                <main className="main main-padding">
                     <div>
                         Cart page
                     </div>

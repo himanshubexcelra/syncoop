@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import ListOrganization from "@/components/Organization/ListOrganization";
 import { getUsers } from '@/components/User/service';
@@ -33,17 +34,25 @@ const data = [
     creationDate: '2024-08-05',
     lastModifiedDate: '2024-08-01',
   }
-];
+] as any;
+
+
+
 
 const testUser = {
-  email_id: "forum.tanna@external.milliporesigma.com", 
-  first_name: "Forum", 
-  last_name: "Tanna", 
-  user_role: [{ role: { type: "admin" } }]
-}
+  email_id: "forum.tanna@external.milliporesigma.com",
+  first_name: "Forum",
+  last_name: "Tanna",
+  user_role: [{ role: { type: "admin" } }],
+} as any;
 
-const users = [{ id: 1, first_name: 'John', last_name: 'Doe', email_id: 'jogn@external.millipore.com' }];
-const roles = [1];
+const users = [{
+  id: 1,
+  first_name: 'John',
+  last_name: 'Doe',
+  email_id: 'jogn@external.millipore.com'
+}];
+const actionsEnabled: string[] = [];
 
 describe('OrganizationList should display proper data', () => {
   beforeEach(() => {
@@ -60,7 +69,7 @@ describe('OrganizationList should display proper data', () => {
 
     // Wrap the render and any state updates in act
     await act(async () => {
-      render(<ListOrganization userData={data} roles={roles} />);
+      render(<ListOrganization userData={data} actionsEnabled={actionsEnabled} />);
     });
 
     expect(screen.getByText('Organization Name')).toBeInTheDocument();
@@ -83,7 +92,7 @@ describe('OrganizationList should display proper data', () => {
 
 
     await act(async () => {
-      render(<ListOrganization userData={data} roles={roles} />);
+      render(<ListOrganization userData={data} actionsEnabled={actionsEnabled} />);
     });
 
     const searchInput = screen.getByPlaceholderText('Search...');
@@ -100,7 +109,7 @@ describe('OrganizationList should display proper data', () => {
     (getUsers as jest.Mock).mockResolvedValue(users);
 
     await act(async () => {
-      render(<ListOrganization userData={data} />);
+      render(<ListOrganization userData={data} actionsEnabled={actionsEnabled} />);
     });
     const creationDateHeader = screen.getByText('Creation Date');
     fireEvent.click(creationDateHeader);
@@ -114,11 +123,11 @@ describe('Create and Edit buttons should work properly', () => {
     (fetch as jest.Mock).mockResolvedValueOnce({
       json: jest.fn().mockResolvedValueOnce(data),
     });
+
     (getUsers as jest.Mock).mockResolvedValue(users);
 
-
     await act(async () => {
-      render(<ListOrganization userData={testUser} />);
+      render(<ListOrganization userData={testUser} actionsEnabled={actionsEnabled} />);
     });
 
     const createButton = screen.getByText('Create Organization');

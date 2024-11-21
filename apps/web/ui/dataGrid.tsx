@@ -131,9 +131,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
 
     return (
         <div>
-            {loader && <div className="center">
-                <LoadIndicator visible={loader} />
-            </div>}
             <DataGrid
                 ref={dataGridRef}
                 dataSource={data}

@@ -70,9 +70,21 @@
 .moleculeViewBox {
     border: 1px solid var(--themeGreyBorder);
     background: var(--background);
+    width: 168px;
+    height: 105px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .moleculeViewBoxHighlighted {
     border: 7px solid var(--themeBlueColor);
     background: var(--background);
+    width: 168px;
+    height: 105px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

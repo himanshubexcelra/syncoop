@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 interface OrderData {
@@ -13,7 +13,6 @@ interface OrderData {
     created_by: string;
 }
 
-const { MOLECULE_ORDER_NOT_FOUND } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 
 export async function GET(request: Request) {
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
                         molecular_weight: true,
                         smiles_string: true,
                         status: true,
-                        source_molecule_name:true,
+                        source_molecule_name: true,
                     },
                 },
                 project: {
@@ -61,28 +60,26 @@ export async function GET(request: Request) {
             where,
         });
 
-        if (!data || data.length === 0) {
-            return new Response(
-                JSON.stringify({ error: MOLECULE_ORDER_NOT_FOUND }),
-                {
-                    headers: { "Content-Type": "application/json" },
-                    status: NOT_FOUND,
-                }
-            );
-        }
-
-        return new Response(json(data), {
-            headers: { "Content-Type": "application/json" },
-            status: SUCCESS,
-        });
-    } catch (error: any) {
-        return new Response(
-            JSON.stringify({ error: error.message }),
-            {
+        if (data) {
+            return new Response(json(data), {
                 headers: { "Content-Type": "application/json" },
-                status: BAD_REQUEST,
-            }
-        );
+                status: SUCCESS,
+            });
+        } else {
+            return new Response(JSON.stringify({
+                success: false,
+                errorMessage: MESSAGES.MOLECULE_ORDER_NOT_FOUND
+            }), {
+                status: NOT_FOUND,
+            });
+        }
+    } catch (error: any) {
+        return new Response(JSON.stringify({
+            success: false,
+            errorMessage: `Webhook error: ${error}`
+        }), {
+            status: BAD_REQUEST,
+        })
     }
 }
 

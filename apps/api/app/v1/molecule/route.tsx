@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import json from "@/utils/helper";
+import { json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;

@@ -12,21 +12,25 @@ import {
     UserData,
     OrganizationDataFields,
     ProjectDataFields,
-    OrganizationType
+    OrganizationType,
+    BreadCrumbsObj
 } from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { getOrganizationById, getOrganization } from "@/components/Organization/service";
 import { debounce } from '@/utils/helpers';
+import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import { getProjectBreadCrumbs } from './breadCrumbs';
 
 type ProjectDetailsProps = {
     userData: UserData,
     actionsEnabled: string[]
-    organizationId: string
+    organizationId: string,
 }
 
 export default function ProjectDetails({
     userData,
-    actionsEnabled
+    actionsEnabled,
+    organizationId,
 }: ProjectDetailsProps) {
     const [filteredData, setFilteredData] = useState<ProjectDataFields[]>([]);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -40,7 +44,10 @@ export default function ProjectDetails({
 
     const { myRoles } = userData;
     const createEnabled = actionsEnabled.includes('create_project')
-
+    const breadcrumbs: BreadCrumbsObj[] = getProjectBreadCrumbs(
+        organization,
+        Number(organizationId),
+    )
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setPopupPosition({
@@ -53,7 +60,7 @@ export default function ProjectDetails({
 
     const fetchOrganizations = async () => {
         let organization;
-        if (myRoles?.includes("admin")) {
+        if (myRoles?.includes("admin") && !organizationId) {
             organization = await getOrganization({
                 withRelation: ['orgUser', 'user_role', 'projects']
             });
@@ -67,7 +74,9 @@ export default function ProjectDetails({
             const tempOrganization = [];
             organization = await getOrganizationById({
                 withRelation: ['orgUser', 'user_role', 'projects'],
-                id: userData?.organization_id
+                id: organizationId
+                    ? Number(organizationId)
+                    : userData?.organization_id
             });
             setFilteredData(organization?.projects);
             setOrgProjects(organization?.projects);
@@ -129,137 +138,130 @@ export default function ProjectDetails({
     }
 
     return (
-        <div className='p-[20px] projects'>
-            {loader ?
-                <LoadIndicator
-                    visible={loader}
-                /> :
-                <div>
-                    <div className="flex justify-between projects">
-                        <main className="main">
-                            <Image
-                                src="/icons/project-logo.svg"
-                                width={33}
-                                height={30}
-                                alt="Project logo"
-                            />
-                            {userData.orgUser.type === OrganizationType.Internal ?
-                                <span>Projects</span>
-                                : <span>{`Projects: ${userData?.orgUser?.name}`}</span>}
-                        </main>
-                        <div className='flex'>
-                            {createEnabled && <Button
-                                text="Filter"
-                                icon="filter"
-                                elementAttr={{ class: "btn-primary mr-[20px]" }}
-                                render={() => (
-                                    <>
-                                        <Image
-                                            src="/icons/plus-white.svg"
-                                            width={24}
-                                            height={24}
-                                            alt="Add"
-                                        />
-                                        <span className='pl-[5px]'>Add Project</span>
-                                    </>
-                                )}
-                                onClick={() => setCreatePopupVisibility(true)}
-                            />}
-                            {actionsEnabled.includes('create_project') && createPopupVisible && (
-                                <Popup
-                                    title="Add Project"
-                                    visible={createPopupVisible}
-                                    contentRender={() => (
-                                        <CreateProject
-                                            formRef={formRef}
-                                            setCreatePopupVisibility={setCreatePopupVisibility}
-                                            fetchOrganizations={fetchOrganizations}
-                                            userData={
-                                                {
-                                                    ...userData,
-                                                    owner: {
-                                                        first_name: userData.first_name,
-                                                        last_name: userData.last_name
-                                                    }
-                                                }}
-                                            users={users}
-                                            organizationData={organization}
-                                            myRoles={myRoles}
-                                        />
-                                    )}
-                                    width={477}
-                                    hideOnOutsideClick={true}
-                                    height="100%"
-                                    position={popupPosition}
-                                    onHiding={() => {
-                                        formRef.current?.instance().reset();
-                                        setCreatePopupVisibility(false);
-                                    }}
-                                    showCloseButton={true}
-                                    wrapperAttr={{ class: "create-popup mr-[15px]" }}
-                                />
-                            )}
-                            <Button
-                                text="Filter"
-                                icon="filter"
-                                elementAttr={{ class: "btn-secondary mr-[20px]" }}
-                                disabled={true}
-                                render={() => (
-                                    <>
-                                        <Image
-                                            src="/icons/filter.svg"
-                                            width={24}
-                                            height={24}
-                                            alt="Filter"
-                                        />
-                                        <span>Filter</span>
-                                    </>
-                                )}
-                            />
-                            <Button
-                                text="Sort"
-                                elementAttr={{ class: "btn-secondary mr-[20px]" }}
-                                onClick={sortData}
-                                render={() => (
-                                    <>Sort</>
-                                )}
-                            />
-                            <div className="search-box">
+        <>
+            <Breadcrumb breadcrumbs={breadcrumbs} />
+            <div className='p-[20px] projects'>
+                {loader ?
+                    <LoadIndicator
+                        visible={loader} /> :
+                    <div>
+                        <div className="flex justify-between projects">
+                            <main className="main padding-sub-heading">
                                 <Image
-                                    src="/icons/search.svg"
-                                    width={24}
-                                    height={24}
-                                    alt="Sort"
-                                    className='search-icon'
-                                />
-                                <input
-                                    placeholder="Search"
-                                    className="search-input"
-                                    width={120}
-                                    style={{ paddingLeft: '30px' }}
-                                    onChange={searchData}
-                                />
+                                    src="/icons/project-logo.svg"
+                                    width={33}
+                                    height={30}
+                                    alt="Project logo" />
+                                {userData.orgUser.type === OrganizationType.Internal ?
+                                    <span>Projects</span>
+                                    : <span>{`Projects: ${userData?.orgUser?.name}`}</span>}
+                            </main>
+                            <div className='flex'>
+                                {createEnabled && <Button
+                                    text="Filter"
+                                    icon="filter"
+                                    elementAttr={{ class: "btn-primary mr-[20px]" }}
+                                    render={() => (
+                                        <>
+                                            <Image
+                                                src="/icons/plus-white.svg"
+                                                width={24}
+                                                height={24}
+                                                alt="Add" />
+                                            <span className='pl-[5px]'>Add Project</span>
+                                        </>
+                                    )}
+                                    onClick={() => setCreatePopupVisibility(true)} />}
+                                {actionsEnabled.includes('create_project')
+                                    && createPopupVisible && (
+                                        <Popup
+                                            title="Add Project"
+                                            visible={createPopupVisible}
+                                            contentRender={() => (
+                                                <CreateProject
+                                                    formRef={formRef}
+                                                    setCreatePopupVisibility
+                                                    ={setCreatePopupVisibility}
+                                                    fetchOrganizations={fetchOrganizations}
+                                                    userData={{
+                                                        ...userData,
+                                                        owner: {
+                                                            first_name: userData.first_name,
+                                                            last_name: userData.last_name
+                                                        }
+                                                    }}
+                                                    users={users}
+                                                    organizationData={organization}
+                                                    myRoles={myRoles}
+                                                    clickedOrg={Number(organizationId)} />
+                                            )}
+                                            width={477}
+                                            hideOnOutsideClick={true}
+                                            height="100%"
+                                            position={popupPosition}
+                                            onHiding={() => {
+                                                formRef.current?.instance().reset();
+                                                setCreatePopupVisibility(false);
+                                            }}
+                                            showCloseButton={true}
+                                            wrapperAttr={{ class: "create-popup mr-[15px]" }} />
+                                    )}
+                                <Button
+                                    text="Filter"
+                                    icon="filter"
+                                    elementAttr={{ class: "btn-secondary mr-[20px]" }}
+                                    disabled={true}
+                                    render={() => (
+                                        <>
+                                            <Image
+                                                src="/icons/filter.svg"
+                                                width={24}
+                                                height={24}
+                                                alt="Filter" />
+                                            <span>Filter</span>
+                                        </>
+                                    )} />
+                                <Button
+                                    text="Sort"
+                                    elementAttr={{ class: "btn-secondary mr-[20px]" }}
+                                    onClick={sortData}
+                                    render={() => (
+                                        <>Sort</>
+                                    )} />
+                                <div className="search-box">
+                                    <Image
+                                        src="/icons/search.svg"
+                                        width={24}
+                                        height={24}
+                                        alt="Sort"
+                                        className='search-icon' />
+                                    <input
+                                        placeholder="Search"
+                                        className="search-input"
+                                        width={120}
+                                        style={{ paddingLeft: '30px' }}
+                                        onChange={searchData} />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="content-wrapper">
-                        <ListProjects
-                            userData={
-                                {
+                        <div className="content-wrapper">
+                            <ListProjects
+                                userData={{
                                     ...userData,
                                     owner: {
                                         first_name: userData?.first_name,
                                         last_name: userData?.last_name
                                     }
                                 }}
-                            data={filteredData}
-                            fetchOrganizations={fetchOrganizations}
-                            users={users}
-                            organizationData={organization}
-                            actionsEnabled={actionsEnabled} />
-                    </div>
-                </div>
-            }
-        </div>
+                                data={filteredData}
+                                fetchOrganizations={fetchOrganizations}
+                                users={users}
+                                organizationData={organization}
+                                actionsEnabled={actionsEnabled}
+                                clickedOrg={Number(organizationId)} />
+                        </div>
+                    </div>}
+            </div>
+        </>
     )
 }

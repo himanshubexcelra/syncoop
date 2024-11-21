@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
-import json from "@/utils/helper";
+import { getUTCTime, json } from "@/utils/helper";
 
 const { ORGANIZATION_ALREADY_EXISTS, } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
@@ -138,7 +138,7 @@ export async function GET(request: Request) {
     if (orgId) {
       // If an ID is present, fetch the specific organization with users and projects
       query.where = { id: Number(orgId) }; // Add the where condition to the query
-      const organization = await prisma.organization.findUnique(query);
+      const organization = await prisma.container.findUnique(query);
 
       if (!organization) {
         return new Response(JSON.stringify({ error: 'Organization not found' }), {
@@ -154,7 +154,7 @@ export async function GET(request: Request) {
     }
     else if (type) {
       query.where = { type: type }; // Add the where condition to the query
-      const organization = await prisma.organization.findMany(query);
+      const organization = await prisma.container.findMany(query);
 
       if (!organization) {
         return new Response(JSON.stringify({ error: 'Organization not found' }), {
@@ -170,7 +170,7 @@ export async function GET(request: Request) {
     }
     else {
       // If no ID is present, fetch all organizations, users, and projects
-      const organizations = await prisma.organization.findMany(query);
+      const organizations = await prisma.container.findMany(query);
 
       return new Response(json(organizations), {
         headers: { "Content-Type": "application/json" },
@@ -192,7 +192,7 @@ export async function POST(request: Request) {
   const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
   // Check if an organization with the same name already exists (case insensitive)
   try {
-    const existingOrganization = await prisma.organization.findFirst({
+    const existingOrganization = await prisma.container.findFirst({
       where: {
         name: {
           equals: name,
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
 
 
       // Step 2: Create the organization and link the admin user
-      const organization = await prisma.organization.create({
+      const organization = await prisma.container.create({
         data: {
           name,
           status: 'Enabled',
@@ -239,17 +239,17 @@ export async function POST(request: Request) {
             create: [
               {
                 product_module_id: 1,
-                created_at: new Date(),
+                created_at: getUTCTime(new Date().toISOString()),
                 created_by: adminUser.id,
               },
               {
                 product_module_id: 2,
-                created_at: new Date(),
+                created_at: getUTCTime(new Date().toISOString()),
                 created_by: adminUser.id,
               },
               {
                 product_module_id: 3,
-                created_at: new Date(),
+                created_at: getUTCTime(new Date().toISOString()),
                 created_by: adminUser.id,
               }
             ]
@@ -286,7 +286,7 @@ export async function PUT(request: Request) {
     const { id, primaryContactId, status, metadata } = req;
 
     // Update the organization and user details
-    const updatedOrganization = await prisma.organization.update({
+    const updatedOrganization = await prisma.container.update({
       where: { id },
       data: {
         orgAdminId: primaryContactId,

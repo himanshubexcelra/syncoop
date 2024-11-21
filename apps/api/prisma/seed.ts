@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { getUTCTime } from "@/utils/helper";
 
 async function main() {
 
@@ -12,9 +13,8 @@ async function main() {
             type: 'admin',
             name: 'System Admin',
             definition: '',
-            orgType: 'Internal',
             priority: 1,
-            status: 'Enabled'
+            is_active: true
         },
     });
 
@@ -24,9 +24,8 @@ async function main() {
             type: 'org_admin',
             name: 'Organization Admin',
             definition: '',
-            orgType: 'External',
             priority: 2,
-            status: 'Enabled'
+            is_active: true
         },
     });
 
@@ -36,9 +35,8 @@ async function main() {
             type: 'library_manager',
             name: 'Library Manager',
             definition: '',
-            orgType: 'External',
             priority: 3,
-            status: 'Enabled'
+            is_active: true
         },
     });
 
@@ -48,9 +46,8 @@ async function main() {
             type: 'researcher',
             name: 'Researcher',
             definition: '',
-            orgType: 'External',
             priority: 4,
-            status: 'Enabled'
+            is_active: true
         },
     });
 
@@ -60,9 +57,8 @@ async function main() {
             type: 'protocol_approver',
             name: 'Protocol Approver',
             definition: '',
-            orgType: 'External',
             priority: 5,
-            status: 'Enabled'
+            is_active: true
         }
     });
 
@@ -99,7 +95,7 @@ async function main() {
             user_role: {
                 create: {
                     role: {
-                        connect: oARoleCreate
+                        connect: oARoleCreate,
                     }
                 }
             }
@@ -168,7 +164,7 @@ async function main() {
         data: {
             name: 'Organization Management',
             description: '',
-            created_at: new Date(),
+            created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             product_module_action: {
                 create: [
@@ -176,7 +172,7 @@ async function main() {
                         name: 'Edit Own Organization',
                         type: 'edit_own_org',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -193,7 +189,7 @@ async function main() {
                         name: 'View Own Organization',
                         type: 'view_own_org',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -217,9 +213,9 @@ async function main() {
                     },
                     {
                         name: 'Create Client Organization',
-                        type: 'create',
+                        type: 'create_client_org',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -231,9 +227,9 @@ async function main() {
                     },
                     {
                         name: 'Edit Client Organization',
-                        type: 'create_client_org',
+                        type: 'edit_client_org',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -250,7 +246,7 @@ async function main() {
                         name: 'View Client Organization',
                         type: 'view_client_org',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -276,7 +272,7 @@ async function main() {
                         name: 'Disable Client Organization',
                         type: 'disable_client_org',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -290,7 +286,7 @@ async function main() {
                         name: 'Delete Client Organization',
                         type: 'delete_client_org',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -310,7 +306,7 @@ async function main() {
         data: {
             name: 'Project Management',
             description: '',
-            created_at: new Date(),
+            created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             product_module_action: {
                 create: [
@@ -318,7 +314,7 @@ async function main() {
                         name: 'Create Project',
                         type: 'create_project',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -338,7 +334,7 @@ async function main() {
                         name: 'Edit Project',
                         type: 'edit_project',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -358,7 +354,7 @@ async function main() {
                         name: 'View Project',
                         type: 'view_project',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -384,7 +380,7 @@ async function main() {
                         name: 'Delete Project',
                         type: 'delete_project',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -404,7 +400,7 @@ async function main() {
                         name: 'Create Library',
                         type: 'create_library',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -424,7 +420,7 @@ async function main() {
                         name: 'Edit Library',
                         type: 'edit_library',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -444,7 +440,7 @@ async function main() {
                         name: 'View Library',
                         type: 'view_library',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -470,7 +466,7 @@ async function main() {
                         name: 'Delete Library',
                         type: 'delete_library',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -491,7 +487,7 @@ async function main() {
                         name: 'Create Molecule',
                         type: 'create_molecule',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -511,7 +507,7 @@ async function main() {
                         name: 'Edit Molecule',
                         type: 'edit_molecule',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -531,7 +527,7 @@ async function main() {
                         name: 'View Molecule',
                         type: 'view_molecule',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -557,7 +553,7 @@ async function main() {
                         name: 'Delete Molecule',
                         type: 'delete_molecule',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -577,7 +573,7 @@ async function main() {
                         name: 'Create Molecule Order',
                         type: 'create_molecule_order',
                         route: '/molecule_order',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -597,7 +593,7 @@ async function main() {
                         name: 'Edit Molecule Order',
                         type: 'edit_molecule_order',
                         route: '/molecule_order',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -617,7 +613,7 @@ async function main() {
                         name: 'View Molecule Order',
                         type: 'view_molecule_order',
                         route: '/molecule_order',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -643,7 +639,7 @@ async function main() {
                         name: 'Delete Molecule Order',
                         type: 'delete_molecule_order',
                         route: '/molecule_order',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -663,7 +659,7 @@ async function main() {
                         name: 'Submit Molecule Order',
                         type: 'submit_molecule_order',
                         route: '/projects',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -689,7 +685,7 @@ async function main() {
         data: {
             name: 'User Management',
             description: '',
-            created_at: new Date(),
+            created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             product_module_action: {
                 create: [
@@ -697,7 +693,7 @@ async function main() {
                         name: 'Create User',
                         type: 'create_user',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -714,7 +710,7 @@ async function main() {
                         name: 'Edit User',
                         type: 'edit_user',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -731,7 +727,7 @@ async function main() {
                         name: 'Invite User',
                         type: 'invite_user',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -748,7 +744,7 @@ async function main() {
                         name: 'Disable User',
                         type: 'disable_user',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -765,7 +761,7 @@ async function main() {
                         name: 'View User',
                         type: 'view_user',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -791,7 +787,7 @@ async function main() {
                         name: 'Delete User',
                         type: 'delete_user',
                         route: '/dashboard',
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                         product_module_action_role_permission: {
                             create: [
@@ -812,31 +808,31 @@ async function main() {
      */
 
     // Insert EMD DD organization
-    const emddOrgCreate = await prisma.organization.create({
+    const emddOrgCreate = await prisma.container.create({
         data:
         {
             name: 'EMD DD',
             status: 'Enabled',
             type: 'Internal',
-            created_at: new Date(),
+            created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             orgAdminId: sysAdminCreate.id,
             org_product_module: {
                 create: [ // Fauxbio purchased Project Management Module
                     {
                         product_module_id: orgManagementModule.id,
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
 
                     },
                     {
                         product_module_id: userManagementModule.id,
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                     },
                     {
                         product_module_id: projectMangementModule.id,
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                     }
                 ],
@@ -846,30 +842,30 @@ async function main() {
     });
 
     // Insert Fauxbio organization
-    const fauxbioOrgCreate = await prisma.organization.create({
+    const fauxbioOrgCreate = await prisma.container.create({
         data:
         {
             name: 'Fauxbio',
             status: 'Enabled',
             type: 'External',
-            created_at: new Date(),
+            created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             orgAdminId: orgAdminCreate.id,
             org_product_module: {
                 create: [ // Fauxbio purchased Project Management Module
                     {
                         product_module_id: orgManagementModule.id,
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                     },
                     {
                         product_module_id: userManagementModule.id,
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                     },
                     {
                         product_module_id: projectMangementModule.id,
-                        created_at: new Date(),
+                        created_at: getUTCTime(new Date().toISOString()),
                         created_by: sysAdminCreate.id,
                     }
                 ]
@@ -878,13 +874,13 @@ async function main() {
     });
 
     // Insert Astra organization
-    /* const astraOrgCreate = await prisma.organization.create({
+    /* const astraOrgCreate = await prisma.container.create({
         data:
         {
             name: 'Astra',
             status: 'Enabled',
             type: 'External',
-            created_at: new Date(),
+            created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             orgAdminId: orgAdminCreate.id
         }

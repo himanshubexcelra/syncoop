@@ -17,7 +17,7 @@ jest.mock('@/utils/auth', () => ({
     }),
 }));
 
-jest.mock('@/utils/helpers', () => ({
+jest.mock('../file', () => ({
     downloadCSV: jest.fn(),
 }));
 

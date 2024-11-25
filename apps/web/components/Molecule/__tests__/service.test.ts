@@ -24,7 +24,7 @@ describe('Molecule APIs', () => {
             const response = await uploadMoleculeSmiles(formData);
 
             expect(fetch).toHaveBeenCalledWith(
-                `${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_smiles`,
+                `${process.env.PYTHON_API_HOST_URL}/upload_molecule_smiles`,
                 expect.objectContaining({
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -58,7 +58,7 @@ describe('Molecule APIs', () => {
             const response = await uploadMoleculeFile(formData);
 
             expect(fetch).toHaveBeenCalledWith(
-                `${process.env.PYTHON_API_HOST_URL}/molecule/upload_molecule_files`,
+                `${process.env.PYTHON_API_HOST_URL}/upload_molecule_files`,
                 expect.objectContaining({
                     method: 'POST',
                     body: formData,
@@ -93,7 +93,7 @@ describe('Molecule APIs', () => {
             const response = await updateMoleculeSmiles(formData);
 
             expect(fetch).toHaveBeenCalledWith(
-                `${process.env.PYTHON_API_HOST_URL}/molecule/update_molecule`,
+                `${process.env.PYTHON_API_HOST_URL}/update_molecule`,
                 expect.objectContaining({
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },

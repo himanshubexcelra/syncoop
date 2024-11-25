@@ -29,9 +29,6 @@ const config: Config = {
     'packages',
     '<rootDir>/components/Libraries/__tests__/LibraryDetails.test.tsx',
     '<rootDir>/components/MoleculeOrder/__tests__/MoleculeOrder.test.tsx',
-    '<rootDir>/components/Molecule/__tests__/AddMolecule.test.tsx',
-    '<rootDir>/components/Molecule/__tests__/RejectedDialog.test.tsx',
-    '<rootDir>/components/Molecule/__tests__/service.test.ts'
   ],
 }
 

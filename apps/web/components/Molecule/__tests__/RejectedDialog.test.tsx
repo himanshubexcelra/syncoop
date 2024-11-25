@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import RejectedDialog from '../AddMolecule/RejectedDialog';
-import { downloadCSV } from '@/utils/helpers';
+import { downloadCSV } from '../file';
 import { RejectedMolecules } from '@/lib/definition';
 
-jest.mock('@/utils/helpers', () => ({
+jest.mock('../file', () => ({
     downloadCSV: jest.fn(),
 }));
 

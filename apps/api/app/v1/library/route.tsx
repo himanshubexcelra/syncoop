@@ -142,8 +142,9 @@ export async function PUT(request: Request) {
             },
         });
 
-        const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase() && library.id !== id)[0];
-
+        const existingLibrary = project?.libraries.filter(library =>
+            library.name?.toLowerCase() === name.toLowerCase()
+            && Number(library.id) !== Number(id))[0];
         if (existingLibrary) {
             return new Response(JSON.stringify(LIBRARY_EXISTS), {
                 headers: { "Content-Type": "application/json" },

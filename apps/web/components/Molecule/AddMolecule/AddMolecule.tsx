@@ -250,6 +250,7 @@ export default function AddMolecule({
                         onChange={handleFileSelect}
                         accept=".csv,.sdf"
                         ref={fileInputRef}
+                        data-testid="file-input"
                     />
                     <div className="flex items-center justify-center">
                         <p className={`${styles.subMessage} p-4`}>

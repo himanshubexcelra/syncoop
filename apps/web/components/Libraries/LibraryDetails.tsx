@@ -131,7 +131,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [expanded, setExpanded] = useState(library_id ? false : true);
 
 
-    const [sortBy, setSortBy] = useState('Creation Time');
+    const [sortBy, setSortBy] = useState('Recent');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
 
     let toastShown = false;
@@ -201,7 +201,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                 } const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
                 setSelectedLibrary(tempLibraries[0]?.id);
-                setSortBy('Creation Time');
+                setSortBy('Recent');
                 setExpanded(true);
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,

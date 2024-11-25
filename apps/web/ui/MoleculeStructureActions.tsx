@@ -12,7 +12,7 @@ const MoleculeStructure = dynamic(
 type MoleculeStructureActionsProps = {
     smilesString: string;
     molecule_id: number;
-    onZoomClick: () => void;
+    onZoomClick: (e: any) => void;
     onEditClick?: () => void;
     onDeleteClick?: () => void;
     enableEdit?: boolean;

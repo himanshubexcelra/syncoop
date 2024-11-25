@@ -63,14 +63,14 @@
 }
 
 .ketcherContainer {
-    height: 50vh;
+    height: 65vh;
     width: auto;
 }
 
 .moleculeViewBox {
     border: 1px solid var(--themeGreyBorder);
     background: var(--background);
-    width: 168px;
+    width: 100%;
     height: 105px;
     overflow: hidden;
     display: flex;
@@ -81,7 +81,7 @@
 .moleculeViewBoxHighlighted {
     border: 7px solid var(--themeBlueColor);
     background: var(--background);
-    width: 168px;
+    width: 100%;
     height: 105px;
     overflow: hidden;
     display: flex;

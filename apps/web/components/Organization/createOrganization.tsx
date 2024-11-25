@@ -192,6 +192,7 @@ export default function RenderCreateOrganization({
           text="Create Organization"
           useSubmitBehavior={true}
           onClick={handleSubmit}
+          elementAttr={{ class: "btn-primary" }}
         />
       </ButtonItem>
     </CreateForm>

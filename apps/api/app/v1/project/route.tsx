@@ -147,8 +147,9 @@ export async function PUT(request: Request) {
         });
 
         // Check if an project with the same name already exists (case insensitive)
-        let existingProject = organization?.projects.filter(project => project.name?.toLowerCase() === name.toLowerCase() && project.id !== id)[0];
-
+        let existingProject = organization?.projects.filter(project =>
+            project.name?.toLowerCase() === name.toLowerCase()
+            && Number(project.id) !== Number(id))[0];
         if (existingProject) {
             return new Response(JSON.stringify(PROJECT_EXISTS), {
                 headers: { "Content-Type": "application/json" },

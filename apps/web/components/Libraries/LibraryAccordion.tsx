@@ -92,7 +92,7 @@ export default function LibraryAccordion({
         <div className="header-text text-black">{title}</div>
     );
 
-    const sortByFields = ['Name', 'Owner', 'Updation Time', 'Creation Time', 'Count of Molecules'];
+    const sortByFields = ['Name', 'Owner', 'Updation Time', 'Recent', 'Count of Molecules'];
 
     const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -106,7 +106,7 @@ export default function LibraryAccordion({
             if (sortKey === 'Updation Time') {
                 sortKey = 'updated_at';
                 sortBy = 'desc';
-            } else if (sortKey === 'Creation Time') {
+            } else if (sortKey === 'Recent') {
                 sortKey = 'created_at';
                 sortBy = 'desc';
             } else if (sortKey === 'Owner') {
@@ -435,7 +435,19 @@ export default function LibraryAccordion({
                                     'selected-accordion' : ''
                                 }`
                             }
-                            onClick={async () => {
+                            onClick={async (e) => {
+                                const target = e.target as HTMLElement;
+
+                                const moreButtonId = `image${item.id}`;
+                                const editButtonId = `edit-${item.id}`;
+                                const urlButtonId = `url-${item.id}`;
+                                if (target.id === moreButtonId
+                                    || target.closest(`#${moreButtonId}`) ||
+                                    target.id === editButtonId ||
+                                    target.id === urlButtonId
+                                ) {
+                                    return;
+                                }
                                 getLibraryData(item);
                             }}>
                             <div className={
@@ -494,6 +506,7 @@ export default function LibraryAccordion({
                                         `mb-[20px] ${!editEnabled ?
                                             'cursor-pointer' : ''}`
                                     }
+                                    id={`edit-${item.id}`}
                                     onClick={() => {
                                         if (!editEnabled) {
                                             setExpandedMenu(-1);
@@ -507,6 +520,7 @@ export default function LibraryAccordion({
                                 </p>
                                 <p
                                     className='cursor-pointer'
+                                    id={`url-${item.id}`}
                                     onClick={() =>
                                         copyUrl(
                                             'library',
@@ -530,8 +544,7 @@ export default function LibraryAccordion({
                                         Owner:
                                     </div>
                                     <span>
-                                        {item.owner.first_name}
-                                        {item.owner.last_name}
+                                        {`${item.owner.first_name} ${item.owner.last_name}`}
                                     </span>
                                 </div>
                                 <div className='w-[45%] flex justify-start'>

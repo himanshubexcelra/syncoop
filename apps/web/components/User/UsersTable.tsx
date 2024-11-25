@@ -283,6 +283,7 @@ export default function UsersTable({
                                         myRoles={myRoles}
                                         type={type}
                                         fetchAndFilterData={fetchAndFilterData}
+                                        customerOrgId={customerOrgId}
                                     />
                                 )}
                                 width={470}

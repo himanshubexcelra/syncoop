@@ -37,12 +37,12 @@ export default function RenderCreateUser({
     myRoles,
     type,
     fetchAndFilterData,
+    customerOrgId,
 }: any) {
     const passwordLabel = { 'aria-label': 'Password' };
     const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
     const [organization, setOrganization] = useState(organizationData);
     const [valid, setValid] = useState<any>('valid');
-
     const passwordButton = useMemo<ButtonTypes.Properties>(
         () => ({
             icon: passwordMode === "text" ? "eyeclose" : "eyeopen",
@@ -182,9 +182,11 @@ export default function RenderCreateUser({
                 displayExpr: "name",
                 valueExpr: "id",
                 value: myRoles.includes('admin')
-                    ? (type === OrganizationType.External ? "" : organization && organization[0].id)
+                    ? ((type === OrganizationType.External && !customerOrgId)
+                        ? "" : organization && organization[0].id)
                     : organization[0].id,
-                disabled: !myRoles.includes('admin') || type === OrganizationType.Internal,
+                disabled: !myRoles.includes('admin') || type === OrganizationType.Internal
+                    || customerOrgId,
                 onOpened: async () => {
                     if (type) {
                         const organizationDropdown = await getOrganization({ type });
@@ -242,6 +244,7 @@ export default function RenderCreateUser({
                 dataField="password_hash"
                 render={passwordEditorRender}
             >
+                <Label text="Password" />
                 <RequiredRule message={Messages.requiredMessage('Password')} />
             </SimpleItem>
             <SimpleItem>

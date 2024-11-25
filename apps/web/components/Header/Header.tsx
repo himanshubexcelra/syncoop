@@ -42,10 +42,14 @@ export default function Header({ userData }: HeaderProps) {
         const fetchCartData = async () => {
             const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
             setCartData(cartDataAvaialable);
+            context?.addToState({
+                ...appContext,
+                refreshCart: false,
+            })
         };
 
         fetchCartData();
-    }, [library_id, cartDetail, userData.id]);
+    }, [library_id, cartDetail, userData.id, appContext?.refreshCart]);
 
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -164,8 +168,91 @@ export default function Header({ userData }: HeaderProps) {
     }, [userData])
 
     return (
-        <header className="top-0 left-0 w-full h-10 bg-themeBlueColor 
-            flex items-center justify-between px-4 shadow-sm">
+        <>
+            <header className="top-0 left-0 w-full h-10 bg-themeBlueColor
+            flex items-center justify-between px-6 shadow-sm">
+                <div className="flex items-center">
+                    <Link href="/">
+                        <Image
+                            src={"/icons/aidd-icon-shell.svg"}
+                            alt="aidd icon"
+                            width={267}
+                            height={24}
+                        />
+                    </Link>
+                </div>
+                <div className="flex items-center gap-8">
+                    <Image
+                        className="icon-help"
+                        src={"/icons/help-icon.svg"}
+                        alt="Help"
+                        width={20}
+                        height={20}
+                    />
+                    <Image
+                        className="icon-bell"
+                        src={"/icons/bell-icon.svg"}
+                        alt="Bell"
+                        width={20}
+                        height={20}
+                    />
+                    <Image
+                        className="icon-preferences"
+                        src={"/icons/preferences-icon.svg"}
+                        alt="Preferences"
+                        width={20}
+                        height={20}
+                    />
+                    <Link href="#"
+                        onClick={() =>
+                            setCreatePopupVisibility(
+                                cartData.length > 0 ? !createPopupVisible : createPopupVisible
+                            )
+                        }
+
+                    >
+                        <div className="relative flex items-center justify-center">
+                            <Image priority
+                                className="icon-cart"
+                                src={"/icons/cart-icon.svg"}
+                                alt="Cart"
+                                width={33}
+                                height={22}
+                            />
+                            <div className="absolute flex items-center
+                            justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0"
+                            >
+                                <span
+                                    className="text-black text-sm"
+                                    onClick={() =>
+                                        setCreatePopupVisibility(
+                                            cartData.length > 0 ?
+                                                !createPopupVisible : createPopupVisible
+                                        )
+                                    }
+                                >
+                                    {cartData.length}
+                                </span>
+
+                            </div>
+                        </div>
+                    </Link>
+                    <div>
+                        <div
+                            className="flex items-center justify-center w-[24px] h-[24px]
+    text-white rounded-full border-2 border-white cursor-pointer"
+                            onClick={toggleDropdown}
+                        >
+                            {shortName}
+                        </div>
+                        <PopupBox
+                            isOpen={dropdownOpen}
+                            onItemSelected={(item: DropDownItem) => onItemSelected(item)}
+                            onClose={toggleDropdown}
+                            items={dropDownItems} />
+                    </div>
+                </div>
+            </header>
             {createPopupVisible && <CartPopup
                 title="Molecule Cart"
                 visible={createPopupVisible}
@@ -205,86 +292,5 @@ export default function Header({ userData }: HeaderProps) {
                 showTitle={false}
                 style={{ backgroundColor: 'white' }}
             />}
-            <div className="flex items-center">
-                <Link href="/">
-                    <Image
-                        src={"/icons/aidd-icon-shell.svg"}
-                        alt="aidd icon"
-                        width={267}
-                        height={24}
-                    />
-                </Link>
-            </div>
-            <div className="flex items-center gap-8">
-                <Image
-                    className="icon-help"
-                    src={"/icons/help-icon.svg"}
-                    alt="Help"
-                    width={20}
-                    height={20}
-                />
-                <Image
-                    className="icon-bell"
-                    src={"/icons/bell-icon.svg"}
-                    alt="Bell"
-                    width={20}
-                    height={20}
-                />
-                <Image
-                    className="icon-preferences"
-                    src={"/icons/preferences-icon.svg"}
-                    alt="Preferences"
-                    width={20}
-                    height={20}
-                />
-                <Link href="#"
-                    onClick={() =>
-                        setCreatePopupVisibility(
-                            cartData.length > 0 ? !createPopupVisible : createPopupVisible
-                        )
-                    }
-
-                >
-                    <div className="relative flex items-center justify-center">
-                        <Image priority
-                            className="icon-cart"
-                            src={"/icons/cart-icon.svg"}
-                            alt="Cart"
-                            width={33}
-                            height={22}
-                        />
-                        <div className="absolute flex items-center 
-                            justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0"
-                        >
-                            <span
-                                className="text-black text-sm"
-                                onClick={() =>
-                                    setCreatePopupVisibility(
-                                        cartData.length > 0 ?
-                                            !createPopupVisible : createPopupVisible
-                                    )
-                                }
-                            >
-                                {cartData.length}
-                            </span>
-
-                        </div>
-                    </div>
-                </Link>
-                <div>
-                    <div
-                        className="flex items-center justify-center w-[24px] h-[24px] 
-    text-white rounded-full border-2 border-white cursor-pointer"
-                        onClick={toggleDropdown}
-                    >
-                        {shortName}
-                    </div>
-                    <PopupBox
-                        isOpen={dropdownOpen}
-                        onItemSelected={(item: DropDownItem) => onItemSelected(item)}
-                        onClose={toggleDropdown}
-                        items={dropDownItems} />
-                </div>
-            </div>
-        </header>);
+        </>);
 }

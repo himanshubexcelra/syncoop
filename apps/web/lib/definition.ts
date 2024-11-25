@@ -388,6 +388,8 @@ export interface AppContextModel {
   userCount: UserCountModel;
   refreshAssayTable: boolean;
   refreshUsersTable: boolean;
+  cartDetail?: any[];
+  refreshCart: boolean;
 }
 
 export type ToggleExpandType = (value: number, text: string) => void;

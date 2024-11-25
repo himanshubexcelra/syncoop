@@ -18,6 +18,8 @@ const initialContext = {
   },
   refreshAssayTable: false,
   refreshUsersTable: false,
+  cartDetail: [],
+  refreshCart: false,
 }
 
 interface AppContextData {

@@ -15,6 +15,8 @@ import { createLibrary, editLibrary } from "./service";
 import { LibraryCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
+import { AppContext } from "@/app/AppState";
+import { useContext } from "react";
 
 export default function CreateLibrary({
   setCreatePopupVisibility,
@@ -24,6 +26,8 @@ export default function CreateLibrary({
   projectData,
   library_idx,
 }: LibraryCreateFields) {
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
 
   const handleSubmit = async () => {
     const values = formRef?.current!.instance().option("formData");
@@ -53,6 +57,7 @@ export default function CreateLibrary({
         const toastId = toast.success(message);
         await delay(DELAY);
         toast.remove(toastId);
+        context?.addToState({ ...appContext, refreshCart: true })
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);

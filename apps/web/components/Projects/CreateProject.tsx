@@ -1,7 +1,8 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
 import toast from "react-hot-toast";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
+import { AppContext } from "@/app/AppState";
 import {
   Form,
   SimpleItem,
@@ -40,6 +41,8 @@ export default function CreateProject({
   edit,
   clickedOrg
 }: ProjectCreateFields) {
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
   const [filteredData, setFilteredData] = useState<User[]>(users);
   const [userList, setUsers] = useState<User[]>([]);
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
@@ -155,6 +158,7 @@ export default function CreateProject({
         const toastId = toast.success(message);
         await delay(DELAY);
         toast.remove(toastId);
+        context?.addToState({ ...appContext, refreshCart: true })
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);

@@ -1,7 +1,7 @@
 
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
@@ -34,6 +34,7 @@ import EditMolecule from '../Molecule/EditMolecule/EditMolecule';
 import { Messages } from '@/utils/message';
 import CustomDataGrid from '@/ui/dataGrid';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
+import dynamic from 'next/dynamic';
 
 type MoleculeListType = {
     moleculeLoader: boolean,
@@ -49,7 +50,13 @@ type MoleculeListType = {
     projectId: string,
     organizationId: string,
 }
-
+const MoleculeStructure = dynamic(
+    () => import("@/utils/MoleculeStructure"),
+    { ssr: false }
+);
+interface CellData {
+    smiles_string: string;
+}
 export default function MoleculeList({
     moleculeLoader,
     expanded,
@@ -76,9 +83,22 @@ export default function MoleculeList({
     const [moleculeData, setMoleculeData] = useState([]);
     const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
     const [reloadMolecules, setReloadMolecules] = useState(false);
-
-    const handleStructureZoom = () => { };
-
+    const [popupVisible, setPopupVisible] = useState(false);
+    const [cellData, setCellData] = useState<CellData>({ smiles_string: "" });
+    const [popupCords, setPopupCords] = useState({ x: 0, y: 0 });
+    const popupRef = useRef<HTMLDivElement>(null);
+    const closeMagnifyPopup = (event: any) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+            setPopupVisible(false);
+        }
+    };
+    const handleStructureZoom = (event: any, data: any) => {
+        const { x, y } = event.event.target.getBoundingClientRect();
+        const screenHeight = window.innerHeight;
+        setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
+        setPopupVisible(true);
+        setCellData(data);
+    }
     const columns: ColumnConfig<MoleculeType>[] = [
         {
             dataField: "user_favourite_molecule",
@@ -127,7 +147,7 @@ export default function MoleculeList({
                 <MoleculeStructureActions
                     smilesString={data.smiles_string}
                     molecule_id={data.id}
-                    onZoomClick={() => handleStructureZoom()}
+                    onZoomClick={(e: any) => handleStructureZoom(e, data)}
                     enableEdit={actionsEnabled.includes('edit_molecule')}
                     enableDelete={actionsEnabled.includes('delete_molecule')}
                     onEditClick={() => showEditMolecule(data)}
@@ -372,27 +392,28 @@ export default function MoleculeList({
         {
             text: `Edit (${selectedRows?.length})`,
             onClick: showEditMolecule,
-            class: 'btn-secondary',
-            disabled: selectedRows?.length < 1,
+            class: !selectedRows.length ? 'btn-disable' : 'btn-secondary',
+            disabled: !selectedRows.length,
             visible: actionsEnabled.includes('edit_molecule') && !!library_id
         },
         {
             text: `Add to Cart (${selectedRows?.length})`,
             onClick: addProductToCart,
-            class: 'btn-secondary',
+            class: isAddToCartEnabled ? 'btn-disable' : 'btn-secondary',
             disabled: isAddToCartEnabled,
             visible: cartEnabled && !!library_id
         }
     ];
 
     return (
-        <>
+        < >
             {moleculeLoader ?
                 <LoadIndicator
                     visible={moleculeLoader}
                 /> :
                 <div className={
-                    `table pb-[10px] ${expanded ? 'w-3/5' : 'w-full'}`}>
+                    `table pb-[10px] ${expanded ? 'w-3/5' : 'w-full'}`}
+                    onClick={closeMagnifyPopup}>
                     <CustomDataGrid
                         columns={columns}
                         data={tableData}
@@ -426,6 +447,7 @@ export default function MoleculeList({
                         resizeEnabled={true}
                         hideOnOutsideClick={true}
                         defaultWidth={710}
+                        minWidth={710}
                         defaultHeight={'100%'}
                         position={{
                             my: { x: 'right', y: 'top' },
@@ -459,6 +481,8 @@ export default function MoleculeList({
                         hideOnOutsideClick={true}
                         defaultWidth=
                         {editMolecules.length > 1
+                            ? 896 : 710}
+                        minWidth={editMolecules.length > 1
                             ? 896 : 710}
                         defaultHeight={'100%'}
                         position={{
@@ -495,6 +519,36 @@ export default function MoleculeList({
                     </div>
                 </div >
             }
+            {popupVisible && (
+                <div
+                    ref={popupRef}
+                    style={{
+                        top: `${popupCords.y}px`,
+                        left: `${popupCords.x + 225}px`,
+                    }}
+                    className="fixed
+                            transform -translate-x-1/2 -translate-y-1/2
+                            bg-gray-100
+                            bg-opacity-80
+                            z-50
+                            w-[250px]
+                            h-[250px]"
+                >
+                    <div
+                        className="absolute
+                                top-1/2
+                                left-1/2
+                                transform -translate-x-1/2 -translate-y-1/2"
+                    >
+                        <MoleculeStructure
+                            structure={cellData?.smiles_string}
+                            width={200}
+                            height={200}
+                            svgMode={true}
+                        />
+                    </div>
+                </div>
+            )}
         </>
     )
 }

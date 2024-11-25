@@ -41,6 +41,8 @@ const config: Config = {
         greyMessage: "var(--greyMessage)",
         blueLightBg: "var(--blueLightBg)",
         messageDarkBlue: "var(--messageDarkBlue)",
+        disabledTextButtonBlue: "var(--disabledTextButtonBlue)",
+        disabledBlueButton: "var(--disabledBlueButton)",
       },
     },
   },

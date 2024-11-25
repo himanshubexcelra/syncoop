@@ -184,9 +184,9 @@ const EditMolecule = ({
 
     return (
         <>
-            <div className="flex gap-2">
+            <div className="flex gap-4">
                 {editedMolecules?.length > 1 ?
-                    <div className='w-[30%] max-h-96 overflow-y-auto overflow-x-hidden'>
+                    <div className='w-[190px] max-h-96 overflow-y-auto overflow-x-hidden pr-2'>
                         {editedMolecules?.map((molecule: any, index: number) => (
                             <div
                                 key={molecule.id}
@@ -206,7 +206,7 @@ const EditMolecule = ({
                             </div>
                         ))}
                     </div> : null}
-                <div className={editMolecules?.length > 1 ? 'w-[70%]' : 'w-full'}>
+                <div className={editMolecules?.length > 1 ? 'w-[calc(100%-190px)]' : 'w-[100%]'}>
                     <div className={styles.ketcherContainer}>
                         <KetcherDrawBox
                             reactionString={editMolecules[moleculeIndex]?.smiles_string ||

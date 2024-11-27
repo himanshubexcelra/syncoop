@@ -28,7 +28,6 @@ const config: Config = {
     '<rootDir>/packages/',
     'packages',
     '<rootDir>/components/Libraries/__tests__/LibraryDetails.test.tsx',
-    '<rootDir>/components/MoleculeOrder/__tests__/MoleculeOrder.test.tsx',
   ],
 }
 

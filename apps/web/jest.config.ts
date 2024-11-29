@@ -27,7 +27,6 @@ const config: Config = {
   testPathIgnorePatterns: [
     '<rootDir>/packages/',
     'packages',
-    '<rootDir>/components/Libraries/__tests__/LibraryDetails.test.tsx',
   ],
 }
 

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { json } from "@/utils/helper";
+import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
 const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;
@@ -17,8 +17,23 @@ export async function GET(request: Request) {
 
         if (condition === "count") {
             const count = organization_id
-                ? await prisma.library.count({ where: { project: { organization_id: Number(organization_id) } } })
-                : await prisma.library.count();
+                ? await prisma.container.count({
+                    where: {
+                        type: 'L',
+                        container: {
+                            type: 'P',
+                            container: {
+                                type: 'CO',
+                                parent_id: Number(organization_id)
+                            }
+                        }
+                    }
+                })
+                : await prisma.container.count({
+                    where: {
+                        type: 'L'
+                    }
+                });
             return new Response(JSON.stringify(count), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
@@ -30,7 +45,7 @@ export async function GET(request: Request) {
             if (joins.includes('molecule')) {
                 query.include = {
                     ...query.include,
-                    molecule: {
+                    libraryMolecules: {
                         include: {
                             user_favourite_molecule: true
                         }
@@ -40,8 +55,11 @@ export async function GET(request: Request) {
         }
 
         if (library_id) {
-            query.where = { id: Number(library_id) }; // Add the where condition to the query
-            const library = await prisma.library.findUnique(query);
+            query.where = {
+                id: Number(library_id),
+                type: 'L'
+            }; // Add the where condition to the query
+            const library = await prisma.container.findUnique(query);
 
             if (!library) {
                 return new Response(JSON.stringify({ error: LIBRARY_NOT_FOUND }), {
@@ -56,7 +74,7 @@ export async function GET(request: Request) {
             });
         }
 
-        const libraries = await prisma.library.findMany(query);
+        const libraries = await prisma.container.findMany(query);
         return new Response(json(libraries), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
@@ -74,15 +92,16 @@ export async function POST(request: Request) {
     const { name, target, description, project_id, user_id } = req;
 
     try {
-        const project = await prisma.project.findUnique({
-            where: { id: Number(project_id) },
-            include: {
-                libraries: true,
+        const existingLibrary = await prisma.container.findUnique({
+            where: {
+                parent_id: Number(project_id),
+                name,
+                type: 'L'
             },
         });
 
         // Check if an library with the same name already exists (case insensitive)
-        const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase())[0];
+        // const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase())[0];
 
         if (existingLibrary) {
             return new Response(JSON.stringify(LIBRARY_EXISTS), {
@@ -92,12 +111,17 @@ export async function POST(request: Request) {
         }
 
         try {
-            // Create a new project
-            const newLibrary = await prisma.library.create({
+            // Create a new library
+            const newLibrary = await prisma.container.create({
                 data: {
                     name,
                     description,
-                    target,
+                    type: 'L',
+                    created_at: getUTCTime(new Date().toISOString()),
+                    is_active: true,
+                    metadata: {
+                        target
+                    },
                     owner: {
                         connect: {
                             id: user_id, // Associate the project with the organization
@@ -108,7 +132,7 @@ export async function POST(request: Request) {
                             id: user_id, // Associate the project with the organization
                         }
                     },
-                    project: {
+                    container: {
                         connect: {
                             id: project_id, // Associate the project with the organization
                         },
@@ -135,16 +159,16 @@ export async function PUT(request: Request) {
         const req = await request.json();
         const { name, target, description, project_id, user_id, id } = req;
 
-        const project = await prisma.project.findUnique({
-            where: { id: Number(project_id) },
-            include: {
-                libraries: true,
-            },
+        const existingLibrary = await prisma.container.findUnique({
+            where: {
+                parent_id: Number(project_id),
+                name,
+                type: 'L'
+            }
         });
 
-        const existingLibrary = project?.libraries.filter(library =>
-            library.name?.toLowerCase() === name.toLowerCase()
-            && Number(library.id) !== Number(id))[0];
+        // const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase() && library.id !== id)[0];
+
         if (existingLibrary) {
             return new Response(JSON.stringify(LIBRARY_EXISTS), {
                 headers: { "Content-Type": "application/json" },
@@ -152,16 +176,20 @@ export async function PUT(request: Request) {
             });
         }
 
-        const updatedLibrary = await prisma.library.update({
+        const updatedLibrary = await prisma.container.update({
             where: { id },
             data: {
                 name,
                 description,
-                target,
-                userWhoUpdated: {
-                    connect: { id: user_id }, // Associate the user who created/updated the project
+                metadata: {
+                    target
                 },
-                updated_at: new Date().toISOString(),
+                userWhoUpdated: {
+                    connect: {
+                        id: user_id
+                    }, // Associate the user who created/updated the project
+                },
+                updated_at: getUTCTime(new Date().toISOString()),
             },
         });
 
@@ -170,7 +198,6 @@ export async function PUT(request: Request) {
             status: SUCCESS,
         });
     } catch (error: any) {
-        console.error(error);
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { "Content-Type": "application/json" },
             status: BAD_REQUEST, // Adjust status code as needed

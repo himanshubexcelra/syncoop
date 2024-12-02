@@ -3,9 +3,12 @@ import {
   CombinedLibraryType, LibraryFields, LoginFormSchema,
   MoleculeOrder,
   MoleculeStatusCode, MoleculeStatusLabels, MoleculeType,
-  StatusCode, StatusType
+  Status,
+  StatusCode, StatusType,
+  StatusTypes
 } from "@/lib/definition"
-import { StatusCodeType } from "./constants";
+import CustomFile from "./file";
+import { stats, CategoryCodeBg, StatusCodeType } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -162,23 +165,48 @@ type UnionLibType = LibraryFields | CombinedLibraryType;
 type UnionMoleculeType = MoleculeType | StatusType;
 
 export function fetchMoleculeStatus(data: UnionLibType) {
-  let projectStatusCount = {
-    [StatusCode.READY]: 0,
-    [StatusCode.NEW]: 0,
-    [StatusCode.FAILED]: 0,
-    [StatusCode.INPROGRESS]: 0,
-    [StatusCode.DONE]: 0,
+
+  let projectStatusCode: any = {};
+  let projectStatusName: any = {};
+  Object.entries(MoleculeStatusCode).forEach(([key, value]) => {
+    if (!isNaN(Number(key))) {
+      projectStatusCode = {
+        ...projectStatusCode,
+        [key]: 0
+      }
+    } else {
+      projectStatusName = {
+        ...projectStatusName,
+        [value]: key
+      }
+    }
+  });
+
+  let projectStatusCount: any = {
+    [StatusCode.Ready]: 0,
+    [StatusCode.New]: 0,
+    [StatusCode.FailedRetro]: 0,
+    [StatusCode.InProgress]: 0,
+    [StatusCode.Done]: 0,
   };
 
-  data.molecule.forEach((molecule: UnionMoleculeType) => {
-    const keys = Object.keys(projectStatusCount);
-    const values = Object.values(projectStatusCount);
-    const keyIndex = keys.indexOf(molecule.status as any)
+  const keys: string[] = Object.keys(projectStatusCode);
+  const values: number[] = Object.values(projectStatusCode);
+  data.libraryMolecules.forEach((molecule: UnionMoleculeType) => {
+    const keyIndex = keys.indexOf(String(molecule.status) as any);
     if (keyIndex > -1) {
-      const key = keys[keyIndex];
-      projectStatusCount = {
-        ...projectStatusCount,
-        [key]: values[keyIndex] + 1
+      const status_code = keys[keyIndex];
+      const status_name = projectStatusName[status_code];
+      if (projectStatusCount[status_name]) {
+        projectStatusCount = {
+          ...projectStatusCount,
+          [status_name]: projectStatusCount[status_name] + 1
+        }
+      } else {
+        projectStatusCount = {
+          ...projectStatusCount,
+          [status_name]: 1
+        }
       }
     }
   });
@@ -189,6 +217,16 @@ export function fetchMoleculeStatus(data: UnionLibType) {
 export function isAdmin(myRoles: string[]) {
   return ['admin', 'org_admin'].some((role) => myRoles.includes(role));
 }
+export function isExternal(myRoles: string[]) {
+  return ['library_manager', 'org_admin'].some((role) => myRoles.includes(role));
+}
+export function isInternal(myRoles: string[]) {
+  return ['admin', 'protocol_approver', 'researcher'].some((role) => myRoles.includes(role));
+}
+
+export function isSystemAdmin(myRoles: string[]) {
+  return myRoles.includes('admin');
+}
 
 export function generateRandomDigitNumber() {
   // Generate a random number between 10000000 and 99999999
@@ -196,20 +234,16 @@ export function generateRandomDigitNumber() {
   return randomNum;
 }
 
-export function getStatusLabel(statusCode: number) {
-  return MoleculeStatusLabels[statusCode as MoleculeStatusCode];
-}
-
-export const colorSchemeADME = (data: MoleculeType | MoleculeOrder, field: keyof MoleculeType) => {
-  let color: StatusCodeType = 'READY';
-  const value = (data as any)[field]; // Dynamic field access based on the `field` parameter
-
+export const colorSchemeADME = (data: MoleculeType | MoleculeOrder) => {
+  let color: StatusCodeType = StatusTypes.Failed;
+  const value = data;
   if (typeof value === 'number') {
-    if (value <= 0.5) color = 'FAILED';
-    else if (value > 0.5 && value < 1) color = 'INFO';
-    else if (value >= 1) color = 'DONE';
+    if (value <= 0.5) color = StatusTypes.Failed;
+    else if (value > 0.5 && value < 1) color = StatusTypes.Info;
+    else if (value >= 1) color = StatusTypes.Done;
   }
-  return color;
+  const background = CategoryCodeBg[color];
+  return background;
 };
 
 export const getUTCTime = (dateTimeString: string) => {
@@ -221,3 +255,15 @@ export const getUTCTime = (dateTimeString: string) => {
 
   return dtUTC;
 }
+
+export const colorStatus = (status: number) => {
+  let foundStatus = stats.find((item: Status) => item?.text ===
+    MoleculeStatusLabels[status as MoleculeStatusCode]);
+  // If no match is found, fallback to the "NEW" status
+  if (!foundStatus) {
+    foundStatus = stats.find((item: Status) => item?.text === StatusTypes.New);
+  }
+  if (foundStatus) {
+    return foundStatus;
+  }
+};

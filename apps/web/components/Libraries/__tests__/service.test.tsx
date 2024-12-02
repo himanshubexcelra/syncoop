@@ -101,7 +101,8 @@ describe('Library API Functions', () => {
         const withRelation = ['libraries'];
         const project_id = '2'
         const result = await getLibraries(withRelation, project_id);
-        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project/${project_id}`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
+        url.searchParams.append('project_id', project_id);
         if (withRelation.length) {
             url.searchParams.append('with', JSON.stringify(withRelation));
         }

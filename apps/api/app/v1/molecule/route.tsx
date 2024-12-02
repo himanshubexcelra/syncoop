@@ -11,10 +11,16 @@ export async function GET(request: Request) {
         const condition = searchParams.get('condition');
         const organization_id = searchParams.get('organization_id');
 
+        const query: any = {};
         if (condition === "count") {
-            const count = organization_id
-                ? await prisma.molecule.count({ where: { library: { project: { organization_id: Number(organization_id) } } } })
-                : await prisma.molecule.count();
+            if (organization_id) {
+                query.where = {
+                    organization_id: Number(organization_id)
+                }
+            }
+
+
+            const count = await prisma.molecule.count(query)
             return new Response(JSON.stringify(count), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
@@ -62,5 +68,45 @@ export async function POST(request: Request) {
         }
     } catch (error) {
         console.error(error);
+    }
+}
+
+type MOLECULETYPE = {
+    status: number,
+    molecule_id: number,
+    userId: number,
+}
+
+export async function PUT(request: Request) {
+    try {
+        const req = await request.json();
+        const { formData, status, userId } = req;
+
+        const updatePromises = formData.map(async ({ molecule_id }: MOLECULETYPE) => {
+            return await prisma.molecule.update({
+                where: { id: molecule_id },
+                data: {
+                    status: status,
+                    userWhoUpdated: {
+                        connect: { id: userId }, // Associate the user who created/updated the project
+                    },
+                    updated_at: new Date().toISOString(),
+                },
+            });
+        });
+
+        const updatedMolecules = await Promise.all(updatePromises);
+        return new Response(json(updatedMolecules), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        console.error(error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // Adjust status code as needed
+        });
+    } finally {
+        await prisma.$disconnect();
     }
 }

@@ -44,7 +44,8 @@ export default function LandingPage({
     actionsEnabled,
     customerOrgId,
 }: DashboardPageTypeProps) {
-    const [organizationData, setOrganization] = useState<OrganizationDataFields>({});
+    const [organizationData, setOrganization] =
+        useState<OrganizationDataFields>({} as OrganizationDataFields);
     const [editPopup, showEditPopup] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<any>(null);
@@ -119,7 +120,9 @@ export default function LandingPage({
                 <Heading {...{ heading }} myRoles={myRoles} showEditPopup={showEditPopup} />
             </div>
             <main className="main main-heading main-padding">
-                <Tabs tabsDetails={tabsStatus} />
+                <div className="w-full shadow-lg shadow-[var(--tabBoxShadow)]">
+                    <Tabs tabsDetails={tabsStatus} />
+                </div>
                 {myRoles.includes('admin') && !customerOrgId &&
                     <>
                         <TabUsersTable

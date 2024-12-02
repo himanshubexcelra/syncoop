@@ -28,7 +28,7 @@ const dialogProperties = {
 type EditMoleculeProps = {
     editMolecules: MoleculeType[]
     userData: UserData;
-    libraryId: string;
+    libraryId: number;
     projectId: string;
     organizationId: string;
     setViewEditMolecule: (val: boolean) => void;
@@ -184,7 +184,7 @@ const EditMolecule = ({
 
     return (
         <>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
                 {editedMolecules?.length > 1 ?
                     <div className='w-[190px] max-h-96 overflow-y-auto overflow-x-hidden pr-2'>
                         {editedMolecules?.map((molecule: any, index: number) => (

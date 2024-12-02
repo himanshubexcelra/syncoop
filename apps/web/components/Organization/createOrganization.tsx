@@ -13,10 +13,19 @@ import {
 } from "devextreme-react/form";
 import { delay, generatePassword } from "@/utils/helpers";
 import { createOrganization } from "./service";
-import { LoginFormSchema, OrganizationCreateFields } from "@/lib/definition";
+import {
+  FetchUserType,
+  LoginFormSchema,
+  OrganizationDataFields,
+  ProjectDataFields,
+  ShowEditPopupType,
+  User,
+  UserData,
+  UserRole
+} from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { AppContext } from "@/app/AppState";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { Messages } from "@/utils/message";
 import { useMemo, useState } from "react";
 import { ButtonTypes } from "devextreme-react/cjs/button";
@@ -24,21 +33,35 @@ import { TextBoxTypes } from "devextreme-react/cjs/text-box";
 import Image from "next/image";
 import { Tooltip, } from "devextreme-react";
 import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
+import { getFilteredRoles } from "../Role/service";
 
 const customPasswordCheck = (password: any) =>
   LoginFormSchema.shape.password_hash.safeParse(password).success
 
+type OrganizationCreateFields = {
+  setCreatePopupVisibility: ShowEditPopupType,
+  formRef: any,
+  fetchOrganizations: FetchUserType,
+  projectData?: ProjectDataFields,
+  users?: User[],
+  organizationData?: OrganizationDataFields[],
+  roleType?: string,
+  edit?: boolean,
+  data?: UserData,
+  created_by: number
+}
 export default function RenderCreateOrganization({
   setCreatePopupVisibility,
   formRef,
   fetchOrganizations,
-  role_id,
   created_by,
 }: OrganizationCreateFields) {
   const context: any = useContext(AppContext);
   const appContext = context.state;
   const [password_hash, setPassword] = useState('');
   const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
+  const [role_id, setRoleId] = useState(-1);
+
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
@@ -55,6 +78,7 @@ export default function RenderCreateOrganization({
       }
     }
   };
+
   const passwordButton = useMemo<ButtonTypes.Properties>(
     () => ({
       icon: passwordMode === "text" ? "eyeclose" : "eyeopen",
@@ -87,6 +111,19 @@ export default function RenderCreateOrganization({
       .then(() => toast.success(Messages.PASSWORD_COPY))
       .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
   };
+
+  const fetchRoles = async () => {
+    const roles = await getFilteredRoles();
+    const role = roles.find(
+      (role: UserRole) => role.type === 'org_admin');
+    if (role) {
+      setRoleId(role.id)
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   return (
     <CreateForm ref={formRef} showValidationSummary={true} >
@@ -187,14 +224,29 @@ export default function RenderCreateOrganization({
             elementAttr={{ class: 'btn-secondary' }} />
         </ButtonItem>
       </GroupItem>
-      <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
-        <ButtonOptions
-          text="Create Organization"
-          useSubmitBehavior={true}
-          onClick={handleSubmit}
-          elementAttr={{ class: "btn-primary" }}
-        />
-      </ButtonItem>
+      <GroupItem
+        cssClass="buttons-group"
+        colCountByScreen={{ xs: 2, sm: 2, md: 2, lg: 2 }}
+      >
+        <ButtonItem cssClass="form_btn_primary">
+          <ButtonOptions
+            text="Create Organization"
+            useSubmitBehavior={true}
+            onClick={handleSubmit}
+            elementAttr={{ class: "btn-primary" }}
+          />
+        </ButtonItem>
+        <ButtonItem cssClass="form_btn_secondary">
+          <ButtonOptions
+            text="Cancel"
+            onClick={() => {
+              formRef.current?.instance().reset();
+              setCreatePopupVisibility(false)
+            }}
+            elementAttr={{ class: "btn-secondary" }}
+          />
+        </ButtonItem>
+      </GroupItem>
     </CreateForm>
   );
 }

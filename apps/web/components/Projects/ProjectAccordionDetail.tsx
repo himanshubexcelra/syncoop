@@ -11,6 +11,7 @@ import {
     FetchUserType,
     OrganizationDataFields,
     ProjectDataFields,
+    StatusCode,
     User,
     UserData
 } from '@/lib/definition';
@@ -49,17 +50,20 @@ export default function ProjectAccordionDetail({
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
     const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
-    const moleculeCount = data.libraries.reduce((count, library) => {
-        return count + library.molecule.length; // Add the count of molecules in each library
-    }, 0);
+    // Project's molecule count count OPT: 1
+    const moleculeCount = data.other_container?.reduce((count, library) => {
+        // Add the count of molecules in each library
+        return count + library.libraryMolecules.length;
+    }, 0) || 0;
 
-    const combinedLibrary = data.libraries.reduce((acc, lib) => {
-        acc.molecule.push(...lib.molecule);
+    // Library's under project with it's molecule status OPT: 2
+    const combinedLibrary = data.other_container?.reduce((acc, lib) => {
+        acc.libraryMolecules.push(...lib.libraryMolecules);
         return acc;
-    }, { molecule: [] });
+    }, { libraryMolecules: [] }) || { libraryMolecules: [] };
 
     useEffect(() => {
-        const sharedUser = data.sharedUsers.find(u => u.user_id === userData.id);
+        const sharedUser = data.sharedUsers?.find(u => u.user_id === userData.id);
         const owner = data.ownerId === userData.id;
         const admin = ['admin', 'org_admin'].some(
             (role) => myRoles?.includes(role));
@@ -93,7 +97,7 @@ export default function ProjectAccordionDetail({
             <div className='flex justify-between'>
                 <div>
                     <div className='project-target flex'>
-                        Target: <span className='pl-[5px]'>{data.target}</span>
+                        Target: <span className='pl-[5px]'>{data.metadata.target}</span>
                     </div>
                     <div className='project-title mt-[21px] mb-[21px]'>
                         {data.name}
@@ -136,7 +140,7 @@ export default function ProjectAccordionDetail({
                     height={15}
                     alt="project"
                 />
-                <div className='pl-[10px] project-type'>{data.type}</div>
+                <div className='pl-[10px] project-type'>{data.metadata.type}</div>
             </div>
             <div className='description'>
                 {data.description &&
@@ -177,7 +181,8 @@ export default function ProjectAccordionDetail({
                                         }
                                         return (
                                             <span key={status} className={`badge ${type}`}>
-                                                <b>{count}</b> {status}
+                                                <b>{count as number}</b>
+                                                {(StatusCode as any)[status]}
                                             </span>
                                         )
                                     })}
@@ -206,7 +211,7 @@ export default function ProjectAccordionDetail({
                             width={15}
                             height={15}
                         />
-                        Libraries: <span>{data.libraries?.length}</span>
+                        Libraries: <span>{data.other_container?.length}</span>
                     </div>
                 </div>
             </div>
@@ -265,7 +270,7 @@ export default function ProjectAccordionDetail({
             </div>
             <div className='libraries'>
                 <div className="flex-container">
-                    {data.libraries.map(item => (
+                    {data.other_container?.map(item => (
                         <div key={item.id} className='box-item library'>
                             <div className='flex library-name text-normal justify-between'>
                                 <div>Library: <span>{item.name}</span></div>
@@ -343,14 +348,15 @@ export default function ProjectAccordionDetail({
                                         }
                                         return (
                                             <span key={status} className={`badge ${type}`}>
-                                                <b>{count}</b> {status}
+                                                <b>{count as number}</b>
+                                                {(StatusCode as any)[status]}
                                             </span>
                                         )
                                     })}
                             </div>
                         </div>
                     ))}
-                    {data.libraries.length === 0 && (
+                    {data.other_container?.length === 0 && (
                         <div
                             className={`flex justify-center items-center 
                             p-[40px] h-[70px] nodata-project`}

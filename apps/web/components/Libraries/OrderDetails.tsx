@@ -1,10 +1,13 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import React from 'react'
 import Image from 'next/image';
-import { Messages } from "@/utils/message";
 import { Button as Btn } from "devextreme-react/button";
+type OrderDetailsProps = {
+  closeOrderPopup: () => void;
+  msg: string;
+};
 
-const OrderDetails = ({ closeOrderPopup }: { closeOrderPopup: () => void }) => {
+const OrderDetails = ({ closeOrderPopup, msg }: OrderDetailsProps) => {
   return (
 
     <div className="container">
@@ -18,7 +21,7 @@ const OrderDetails = ({ closeOrderPopup }: { closeOrderPopup: () => void }) => {
         />
       </div>
       <div className="text-column">
-        <p>{Messages.SUBMIT_ORDER}</p>
+        <p>{msg}</p>
       </div>
       <Btn
         className="btn-primary"

@@ -76,15 +76,16 @@ export interface metaDataType {
 }
 
 export interface OrganizationDataFields {
-  id?: number;
-  name?: string;
-  email_id?: string;
-  status?: string;
-  orgUser?: User[];
-  metadata?: metaDataType;
-  projects?: ProjectDataFields[];
-  orgAdminId?: number;
-  type?: string;
+  id: number;
+  name: string;
+  email_id: string;
+  // status?: string;
+  is_active: boolean;
+  orgUser: User[];
+  metadata: metaDataType;
+  other_container?: ProjectDataFields[];
+  owner_id: number;
+  type: string;
 }
 
 export interface OrganizationTableProps {
@@ -94,20 +95,6 @@ export interface OrganizationTableProps {
 export type ShowEditPopupType = (value: boolean) => void;
 
 export type fetchDataType = () => void;
-
-export interface OrganizationCreateFields {
-  setCreatePopupVisibility: ShowEditPopupType,
-  formRef: any,
-  fetchOrganizations: FetchUserType,
-  projectData?: ProjectDataFields,
-  users?: User[],
-  organizationData?: OrganizationDataFields[],
-  roleType?: string,
-  edit?: boolean,
-  role_id: number,
-  data?: UserData,
-  created_by: number
-}
 
 export interface ProjectCreateFields {
   setCreatePopupVisibility: ShowEditPopupType,
@@ -124,17 +111,6 @@ export interface ProjectCreateFields {
 }
 
 export type FetchUserType = (value?: boolean) => void;
-export interface OrganizationEditField {
-  organizationData: OrganizationDataFields,
-  showEditPopup: ShowEditPopupType,
-  formRef: any,
-  fetchOrganizations: fetchDataType,
-  projectData?: ProjectDataFields,
-  myRoles?: string[],
-  edit?: boolean,
-  loggedInUser: number,
-  orgAdminRole?: number,
-}
 
 export interface MoleculeStatus {
   name: string;
@@ -150,6 +126,8 @@ export interface MoleculeType {
   id: number;
   inchi_key: string;
   library_id: number;
+  project_id: number;
+  organization_id: number;
   molecular_weight: number;
   smiles_string: string;
   source_molecule_name: string;
@@ -163,6 +141,9 @@ export interface MoleculeType {
   anlayse?: number;
   herg?: number;
   caco2?: number;
+  clint?: number;
+  hepG2cytox?: number;
+  solubility?: number;
 }
 
 export interface MoleculeFavourite {
@@ -184,14 +165,16 @@ export interface LibraryFields {
   description?: string;
   project_id?: number;
   project: ProjectDataFields,
-  target?: string;
+  metadata: {
+    target?: string;
+  };
   userWhoUpdated?: userType;
   updated_at?: Date;
   owner: User;
   ownerId: number;
   created_at: Date;
   status?: MoleculeStatus[];
-  molecule: [];
+  libraryMolecules: [];
 }
 
 export interface StatusType {
@@ -199,18 +182,17 @@ export interface StatusType {
 }
 
 export interface CombinedLibraryType {
-  molecule: StatusType[];
+  libraryMolecules: StatusType[];
 }
 export interface ProjectDataFields {
   name: string;
   id: number;
   description?: string;
-  organization_id?: number;
-  organization: OrganizationDataFields,
+  parent_id?: number;
+  container: OrganizationDataFields,
   user: userType;
   sharedUsers: sharedUserType[];
   target: string;
-  type: string;
   userWhoUpdated: userType;
   userWhoCreated: userType;
   updated_at: Date;
@@ -218,7 +200,11 @@ export interface ProjectDataFields {
   owner: User;
   ownerId: number;
   orgUser?: OrgUser;
-  libraries: LibraryFields[];
+  other_container?: LibraryFields[];
+  metadata: {
+    target: string,
+    type: string
+  },
   created_at: Date,
   combinedLibrary?: CombinedLibraryType
 }
@@ -270,6 +256,10 @@ export interface UserData {
   owner?: OwnerType;
   status?: string;
   myRoles: string[];
+  roles: [{
+    type: string;
+
+  }];
 }
 export interface projectType {
   id: number,
@@ -302,9 +292,11 @@ export interface ModuleTableProps {
 }
 
 export interface Status {
-  text: StatusCode;
+  text: string;
   number: string;
   background: string;
+  textColor: string;
+  image?: string | undefined;
   dotColorStyle: string[];
 }
 
@@ -334,10 +326,22 @@ export type UserTableProps = {
   customerOrgId?: number,
 }
 
+// Define the type for the props of each tab
+interface TabProps {
+  isReactantList: boolean;
+  data: any;
+  onDataChange?: (updatedData: any) => void;
+  solventList?: string[];
+  temperatureList?: number[];
+  onSolventChange?: (solvent: string) => void;
+  onTemperatureChange?: (temperature: number) => void;
+}
+
 export interface TabDetail {
   title?: string;
   Component?: React.ComponentType<any>;
-  props?: AssayTableProps | ModuleTableProps | StatusComponentProps | UserTableProps;
+  props?: AssayTableProps | ModuleTableProps | StatusComponentProps
+  | UserTableProps | TabProps;
 }
 
 export interface OrgUser {
@@ -346,37 +350,45 @@ export interface OrgUser {
 };
 
 export enum StatusCode {
-  READY = 'Ready',
-  NEW = 'New',
-  FAILED = 'Failed',
-  INPROGRESS = 'In Progress',
-  DONE = 'Done',
-  INRETROQUEUE = 'In-retro Queue',
-  INFO = 'Info'
+  Ready = 'Ready',
+  New = 'New',
+  NewInCart = 'New + In Cart',
+  InProgress = 'In Progress',
+  Done = 'Done',
+  InRetroQueue = 'In-retro Queue',
+  InReview = 'In-review',
+  Validated = 'Validated',
+  ValidatedInCart = 'Validated + In cart',
+  Ordered = 'Ordered',
+  FailedRetro = 'Failed'
 }
 
 export enum MoleculeStatusCode {
   New = 1,
-  Ordered = 2,
-  InRetroQueue = 3,
-  Ready = 4,
+  NewInCart = 2,
+  Ordered = 3,
+  InRetroQueue = 4,
   FailedRetro = 5,
-  InReview = 6,
-  Validated = 7,
-  Done = 8,
-  Failed = 9
+  Ready = 6,
+  InReview = 7,
+  Validated = 8,
+  ValidatedInCart = 9,
+  InProgress = 10,
+  Done = 11
 }
 
 export const MoleculeStatusLabels: Record<MoleculeStatusCode, string> = {
-  [MoleculeStatusCode.New]: "New",
-  [MoleculeStatusCode.Ordered]: "Ordered",
-  [MoleculeStatusCode.InRetroQueue]: "In-retro Queue",
-  [MoleculeStatusCode.Ready]: "Ready",
-  [MoleculeStatusCode.FailedRetro]: "Failed Retro",
-  [MoleculeStatusCode.InReview]: "In Review",
-  [MoleculeStatusCode.Validated]: "Validated",
-  [MoleculeStatusCode.Done]: "Done",
-  [MoleculeStatusCode.Failed]: "Failed"
+  [MoleculeStatusCode.New]: StatusCode.New,
+  [MoleculeStatusCode.Ordered]: StatusCode.Ordered,
+  [MoleculeStatusCode.NewInCart]: StatusCode.NewInCart,
+  [MoleculeStatusCode.InRetroQueue]: StatusCode.InRetroQueue,
+  [MoleculeStatusCode.Ready]: StatusCode.Ready,
+  [MoleculeStatusCode.FailedRetro]: StatusCode.FailedRetro,
+  [MoleculeStatusCode.InReview]: StatusCode.InReview,
+  [MoleculeStatusCode.Validated]: StatusCode.Validated,
+  [MoleculeStatusCode.ValidatedInCart]: StatusCode.ValidatedInCart,
+  [MoleculeStatusCode.InProgress]: StatusCode.InProgress,
+  [MoleculeStatusCode.Done]: StatusCode.Done
 };
 
 export interface UserCountModel {
@@ -459,6 +471,7 @@ export interface OrderType {
   molecule_id: number;
   library_id: number;
   project_id: number;
+  batch_detail: string;
   organization_id: number;
   created_by: number;
 }
@@ -482,14 +495,17 @@ export interface MoleculeOrderParams {
 
 export interface MoleculeOrder {
   id: number;
-  bookmark: boolean;
+  bookmark?: boolean;
   order_id: number;
-  order_name: string;
+  order_name?: string;
   molecule_id: number;
-  molecularWeight: number;
-  organizationName: string;
-  molecular_weight: string;
-  source_molecule_name: string;
+  library_id: number;
+  project_id: number;
+  organization_id: number;
+  molecularWeight?: number;
+  organizationName?: string;
+  molecular_weight?: string;
+  source_molecule_name?: string;
   smiles_string: string;
   status: number;
   yield?: number;
@@ -499,13 +515,16 @@ export interface MoleculeOrder {
 }
 
 export enum OrganizationType {
-  Internal = "Internal",
-  External = "External"
+  Internal = "O",
+  External = "CO"
 }
 
 export interface MoleculeObj {
   molecular_weight: string;
   smiles_string: string;
+  project: {
+    name: string;
+  };
   library: {
     name: string;
     project: {
@@ -526,7 +545,7 @@ export interface CartItem {
   molecule: MoleculeObj;
   moleculeName: string;
   smiles_string: string;
-  order_id: number,
+  molecule_order_id: number,
   orderName: string,
   organization: Organization;
 }
@@ -562,10 +581,7 @@ export interface OrderDetail {
   user_id: number;
 }
 
-export interface RejectedMolecules {
-  smiles: string;
-  reason: string;
-};
+
 export interface ColumnConfig<T> {
   dataField: keyof T;
   title?: string | React.ReactNode;
@@ -581,7 +597,10 @@ export interface ColumnConfig<T> {
 
 export enum StatusTypes {
   Failed = "FAILED",
-  InRetroQueue = "INRETROQUEUE"
+  InRetroQueue = "INRETROQUEUE",
+  Info = "INFO",
+  Done = "DONE",
+  New = "NEW",
 }
 
 export interface SaveMoleculeParams {
@@ -601,3 +620,152 @@ export enum AssayLabel {
   functionalAssay3 = 'Functional Assay 3',
   functionalAssay4 = 'Functional Assay 4',
 };
+
+export interface Pathway {
+  id: number;
+  pathway_instance_id: number;
+  pathway_score: string;
+  molecule_id: string;
+  description: string | null;
+  selected: boolean;
+  created_at: string;
+  created_by: number;
+  updated_at: string | null;
+  updated_by: number | null;
+  pathway_index: number;
+  step_count: number;
+  reaction_detail: ReactionDetailType[];
+}
+
+export interface ReactionTemplate {
+  id: number;
+  name: string;
+  type: string;
+  version: number;
+  chemical_1: string;
+  chemical_2: string;
+  chemical_3: string;
+  chemical_4: string;
+  chemical_5: string;
+  chemical_6: string | null;
+  no_of_components: number;
+  solvent: string;
+  temperature: string;
+  last_synced_at: string;
+}
+
+export type ReactionInputData = {
+  id: number;
+} & {
+  [key: string]: string | number;
+};
+
+export type NodeType = {
+  id: string,
+  parentId?: string,
+  type?: string,
+  name?: string,
+  condition?: string,
+  smiles?: string,
+  reactionIndex?: number,
+}
+
+
+export type Compound = {
+  compound_id: number;
+  compound_type: string;
+}
+
+export type ReactionCompoundType = {
+  id: number,
+  type?: string,
+  name?: string,
+  compound_label?: number,
+  sNo?: number,
+  reaction_name?: string,
+  product_type?: string,
+  smiles_string: string,
+  compound_type: string,
+  compound_name: string,
+  role: string,
+  molar_ratio: number,
+  inventory_id: number,
+  dispense_time: number;
+  compound_id?: string;
+}
+
+export type ReactionDetailType = {
+  id: string,
+  type: string,
+  name: string,
+  reactionCount?: number,
+  condition?: string,
+  temperature?: number,
+  solvent?: string,
+  reaction_name: string,
+  product_type?: string,
+  smiles: string,
+  product_smiles_string: string,
+  reaction_compound: ReactionCompoundType[],
+  reaction_template: string,
+}
+
+export type PathwayType = {
+  id: string,
+  parentId: string,
+  type: "reaction" | "molecule",
+  name: string,
+  score: number,
+  doi?: string,
+  reactionCount?: number,
+  condition?: string,
+  reaction_detail: ReactionDetailType[],
+  dex: number,
+  pathway_index: number,
+}
+
+export type CompoundType = {
+  id: string,
+  smile: string,
+}
+
+export interface ReactionDetail {
+  id: string | number;
+  temperature: number;
+  solvent: string;
+  reactionTemplate: string;
+}
+
+export enum ActionStatus {
+  Enabled = 'Enabled',
+  Disabled = 'Disabled'
+}
+export type CreateLabJobOrder = {
+  id: number,
+  molecule_id: number,
+  library_id: number,
+  organization_id: number,
+  project_id: number,
+  user_id: number,
+  order_id: number,
+}
+export type SaveLabJobOrder = {
+  molecule_id: number,
+  pathway_id: number,
+  pathway_instance_id: number,
+  product_smiles_string: string,
+  product_molecular_weight: number,
+  no_of_steps: number,
+  functional_bioassays: string,
+  reactions: string,
+  created_by: number
+}
+export type MoleculeLabJob = {
+  id: number,
+  molecule_id: number,
+  library_id: number,
+  organization_id: number,
+  project_id: number,
+  user_id: number,
+  order_id: number
+}

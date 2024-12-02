@@ -41,5 +41,14 @@ export const Messages = {
     REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",
     SUBMIT_ORDER: "Molecules order submitted successfully.",
     USER_ROLE_CHECK: "User role not supported or missing required parameters.",
-    UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully"
+    MOLECULES_SAVE_MSG: "Reactions have been saved successfully.",
+    sentForSynthesis(count: number) {
+        return `${count} molecules sent for retro synthesis!`;
+    },
+    UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully",
+    CREATE_LAB_JOB_ORDER: "Pathway has been added to synthesis lab job cart",
+    displayLabJobMessage(count: number) {
+        return `Synthesis order confirmation.you are ordering the synthesis of ${count} Molecule.`;
+    },
+
 }

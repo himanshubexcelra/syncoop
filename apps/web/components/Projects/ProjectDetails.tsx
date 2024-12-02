@@ -58,14 +58,15 @@ export default function ProjectDetails({
         }
     }, []);
 
+    // Fetching projects under organization OPT: 3
     const fetchOrganizations = async () => {
         let organization;
-        if (myRoles?.includes("admin") && !organizationId) {
+        if (myRoles?.includes("admin")) {
             organization = await getOrganization({
                 withRelation: ['orgUser', 'user_role', 'projects']
             });
             const projectList = organization.map(
-                (org: OrganizationDataFields) => org.projects).flat() || [];
+                (org: OrganizationDataFields) => org.other_container).flat() || [];
             setFilteredData(projectList);
             setOrgProjects(projectList);
             setUsers([]);
@@ -78,8 +79,8 @@ export default function ProjectDetails({
                     ? Number(organizationId)
                     : userData?.organization_id
             });
-            setFilteredData(organization?.projects);
-            setOrgProjects(organization?.projects);
+            setFilteredData(organization?.other_container);
+            setOrgProjects(organization?.other_container);
             setUsers(organization?.orgUser?.filter(
                 (user: UserData) =>
                     user.user_role[0]?.role?.type === 'library_manager' &&
@@ -101,7 +102,7 @@ export default function ProjectDetails({
                 filteredValue = filteredData.filter((item) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.type.toLowerCase().includes(value.toLowerCase()) ||
+                    item.metadata.type.toLowerCase().includes(value.toLowerCase()) ||
                     item.target?.toLowerCase().includes(value.toLowerCase()) ||
                     item.user?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
                     item.user?.last_name?.toLowerCase().includes(value.toLowerCase()));
@@ -109,7 +110,7 @@ export default function ProjectDetails({
                 filteredValue = orgProj.filter((item: ProjectDataFields) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.type.toLowerCase().includes(value.toLowerCase()) ||
+                    item.metadata.type.toLowerCase().includes(value.toLowerCase()) ||
                     item.target?.toLowerCase().includes(value.toLowerCase()) ||
                     item.user?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
                     item.user?.last_name?.toLowerCase().includes(value.toLowerCase()));

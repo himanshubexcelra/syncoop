@@ -1,12 +1,16 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import { StatusCode } from "@/lib/definition";
-export const status = ["Enabled", "Disabled"];
+import { ActionStatus, StatusCode } from "@/lib/definition";
+export const status = [
+  ActionStatus.Enabled,
+  ActionStatus.Disabled
+];
 
 export const defaultRoutesEnabled = [
   '/profile',
   '/organization',
   '/pathways',
   'ketchertool',
+  '/test'
 ];
 
 export const DELAY = 4000;
@@ -21,57 +25,86 @@ export const PERMISSIONS = ['Admin', 'Edit', 'View'];
 
 export const stats = [
   {
-    text: StatusCode.NEW,
+    text: StatusCode.New,
     number: "29",
-    background: "bg-white",
+    background: "bg-themeSilverGreyColor",
+    textColor: "text-themeGreyColor",
     dotColorStyle: ["bg-themeDotGreyColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
   },
   {
-    text: StatusCode.READY,
+    text: StatusCode.Ready,
     number: "56",
-    background: "bg-white",
+    background: "bg-themeSilverGreyColor",
+    textColor: "text-themeBlueColor",
     dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
   },
   {
-    text: StatusCode.INPROGRESS,
+    text: StatusCode.InProgress,
     number: "94",
     background: "bg-themeStatsBlueColor",
+    textColor: "text-themeBlueColor",
     dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotBlueColor", "bg-themeDotGreyColor"]
   },
   {
-    text: StatusCode.FAILED,
+    text: StatusCode.FailedRetro,
     number: "13",
     background: "bg-themeStatsRedColor",
+    textColor: "text-textLightRed",
+    image: '/icons/warning.svg',
     dotColorStyle: ["bg-themeDotRedColor", "bg-themeDotRedColor", "bg-themeDotRedColor"]
   },
   {
-    text: StatusCode.DONE,
+    text: StatusCode.Done,
     number: "359",
     background: "bg-themeStatsGreenColor",
+    textColor: "text-textLightGreen",
     dotColorStyle: ["bg-themeDotGreenColor", "bg-themeDotGreenColor", "bg-themeDotGreenColor"]
+  },
+  {
+    text: StatusCode.InRetroQueue,
+    number: "360",
+    background: "bg-themeLightBlueColor",
+    textColor: "text-themeGreyColor",
+    image: '/icons/queue.svg',
+    dotColorStyle: []
+  },
+  {
+    text: StatusCode.InReview,
+    number: "56",
+    background: "bg-themeSilverGreyColor",
+    textColor: "text-themeBlueColor",
+    dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
+  },
+  {
+    text: StatusCode.Ordered,
+    number: "96",
+    background: "bg-themeSilverGreyColor",
+    textColor: "text-themeBlueColor",
+    dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
+  },
+  {
+    text: StatusCode.Validated,
+    number: "78",
+    background: "bg-themeSilverGreyColor",
+    textColor: "text-themeBlueColor",
+    dotColorStyle: ["bg-themeDotBlueColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
+  },
+  {
+    text: StatusCode.NewInCart,
+    number: "29",
+    background: "bg-themeSilverGreyColor",
+    textColor: "text-themeGreyColor",
+    dotColorStyle: ["bg-themeDotGreyColor", "bg-themeDotGreyColor", "bg-themeDotGreyColor"]
   },
 ];
 
-export enum StatusCodeBg {
-  READY, NEW = 'bg-themeSilverGreyColor',
-  INPROGRESS = 'bg-themeStatsBlueColor',
-  DONE = 'bg-themeStatsGreenColor',
-  INFO = 'bg-themeStatsYellowColor',
-  FAILED = 'bg-themeStatsRedColor',
-  INRETROQUEUE = 'bg-themeLightBlueColor',
-  
+export enum CategoryCodeBg {
+  DONE = 'bg-doneCategoryGreen',
+  INFO = 'bg-infoCategoryYellow',
+  FAILED = 'bg-failedCategoryRed',
 }
 
-export const StatusCodeTextColor: { [key: string]: string } = {
-  NEW: "text-themeGreyColor",
-  READY: "text-themeBlueColor",
-  INPROGRESS: "text-themeBlueColor",
-  DONE: "text-background",
-  FAILED: "text-failedStatusColor",
-  INRETROQUEUE: "text-themeGreyColor"
-};
-
-export type StatusCodeType = keyof typeof StatusCodeBg;
+export type StatusCodeType = keyof typeof CategoryCodeBg;
 
 export interface DataType {
   status: StatusCodeType;
@@ -114,3 +147,6 @@ export const features = [
   { name: "Multiple Org Access", value: "multiple_org_access", checked: false },
   { name: "Order Management", value: "order_management", checked: false },
 ];
+
+export const COMPOUND_TYPE_R = 'r';
+export const COMPOUND_TYPE_A = 'a';

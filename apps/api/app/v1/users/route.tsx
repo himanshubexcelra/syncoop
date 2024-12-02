@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
-import { json } from "@/utils/helper";
+import { getUTCTime, json } from "@/utils/helper";
 
 const { EMAIL_ALREADY_EXIST, } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST } = STATUS_TYPE;
@@ -109,12 +109,19 @@ export async function POST(request: Request) {
                 last_name,
                 email_id,
                 password_hash,
-                status: 'Enabled',
+                is_active: true,
                 organization_id: organization,
+                created_at: getUTCTime(new Date().toISOString()),
                 user_role: {
                     create: roles.map((role_id: number) => ({
-                        role: { connect: { id: role_id } }
+                        role: {
+                            connect: {
+                                id: role_id
+                            }
+                        },
+                        created_at: getUTCTime(new Date().toISOString()),
                     })),
+
                 },
             },
             include: {
@@ -200,6 +207,7 @@ export async function PUT(request: Request) {
             const userRolesData = roles.map((role_id: number) => ({
                 user_id: existingUser.id,
                 role_id: role_id,
+                created_at: getUTCTime(new Date().toISOString()),
             }));
 
             await prisma.user_role.createMany({

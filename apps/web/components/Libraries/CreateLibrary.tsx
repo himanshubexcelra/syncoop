@@ -56,8 +56,8 @@ export default function CreateLibrary({
         const message = Messages.libraryAddedUpdated(status);
         const toastId = toast.success(message);
         await delay(DELAY);
-        toast.remove(toastId);
         context?.addToState({ ...appContext, refreshCart: true })
+        toast.remove(toastId);
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
@@ -75,7 +75,7 @@ export default function CreateLibrary({
     <Form
       ref={formRef}
       showValidationSummary={true}
-      formData={library_idx !== undefined ? projectData.libraries[library_idx] : {}
+      formData={!!library_idx ? projectData.other_container?.[library_idx] : {}
       }>
       <SimpleItem
         dataField="organization"
@@ -83,7 +83,7 @@ export default function CreateLibrary({
           {
             placeholder: "Organization name",
             disabled: true,
-            value: projectData.organization?.name
+            value: projectData?.container?.name
           }}
       >
         <Label text="Organization Name*" />

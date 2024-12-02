@@ -3,15 +3,7 @@ import { getUserData } from "@/utils/auth";
 import Layout from "@/components/layout";
 import { redirect } from "next/navigation";
 
-type ProjectDetailProps = {
-    organizationId?: string;
-    projectId: string
-}
-
-export default async function ProjectDetail({
-    organizationId,
-    projectId
-}: ProjectDetailProps) {
+export default async function ProjectDetail() {
     const sessionData = await getUserData();
 
     if (!sessionData) {
@@ -24,9 +16,7 @@ export default async function ProjectDetail({
         <Layout>
             <LibraryDetails
                 userData={userData}
-                actionsEnabled={actionsEnabled}
-                organizationId={organizationId}
-                projectId={projectId} />
+                actionsEnabled={actionsEnabled} />
         </Layout>
     );
 }

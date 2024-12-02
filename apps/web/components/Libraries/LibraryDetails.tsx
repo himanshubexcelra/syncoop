@@ -25,9 +25,16 @@ import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
 import { delay, getUTCTime } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
-import MoleculeList from './MoleculeList';
 import LibraryAccordion from './LibraryAccordion';
+import dynamic from 'next/dynamic';
 
+const MoleculeList = dynamic(
+    () => import("./MoleculeList"),
+    {
+        ssr: false,
+        loading: () => <LoadIndicator visible={true}></LoadIndicator>
+    }
+);
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -88,12 +95,15 @@ const initialProjectData: ProjectDataFields = {
     name: '',
     id: 0,
     description: '',
-    organization_id: undefined,
-    organization: {} as OrganizationDataFields, // Provide a default organization object
+    parent_id: undefined,
+    container: {} as OrganizationDataFields, // Provide a default organization object
     user: {} as userType, // Provide a default user object
     sharedUsers: [],
     target: '',
-    type: '',
+    metadata: {
+        target: '',
+        type: ''
+    },
     userWhoUpdated: {} as userType, // Provide a default user object
     userWhoCreated: {} as userType, // Provide a default user object
     updated_at: new Date(),
@@ -102,7 +112,7 @@ const initialProjectData: ProjectDataFields = {
     ownerId: 0,
     orgUser: undefined,
     created_at: getUTCTime(new Date().toISOString()),
-    libraries: [] as LibraryFields[],
+    other_container: [] as LibraryFields[],
 };
 
 type LibraryDetailsProps = {
@@ -117,66 +127,64 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id?: string, projectId?: string }>();
-    const [library_id, setLibraryId] = useState(searchParams.get('library_id') || '');
-    const [project_id, setProjectId] = useState(params.id || params.projectId!);
+    const [library_id, setLibraryId] = useState<number>(Number(searchParams.get('library_id')));
+    const [project_id, setProjectId] = useState(params.projectId || params.projectId!);
     const [organization_id, setOrganizationId] = useState(organizationId);
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
-    const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
-    const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
-    const [selectedLibrary, setSelectedLibrary] =
-        useState(library_id ? Number(library_id) : -1);
+    const [projectData, setProjects] = useState<ProjectDataFields>(initialProjectData);
+    const [projectInitial, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
+    /* const [selectedLibrary, setSelectedLibrary] =
+        useState(library_id ? Number(library_id) : -1); */
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
     const [loader, setLoader] = useState(true);
-    const [moleculeLoader, setMoleculeLoader] = useState(false);
     const [expanded, setExpanded] = useState(library_id ? false : true);
 
 
-    const [sortBy, setSortBy] = useState('Recent');
+    const [sortBy, setSortBy] = useState('recent');
     const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
 
     let toastShown = false;
 
+    // OPT: 7
     const getLibraryData = async (item: LibraryFields) => {
-        setMoleculeLoader(true)
-        setSelectedLibrary(item.id);
+        setLibraryId(item.id);
         setSelectedLibraryName(item.name);
         const libraryData =
             await getLibraryById(['molecule'],
                 item.id.toString());
-        setTableData(libraryData.molecule || []);
-        setMoleculeLoader(false)
+        setTableData(libraryData.libraryMolecules || []);
     }
     const fetchLibraries = async () => {
-        const projectData = await getLibraries(['libraries', 'organization'], project_id);
+        const projectData = await getLibraries(['libraries'/* , 'organization' */], project_id);
 
         // let selectedLib = null;
         let selectedLib = { name: '' };
         if (library_id && projectData) {
-            selectedLib = projectData.libraries.find(
+            selectedLib = projectData.other_container.find(
                 (library: LibraryFields) => Number(library.id) === Number(library_id));
         }
         if (projectData && !!selectedLib) {
             const sortKey = 'created_at';
             const sortBy = 'desc';
-            const tempLibraries = sortByDate(projectData.libraries, sortKey, sortBy);
+            const tempLibraries = sortByDate(projectData.other_container, sortKey, sortBy);
             setProjects({ ...projectData, libraries: tempLibraries });
             setInitProjects({ ...projectData, libraries: tempLibraries });
-            setOrganizationId(projectData.organization_id);
+            setOrganizationId(projectData.parent_id);
             let breadcrumbTemp = breadcrumbArr({
                 projectTitle: `${projectData.name}`,
                 projectHref: `/${project_id}`,
-                orgData: projectData.organization,
+                orgData: (organizationId) ? projectData.container: '',
             });
             if (library_id) {
-                const libraryData = await getLibraryById(['molecule'], library_id);
-                setTableData(libraryData.molecule || []);
+                const libraryData = await getLibraryById(['molecule'], library_id.toString());
+                setTableData(libraryData.libraryMolecules || []);
                 const libName = libraryData.name;
                 setSelectedLibraryName(libName);
-                setSelectedLibrary(parseInt(library_id));
+                setLibraryId(library_id);
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,
                     projectHref: `/${project_id}`, projectSvg: "/icons/project-inactive.svg",
-                    orgData: projectData.organization,
+                    orgData: (organizationId) ? projectData.container: ''
                 });
                 breadcrumbTemp = [
                     ...breadcrumbTemp,
@@ -187,8 +195,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                         svgHeight: 16,
                         href: projectData.organization
                             ? `/organization/${projectData.organization?.id}`
-                            + `/projects/${project_id}/library_id/${library_id}`
-                            : `/projects/${project_id}?library_id/${library_id}`,
+                            + `/projects/${project_id}?library_id=${library_id}`
+                            : `/projects/${project_id}?library_id=${library_id}`,
                         isActive: true,
                     }];
             } else {
@@ -198,10 +206,11 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                         setTableData(libraryData.molecule || []);
                         setLibraryId(libraryData.id);
                     }
-                } const libName = tempLibraries[0]?.name || 'untitled';
+                } 
+                const libName = tempLibraries[0]?.name || 'untitled';
                 setSelectedLibraryName(libName);
-                setSelectedLibrary(tempLibraries[0]?.id);
-                setSortBy('Recent');
+                setLibraryId(tempLibraries[0]?.id);
+                setSortBy('recent');
                 setExpanded(true);
                 breadcrumbTemp = breadcrumbArr({
                     projectTitle: `${projectData.name}`,
@@ -211,7 +220,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                 });
             }
             setBreadCrumbs(breadcrumbTemp);
-            setMoleculeLoader(false);
             setLoader(false);
         } else {
             if (!toastShown) {
@@ -259,39 +267,38 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                 />
                             </main>
                         </div>
-                        <div className='flex gap-[20px]'>
+                        <div className='flex'>
                             {expanded && (<div className='w-2/5 projects'>
                                 <LibraryAccordion
-                                    projects={projects}
+                                    projectData={projectData}
                                     setLoader={setLoader}
                                     setSortBy={setSortBy}
                                     setProjects={setProjects}
-                                    initProjects={initProjects}
+                                    projectInitial={projectInitial}
                                     projectId={project_id}
                                     sortBy={sortBy}
                                     actionsEnabled={actionsEnabled}
                                     fetchLibraries={fetchLibraries}
                                     userData={userData}
-                                    selectedLibrary={selectedLibrary}
+                                    selectedLibraryId={library_id}
                                     getLibraryData={getLibraryData}
-                                    setSelectedLibrary={setSelectedLibrary}
+                                    setLibraryId={setLibraryId}
                                     setSelectedLibraryName={setSelectedLibraryName}
                                     setExpanded={setExpanded}
                                 />
                             </div >
                             )}
                             <MoleculeList
-                                moleculeLoader={moleculeLoader}
                                 expanded={expanded}
                                 tableData={tableData}
                                 userData={userData}
-                                setMoleculeLoader={setMoleculeLoader}
                                 setTableData={setTableData}
                                 actionsEnabled={actionsEnabled}
-                                selectedLibrary={selectedLibrary}
+                                selectedLibrary={library_id}
                                 library_id={library_id}
-                                projects={projects}
+                                projectData={projectData}
                                 projectId={project_id}
+                                fetchLibraries={fetchLibraries}
                                 organizationId={organization_id || ''}
                             />
                         </div >

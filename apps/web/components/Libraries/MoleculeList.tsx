@@ -1,4 +1,3 @@
-
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 import { useCallback, useContext, useEffect, useState, useRef } from 'react';
@@ -7,15 +6,11 @@ import toast from "react-hot-toast";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { AppContext } from "../../app/AppState";
 import {
-    StatusCodeBg,
-    StatusCodeTextColor,
-} from '@/utils/constants';
-import {
+    CartDetail,
     ColumnConfig,
     MoleculeFavourite,
     MoleculeType,
     ProjectDataFields,
-    StatusTypes,
     UserData,
     addToFavouritesProps
 } from '@/lib/definition';
@@ -26,29 +21,30 @@ import {
     getMoleculeCart
 } from './service';
 import { DELAY } from "@/utils/constants";
-import { delay, getStatusLabel, generateRandomDigitNumber, colorSchemeADME } from "@/utils/helpers";
-import StatusMark from '@/ui/StatusMark';
+import { delay, colorSchemeADME, colorStatus } from "@/utils/helpers";
 import { Popup } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
 import EditMolecule from '../Molecule/EditMolecule/EditMolecule';
 import { Messages } from '@/utils/message';
 import CustomDataGrid from '@/ui/dataGrid';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
+import StatusCard from '@/ui/StatusCard';
 import dynamic from 'next/dynamic';
 
 type MoleculeListType = {
-    moleculeLoader: boolean,
+    /* moleculeLoader: boolean, */
     expanded: boolean,
     tableData: MoleculeType[],
     userData: UserData,
-    setMoleculeLoader: (value: boolean) => void,
+    /* setMoleculeLoader: (value: boolean) => void, */
     setTableData: (value: MoleculeType[]) => void,
     actionsEnabled: string[],
     selectedLibrary: number,
-    library_id: string,
-    projects: ProjectDataFields,
+    library_id: number,
+    projectData: ProjectDataFields,
     projectId: string,
     organizationId: string,
+    fetchLibraries: () => void,
 }
 const MoleculeStructure = dynamic(
     () => import("@/utils/MoleculeStructure"),
@@ -58,18 +54,19 @@ interface CellData {
     smiles_string: string;
 }
 export default function MoleculeList({
-    moleculeLoader,
+    /* moleculeLoader, */
     expanded,
     tableData,
     userData,
-    setMoleculeLoader,
+    /* setMoleculeLoader, */
     setTableData,
     actionsEnabled,
     selectedLibrary,
     library_id,
-    projects,
+    projectData,
     projectId,
-    organizationId
+    organizationId,
+    fetchLibraries
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
@@ -87,6 +84,7 @@ export default function MoleculeList({
     const [cellData, setCellData] = useState<CellData>({ smiles_string: "" });
     const [popupCords, setPopupCords] = useState({ x: 0, y: 0 });
     const popupRef = useRef<HTMLDivElement>(null);
+    const [moleculeLoader, setMoleculeLoader] = useState(false);
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
@@ -99,6 +97,7 @@ export default function MoleculeList({
         setPopupVisible(true);
         setCellData(data);
     }
+
     const columns: ColumnConfig<MoleculeType>[] = [
         {
             dataField: "user_favourite_molecule",
@@ -170,82 +169,48 @@ export default function MoleculeList({
         {
             dataField: 'status',
             title: 'Status',
-            width: 120,
-            customRender: (data) => {
-                const statusUpper = getStatusLabel(data.status);
-                const colorKey = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
-                const colorBgClass = StatusCodeBg[colorKey] || "bg-white";
-                const textColorClass = StatusCodeTextColor[colorKey] || "#000";
+            width: 140,
+            customRender: (data: MoleculeType) => {
+                const status: any = colorStatus(data.status);
                 return (
-                    <div className={`flex items-center gap-[5px] 
-                    ${colorBgClass} ${textColorClass}`}>
-                        {colorKey === StatusTypes.Failed && (
-                            <Image src="/icons/warning.svg" width={14}
-                                height={14} alt="Molecule order failed" />
-                        )}
-                        {colorKey === StatusTypes.InRetroQueue && (
-                            <Image src="/icons/queue.svg" width={14}
-                                height={14} alt="Molecule order In-retro Queue" />
-                        )}
-                        {statusUpper}
-                        <StatusMark status={statusUpper} />
-                    </div>
+                    <StatusCard key={data.id} stat={status} />
                 );
             }
         },
         {
             dataField: 'yield', title: 'Yield', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => {
-                const color = colorSchemeADME(data, 'yield')
-                return (
-                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                        {`${data['yield']} || ''`}
-                    </span>
-                )
-            }
         },
         {
             dataField: 'anlayse', title: 'Analyse', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => {
-                const color = colorSchemeADME(data, 'anlayse')
-                return (
-                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                        {`${data['anlayse']} || ''`}
-                    </span>
-                )
-            }
         },
         {
             dataField: 'herg', title: 'HERG', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => {
-                const color = colorSchemeADME(data, 'herg')
-                return (
-                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                        {`${data['herg']} || ''`}
-                    </span>
-                )
-            }
         },
         {
             dataField: 'caco2', title: 'Caco-2', width: 100, visible: !expanded,
             allowHeaderFiltering: false, allowSorting: false,
-            customRender: (data) => {
-                const color = colorSchemeADME(data, 'caco2')
-                return (
-                    <span className={`flex items-center gap-[5px] ${StatusCodeBg[color]}`}>
-                        {`${data['caco2']} || ''`}
-                    </span>
-                )
-            }
+        },
+        {
+            dataField: 'clint', title: 'CLint', width: 100, visible: !expanded,
+            allowHeaderFiltering: false, allowSorting: false,
+        },
+        {
+            dataField: 'hepG2cytox', title: 'HepG2-cytox', width: 100, visible: !expanded,
+            allowHeaderFiltering: false, allowSorting: false,
+        },
+        {
+            dataField: 'solubility', title: 'Solubility', width: 100, visible: !expanded,
+            allowHeaderFiltering: false, allowSorting: false,
         },
     ];
 
     const fetchCartData = async () => {
+        // OPT: 5
         const moleculeCart = library_id ?
-            await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
+            await getMoleculeCart(Number(userData.id), Number(library_id), Number(projectData.id))
             : [];
         const molecule_ids = moleculeCart.map((item: any) => item.molecule_id);
         const molecule_idsInCart = moleculeCart
@@ -260,6 +225,8 @@ export default function MoleculeList({
         fetchCartData();
     }, [library_id, userData.id, appContext]);
 
+    const fieldNames: string[] = ["yield", "anlayse", "herg", "caco2"];
+
     const onCellPrepared = (e: any) => {
         if (isMoleculeInCart.includes(e.key)) {
             e.cellElement.style.pointerEvents = 'none';
@@ -267,9 +234,14 @@ export default function MoleculeList({
         }
         if (e.rowType === "data") {
             if (e.column.dataField === "status") {
-                const statusUpper = getStatusLabel(e.data.status);
-                const color = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
-                e.cellElement.classList.add(StatusCodeBg[color]);
+                const status = colorStatus(e.data.status);
+                e.cellElement.classList.add(status?.background);
+            } else if (e?.column?.dataField && fieldNames.includes(e.column.dataField)) {
+                const value = e.data?.[e.column.dataField];
+                if (value !== undefined) {
+                    const color = colorSchemeADME(value);
+                    e.cellElement.classList.add(color);
+                }
             }
         }
     };
@@ -288,7 +260,7 @@ export default function MoleculeList({
             const libraryData =
                 await getLibraryById(['molecule'], data.library_id.toString());
             setMoleculeLoader(false);
-            setTableData(libraryData.molecule || []);
+            setTableData(libraryData.libraryMolecules || []);
         } else {
             const toastId = toast.error(`${response.error}`);
             await delay(DELAY);
@@ -298,7 +270,6 @@ export default function MoleculeList({
     }
 
     const onSelectionChanged = async (e: any) => {
-        const orderId = generateRandomDigitNumber();
         if (e.selectedRowKeys.length > 0) {
             setIsAddToCartEnabled(false)
         }
@@ -309,27 +280,26 @@ export default function MoleculeList({
         setSelectedRows(e.selectedRowKeys);
         setSelectedRowsData(e.selectedRowsData)
         const checkedMolecule = e.selectedRowsData;
-        const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
-            ...item,
-            order_id: orderId,
-            molecule_id: item.id,
-            library_id: library_id,
-            user_id: userData.id,
-            organization_id: projects.organization_id,
-            project_id: projects.id
-        }));
+        const selectedLibraryMolecule = checkedMolecule.map((item: MoleculeType) => {
+            return {
+                ...item,
+                molecule_id: item.id,
+                user_id: userData.id,
+            }
+        });
 
+        // OPT: 6
         const moleculeCart = library_id ?
-            await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
+            await getMoleculeCart(Number(userData.id), Number(library_id), Number(projectData.id))
             : [];
-        const preselectedIds = moleculeCart.map((item: any) => item.molecule_id);
-        const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
+        const preselectedIds = moleculeCart.map((item: CartDetail) => item.molecule_id);
+        const updatedMoleculeCart = selectedLibraryMolecule.filter((item: CartDetail) =>
             !preselectedIds.includes(item.molecule_id));
         // If the check box is unchecked
         if (e.currentDeselectedRowKeys.length > 0) {
             const newmoleculeData = checkedMolecule.filter((
-                item: any) => item.id !== e.currentDeselectedRowKeys[0].id
-                && item.project_id !== projects.id);
+                item: MoleculeType) => item.id !== e.currentDeselectedRowKeys[0].id
+                && item.project_id !== projectData.id);
             setMoleculeData(newmoleculeData);
         }
         else {
@@ -348,6 +318,7 @@ export default function MoleculeList({
         context?.addToState({
             ...appContext, cartDetail: [...moleculeData]
         })
+
         addMoleculeToCart(moleculeData)
             .then((res) => {
                 toast.success(Messages.addMoleculeCartMessage(res.count));
@@ -357,7 +328,6 @@ export default function MoleculeList({
                 toast.success(error);
             })
     }
-
     useEffect(() => {
         if (reloadMolecules) {
             (async () => {
@@ -368,7 +338,7 @@ export default function MoleculeList({
                 const libraryData =
                     await getLibraryById(['molecule'], selectedLibrary.toString());
                 setMoleculeLoader(false);
-                setTableData(libraryData.molecule || []);
+                setTableData(libraryData.libraryMolecules || []);
                 setReloadMolecules(false);
             })();
         }
@@ -376,6 +346,7 @@ export default function MoleculeList({
 
     const callLibraryId = async () => {
         setReloadMolecules(true);
+        fetchLibraries()
     }
 
     const addMolecule = () => {
@@ -400,13 +371,14 @@ export default function MoleculeList({
             text: `Add to Cart (${selectedRows?.length})`,
             onClick: addProductToCart,
             class: isAddToCartEnabled ? 'btn-disable' : 'btn-secondary',
-            disabled: isAddToCartEnabled,
+            disabled: isAddToCartEnabled ||
+                !(selectedRows.filter(value => !isMoleculeInCart.includes(value)).length),
             visible: cartEnabled && !!library_id
         }
     ];
 
     return (
-        < >
+        <>
             {moleculeLoader ?
                 <LoadIndicator
                     visible={moleculeLoader}
@@ -436,7 +408,7 @@ export default function MoleculeList({
                         visible={viewAddMolecule}
                         contentRender={() => (
                             <AddMolecule
-                                libraryId={library_id}
+                                libraryId={selectedLibrary}
                                 projectId={projectId}
                                 organizationId={organizationId}
                                 userData={userData}
@@ -470,7 +442,7 @@ export default function MoleculeList({
                         contentRender={() => (
                             <EditMolecule
                                 editMolecules={editMolecules}
-                                libraryId={library_id}
+                                libraryId={selectedLibrary}
                                 projectId={projectId}
                                 organizationId={organizationId}
                                 userData={userData}

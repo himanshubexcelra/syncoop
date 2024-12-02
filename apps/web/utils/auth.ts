@@ -22,7 +22,6 @@ export async function authorize(formData: FormData) {
         });
         if (response.status === 200) {
             const output = await response.json();
-            console.log(output);
             const {
                 id,
                 first_name,

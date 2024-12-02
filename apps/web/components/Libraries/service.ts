@@ -1,13 +1,21 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-import { addToFavouritesProps, MoleculeType, OrderType } from "@/lib/definition";
+import {
+    addToFavouritesProps,
+    MoleculeOrder,
+    OrderType,
+    MoleculeStatusCode,
+    SaveLabJobOrder,
+    CreateLabJobOrder
+} from "@/lib/definition";
 
 export async function getLibraries(withRelation: string[] = [], project_id: string) {
-    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project/${project_id}`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
+    url.searchParams.append('project_id', project_id);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
-    }
+    }    
     const response = await fetch(url, {
         mode: "no-cors",
         method: "GET",
@@ -16,7 +24,7 @@ export async function getLibraries(withRelation: string[] = [], project_id: stri
         },
     });
 
-    
+
     const data = await response.json();
     return data;
 }
@@ -91,7 +99,7 @@ export async function createLibrary(formData: FormData) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
 
@@ -112,12 +120,11 @@ export async function editLibrary(formData: FormData) {
         const response = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/library`,
             {
-                // mode: "no-cors",
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
         if (response.status === 200) {
@@ -132,7 +139,11 @@ export async function editLibrary(formData: FormData) {
     }
 }
 
-export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
+export async function addMoleculeToCart(moleculeData: CreateLabJobOrder[]) {
+    const payload = {
+        molecules: moleculeData,
+        status: MoleculeStatusCode.NewInCart
+    };
     try {
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/molecule_cart`,
@@ -142,7 +153,7 @@ export async function addMoleculeToCart(moleculeData: MoleculeType[]) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(moleculeData),
+                body: JSON.stringify(payload),
             }
         );
 
@@ -231,7 +242,7 @@ export async function addToFavourites(formData: addToFavouritesProps) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
 
@@ -249,6 +260,10 @@ export async function addToFavourites(formData: addToFavouritesProps) {
 
 export async function submitOrder(orderData: OrderType[]) {
     try {
+        const payload = {
+            order: orderData,
+            status: MoleculeStatusCode.Ordered
+        };
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/molecule_order`,
             {
@@ -257,7 +272,124 @@ export async function submitOrder(orderData: OrderType[]) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(orderData),
+                body: JSON.stringify(payload),
+            }
+        );
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else if (response.status === 500) {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
+
+export async function updateMoleculeStatus(formData: MoleculeOrder[],
+    status: number,
+    userId: number) {
+    try {
+        const response: any = await fetch(
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ formData: formData, status: status, userId: userId }),
+            }
+        );
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else if (response.status === 500) {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
+
+type MoleculeType = {
+    id: string;
+    smile: string;
+}
+
+type SubmittedMoleculesType = {
+    orderId: string;
+    molecules: MoleculeType[];
+}
+
+type GeneratePathwayType = {
+    submittedBy: number;
+    submittedMolecules: SubmittedMoleculesType[];
+}
+
+export async function generatePathway(formData: GeneratePathwayType) {
+    try {
+        const response: any = await fetch(
+            `${process.env.PYTHON_API_HOST_URL}/generate_pathway_schemes`,
+            {
+                method: "POST",
+                headers: {
+                    'Accept': '*',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData),
+            }
+        );
+        if (response.status !== 200) {
+            return response;
+        } else {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
+export async function getLabJobOrderDetail(molecule_id: number) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/lab_job_order/`);
+        if (molecule_id) {
+            url.searchParams.append('molecule_id', String(molecule_id));
+        }
+        const response = await fetch(url, {
+            mode: "no-cors",
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        if (response) {
+            const data = await response.json();
+            return data;
+        }
+    }
+    catch (error: any) {
+        return error;
+    }
+}
+export async function postLabJobOrder(data: SaveLabJobOrder) {
+    try {
+        const payload = {
+            order: data,
+            status: MoleculeStatusCode.InReview
+        };
+        const response: any = await fetch(
+            `${process.env.NEXT_API_HOST_URL}/v1/lab_job_order`,
+            {
+                mode: "no-cors",
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
             }
         );
 

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import { Popup, Position } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
-import { LibraryFields, ProjectDataFields, UserData } from "@/lib/definition";
+import { LibraryFields, ProjectDataFields, StatusCode, UserData } from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import {
     formatDatetime,
@@ -24,38 +24,37 @@ import { FormRef } from "devextreme-react/cjs/form";
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 type LibraryAccordionType = {
-    projects: ProjectDataFields,
+    projectData: ProjectDataFields,
     setLoader: (value: boolean) => void,
     setSortBy: (value: string) => void,
     setProjects: (value: ProjectDataFields) => void,
-    initProjects: ProjectDataFields,
+    projectInitial: ProjectDataFields,
     projectId: string,
     sortBy: string,
     actionsEnabled: string[],
     fetchLibraries: () => void,
     userData: UserData,
-    selectedLibrary: number,
+    selectedLibraryId: number,
     getLibraryData: (value: LibraryFields) => void,
-    setSelectedLibrary: (value: number) => void,
     setSelectedLibraryName: (value: string) => void,
     setExpanded: (value: boolean) => void,
+    setLibraryId: (value: number) => void,
 }
 
 export default function LibraryAccordion({
-    projects,
+    projectData,
     setLoader,
     setSortBy,
     setProjects,
-    initProjects,
+    projectInitial,
     projectId,
     sortBy,
     actionsEnabled,
     fetchLibraries,
     userData,
-    selectedLibrary,
+    selectedLibraryId,
     getLibraryData,
-    setSelectedLibrary,
-    setSelectedLibraryName,
+    setLibraryId,
     setExpanded,
 }: LibraryAccordionType) {
     const router = useRouter();
@@ -67,7 +66,7 @@ export default function LibraryAccordion({
     const [searchValue, setSearchValue] = useState('');
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
-    const [selectedLibraryIdx, setSelectedLibraryIndex] = useState(-1);
+    const [selectedLibraryIdIdx, setSelectedLibraryIndex] = useState(-1);
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
@@ -92,7 +91,7 @@ export default function LibraryAccordion({
         <div className="header-text text-black">{title}</div>
     );
 
-    const sortByFields = ['Name', 'Owner', 'Updation Time', 'Recent', 'Count of Molecules'];
+    const sortByFields = ['name', 'owner', 'updation time', 'recent', 'count of molecules'];
 
     const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -103,35 +102,35 @@ export default function LibraryAccordion({
             let sortBy = 'asc';
             let object = false;
             let tempLibraries: LibraryFields[] = [];
-            if (sortKey === 'Updation Time') {
+            if (sortKey === 'updation time') {
                 sortKey = 'updated_at';
                 sortBy = 'desc';
-            } else if (sortKey === 'Recent') {
+            } else if (sortKey === 'recent') {
                 sortKey = 'created_at';
                 sortBy = 'desc';
-            } else if (sortKey === 'Owner') {
+            } else if (sortKey === 'owner') {
                 sortKey = 'owner.first_name';
                 object = true;
-            } else if (sortKey === 'Count of Molecules') {
+            } else if (sortKey === 'count of molecules') {
                 sortKey = 'molecule';
                 sortBy = 'desc';
             } else {
                 sortKey = 'name';
             }
             if (sortKey === 'molecule') {
-                tempLibraries = sortNumber(projects.libraries, sortKey, sortBy);
+                tempLibraries = sortNumber(projectData.other_container, sortKey, sortBy);
             } else if (sortKey !== 'updated_at' && sortKey !== 'created_at') {
-                tempLibraries = sortString(projects.libraries, sortKey, sortBy, object);
+                tempLibraries = sortString(projectData.other_container, sortKey, sortBy, object);
             } else {
-                tempLibraries = sortByDate(projects.libraries, sortKey, sortBy);
+                tempLibraries = sortByDate(projectData.other_container, sortKey, sortBy);
             }
             const tempProjects = {
-                ...projects,
+                ...projectData,
                 libraries: tempLibraries,
             }
             setProjects(tempProjects);
         } else {
-            setProjects(initProjects);
+            setProjects(projectInitial);
         }
         setLoader(false);
     }
@@ -139,36 +138,37 @@ export default function LibraryAccordion({
     const handleSearch = debounce((value: string) => {
         setLoader(true);
         if (value) {
-            if (projects.libraries.length > 0) {
-                const filteredLibraries = projects.libraries.filter((item) =>
+            // Search OPT: 4
+            if (projectData.other_container?.length) {
+                const filteredLibraries = projectData.other_container?.filter((item) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
-                    item.molecule.length.toString().includes(value.toLowerCase())
+                    item.libraryMolecules.length.toString().includes(value.toLowerCase())
                 );
                 const tempProjects = {
-                    ...projects,
+                    ...projectData,
                     libraries: filteredLibraries,
                 }
                 setProjects(tempProjects);
             } else {
-                const filteredLibraries = initProjects.libraries.filter((item) =>
+                const filteredLibraries = projectInitial.other_container?.filter((item) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
-                    item.molecule.length.toString().includes(value.toLowerCase())
+                    item.libraryMolecules.length.toString().includes(value.toLowerCase())
                 );
                 const tempProjects = {
-                    ...projects,
+                    ...projectData,
                     libraries: filteredLibraries,
                 }
                 setProjects(tempProjects);
             }
         }
         else {
-            setProjects(initProjects);
+            setProjects(projectInitial);
         }
         setLoader(false);
     }, 500);
@@ -205,7 +205,7 @@ export default function LibraryAccordion({
         <Accordion multiple={true} collapsible={true}>
             {/* Project Details Section */}
             <Item titleRender={
-                () => renderTitle(`Project Details: ${projects.name}`)}>
+                () => renderTitle(`Project Details: ${projectData.name}`)}>
                 <div>
                     <div className={
                         `library-name
@@ -218,8 +218,8 @@ export default function LibraryAccordion({
                         <div>
                             Project Owner:
                             <span>
-                                {`${projects.owner.first_name}
-                                    ${projects.owner.last_name}`}
+                                {`${projectData.owner.first_name}
+                                    ${projectData.owner.last_name}`}
                             </span>
                         </div>
                         <div className='flex'>
@@ -238,28 +238,28 @@ export default function LibraryAccordion({
                                 stylingMode="contained"
                                 elementAttr={{ class: "btn-primary" }}
                                 onClick={
-                                    () => copyUrl('project', projects.name)
+                                    () => copyUrl('project', projectData.name)
                                 }
                             />
                         </div>
                     </div>
                     <div className='library-name no-border text-normal'>
-                        Target: <span>{projects.target}</span>
+                        Target: <span>{projectData.metadata.target}</span>
                     </div>
-                    {projects.updated_at &&
+                    {projectData.updated_at &&
                         <div className='library-name no-border text-normal'>
 
                             Last Modified: <span>
-                                {formatDetailedDate(projects.updated_at)}
+                                {formatDetailedDate(projectData.updated_at)}
                             </span>
                         </div>}
                     <div className='library-name no-border text-normal'>
-                        {projects.description ?
+                        {projectData.description ?
                             <TextWithToggle
-                                text={projects.description}
+                                text={projectData.description}
                                 isExpanded={isProjectExpanded}
                                 toggleExpanded={toggleExpanded}
-                                id={projects.id}
+                                id={projectData.id}
                                 heading='Description:'
                                 component="project"
                                 clamp={12}
@@ -275,9 +275,9 @@ export default function LibraryAccordion({
                 <div className='libraries'>
                     <div className={
                         `flex 
-                                                    justify-between 
-                                                    items-center 
-                                                    p-2`
+                        justify-between 
+                        items-center 
+                        p-2`
                     }>
                         <div className='flex items-center'>
                             <span className={`text-normal mr-[5px]`}>
@@ -286,7 +286,8 @@ export default function LibraryAccordion({
                             <select
                                 value={sortBy}
                                 className=
-                                {`w-[145px] bg-transparent cursor-pointer`}
+                                {`w-[145px] bg-transparent cursor-pointer font-normal
+                                    text-normal text-themeBlueColor`}
                                 onChange={(e) => handleSortChange(e)}>
                                 {sortByFields.map(option => (
                                     <option key={option} value={option}>
@@ -313,7 +314,8 @@ export default function LibraryAccordion({
                                             height={13}
                                             alt="Add"
                                         />
-                                        <span className='pl-2 pt-[1px]'>
+                                        <span className='pl-2 pt-[1px] text-themeBlueColor
+                                        text-normal'>
                                             Add Library
                                         </span>
                                     </>
@@ -329,12 +331,15 @@ export default function LibraryAccordion({
                                 render={() => (
                                     <>
                                         <Image
-                                            src="/icons/filter.svg"
-                                            width={24}
-                                            height={24}
+                                            src="/icons/filter-active-icon.svg"
+                                            width={9}
+                                            height={12}
                                             alt="Filter"
                                         />
-                                        <span>Filter</span>
+                                        <span className="pl-2 pt-[1px] text-themeBlueColor
+                                        text-normal">
+                                            Filter
+                                        </span>
                                     </>
                                 )}
                             />
@@ -369,7 +374,7 @@ export default function LibraryAccordion({
                                             setCreatePopupVisibility}
                                         fetchLibraries={fetchLibraries}
                                         userData={userData}
-                                        projectData={projects}
+                                        projectData={projectData}
                                         library_idx={-1}
                                     />
                                 )}
@@ -402,8 +407,8 @@ export default function LibraryAccordion({
                                             setEditPopupVisibility}
                                         fetchLibraries={fetchLibraries}
                                         userData={userData}
-                                        projectData={projects}
-                                        library_idx={selectedLibraryIdx}
+                                        projectData={projectData}
+                                        library_idx={selectedLibraryIdIdx}
                                     />
                                 )}
                                 width={477}
@@ -423,7 +428,7 @@ export default function LibraryAccordion({
                                 }
                             />
                         )}
-                    {projects.libraries.map((item, idx) => (
+                    {projectData.other_container?.map((item, idx) => (
                         <div
                             key={item.id}
                             className={
@@ -431,13 +436,12 @@ export default function LibraryAccordion({
                                 library
                                 mb-[10px]
                                 cursor-pointer
-                                ${(selectedLibrary === item.id) ?
+                                ${(Number(selectedLibraryId) === Number(item.id)) ?
                                     'selected-accordion' : ''
                                 }`
                             }
                             onClick={async (e) => {
                                 const target = e.target as HTMLElement;
-
                                 const moreButtonId = `image${item.id}`;
                                 const editButtonId = `edit-${item.id}`;
                                 const urlButtonId = `url-${item.id}`;
@@ -448,7 +452,12 @@ export default function LibraryAccordion({
                                 ) {
                                     return;
                                 }
+                                const url =
+                                    `/projects/${projectId}` +
+                                    `?library_id=${item.id}`;
+                                setLibraryId(item.id)
                                 getLibraryData(item);
+                                router.push(url);
                             }}>
                             <div className={
                                 `library-name
@@ -472,18 +481,20 @@ export default function LibraryAccordion({
                                         }
                                         </span>
                                     </div>
-                                    <Image
-                                        src="/icons/more.svg"
-                                        alt="more button"
-                                        width={5}
-                                        height={3}
-                                        className='cursor-pointer'
+                                    <div
+                                        className='p-2 cursor-pointer'
                                         id={`image${item.id}`}
                                         onClick={() => {
                                             setExpandedMenu(item.id);
                                             checkDisabled(item);
-                                        }}
-                                    />
+                                        }}>
+                                        <Image
+                                            src="/icons/more.svg"
+                                            alt="more button"
+                                            width={5}
+                                            height={3}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <Popup
@@ -573,7 +584,7 @@ export default function LibraryAccordion({
                                         {`flex`}>
                                         Target:
                                     </div>
-                                    <span>{item.target}</span></div>
+                                    <span>{item.metadata.target}</span></div>
                                 <div className='w-[45%]'>
                                     {item.updated_at &&
                                         <>
@@ -598,7 +609,7 @@ export default function LibraryAccordion({
                                         no-border`
                                     }>
                                     <div>Molecules:
-                                        <span>{item.molecule.length}</span>
+                                        <span>{item.libraryMolecules.length}</span>
                                         {Object.entries(
                                             fetchMoleculeStatus(item))
                                             .map(([status, count]) => {
@@ -612,7 +623,7 @@ export default function LibraryAccordion({
                                                 }
                                                 return (
                                                     <span
-                                                        key={status}
+                                                        key={(StatusCode as any)[status]}
                                                         className={
                                                             `text-normal badge ${type}`
                                                         }
@@ -620,7 +631,7 @@ export default function LibraryAccordion({
                                                         <b
                                                             className="pr-[5px]"
                                                         >
-                                                            {count}
+                                                            {count as number}
                                                         </b>
                                                         {status}
                                                     </span>
@@ -660,8 +671,9 @@ export default function LibraryAccordion({
                                         const url =
                                             `/projects/${projectId}` +
                                             `?library_id=${item.id}`;
-                                        setSelectedLibrary(idx);
-                                        setSelectedLibraryName(item.name);
+
+                                        setLibraryId(item.id)
+                                        getLibraryData(item);
                                         setExpanded(false);
                                         router.push(url);
                                     }}
@@ -669,7 +681,7 @@ export default function LibraryAccordion({
                             </div>
                         </div>
                     ))}
-                    {projects.libraries.length == 0 && (
+                    {projectData.other_container?.length == 0 && (
                         <div className={
                             `flex justify-center 
                             items-center 

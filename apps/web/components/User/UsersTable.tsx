@@ -86,14 +86,13 @@ export default function UsersTable({
     const fetchAndFilterData = async () => {
         setLoader(true);
         try {
-
             if (myRoles.includes("admin") && !customerOrgId) {
                 const [internal, external] = await Promise.all([
                     getUsers(['orgUser', 'user_role'], OrganizationType.Internal, user_id),
                     getUsers(['orgUser', 'user_role'], OrganizationType.External, user_id)
                 ])
-                setInternalUsers(internal)
-                setExternalUsers(external)
+                setInternalUsers(internal);
+                setExternalUsers(external);
                 setInternalCount(internal.length);
                 setExternalCount(external.length);
                 if (type === OrganizationType.Internal) {
@@ -282,8 +281,8 @@ export default function UsersTable({
                                         roles={filteredRoles}
                                         myRoles={myRoles}
                                         type={type}
-                                        fetchAndFilterData={fetchAndFilterData}
                                         customerOrgId={customerOrgId}
+                                        fetchAndFilterData={fetchAndFilterData}
                                     />
                                 )}
                                 width={470}
@@ -315,7 +314,7 @@ export default function UsersTable({
                                         customerOrgId={customerOrgId}
                                     />
                                 )}
-                                width={400}
+                                width={470}
                                 height="100%"
                                 position={popupPosition}
                                 onHiding={() => {

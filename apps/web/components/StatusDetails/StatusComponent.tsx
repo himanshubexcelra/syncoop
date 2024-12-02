@@ -1,12 +1,13 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 import { StatusComponentProps } from "@/lib/definition"
 import CountCards from "@/ui/CountCards";
-import StatusCards from "@/ui/StatusCard";
 import { getCountCardsDetails } from "@/utils/helpers";
 import { stats } from "@/utils/constants";
 import { useEffect, useState } from "react";
 import { getProjectsCountById } from "../Projects/projectService";
 import { getLibraryCountById, geMoleculeCountById } from "../Libraries/service";
+import StatusCard from "@/ui/StatusCard";
 
 export default function StatusComponent({ myRoles, orgUser, customerOrgId }: StatusComponentProps) {
     const { id } = orgUser
@@ -15,6 +16,7 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
     const [moleculeNumber, setMoleculeNumber] = useState<number>(0);
     const countCardsDetails = getCountCardsDetails(projectNumber, libraryNumber,
         moleculeNumber, customerOrgId);
+        
     const fetchData = async () => {
         let projectCount, libraryCount, moleculeCount;
 
@@ -34,11 +36,27 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
 
     useEffect(() => {
         fetchData();
-    }, [id, myRoles])
+    }, [id, myRoles]);
+
+    const validStatuses = ['New', 'Ready','In Progress', 'Failed', 'Done'];
+
     return (
         <div className="h-[177px] items-center flex justify-center gap-[47px]">
             <CountCards {... { countCardsDetails }} />
-            <StatusCards {...{ stats }} />
+            <div className="flex">
+                {stats.filter((stat: any) =>
+                    validStatuses.includes(stat.text)).map((stat: any, index: number) => {
+                        return (
+                            <StatusCard
+                                key={index}
+                                stat={stat}
+                                hideCount={true}
+                                customStyles={true}
+                            />
+                        );
+                    })}
+
+            </div>
         </div>
     )
 }

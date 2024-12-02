@@ -51,7 +51,7 @@ export async function getProjectsCountById(orgId?: number) {
         return error;
     }
 }
-export async function createProjectApi(formData: FormData) {
+export async function createProject(formData: FormData) {
     try {
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/project`,
@@ -61,7 +61,7 @@ export async function createProjectApi(formData: FormData) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
 
@@ -87,7 +87,7 @@ export async function editProject(formData: FormData) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
         if (response.status === 200) {

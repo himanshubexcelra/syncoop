@@ -1,5 +1,5 @@
 describe('Pathways', () => {
-    test('Display Pathway', () => {
+    test.skip('Display Pathway', () => {
 
     })
 })

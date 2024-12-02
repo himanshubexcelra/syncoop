@@ -36,9 +36,6 @@ const data = [
   }
 ] as any;
 
-
-
-
 const testUser = {
   email_id: "forum.tanna@external.milliporesigma.com",
   first_name: "Forum",

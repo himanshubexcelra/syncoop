@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
 import { getUTCTime, json } from "@/utils/helper";
 
-const { ORGANIZATION_ALREADY_EXISTS, } = MESSAGES;
+const { ORGANIZATION_ALREADY_EXISTS, EMAIL_ALREADY_EXIST } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
 
 export async function GET(request: Request) {
@@ -17,50 +17,56 @@ export async function GET(request: Request) {
     const joins = searchParams.get('with');
     const count = searchParams.get('withCount');
     const role_ids = searchParams.get('role_ids');
-    const query: any = {};
+    const query: any = {
+      where: {
+        OR: [
+          {
+            type: 'O'
+          },
+          {
+            type: 'CO'
+          }
+        ]
+      }
+    };
 
     if (joins && joins.length) {
       query.include = {};
-      if (joins.includes('orgUser') && !joins.includes('user_role')) {
+      if (joins.includes('orgUser')) {
         query.include = {
           ...query.include,
-          user: true,
-          orgUser: {
+          owner: true,   // owner
+          orgUser: {    // All organization users
             select: {
               id: true,
-              projectPermissions: true,
-              orgAdmin: true,
+              first_name: true,
+              last_name: true,
+              // projectPermissions: true,
+              owner: true,
               orgUser: true,
-            },
-          }
-        }
-      }
-      if (joins.includes('user_role')) {
-        query.include = {
-          ...query.include,
-          user: true,
-          orgUser: { // Include users related to this organization
-            include: {
-              projectPermissions: true,
-              orgAdmin: true,
-              orgUser: true,
-              user_role: {
-                orderBy: {
-                  role: {
-                    priority: 'asc',
-                  },
-                },
-                select: {
-                  role: {
-                    select: {
-                      type: true,
+              ...(() => {
+                if (joins.includes('user_role')) {
+                  return {
+                    user_role: {
+                      orderBy: {
+                        role: {
+                          priority: 'asc',
+                        },
+                      },
+                      select: {
+                        role: {
+                          select: {
+                            type: true,
+                          }
+                        }
+                      },
+                      take: 1
                     }
                   }
-                },
-                take: 1
-              },
-            }
-          },
+                }
+              })()
+            },
+          }
         }
       }
       if (joins.includes('org_product_module')
@@ -90,14 +96,24 @@ export async function GET(request: Request) {
       if (joins.includes('projects')) {
         query.include = {
           ...query.include,
-          projects: {
+          other_container: {
+            where: {
+              type: 'P'
+            },
+            orderBy:
+            {
+              id: 'desc',
+            },
             include: {
-              sharedUsers: true, // Include shared users for each project
-              libraries: {
+              // sharedUsers: true, // Include shared users for each project
+              other_container: {
+                where: {
+                  type: 'L'
+                },
                 select: {
                   _count: {
                     select: {
-                      molecule: true, // Count molecules in each library
+                      libraryMolecules: true, // Count molecules in each library
                     },
                   },
                 },
@@ -125,16 +141,22 @@ export async function GET(request: Request) {
         }
       }
     }
+
     if (count && count.includes('projects')) {
       query.include = {
         ...query.include,
         _count: {
           select: {
-            projects: true, // Count of projects in each organization
-          },
-        },
+            other_container: { // Count of projects in each organization
+              where: {
+                type: 'P'
+              }
+            }
+          }
+        }
       }
     }
+
     if (orgId) {
       // If an ID is present, fetch the specific organization with users and projects
       query.where = { id: Number(orgId) }; // Add the where condition to the query
@@ -151,11 +173,11 @@ export async function GET(request: Request) {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS, // success status code
       });
-    }
-    else if (type) {
-      query.where = { type: type }; // Add the where condition to the query
+    } else {
+      if (type) {
+        query.where = { type: type }; // Add the where condition to the query
+      }
       const organization = await prisma.container.findMany(query);
-
       if (!organization) {
         return new Response(JSON.stringify({ error: 'Organization not found' }), {
           headers: { "Content-Type": "application/json" },
@@ -164,15 +186,6 @@ export async function GET(request: Request) {
       }
 
       return new Response(json(organization), {
-        headers: { "Content-Type": "application/json" },
-        status: SUCCESS, // success status code
-      });
-    }
-    else {
-      // If no ID is present, fetch all organizations, users, and projects
-      const organizations = await prisma.container.findMany(query);
-
-      return new Response(json(organizations), {
         headers: { "Content-Type": "application/json" },
         status: SUCCESS, // success status code
       });
@@ -189,11 +202,18 @@ export async function POST(request: Request) {
 
   const req = await request.json();
   const { name, first_name, last_name, email_id, role_id, created_by, password_hash } = req;
-  const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
   // Check if an organization with the same name already exists (case insensitive)
   try {
     const existingOrganization = await prisma.container.findFirst({
       where: {
+        OR: [
+          {
+            type: 'O'
+          },
+          {
+            type: 'CO'
+          }
+        ],
         name: {
           equals: name,
           mode: 'insensitive', // Perform case-insensitive comparison
@@ -207,52 +227,136 @@ export async function POST(request: Request) {
         status: INTERNAL_SERVER_ERROR,
       });
     }
-
+    const existingUser = await prisma.users.findUnique({
+      where: { email_id: email_id },
+    });
+    if (existingUser) {
+      return new Response(JSON.stringify(EMAIL_ALREADY_EXIST), {
+        headers: { "Content-Type": "application/json" },
+        status: INTERNAL_SERVER_ERROR,
+      });
+    }
     try {
+      const emddORG = await prisma.container.findUnique({
+        where: {
+          type: 'O',
+          name: 'EMD DD'
+        },
+      });
+
+      const orgManagementProductModule = await prisma.product_module.findUnique({
+        where: {
+          name: 'Organization Management'
+        },
+      });
+
+      const projectManagementProductModule = await prisma.product_module.findUnique({
+        where: {
+          name: 'Project Management'
+        },
+      });
+
+      const userManagementProductModule = await prisma.product_module.findUnique({
+        where: {
+          name: 'User Management'
+        },
+      });
+      const retroSynthesisModule = await prisma.product_module.findUnique({
+        where: {
+          name: 'Retrosynthesis'
+        },
+      });
+      const pathwayModule = await prisma.product_module.findUnique({
+        where: {
+          name: 'Pathway Viewer'
+        },
+      });
       // Step 1: Create the user (admin)
+      const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
       const adminUser = await prisma.users.create({
         data: {
           first_name,
           last_name,
           email_id,
           password_hash: hashedPassword,
-          status: 'Enabled',
+          is_active: true,
+          created_at: getUTCTime(new Date().toISOString()),
           user_role: {
             create: {
               role_id: role_id,
+              created_at: getUTCTime(new Date().toISOString()),
             },
           },
         },
       });
 
+      let clientOrgModulePurchased: any[] = [];
+      if (orgManagementProductModule) {
+        clientOrgModulePurchased = [
+          ...clientOrgModulePurchased,
+          {
+            product_module_id: orgManagementProductModule?.id,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: adminUser.id,
+          }
+        ]
+      }
 
 
+      if (projectManagementProductModule) {
+        clientOrgModulePurchased = [
+          ...clientOrgModulePurchased,
+          {
+            product_module_id: projectManagementProductModule?.id,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: adminUser.id,
+          }
+        ]
+      }
+
+
+      if (userManagementProductModule) {
+        clientOrgModulePurchased = [
+          ...clientOrgModulePurchased,
+          {
+            product_module_id: userManagementProductModule?.id,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: adminUser.id,
+          }
+        ]
+      }
+      if (retroSynthesisModule) {
+        clientOrgModulePurchased = [
+          ...clientOrgModulePurchased,
+          {
+            product_module_id: retroSynthesisModule?.id,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: adminUser.id,
+          }
+        ]
+      }
+      if (pathwayModule) {
+        clientOrgModulePurchased = [
+          ...clientOrgModulePurchased,
+          {
+            product_module_id: pathwayModule?.id,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: adminUser.id,
+          }
+        ]
+      }
       // Step 2: Create the organization and link the admin user
       const organization = await prisma.container.create({
         data: {
           name,
-          status: 'Enabled',
-          type: "External",
-          orgAdminId: adminUser.id, // Link the user as the org admin
+          is_active: true,
+          type: "CO",
+          parent_id: emddORG?.id,
+          owner_id: adminUser.id, // Link the user as the org admin
           created_by,
+          created_at: getUTCTime(new Date().toISOString()),
           org_product_module: {
-            create: [
-              {
-                product_module_id: 1,
-                created_at: getUTCTime(new Date().toISOString()),
-                created_by: adminUser.id,
-              },
-              {
-                product_module_id: 2,
-                created_at: getUTCTime(new Date().toISOString()),
-                created_by: adminUser.id,
-              },
-              {
-                product_module_id: 3,
-                created_at: getUTCTime(new Date().toISOString()),
-                created_by: adminUser.id,
-              }
-            ]
+            create: clientOrgModulePurchased
           }
         },
       });
@@ -283,18 +387,18 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, primaryContactId, status, metadata } = req;
+    const { id, primaryContactId, is_active, metadata } = req;
 
     // Update the organization and user details
     const updatedOrganization = await prisma.container.update({
       where: { id },
       data: {
-        orgAdminId: primaryContactId,
+        owner_id: primaryContactId,
         metadata,
-        status,
+        is_active,
       },
       include: {
-        user: {
+        owner: {
           include: {
             user_role: {
               include: {

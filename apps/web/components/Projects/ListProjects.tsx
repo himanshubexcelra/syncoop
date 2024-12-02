@@ -25,7 +25,8 @@ type ProjectListProps = {
     clickedOrg?: number,
 }
 
-export default function ListProjects({ data,
+export default function ListProjects({ 
+    data,
     users,
     fetchOrganizations,
     organizationData,
@@ -40,17 +41,18 @@ export default function ListProjects({ data,
 
     const fetchLibraryData = async (id: number) => {
         if (id) {
-            const projectData = await getLibraries(['libraries', 'projects'], id.toString());
+            const projectData = await getLibraries(['libraries'/* , 'projects' */], id.toString());
+            
             setSelectedItems([projectData]);
             setLoader(false);
         }
     }
 
     useEffect(() => {
-        if (data.length) {
+        if (data?.length) {
             fetchLibraryData(data[0].id);
         }
-    }, [data.length]);
+    }, [data?.length]);
 
     const selectionChanged = useCallback((e: AccordionTypes.SelectionChangedEvent) => {
         setLoader(true);
@@ -69,7 +71,7 @@ export default function ListProjects({ data,
             if (Array.isArray(organizationData)) {
                 const filteredUsers = organizationData.filter(
                     (org: OrganizationDataFields) =>
-                        org.id === newItems[0].organization_id)[0]?.orgUser;
+                        org.id === newItems[0].parent_id)[0]?.orgUser;
 
                 if (filteredUsers) {
                     setUsers(filteredUsers?.filter(
@@ -83,7 +85,7 @@ export default function ListProjects({ data,
 
     return (
         <div className='content'>
-            {data.length > 0 ? (
+            {data?.length > 0 ? (
                 <div className='flex'>
                     <div className="accordion projects">
                         <Accordion

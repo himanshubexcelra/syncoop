@@ -16,11 +16,14 @@ import { editOrganization } from "./service";
 import { delay } from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
 import {
-  OrganizationEditField,
   userType,
   OrganizationDataFields,
   OrganizationType,
-  AssayLabel
+  AssayLabel,
+  ShowEditPopupType,
+  fetchDataType,
+  ProjectDataFields,
+  ActionStatus
 } from "@/lib/definition";
 import { TextBoxTypes } from 'devextreme-react/text-box';
 import { User } from "@/lib/definition";
@@ -33,6 +36,18 @@ const functionalAssay = {
   functionalAssay4: '',
 };
 
+export interface OrganizationEditField {
+  organizationData: OrganizationDataFields,
+  showEditPopup: ShowEditPopupType,
+  formRef: any,
+  fetchOrganizations: fetchDataType,
+  projectData?: ProjectDataFields,
+  myRoles?: string[],
+  edit?: boolean,
+  loggedInUser: number,
+  orgAdminRole?: number,
+}
+
 export default function EditOrganization({
   organizationData,
   showEditPopup,
@@ -42,20 +57,22 @@ export default function EditOrganization({
   loggedInUser,
 }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
-  const [primaryContactId, setPrimaryContactId] = useState(organizationData.orgAdminId);
+  const [primaryContactId, setPrimaryContactId] = useState(organizationData.owner_id);
   const meta = organizationData.metadata ? organizationData.metadata : functionalAssay
   const [metaData, setMetaData] = useState(meta);
   const context: any = useContext(AppContext);
   const appContext = context.state;
+  const { orgUser, type } = organizationData;
+
   // Update local state when organizationData changes
+
   useEffect(() => {
     const data = organizationData.metadata || functionalAssay;
     const formValue = { ...organizationData, metadata: data };
     formRef.current?.instance().option('formData', formValue);
     setFormData(formValue);
-    setPrimaryContactId(organizationData.orgAdminId);
+    setPrimaryContactId(organizationData.owner_id);
     setMetaData(data);
-
   }, [organizationData, formRef]);
 
 
@@ -80,7 +97,7 @@ export default function EditOrganization({
   const handleValueChange = (value: string) => {
     setFormData((prevData: OrganizationDataFields) => ({
       ...prevData,
-      status: value,
+      is_active: value === ActionStatus.Enabled,
     }));
   };
 
@@ -91,11 +108,11 @@ export default function EditOrganization({
       user
     }));
     setPrimaryContactId(user?.id)
-  };
-  const orgType = organizationData.type
-  const userList = organizationData?.orgUser?.filter((user: User) =>
+  }
+
+  const userList = orgUser?.filter((user: User) =>
     user.user_role[0]?.role?.type ===
-    (orgType === OrganizationType.Internal ? 'admin' : 'org_admin'))
+    (type === OrganizationType.Internal ? 'admin' : 'org_admin'));
 
   const primaryContact = {
     key: "id",
@@ -123,7 +140,7 @@ export default function EditOrganization({
   }
 
   const disableAllowed = myRoles?.includes('admin') &&
-    organizationData.orgAdminId !== loggedInUser;
+    organizationData.owner_id !== loggedInUser;
 
   const cancelSave = () => {
     formRef?.current!.instance().reset();
@@ -132,92 +149,93 @@ export default function EditOrganization({
   }
 
   return (
-    <Form ref={formRef} formData={formData}>
-      <SimpleItem dataField="name" editorOptions={{ disabled: true }}>
-        <Label text="Organization Name" />
-        <RequiredRule message="Organization name is required" />
-      </SimpleItem>
-
-      <GroupItem colCount={2} cssClass="delete-button-group">
+    <>
+      <Form ref={formRef} formData={formData}>
+        <SimpleItem dataField="name" editorOptions={{ disabled: true }}>
+          <Label text="Organization Name" />
+          <RequiredRule message="Organization name is required" />
+        </SimpleItem>
+        <GroupItem colCount={2} cssClass="delete-button-group">
         <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }}>
           <RadioGroup
             items={status}
             disabled={!disableAllowed}
             className={!disableAllowed ? "disabled-field" : ""}
-            defaultValue={formData.status}
+            defaultValue={formData.is_active ? ActionStatus.Enabled : ActionStatus.Disabled}
             onValueChange={handleValueChange} />
-        </SimpleItem>
-        <ButtonItem cssClass="delete-button">
-          <ButtonOptions
-            stylingMode="text"
-            text={`Delete 
-          ${formData.name}`}
-            disabled={true}
-            elementAttr={{ class: 'lowercase' }} />
-        </ButtonItem>
-      </GroupItem>
-      <SimpleItem
-        editorType="dxSelectBox"
-        editorOptions={primaryContact}      >
-        <Label text="Primary Contact" />
-      </SimpleItem>
-      <GroupItem caption="Functional Assay" cssClass="groupItem" colCount={1}></GroupItem>
-      <SimpleItem
-        dataField="functionalAssay1"
-        editorOptions={
-          {
-            placeholder: "Functional Assay",
-            onChange: setMetaDataValue,
-            value: metaData.functionalAssay1
-          }
-        }>
-        <Label text={AssayLabel.functionalAssay1} />
-      </SimpleItem>
-      <SimpleItem
-        dataField="functionalAssay2"
-        editorOptions={
-          {
-            placeholder: "Functional Assay",
-            onChange: setMetaDataValue,
-            value: metaData.functionalAssay2
-          }
-        }>
-        <Label text={AssayLabel.functionalAssay2} />
-      </SimpleItem>
-      <SimpleItem dataField="functionalAssay3" editorOptions={
-        {
-          placeholder: "Functional Assay",
-          onChange: setMetaDataValue,
-          value: metaData.functionalAssay3
-        }
-      }>
-        <Label text={AssayLabel.functionalAssay3} />
-      </SimpleItem>
-      <SimpleItem
-        dataField="functionalAssay4"
-        editorOptions={
-          {
-            placeholder: "Functional Assay",
-            onChange: setMetaDataValue,
-            value: metaData.functionalAssay4
-          }
-        }>
-        <Label text={AssayLabel.functionalAssay4} />
-      </SimpleItem>
-      <GroupItem cssClass="buttons-group" colCount={2}>
-        <GroupItem cssClass="buttons-group" colCount={2}>
-          <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
+          </SimpleItem>
+          <ButtonItem cssClass="delete-button">
             <ButtonOptions
-              text="Update"
-              useSubmitBehavior={true}
-              onClick={handleSubmit}
-            />
-          </ButtonItem>
-          <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
-            <ButtonOptions text="Cancel" onClick={cancelSave} />
+              stylingMode="text"
+              text={`Delete 
+          ${formData.name}`}
+              disabled={true}
+              elementAttr={{ class: 'lowercase' }} />
           </ButtonItem>
         </GroupItem>
-      </GroupItem>
-    </Form >
+        <SimpleItem
+          editorType="dxSelectBox"
+          editorOptions={primaryContact}        >
+          <Label text="Primary Contact" />
+        </SimpleItem>
+        <GroupItem caption="Functional Assay" cssClass="groupItem" colCount={1}></GroupItem>
+        <SimpleItem
+          dataField="functionalAssay1"
+          editorOptions={
+            {
+              placeholder: "Functional Assay",
+              onChange: setMetaDataValue,
+              value: metaData.functionalAssay1
+            }
+          }>
+          <Label text={AssayLabel.functionalAssay1} />
+        </SimpleItem>
+        <SimpleItem
+          dataField="functionalAssay2"
+          editorOptions={
+            {
+              placeholder: "Functional Assay",
+              onChange: setMetaDataValue,
+              value: metaData.functionalAssay2
+            }
+          }>
+          <Label text={AssayLabel.functionalAssay2} />
+        </SimpleItem>
+        <SimpleItem dataField="functionalAssay3" editorOptions={
+          {
+            placeholder: "Functional Assay",
+            onChange: setMetaDataValue,
+            value: metaData.functionalAssay3
+          }
+        }>
+          <Label text={AssayLabel.functionalAssay3} />
+        </SimpleItem>
+        <SimpleItem
+          dataField="functionalAssay4"
+          editorOptions={
+            {
+              placeholder: "Functional Assay",
+              onChange: setMetaDataValue,
+              value: metaData.functionalAssay4
+            }
+          }>
+          <Label text={AssayLabel.functionalAssay4} />
+        </SimpleItem>
+        <GroupItem cssClass="buttons-group" colCount={2}>
+          <GroupItem cssClass="buttons-group" colCount={2}>
+            <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
+              <ButtonOptions
+                text="Update"
+                useSubmitBehavior={true}
+                onClick={handleSubmit}
+              />
+            </ButtonItem>
+            <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
+              <ButtonOptions text="Cancel" onClick={cancelSave} />
+            </ButtonItem>
+          </GroupItem>
+        </GroupItem>
+      </Form >
+    </>
   );
 }

@@ -43,6 +43,8 @@ export default function TabUsersTable({
         },
     ]
     return (
-        <Tabs tabsDetails={tabsDetails} />
+        <div className="w-full shadow-lg shadow-[var(--tabBoxShadow)]">
+            <Tabs tabsDetails={tabsDetails} />
+        </div>
     )
 }

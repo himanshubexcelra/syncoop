@@ -1,4 +1,6 @@
-import ProjectDetail from "@/app/projects/[id]/page";
+/* import ProjectDetail from "@/app/projects/[projectId]/page"; */
+import Layout from "@/components/layout";
+import LibraryDetails from "@/components/Libraries/LibraryDetails";
 import { getUserData } from "@/utils/auth";
 import { redirect } from "next/navigation";
 
@@ -17,7 +19,15 @@ export default async function OrgProjectDetail({ params }: OrgProjectDetailProps
         redirect('/');
     }
 
+    const { userData, actionsEnabled } = sessionData
+
     return (
-        <ProjectDetail organizationId={organizationId} projectId={projectId} />
+        <Layout>
+            <LibraryDetails
+                userData={userData}
+                actionsEnabled={actionsEnabled}
+                organizationId={organizationId}
+                projectId={projectId} />
+        </Layout>
     );
 }

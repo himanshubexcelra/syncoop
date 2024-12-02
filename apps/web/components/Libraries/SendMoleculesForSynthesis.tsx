@@ -10,9 +10,14 @@ import Image from "next/image";
 import { Button } from "devextreme-react/button";
 import { MoleculeOrder } from "@/lib/definition";
 import dynamic from 'next/dynamic';
+import { useState } from "react";
+import { LoadIndicator } from "devextreme-react";
 
 type SendMoleculesForSynthesisProps = {
     moleculeData: MoleculeOrder[],
+    inRetroData: MoleculeOrder[],
+    generateReactionPathway: () => void,
+    setSynthesisView: (val: boolean) => void
 }
 
 const MoleculeStructure = dynamic(
@@ -22,12 +27,35 @@ const MoleculeStructure = dynamic(
 
 export default function SendMoleculesForSynthesis({
     moleculeData,
+    inRetroData,
+    generateReactionPathway,
+    setSynthesisView,
 }: SendMoleculesForSynthesisProps) {
+
+    const [isLoading, setLoading] = useState(false);
+
+    const confirmSynthesis = async () => {
+        setLoading(true);
+        setTimeout(() => {
+            setSynthesisView(false);
+            generateReactionPathway();
+        }, 3000);
+    }
 
     return (
         <>
-            <div>4 of your selected molecules have already been sent for retrosynthesis</div>
-            <div className="mb-[20px] mt-[5px]">Estimated time xx minutes.</div>
+            {inRetroData.length > 0 &&
+                <div>
+                    {`${inRetroData.length} of your selected molecules have already 
+                been sent for retrosynthesis`}
+                </div>
+            }
+            <div className="mb-[20px] mt-[5px]">
+                {`${moleculeData.length} molecules will be sent for retrosynthesis.`}
+            </div>
+            <div className="mb-[20px] mt-[5px]">
+                Estimated time xx minutes.
+            </div>
             <DataGrid
                 dataSource={moleculeData}
                 showBorders={true}
@@ -38,9 +66,10 @@ export default function SendMoleculesForSynthesis({
                 <Scrolling mode="infinite" />
                 <HeaderFilter visible={true} />
                 <Column
-                    dataField="id"
+                    dataField="molecule_id"
                     caption="Molecule ID"
                     alignment="center"
+                    minWidth={150}
                 />
                 <Column dataField="Structure"
                     minWidth={300}
@@ -123,12 +152,14 @@ export default function SendMoleculesForSynthesis({
                 />
             </DataGrid>
             <div className="mt-[20px] flex gap-[20px]">
-                <Button
-                    text="Confirm"
-                    type="normal"
-                    stylingMode="contained"
-                    elementAttr={{ class: "btn-primary" }}
-                />
+                <button className="primary-button"
+                    onClick={confirmSynthesis}
+                >
+                    <LoadIndicator
+                        visible={isLoading}
+                        height={20}
+                        width={20} />
+                    {isLoading ? '' : 'Confirm'} </button>
                 <Button
                     text="Cancel"
                     type="normal"

@@ -1,7 +1,11 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
-import { DeleteMoleculeCart, DropDownItem, UserData } from '@/lib/definition';
+import {
+    DeleteMoleculeCart,
+    DropDownItem,
+    UserData,
+} from '@/lib/definition';
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -18,7 +22,9 @@ import toast from "react-hot-toast";
 import { deleteMoleculeCart, getMoleculeCart } from '../Libraries/service';
 import CartDetails from '../Libraries/CartDetails';
 import OrderDetails from '../Libraries/OrderDetails'
-
+import {
+    isExternal,
+} from '@/utils/helpers';
 type HeaderProps = {
     userData: UserData,
     actionsEnabled: string[]
@@ -37,19 +43,22 @@ export default function Header({ userData }: HeaderProps) {
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [orderPopupVisible, setOrderPopupVisibility] = useState(false);
     const [cartData, setCartData] = useState([]);
+    const [orderMsg, setOrderMsg] = useState<string>('');
+    const orderPopupClassName =
+        isExternal(userData.myRoles) ? 'order-popup' : 'order-popup-internal'
 
     useEffect(() => {
         const fetchCartData = async () => {
             const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
             setCartData(cartDataAvaialable);
-            context?.addToState({
+            /* context?.addToState({
                 ...appContext,
                 refreshCart: false,
-            })
+            }) */
         };
 
         fetchCartData();
-    }, [library_id, cartDetail, userData.id, appContext?.refreshCart]);
+    }, [library_id, cartDetail, userData.id, /* appContext?.refreshCart */]);
 
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -57,14 +66,12 @@ export default function Header({ userData }: HeaderProps) {
     const toggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
     };
-
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
         const { molecule_id, library_id, project_id, moleculeName, created_by } = obj;
         deleteMoleculeCart(created_by, molecule_id, library_id, project_id).then((res) => {
             if (res) {
                 const filteredData = cartData.filter((item: any) =>
-                    !
-                    (
+                    !(
                         item.molecule_id === molecule_id &&
                         item.library_id === library_id &&
                         item.project_id === project_id
@@ -80,15 +87,12 @@ export default function Header({ userData }: HeaderProps) {
                     setCreatePopupVisibility(false);
                 }
             }
+        }).catch((error) => {
+            console.log(error);
         })
-            .catch((error) => {
-                console.log(error);
-            })
-
-
     }
 
-    const removeAll = (user_id: number, type: string) => {
+    const removeAll = (user_id: number, type: string, msg: string) => {
         deleteMoleculeCart(user_id).then((res) => {
             if (res) {
                 setCartData([]);
@@ -97,18 +101,18 @@ export default function Header({ userData }: HeaderProps) {
                 })
                 if (type === 'RemoveAll') {
                     setCreatePopupVisibility(false)
-                    toast.success(Messages.REMOVE_ALL_MESSAGE);
+                    toast.success(toast.success(msg));
                 }
                 else {
                     setCreatePopupVisibility(false)
+                    setOrderMsg(msg)
                     setOrderPopupVisibility(true)
                 }
 
             }
+        }).catch((error) => {
+            console.log(error);
         })
-            .catch((error) => {
-                console.log(error);
-            })
     }
     const onItemSelected = async (item: DropDownItem) => {
         if (item.link) {
@@ -134,6 +138,7 @@ export default function Header({ userData }: HeaderProps) {
             });
         }
     }, []);
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setOrderPopupPosition({
@@ -169,7 +174,7 @@ export default function Header({ userData }: HeaderProps) {
 
     return (
         <>
-            <header className="top-0 left-0 w-full h-10 bg-themeBlueColor
+            <header className="top-0 left-0 w-full h-10 bg-themeBlueColor 
             flex items-center justify-between px-6 shadow-sm">
                 <div className="flex items-center">
                     <Link href="/">
@@ -219,7 +224,7 @@ export default function Header({ userData }: HeaderProps) {
                                 width={33}
                                 height={22}
                             />
-                            <div className="absolute flex items-center
+                            <div className="absolute flex items-center 
                             justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0"
                             >
                                 <span
@@ -231,7 +236,7 @@ export default function Header({ userData }: HeaderProps) {
                                         )
                                     }
                                 >
-                                    {cartData.length}
+                                    {cartData?.length}
                                 </span>
 
                             </div>
@@ -239,7 +244,7 @@ export default function Header({ userData }: HeaderProps) {
                     </Link>
                     <div>
                         <div
-                            className="flex items-center justify-center w-[24px] h-[24px]
+                            className="flex items-center justify-center w-[24px] h-[24px] 
     text-white rounded-full border-2 border-white cursor-pointer"
                             onClick={toggleDropdown}
                         >
@@ -252,8 +257,7 @@ export default function Header({ userData }: HeaderProps) {
                             items={dropDownItems} />
                     </div>
                 </div>
-            </header>
-            {createPopupVisible && <CartPopup
+            </header> {createPopupVisible && <CartPopup
                 title="Molecule Cart"
                 visible={createPopupVisible}
                 onHiding={() => setCreatePopupVisibility(false)}
@@ -263,8 +267,12 @@ export default function Header({ userData }: HeaderProps) {
                         cartData={cartData}
                         user_id={userData.id}
                         orgType={userData.orgUser.type}
+                        setCreatePopupVisibility={setCreatePopupVisibility}
                         removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
-                        removeAll={(user_id: number, type: string) => removeAll(user_id, type)}
+                        removeAll={
+                            (user_id: number, type: string, msg: string) =>
+                                removeAll(user_id, type, msg)
+                        }
                     />
                 )}
                 width={570}
@@ -281,6 +289,7 @@ export default function Header({ userData }: HeaderProps) {
                 contentRender={() => (
                     <OrderDetails
                         closeOrderPopup={closeOrderPopup}
+                        msg={orderMsg}
                     />
                 )}
                 width={577}
@@ -288,9 +297,8 @@ export default function Header({ userData }: HeaderProps) {
                 height={236}
                 position={orderPopupPosition}
                 showCloseButton={false}
-                wrapperAttr={{ class: "order-popup" }}
+                wrapperAttr={{ class: orderPopupClassName }}
                 showTitle={false}
                 style={{ backgroundColor: 'white' }}
-            />}
-        </>);
+            />}</>);
 }

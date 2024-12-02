@@ -1,8 +1,14 @@
 import prisma from "@/lib/prisma";
-import { getUTCTime, json } from "@/utils/helper";
+import { json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
-const prePareMolecule = (moleculeData: []) => {
+export type ReactionInputData = {
+    id: number;
+} & {
+    [key: string]: string | number;
+};
+
+/* const prePareMolecule = (moleculeData: []) => {
     const moleculeInsert = moleculeData.map((item: any, index: number) => ({
         smiles_string: item.reagentSMILES,
         compound_id: item.molID,
@@ -14,18 +20,29 @@ const prePareMolecule = (moleculeData: []) => {
         created_at: getUTCTime(new Date().toISOString())
     }));
     return moleculeInsert;
-}
+} */
 
-export async function POST(request: Request) {
+/* export async function POST(request: Request) {
     const req: any = await request.json();
     const pathwayId: number = 326;
     try {
         const reactionMolecule = prePareMolecule(req.molecules);
+        const reactionTemplate =
+            await prisma.reaction_template_master.findUnique({
+                where: {
+                    name: req.reaction_template
+                }
+            });
         await prisma.reaction_detail.create({
             data: {
-                reaction_template: req.rxnTemplate ? req.rxnTemplate : '',
-                reaction_name: req.nameRXN.label,
-                pathway_id: Number(pathwayId),
+                reaction_template_master: {
+                    connect: {
+                        id: reactionTemplate?.id
+                    }
+                },
+                reaction_name: reaction.reaction_name,
+                reaction_smiles_string: reaction.reaction_smiles_string,
+                pathway_id: pathwayId,
                 pathway_instance_id: 0,
                 reaction_sequence_no: req.rxnindex,
                 confidence: req.Confidence,
@@ -56,7 +73,8 @@ export async function POST(request: Request) {
         );
     }
 
-}
+} */
+
 
 export async function PUT(request: Request) {
     const req: any = await request.json();
@@ -68,18 +86,17 @@ export async function PUT(request: Request) {
             },
             data: data,
         });
-        const updatedCompounds = await Promise.all(
-            molecules.map(async (molecule: any) => {
+        molecules.length > 0 && await Promise.all(
+            molecules.map(async (molecule: ReactionInputData) => {
                 return await prisma.reaction_compound.update({
                     where: {
-                        id: parseInt(molecule.id),
+                        id: molecule.id,
                     },
                     data: molecule,
                 });
             })
         );
-
-        return new Response(json(updatedCompounds), {
+        return new Response(json(req), {
             headers: { "Content-Type": "application/json" },
             status: STATUS_TYPE.SUCCESS,
         });

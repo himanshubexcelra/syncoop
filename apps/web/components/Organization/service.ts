@@ -1,15 +1,17 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
+type getOrganizationParams = {
+  withRelation?: string[];
+  withCount?: string[];
+  type?: string;
+}
+
 export async function getOrganization(
   { withRelation = [],
     withCount = [],
     type = ''
-  }: {
-    withRelation?: string[],
-    withCount?: string[],
-    type?: string
-  }) {
+  }: getOrganizationParams) {
   const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));

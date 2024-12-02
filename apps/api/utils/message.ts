@@ -8,7 +8,10 @@ export const MESSAGES = {
     EMAIL_ALREADY_EXIST: `Email already exists`,
     USER_NOT_FOUND: 'User does not exist',
     LIBRARY_NOT_FOUND: 'Library does not exist',
+    PROJECT_NOT_FOUND: 'Project does not exist',
     MOLECULE_ORDER_NOT_FOUND: 'Molecule order does not exist',
+    NOTFOUND: (field: string) => `${field} not found`,
+    REQUIRED: (field: string) => `${field} is required`
 }
 
 export const STATUS_TYPE = {

@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
-import { json } from "@/utils/helper";
+import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
@@ -10,7 +10,8 @@ interface Item {
     organization_id: string; // or number
     project_id: string; // or number
     user_id: string; // or number
-    order_id?: number
+    order_id?: number,
+    created_at: string
 }
 interface updatedItem {
     molecule_id: number; // or number, depending on your data type
@@ -40,17 +41,17 @@ export async function GET(request: Request) {
                             select: {
                                 id: true,
                                 name: true,
-                                project: {
-                                    select: {
-                                        id: true,
-                                        name: true,
-                                    },
-                                },
+                            },
+                        },
+                        project: {
+                            select: {
+                                id: true,
+                                name: true,
                             },
                         },
                     },
                 },
-                organization: { 
+                organization: {
                     select: {
                         name: true,
                     },
@@ -86,50 +87,45 @@ export async function GET(request: Request) {
     }
 }
 
-
-
 export async function POST(request: Request) {
     const req = await request.json();
-    const result = req.map((item: Item) => ({
-        molecule_id: Number(item.molecule_id),
-        library_id: Number(item.library_id),
-        organization_id: Number(item.organization_id),
-        project_id: Number(item.project_id),
-        created_by: Number(item.user_id),
-        order_id: Number(item.order_id)
-    }));
-    
-    // return new Response(JSON.stringify(response), {
-    //     headers: { "Content-Type": "application/json" },
-    //     status: SUCCESS,
-    // });
-
-    const updatedmolecule_id = result.map((item: updatedItem) => Number(item.molecule_id));
-
-    const updatedResult = await prisma.molecule.updateMany({
-        where: {
-            id: { in: updatedmolecule_id }
-        },
-        data: {
-            is_added_to_cart: true,
-        },
+    const moleculeStatus = req.status;
+    const result = req.molecules.map((item: Item) => {
+        const obj = {
+            molecule_id: Number(item.molecule_id),
+            library_id: Number(item.library_id),
+            organization_id: Number(item.organization_id),
+            project_id: Number(item.project_id),
+            created_by: Number(item.user_id),
+            created_at: getUTCTime(new Date().toISOString())
+        };
+        if (item.order_id) {
+            return { ...obj, molecule_order_id: item.order_id };
+        }
+        return obj;
     });
     try {
-        if (updatedResult.count > 0) {
-            const response = await prisma.molecule_cart.createMany({
-                data: result
-            })
-            return new Response(json(response), {
-                headers: { "Content-Type": "application/json" },
-                status: SUCCESS,
-            });
-        }
-        else {
-            return new Response(JSON.stringify([]), {
-                headers: { "Content-Type": "application/json" },
-                status: BAD_REQUEST,
-            });
-        }
+        const updatedmolecule_id = result.map((item: updatedItem) => Number(item.molecule_id));
+        await prisma.molecule.updateMany({
+            where: {
+                id: { in: updatedmolecule_id }
+            },
+            data: {
+                is_added_to_cart: true,
+                status: moleculeStatus
+            },
+        });
+        const response = await prisma.molecule_cart.createMany({
+            data: result
+        })
+        return new Response(json(response), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+        // return new Response(JSON.stringify(response), {
+        //     headers: { "Content-Type": "application/json" },
+        //     status: BAD_REQUEST,
+        // });
     }
     catch (error) {
         return new Response(JSON.stringify({

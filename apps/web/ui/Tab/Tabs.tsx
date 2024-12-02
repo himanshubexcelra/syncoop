@@ -1,27 +1,40 @@
-"use client"
-
 import TabPanel, { Item } from "devextreme-react/tab-panel";
-import "./tabs.css"
-import styles from './Tabs.module.css'
-import { TabDetail } from '@/lib/definition';
-
+import { useState } from "react";
+import "./tabs.css";
+import { TabDetail } from "@/lib/definition";
 
 interface TabDetailsProps {
-    tabsDetails: TabDetail[];
+  tabsDetails: TabDetail[]; 
+  activeTab?: number; 
+  onSelectedIndexChange?: (index: number) => void;
 }
-export default function Tabs({ tabsDetails }: TabDetailsProps) {
-    return (
-        <div className={styles.box}>
-            <TabPanel animationEnabled={true} >
-                {tabsDetails.map((tab, index) => {
-                    const Component = tab.Component
-                    const props = tab.props
-                    return (
-                        <Item key={index} title={tab.title}>
-                            {Component ? <Component {...props} /> : null}
-                        </Item>)
-                })}
-            </TabPanel>
-        </div>
-    )
+
+export default function Tabs({
+  tabsDetails,
+  activeTab,
+  onSelectedIndexChange,
+}: TabDetailsProps) {
+  const [tabIndex, setTabIndex] = useState<number>(0);
+
+  const handleIndexChange = (index: number) => {
+    setTabIndex(index);
+    onSelectedIndexChange?.(index);
+  };
+
+  return (
+    <TabPanel className="w-[100%]"
+      animationEnabled={true}
+      selectedIndex={activeTab ?? tabIndex}
+      onSelectedIndexChange={handleIndexChange}
+    >
+      {tabsDetails.map((tab, index) => {
+        const { Component, props, title } = tab;
+        return (
+          <Item key={index} title={title}>
+            {Component ? <Component {...props} /> : null}
+          </Item>
+        );
+      })}
+    </TabPanel>
+  );
 }

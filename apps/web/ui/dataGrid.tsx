@@ -14,6 +14,7 @@ import DataGrid, {
     Toolbar,
     Item,
     DataGridTypes,
+    RowDragging,
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
@@ -27,11 +28,11 @@ interface ToolbarButtonConfig {
     class?: string;
     disabled?: boolean;
     visible?: boolean;
-
 }
 
 interface CustomDataGridProps<T> {
     data: any[];
+    height?: string;
     columns: ColumnConfig<T>[];
     toolbarButtons?: ToolbarButtonConfig[];
     groupingColumn?: string;
@@ -49,15 +50,19 @@ interface CustomDataGridProps<T> {
     enableHeaderFiltering?: boolean;
     handleSelectionChange?: (selectedRowsData: any) => void;
     handleSelectedRows?: (e: any) => void;
-
     enableSearchOption?: boolean;
     selectedRowKeys?: any[];
     onSelectionChanged?: (e: any) => void;
     onCellPrepared?: (e: DataGridTypes.CellPreparedEvent) => void;
+    showDragIcons?: boolean;
+    enableToolbar?: boolean;
+    onReorderFunc?: (e: any) => void;
+    onEditorPreparing?: (e: any) => void;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
     data,
+    height = '600px',
     columns,
     toolbarButtons = [],
     groupingColumn,
@@ -74,7 +79,11 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableHeaderFiltering = true,
     selectedRowKeys,
     onSelectionChanged,
-    onCellPrepared
+    onCellPrepared,
+    showDragIcons = false,
+    enableToolbar = true,
+    onReorderFunc,
+    onEditorPreparing,
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -128,6 +137,11 @@ const CustomDataGrid = <T extends Record<string, any>>({
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
+    const onReorder = (event: any) => {
+        if (onReorderFunc) {
+            onReorderFunc(event)
+        }
+    };
 
     return (
         <div>
@@ -137,12 +151,18 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 keyExpr="id"
                 allowColumnReordering={false}
                 showBorders={true}
-                height="600px"
+                height={height}
                 width="100%"
                 onCellPrepared={onCellPrepared}
                 selectedRowKeys={selectedRowKeys}
                 onSelectionChanged={onSelectionChanged}
+                onEditorPreparing={onEditorPreparing}
             >
+                {showDragIcons && <RowDragging
+                    allowReordering={true}
+                    onReorder={onReorder}
+                    showDragIcons={showDragIcons}
+                />}
                 {enableGrouping && <GroupPanel visible={true} />}
 
                 {enableHeaderFiltering && <HeaderFilter visible={true} />}
@@ -175,7 +195,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     />
                 ))}
 
-
                 {groupingColumn && (
                     <Column
                         dataField={String(groupingColumn)}
@@ -184,7 +203,8 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         groupCellRender={groupCellRender}
                     />
                 )}
-                <Toolbar>
+                  {enableToolbar && <Toolbar>
+                    <Item name="searchPanel" location="before" />
                     {groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }
@@ -200,8 +220,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                             />
                         </Item>
                     ))}
-                    <Item name="searchPanel" location="after" />
-                </Toolbar>
+                </Toolbar>}
                 {enableSearchOption && <SearchPanel
                     visible={true}
                     highlightSearchText={true}

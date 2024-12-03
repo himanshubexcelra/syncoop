@@ -14,6 +14,26 @@ jest.mock("@/components/Breadcrumbs/BreadCrumbs", () => ({
     default: jest.fn(() => <div data-testid="breadcrumb">Mocked Breadcrumb</div>),
 }));
 
+jest.mock("@/components/Molecule/AddMolecule/AddMolecule", () => ({
+    __esModule: true,
+    default: jest.fn(() => <div data-testid="addMolecule">Add Molecule</div>),
+}));
+
+jest.mock("@/components/Molecule/EditMolecule/EditMolecule", () => ({
+    __esModule: true,
+    default: jest.fn(() => <div data-testid="editMolecule">Edit Molecule</div>),
+}));
+
+jest.mock("@/components/KetcherTool/KetcherBox", () => ({
+    __esModule: true,
+    default: jest.fn(() => <div data-testid="ketcherBox">Ketcher Box</div>),
+}));
+
+jest.mock("@/utils/MoleculeStructure", () => ({
+    __esModule: true,
+    default: () => <div>Molecule Structure Mock</div>,
+}));
+
 // Mock the next/navigation hooks
 jest.mock('next/navigation', () => ({
     useSearchParams: jest.fn(),
@@ -26,6 +46,7 @@ jest.mock('@/components/Libraries/service', () => ({
     getLibraryById: jest.fn(),
     editLieditLibrary: jest.fn(),
     addToFavourites: jest.fn(),
+    getMoleculeCart: jest.fn(),
 }));
 
 const actionsEnabled = ['create_molecule', 'create_library', 'edit_library'];
@@ -36,7 +57,7 @@ const data = {
     target: null,
     type: 'Optimization',
     description: 'Example data',
-    rganizationId: 1,
+    organizationId: 1,
     created_at: '2024-10-17T08:18:35.505Z',
     updated_at: '2024-10-17T08:18:35.505Z',
     ownerId: 1,

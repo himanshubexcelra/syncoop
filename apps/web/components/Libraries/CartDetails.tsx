@@ -67,7 +67,7 @@ export default function CartDetails({
     },
     { dataField: 'molecular_weight', title: 'Weight', width: 100 },
     {
-      dataField: 'molecular_weight',
+      dataField: 'id',
       title: 'Remove',
       width: 24,
       customRender: (data) => (

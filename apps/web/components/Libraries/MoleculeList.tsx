@@ -173,7 +173,7 @@ export default function MoleculeList({
             width: 120,
             customRender: (data) => {
                 const statusUpper = getStatusLabel(data.status);
-                const colorKey = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
+                const colorKey = statusUpper?.toUpperCase() as keyof typeof StatusCodeBg;
                 const colorBgClass = StatusCodeBg[colorKey] || "bg-white";
                 const textColorClass = StatusCodeTextColor[colorKey] || "#000";
                 return (
@@ -247,9 +247,9 @@ export default function MoleculeList({
         const moleculeCart = library_id ?
             await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
-        const molecule_ids = moleculeCart.map((item: any) => item.molecule_id);
+        const molecule_ids = moleculeCart?.map((item: any) => item.molecule_id);
         const molecule_idsInCart = moleculeCart
-            .filter((item: any) => item.molecule.is_added_to_cart)
+            ?.filter((item: any) => item.molecule.is_added_to_cart)
             .map((item: any) => item.molecule_id);
         setCartMolecule(molecule_idsInCart)
         setSelectedRows(molecule_ids)
@@ -261,14 +261,14 @@ export default function MoleculeList({
     }, [library_id, userData.id, appContext]);
 
     const onCellPrepared = (e: any) => {
-        if (isMoleculeInCart.includes(e.key)) {
+        if (isMoleculeInCart?.includes(e.key)) {
             e.cellElement.style.pointerEvents = 'none';
             e.cellElement.style.opacity = 0.5;
         }
         if (e.rowType === "data") {
             if (e.column.dataField === "status") {
                 const statusUpper = getStatusLabel(e.data.status);
-                const color = statusUpper.toUpperCase() as keyof typeof StatusCodeBg;
+                const color = statusUpper?.toUpperCase() as keyof typeof StatusCodeBg;
                 e.cellElement.classList.add(StatusCodeBg[color]);
             }
         }
@@ -299,7 +299,7 @@ export default function MoleculeList({
 
     const onSelectionChanged = async (e: any) => {
         const orderId = generateRandomDigitNumber();
-        if (e.selectedRowKeys.length > 0) {
+        if (e.selectedRowKeys?.length > 0) {
             setIsAddToCartEnabled(false)
         }
         else {
@@ -309,7 +309,7 @@ export default function MoleculeList({
         setSelectedRows(e.selectedRowKeys);
         setSelectedRowsData(e.selectedRowsData)
         const checkedMolecule = e.selectedRowsData;
-        const selectedProjectMolecule = checkedMolecule.map((item: any) => ({
+        const selectedProjectMolecule = checkedMolecule?.map((item: any) => ({
             ...item,
             order_id: orderId,
             molecule_id: item.id,
@@ -322,11 +322,11 @@ export default function MoleculeList({
         const moleculeCart = library_id ?
             await getMoleculeCart(Number(userData.id), Number(library_id), Number(projects.id))
             : [];
-        const preselectedIds = moleculeCart.map((item: any) => item.molecule_id);
+        const preselectedIds = moleculeCart?.map((item: any) => item.molecule_id);
         const updatedMoleculeCart = selectedProjectMolecule.filter((item: any) =>
-            !preselectedIds.includes(item.molecule_id));
+            !preselectedIds?.includes(item.molecule_id));
         // If the check box is unchecked
-        if (e.currentDeselectedRowKeys.length > 0) {
+        if (e.currentDeselectedRowKeys?.length > 0) {
             const newmoleculeData = checkedMolecule.filter((
                 item: any) => item.id !== e.currentDeselectedRowKeys[0].id
                 && item.project_id !== projects.id);
@@ -387,14 +387,14 @@ export default function MoleculeList({
             text: "Add Molecule",
             onClick: addMolecule,
             icon: '/icons/plus-white.svg',
-            visible: actionsEnabled.includes('create_molecule') && !!library_id
+            visible: actionsEnabled?.includes('create_molecule') && !!library_id
         },
         {
             text: `Edit (${selectedRows?.length})`,
             onClick: showEditMolecule,
-            class: !selectedRows.length ? 'btn-disable' : 'btn-secondary',
-            disabled: !selectedRows.length,
-            visible: actionsEnabled.includes('edit_molecule') && !!library_id
+            class: !selectedRows?.length ? 'btn-disable' : 'btn-secondary',
+            disabled: !selectedRows?.length,
+            visible: actionsEnabled?.includes('edit_molecule') && !!library_id
         },
         {
             text: `Add to Cart (${selectedRows?.length})`,
@@ -480,9 +480,9 @@ export default function MoleculeList({
                         resizeEnabled={true}
                         hideOnOutsideClick={true}
                         defaultWidth=
-                        {editMolecules.length > 1
+                        {editMolecules?.length > 1
                             ? 896 : 710}
-                        minWidth={editMolecules.length > 1
+                        minWidth={editMolecules?.length > 1
                             ? 896 : 710}
                         defaultHeight={'100%'}
                         position={{
@@ -502,19 +502,19 @@ export default function MoleculeList({
                     }
                     <div className='flex justify-center mt-[25px]'>
                         <span className='text-themeGreyColor'>
-                            {tableData.length}
+                            {tableData?.length}
                             <span className='pl-[3px]'>
                                 {tableData.length === 1 ? 'molecule' : 'molecules'}
                             </span>
                             <span className='pl-[2px]'> found</span>
                         </span>
-                        {!!tableData.length && <span>&nbsp;|&nbsp;</span>}
-                        {!!tableData.length &&
+                        {!!tableData?.length && <span>&nbsp;|&nbsp;</span>}
+                        {!!tableData?.length &&
                             <span className={
                                 `text-themeSecondayBlue 
                                                 pl-[5px] 
                                                 font-bold pb-[10px]`
-                            }>Select All {tableData.length}
+                            }>Select All {tableData?.length}
                             </span>}
                     </div>
                 </div >

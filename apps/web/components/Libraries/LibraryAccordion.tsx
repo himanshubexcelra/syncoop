@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import { Popup, Position } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
-import { LibraryFields, ProjectDataFields, StatusCode, UserData } from "@/lib/definition";
+import { LibraryFields, ProjectDataFields, MoleculeStatusLabel, UserData } from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import {
     formatDatetime,
@@ -35,8 +35,8 @@ type LibraryAccordionType = {
     fetchLibraries: () => void,
     userData: UserData,
     selectedLibraryId: number,
-    getLibraryData: (value: LibraryFields) => void,
-    setSelectedLibraryName: (value: string) => void,
+    /* getLibraryData: (value: LibraryFields) => void, */
+    /* setSelectedLibraryName: (value: string) => void, */
     setExpanded: (value: boolean) => void,
     setLibraryId: (value: number) => void,
 }
@@ -53,7 +53,7 @@ export default function LibraryAccordion({
     fetchLibraries,
     userData,
     selectedLibraryId,
-    getLibraryData,
+    /* getLibraryData, */
     setLibraryId,
     setExpanded,
 }: LibraryAccordionType) {
@@ -69,7 +69,7 @@ export default function LibraryAccordion({
     const [selectedLibraryIdIdx, setSelectedLibraryIndex] = useState(-1);
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
-    const [editEnabled, setEditStatus] = useState<boolean>(false);
+    const [editDisabled, setEditStatus] = useState<boolean>(true);
 
     const formRef = useRef<FormRef>(null);
 
@@ -82,7 +82,7 @@ export default function LibraryAccordion({
     }
 
     const checkDisabledField = (item: LibraryFields) => {
-        const owner = item.ownerId === userData.id;
+        const owner = item.owner_id === userData.id;
         const admin = ['admin', 'org_admin'].some((role) => myRoles?.includes(role));
         return !(owner || admin);
     }
@@ -91,7 +91,7 @@ export default function LibraryAccordion({
         <div className="header-text text-black">{title}</div>
     );
 
-    const sortByFields = ['name', 'owner', 'updation time', 'recent', 'count of molecules'];
+    const sortByFields = ['Name', 'Owner', 'Updation time', 'Recent', 'Count of molecules'];
 
     const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -102,22 +102,22 @@ export default function LibraryAccordion({
             let sortBy = 'asc';
             let object = false;
             let tempLibraries: LibraryFields[] = [];
-            if (sortKey === 'updation time') {
+            if (sortKey === 'Updation time') {
                 sortKey = 'updated_at';
                 sortBy = 'desc';
-            } else if (sortKey === 'recent') {
+            } else if (sortKey === 'Recent') {
                 sortKey = 'created_at';
                 sortBy = 'desc';
-            } else if (sortKey === 'owner') {
+            } else if (sortKey === 'Owner') {
                 sortKey = 'owner.first_name';
                 object = true;
-            } else if (sortKey === 'count of molecules') {
-                sortKey = 'molecule';
+            } else if (sortKey === 'Count of molecules') {
+                sortKey = 'libraryMolecules';
                 sortBy = 'desc';
             } else {
                 sortKey = 'name';
             }
-            if (sortKey === 'molecule') {
+            if (sortKey === 'libraryMolecules') {
                 tempLibraries = sortNumber(projectData.other_container, sortKey, sortBy);
             } else if (sortKey !== 'updated_at' && sortKey !== 'created_at') {
                 tempLibraries = sortString(projectData.other_container, sortKey, sortBy, object);
@@ -126,7 +126,7 @@ export default function LibraryAccordion({
             }
             const tempProjects = {
                 ...projectData,
-                libraries: tempLibraries,
+                other_container: tempLibraries,
             }
             setProjects(tempProjects);
         } else {
@@ -149,7 +149,7 @@ export default function LibraryAccordion({
                 );
                 const tempProjects = {
                     ...projectData,
-                    libraries: filteredLibraries,
+                    other_container: filteredLibraries,
                 }
                 setProjects(tempProjects);
             } else {
@@ -162,7 +162,7 @@ export default function LibraryAccordion({
                 );
                 const tempProjects = {
                     ...projectData,
-                    libraries: filteredLibraries,
+                    other_container: filteredLibraries,
                 }
                 setProjects(tempProjects);
             }
@@ -280,13 +280,13 @@ export default function LibraryAccordion({
                         p-2`
                     }>
                         <div className='flex items-center'>
-                            <span className={`text-normal mr-[5px]`}>
-                                sort by:
+                            <span className={`text-normal mr-[5px] w-[43px]`}>
+                                Sort by:
                             </span>
                             <select
                                 value={sortBy}
                                 className=
-                                {`w-[145px] bg-transparent cursor-pointer font-normal
+                                {`w-[122px] bg-transparent cursor-pointer font-normal
                                     text-normal text-themeBlueColor`}
                                 onChange={(e) => handleSortChange(e)}>
                                 {sortByFields.map(option => (
@@ -297,30 +297,29 @@ export default function LibraryAccordion({
                             </select>
                         </div>
                         <div className='flex'>
-                            {createEnabled && <Button
-                                text="Add Library"
-                                icon="plus"
-                                type="default"
-                                stylingMode='text'
-                                onClick={() => {
-                                    setEditPopupVisibility(false);
-                                    setCreatePopupVisibility(true);
-                                }}
-                                render={() => (
-                                    <>
-                                        <Image
-                                            src="/icons/plus.svg"
-                                            width={15}
-                                            height={13}
-                                            alt="Add"
-                                        />
-                                        <span className='pl-2 pt-[1px] text-themeBlueColor
-                                        text-normal'>
-                                            Add Library
-                                        </span>
-                                    </>
-                                )}
-                            />
+                            {createEnabled &&
+                                <Button
+                                    text="Add Library"
+                                    icon="plus"
+                                    type="default"
+                                    stylingMode='text'
+                                    onClick={() => {
+                                        setEditPopupVisibility(false);
+                                        setCreatePopupVisibility(true);
+                                    }}
+                                    elementAttr={{ class: "btn-primary ml-[5px]" }}
+                                    render={() => (
+                                        <>
+                                            <Image
+                                                src="/icons/plus-white.svg"
+                                                width={15}
+                                                height={13}
+                                                alt="Add" />
+                                            <span className='pl-[5px] text-normal'>
+                                                Add Library</span>
+                                        </>
+                                    )}
+                                />
                             }
                             <Button
                                 text="Filter"
@@ -367,6 +366,7 @@ export default function LibraryAccordion({
                             <Popup
                                 title="Add Library"
                                 visible={createPopupVisible}
+                                dragEnabled={false}
                                 contentRender={() => (
                                     <CreateLibrary
                                         formRef={formRef}
@@ -399,6 +399,7 @@ export default function LibraryAccordion({
                         editPopupVisible && (
                             <Popup
                                 title="Edit Library"
+                                dragEnabled={false}
                                 visible={editPopupVisible}
                                 contentRender={() => (
                                     <CreateLibrary
@@ -455,9 +456,10 @@ export default function LibraryAccordion({
                                 const url =
                                     `/projects/${projectId}` +
                                     `?library_id=${item.id}`;
+                                router.replace(url);
                                 setLibraryId(item.id)
-                                getLibraryData(item);
-                                router.push(url);
+                                /* getLibraryData(item); */
+
                             }}>
                             <div className={
                                 `library-name
@@ -466,7 +468,7 @@ export default function LibraryAccordion({
                                 justify-around
                                 no-border`
                             }>
-                                <div className='flex w-[55%]'>
+                                <div className='flex w-[55%] items-center'>
                                     <div className=
                                         {`flex`}>
                                         Library:
@@ -474,7 +476,7 @@ export default function LibraryAccordion({
                                     <span>{item.name}</span>
                                 </div>
                                 <div className=
-                                    {`flex justify-between w-[45%]`}>
+                                    {`flex justify-between w-[45%] items-center`}>
                                     <div>Created On:
                                         <span>{
                                             formatDatetime(item.created_at)
@@ -505,30 +507,27 @@ export default function LibraryAccordion({
                                 showCloseButton={false}
                                 showTitle={false}
                                 width={70}
-                                height={110}
+                                height={'auto'}
                             >
                                 <Position
                                     at="left bottom"
                                     my="right top"
                                     of={`#image${item.id}`}
                                     collision="fit" />
-                                <p
+                                {!editDisabled && <p
                                     className={
-                                        `mb-[20px] ${!editEnabled ?
-                                            'cursor-pointer' : ''}`
+                                        `mb-[20px] ${'cursor-pointer'}`
                                     }
                                     id={`edit-${item.id}`}
                                     onClick={() => {
-                                        if (!editEnabled) {
-                                            setExpandedMenu(-1);
-                                            setCreatePopupVisibility(false);
-                                            setSelectedLibraryIndex(idx);
-                                            setEditPopupVisibility(true);
-                                        }
+                                        setExpandedMenu(-1);
+                                        setCreatePopupVisibility(false);
+                                        setSelectedLibraryIndex(idx);
+                                        setEditPopupVisibility(true);
                                     }}
                                 >
                                     Edit
-                                </p>
+                                </p>}
                                 <p
                                     className='cursor-pointer'
                                     id={`url-${item.id}`}
@@ -549,7 +548,7 @@ export default function LibraryAccordion({
                                 justify-around 
                                 no-border`
                             }>
-                                <div className='flex w-[55%]'>
+                                <div className='flex w-[55%] items-center'>
                                     <div className=
                                         {`flex`}>
                                         Owner:
@@ -558,7 +557,7 @@ export default function LibraryAccordion({
                                         {`${item.owner.first_name} ${item.owner.last_name}`}
                                     </span>
                                 </div>
-                                <div className='w-[45%] flex justify-start'>
+                                <div className='w-[45%] flex justify-start items-center'>
                                     {item.userWhoUpdated &&
                                         <>
                                             Last Updated By:
@@ -603,37 +602,29 @@ export default function LibraryAccordion({
                                         `library-name
                                         text-normal
                                         gap-[10px]
-                                        flex mt-[8px]
-                                        flex-wrap
-                                        justify-between
+                                        flex
                                         no-border`
                                     }>
-                                    <div>Molecules:
+
+                                    <div className="my-0.5">Molecules:
                                         <span>{item.libraryMolecules.length}</span>
-                                        {Object.entries(
-                                            fetchMoleculeStatus(item))
-                                            .map(([status, count]) => {
-                                                let type = 'info';
-                                                if (status === 'Failed') {
-                                                    type = 'error';
-                                                }
-                                                else if
-                                                    (status === 'Done') {
-                                                    type = 'success';
-                                                }
+                                    </div>
+                                    <div className="gap-[10px] flex flex-wrap">
+                                        {Object.entries(fetchMoleculeStatus(item))
+                                            .map(([key, statusObject]) => {
+                                                const statusObj = statusObject as
+                                                    { count: number, className: string };
                                                 return (
-                                                    <span
-                                                        key={(StatusCode as any)[status]}
-                                                        className={
-                                                            `text-normal badge ${type}`
-                                                        }
-                                                    >
-                                                        <b
-                                                            className="pr-[5px]"
-                                                        >
-                                                            {count as number}
-                                                        </b>
-                                                        {status}
+                                                    <span key={key} className={
+                                                        `text-normal 
+                                                        badge 
+                                                        ${statusObj.className} 
+                                                        float-left`
+                                                    }>
+                                                        <b className="pr-[5px]">
+                                                            {statusObj.count}
+                                                        </b>&nbsp;
+                                                        {(MoleculeStatusLabel as any)[key]}
                                                     </span>
                                                 )
                                             })}
@@ -668,14 +659,14 @@ export default function LibraryAccordion({
                                         }
                                     }
                                     onClick={() => {
+                                        setExpanded(false);
                                         const url =
                                             `/projects/${projectId}` +
                                             `?library_id=${item.id}`;
-
                                         setLibraryId(item.id)
-                                        getLibraryData(item);
-                                        setExpanded(false);
                                         router.push(url);
+
+                                        /* getLibraryData(item); */
                                     }}
                                 />
                             </div>

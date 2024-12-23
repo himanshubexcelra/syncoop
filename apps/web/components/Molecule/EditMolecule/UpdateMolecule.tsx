@@ -18,8 +18,8 @@ type UpdateMoleculeProps = {
     saveMoleculeCall: (moleculeDetails: SaveMoleculeParams, inPopup: boolean) => void;
     editMolecules: MoleculeType[];
     editedMolecules: MoleculeType[];
-    onSmilesRejected: (smiles: RejectedSmiles[]) => void
-
+    onSmilesRejected: (smiles: RejectedSmiles[]) => void;
+    libraryId: number;
 }
 
 export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
@@ -31,7 +31,8 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
         onDiscardSubmit,
         saveMoleculeCall,
         onSmilesRejected,
-        editedMolecules
+        editedMolecules,
+        libraryId
     } = props;
     const [saveButtonText, setSaveButtonText] = useState('Add as New Molecule');
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
@@ -55,7 +56,8 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
         setSubmitText('');
         const formData = new FormData();
         formData.set('molecules', JSON.stringify(molecules));
-        formData.set('updatedBy', userData?.id?.toString())
+        formData.set('updatedBy', userData?.id?.toString());
+        formData.set('libraryId', libraryId?.toString());
         await updateMoleculeSmiles(formData).then(async (result) => {
             if (result.detail) {
                 const toastId = toast.error(result.error);
@@ -69,6 +71,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                     } else {
                         setViewEditMolecule(false);
                         callLibraryId();
+                        setSubmitLoadIndicatorVisible(false);
                         setSubmitText('Yes');
                         const message = Messages.UPDATE_MOLECULE_SUCCESS;
                         const toastId = toast.success(message);
@@ -76,6 +79,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                         toast.remove(toastId);
                     }
                 } else if (result) {
+                    setSubmitLoadIndicatorVisible(false);
                     setSubmitText('Yes');
                     const rejectedSmile = result.rejected_smiles[0]
                     const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
@@ -96,7 +100,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
         setLoader: setSaveLoadIndicatorVisible,
         setButtonText: setSaveButtonText,
     }
-
+    const isLoading = submitLoadIndicatorVisible || loadIndicatorVisibleSave;
     return (
         <><div className="flex justify-end">
             <Image
@@ -111,7 +115,10 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                 Update Molecule with Changes
             </div>
             <div className="flex justify-start gap-2 mt-5">
-                <button className='primary-button'
+                <button className={submitLoadIndicatorVisible
+                    ? 'disableButton w-[40px]'
+                    : 'primary-button'}
+                    disabled={isLoading}
                     onClick={() => updateSubmit()}>
                     <LoadIndicator className={
                         `button-indicator ${styles.white}`
@@ -120,7 +127,10 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                         height={20}
                         width={20} />{submitText}</button>
                 {editedMolecules.length === 1 && <button
-                    className='secondary-button'
+                    className={loadIndicatorVisibleSave
+                        ? 'disableButton w-[151px]'
+                        : "secondary-button"}
+                    disabled={isLoading}
                     onClick={() => saveMoleculeCall(moleculeDetails, true)}
                 > <LoadIndicator className={
                     `button-indicator ${styles.white}`
@@ -133,6 +143,7 @@ export default function UpdateMoleculePopup(props: UpdateMoleculeProps) {
                 <button
                     className='reject-button'
                     onClick={reset}
+                    disabled={isLoading}
                 >
                     No, discard the changes
                 </button>

@@ -15,7 +15,6 @@ export async function GET(request: Request) {
         const user_id = searchParams.get('id');
         const orgId = searchParams.get('orgId');
         const orgType = searchParams.get('orgType');
-        const loggedInUser = searchParams.get('loggedInUser')
         const query: any = {};
 
         if (joins && joins.length) {
@@ -67,14 +66,7 @@ export async function GET(request: Request) {
                 }
             };
         }
-        if (loggedInUser) {
-            query.where = {
-                ...query.where,
-                id: {
-                    not: Number(loggedInUser),
-                },
-            }
-        }
+
         const users = await prisma.users.findMany(query);
 
         return new Response(json(users), {

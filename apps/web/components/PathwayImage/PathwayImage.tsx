@@ -11,6 +11,18 @@ type PathwayImageProps = {
     style: object,
     width?: number,
     height?: number,
+    currentReaction?: number,
+    updatedAt?: number,
+    updatedKey?: string,
+}
+
+type ElementType = {
+    nodes: NodeType[],
+    width?: number,
+    height?: number,
+    currentReaction?: number,
+    updatedKey?: string,
+    updatedAt?: number,
 }
 
 export default function PathwayImage({
@@ -19,19 +31,27 @@ export default function PathwayImage({
     children,
     style,
     width = window?.innerWidth,
-    height = window?.innerHeight
+    height = window?.innerHeight,
+    currentReaction,
+    updatedAt,
+    updatedKey
 }: PathwayImageProps) {
-
     useEffect(() => {
         defineCustomElements(window);
-    }, []);
+    }, [updatedAt]);
 
     useEffect(() => {
         const element = document.querySelector("#" + pathwayId);
-
-        // @ts-expect-error JSX element not proper typed
-        element.nodes = nodes;
-    }, []);
+        if (element !== null) {
+            const typedElement = element as unknown as ElementType;
+            typedElement.nodes = nodes;
+            typedElement.width = width;
+            typedElement.height = height;
+            typedElement.currentReaction = currentReaction;
+            typedElement.updatedAt = updatedAt;
+            typedElement.updatedKey = updatedKey;
+        }
+    }, [updatedAt, currentReaction, updatedKey]);
 
     return (
         <div style={style}>
@@ -39,12 +59,15 @@ export default function PathwayImage({
                 // @ts-expect-error JSX element not recognized
                 <reaction-pathway
                     id={pathwayId}
-                    nodes="display-score"
+                    key={pathwayId}
+                    nodes={JSON.stringify(nodes)}
                     width={width}
                     height={height}
+                    currentReaction={currentReaction}
+                    updatedKey={updatedKey}
                     display-reaction-reference="true"
                     display-reaction-name="true"
-                    display-reaction-condition="false"
+                    display-reaction-condition="true"
                     display-honeycomb="true" />
             }
             {children}

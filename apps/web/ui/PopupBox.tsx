@@ -34,7 +34,7 @@ export function PopupBox({ isOpen, onItemSelected, onClose, items }: PopupBoxPro
                 <ul className={styles.popupBox}>
                     {items.map((item) => (
                         <li
-                            className="w-full px-4 py-2 text-center text-neutral-999 font-lato text-sm normal-case font-normal leading-normal hover:bg-greyHover cursor-pointer"
+                            className="w-full px-4 py-2 text-center text-neutral-999 font-lato text-sm normal-case font-normal leading-normal hover:bg-grayHover cursor-pointer"
                             onClick={() => onItemSelected(item)}
                             key={item.value}
                         >

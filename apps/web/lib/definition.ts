@@ -1,4 +1,5 @@
 
+import { ColumnHeaderFilter } from "devextreme/common/grids";
 import { z } from "zod";
 
 export const LoginFormSchema = z.object({
@@ -116,7 +117,7 @@ export interface MoleculeStatus {
   name: string;
   count: string;
   type: string;
-  status: StatusCode;
+  status: MoleculeStatusLabel;
 }
 
 export interface MoleculeType {
@@ -134,29 +135,27 @@ export interface MoleculeType {
   "project / library": string;
   "organization / order": string;
   status: number;
+  status_name: string;
+  favourite_id: number;
+  favourite: boolean;
   updated_at: Date;
   updated_by: number;
-  user_favourite_molecule?: MoleculeFavourite[];
   yield?: number;
   anlayse?: number;
   herg?: number;
   caco2?: number;
   clint?: number;
   hepG2cytox?: number;
-  solubility?: number;
-}
-
-export interface MoleculeFavourite {
-  user_id: number;
-  molecule_id: number;
-  id: number;
+  adme_data: ColorSchemeFormat[],
+  reaction_data: any;
+  functional_assays: ColorSchemeFormat[],
 }
 
 export type addToFavouritesProps = {
   molecule_id: number,
   user_id: number,
-  existingFavourite?: MoleculeFavourite,
   favourite: boolean,
+  favourite_id: number
 }
 
 export interface LibraryFields {
@@ -171,7 +170,7 @@ export interface LibraryFields {
   userWhoUpdated?: userType;
   updated_at?: Date;
   owner: User;
-  ownerId: number;
+  owner_id: number;
   created_at: Date;
   status?: MoleculeStatus[];
   libraryMolecules: [];
@@ -198,7 +197,7 @@ export interface ProjectDataFields {
   updated_at: Date;
   user_id?: number;
   owner: User;
-  ownerId: number;
+  owner_id: number;
   orgUser?: OrgUser;
   other_container?: LibraryFields[];
   metadata: {
@@ -293,7 +292,8 @@ export interface ModuleTableProps {
 
 export interface Status {
   text: string;
-  number: string;
+  code: number | number[];
+  number: number;
   background: string;
   textColor: string;
   image?: string | undefined;
@@ -335,6 +335,7 @@ interface TabProps {
   temperatureList?: number[];
   onSolventChange?: (solvent: string) => void;
   onTemperatureChange?: (temperature: number) => void;
+  resetReaction?: boolean;
 }
 
 export interface TabDetail {
@@ -349,18 +350,19 @@ export interface OrgUser {
   name: string;
 };
 
-export enum StatusCode {
-  Ready = 'Ready',
+export enum MoleculeStatusLabel {
   New = 'New',
   NewInCart = 'New + In Cart',
+  Ordered = 'Ordered',
+  PreProcessing = 'Pre Processing',
+  InRetroQueue = 'In Retro Queue',
+  Ready = 'Ready',
+  InReview = 'In Review',
+  Validated = 'Validated',
+  ValidatedInCart = 'Validated + In Cart',
   InProgress = 'In Progress',
   Done = 'Done',
-  InRetroQueue = 'In-retro Queue',
-  InReview = 'In-review',
-  Validated = 'Validated',
-  ValidatedInCart = 'Validated + In cart',
-  Ordered = 'Ordered',
-  FailedRetro = 'Failed'
+  Failed = 'Failed'
 }
 
 export enum MoleculeStatusCode {
@@ -368,28 +370,27 @@ export enum MoleculeStatusCode {
   NewInCart = 2,
   Ordered = 3,
   InRetroQueue = 4,
-  FailedRetro = 5,
   Ready = 6,
   InReview = 7,
   Validated = 8,
   ValidatedInCart = 9,
   InProgress = 10,
-  Done = 11
+  Done = 11,
+  Failed = 5
 }
 
-export const MoleculeStatusLabels: Record<MoleculeStatusCode, string> = {
-  [MoleculeStatusCode.New]: StatusCode.New,
-  [MoleculeStatusCode.Ordered]: StatusCode.Ordered,
-  [MoleculeStatusCode.NewInCart]: StatusCode.NewInCart,
-  [MoleculeStatusCode.InRetroQueue]: StatusCode.InRetroQueue,
-  [MoleculeStatusCode.Ready]: StatusCode.Ready,
-  [MoleculeStatusCode.FailedRetro]: StatusCode.FailedRetro,
-  [MoleculeStatusCode.InReview]: StatusCode.InReview,
-  [MoleculeStatusCode.Validated]: StatusCode.Validated,
-  [MoleculeStatusCode.ValidatedInCart]: StatusCode.ValidatedInCart,
-  [MoleculeStatusCode.InProgress]: StatusCode.InProgress,
-  [MoleculeStatusCode.Done]: StatusCode.Done
-};
+
+export enum MoleculeOrderStatusLabel {
+  InProgress = 'In Progress',
+  Completed = 'Completed',
+  Failed = 'Failed',
+}
+
+export enum MoleculeOrderStatusCode {
+  InProgress = 1,
+  Completed = 2,
+  Failed = 3
+}
 
 export interface UserCountModel {
   internalUsers: number;
@@ -422,23 +423,7 @@ export interface LibraryCreateFields {
   fetchLibraries: FetchUserType,
   projectData: ProjectDataFields,
   userData: UserData,
-  library_idx?: number,
-}
-
-export interface LibraryDataNode {
-  id: string;
-  type?: string;
-  smiles?: string;
-  parentId?: string;
-  score?: string | number | null;
-  name?: string;
-  condition?: string;
-  reactionCount?: number;
-  doi?: string;
-  isRegulated?: boolean;
-  isProtected?: boolean;
-  isInInventory?: boolean;
-  publishedMoleculeCount?: number;
+  library_idx: number,
 }
 
 export interface ValidateSmileRequest {
@@ -468,12 +453,11 @@ export interface UploadMoleculeSmilesResponse {
 export interface OrderType {
   order_id: number;
   order_name: string;
-  molecule_id: number;
-  library_id: number;
-  project_id: number;
-  batch_detail: string;
+  ordered_molecules: number[];
   organization_id: number;
   created_by: number;
+  status: number;
+  reactionStatus: number,
 }
 
 export interface DeleteMoleculeCart {
@@ -486,15 +470,19 @@ export interface DeleteMoleculeCart {
 }
 
 export interface MoleculeOrderParams {
-  project_id?: number;
-  library_id?: number;
   organization_id?: number;
   userWhoCreated?: number;
-  created_by?: number
+  created_by?: number,
+  sample_molecule_id: number
 }
 
+export type ColorSchemeFormat = {
+  results: { value: string, duplicate: number }[],
+  adme_test_name: string
+}
 export interface MoleculeOrder {
-  id: number;
+  id: string;
+  molecule_order_id?: number;
   bookmark?: boolean;
   order_id: number;
   order_name?: string;
@@ -503,15 +491,23 @@ export interface MoleculeOrder {
   project_id: number;
   organization_id: number;
   molecularWeight?: number;
+  pathway_instance_id?: number;
   organizationName?: string;
-  molecular_weight?: string;
+  molecular_weight: number;
   source_molecule_name?: string;
   smiles_string: string;
   status: number;
-  yield?: number;
-  anlayse?: number;
-  herg?: number;
-  caco2?: number;
+  molecule_status: MoleculeStatusLabel;
+  order_status: string;
+  adme_data: ColorSchemeFormat[],
+  functional_assays: object[],
+  reaction_data: any,
+  organizationMetadata: {
+    functionalAssay1: string;
+    functionalAssay2: string;
+    functionalAssay3: string;
+    functionalAssay4: string;
+  } | null;
 }
 
 export enum OrganizationType {
@@ -568,8 +564,8 @@ export interface CartDetail {
   moleculeName: string;
   created_by: number;
   smiles_string: string;
-  "project / library": string;
-  "organization / order": string;
+  "Project / Library": string;
+  "Organization / Order": string;
 }
 export interface OrderDetail {
   order_id: number;
@@ -582,8 +578,8 @@ export interface OrderDetail {
 }
 
 
-export interface ColumnConfig<T> {
-  dataField: keyof T;
+export interface ColumnConfig {
+  dataField?: string;
   title?: string | React.ReactNode;
   width?: number;
   minWidth?: number;
@@ -592,7 +588,11 @@ export interface ColumnConfig<T> {
   alignment?: "center" | "left" | "right" | undefined,
   allowSorting?: boolean,
   allowHeaderFiltering?: boolean,
-  customRender?: (data: T) => React.ReactNode;
+  customRender?: (data: any) => React.ReactNode;
+  headerCellRenderer?: () => React.ReactNode;
+  headerFilter?: ColumnHeaderFilter;
+  cssClass?: string;
+  defaultSortOrder?: "asc" | "desc" | undefined
 }
 
 export enum StatusTypes {
@@ -667,7 +667,16 @@ export type NodeType = {
   name?: string,
   condition?: string,
   smiles?: string,
-  reactionIndex?: number,
+  reactionIndex: number[],
+  reactionColor?: string,
+  score?: string | number | null;
+  reactionCount?: number;
+  doi?: string;
+  isRegulated?: boolean;
+  isProtected?: boolean;
+  isInInventory?: boolean;
+  publishedMoleculeCount?: number;
+  pathway_instance_id?: number;
 }
 
 
@@ -680,7 +689,7 @@ export type ReactionCompoundType = {
   id: number,
   type?: string,
   name?: string,
-  compound_label?: number,
+  compound_label?: string,
   sNo?: number,
   reaction_name?: string,
   product_type?: string,
@@ -692,35 +701,51 @@ export type ReactionCompoundType = {
   inventory_id: number,
   dispense_time: number;
   compound_id?: string;
+  related_to?: number;
+  inventory_url?: string;
 }
 
 export type ReactionDetailType = {
   id: string,
   type: string,
   name: string,
+  reaction_template?: string,
+  pathway_instance_id?: number,
+  reaction_sequence?: number,
+  confidence?: number,
+  reaction_smiles_string?: string,
   reactionCount?: number,
   condition?: string,
+  status?: number,
   temperature?: number,
   solvent?: string,
   reaction_name: string,
   product_type?: string,
   smiles: string,
+  created_by?: number,
   product_smiles_string: string,
   reaction_compound: ReactionCompoundType[],
-  reaction_template: string,
+  reaction_template_master: { name: string }
 }
 
 export type PathwayType = {
   id: string,
-  parentId: string,
-  type: "reaction" | "molecule",
-  name: string,
-  score: number,
+  molecule_id?: number,
+  parent_id: number,
+  pathway_instance_id?: number,
+  parentId?: string,
+  pathway_score?: number,
+  selected?: boolean,
+  created_by?: number,
+  updated_by?: number,
+  type?: "reaction" | "molecule",
+  name?: string,
+  score?: number,
   doi?: string,
   reactionCount?: number,
   condition?: string,
   reaction_detail: ReactionDetailType[],
-  dex: number,
+  dex?: number,
   pathway_index: number,
 }
 
@@ -741,7 +766,6 @@ export enum ActionStatus {
   Disabled = 'Disabled'
 }
 export type CreateLabJobOrder = {
-  id: number,
   molecule_id: number,
   library_id: number,
   organization_id: number,
@@ -752,20 +776,39 @@ export type CreateLabJobOrder = {
 export type SaveLabJobOrder = {
   molecule_id: number,
   pathway_id: number,
-  pathway_instance_id: number,
   product_smiles_string: string,
   product_molecular_weight: number,
   no_of_steps: number,
   functional_bioassays: string,
+  // reactions: ReactionLabJobOrder[] | [],
   reactions: string,
-  created_by: number
+  created_by: number,
+  status: number,
+  reactionStatus: number,
 }
-export type MoleculeLabJob = {
-  id: number,
-  molecule_id: number,
-  library_id: number,
-  organization_id: number,
-  project_id: number,
-  user_id: number,
-  order_id: number
+
+export type SelectedPathwayInstance = {
+  pathway_instance_id: number;
+  pathway_index: number;
+  pathway_score: number;
+  selected: boolean;
+  created_by: number;
+  id: number;
+}
+export interface CellData {
+  smiles_string: string;
+  source_molecule_name: string;
+}
+
+export type ReactionLabJobOrder = {
+  Solvent: string,
+  "Step No": number,
+  "Product MW": number,
+  "Product 1 SMILES": string,
+  [key: string]: string | number,
+}
+
+export enum ReactionButtonNames {
+  VALIDATE = 0,
+  SAVE = 1
 }

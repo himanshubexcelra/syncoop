@@ -156,6 +156,18 @@ export async function GET(request: Request) {
         }
       }
     }
+    if (count && count.includes('molecules')) {
+      query.include = {
+        ...query.include,
+        _count: {
+          select: {
+            ...query.include._count?.select,  // Keep the existing count of projects
+            organizationMolecules: true,  // Count of molecules for each organization
+          },
+        },
+        organizationMolecules: true, // Include the actual molecules if needed
+      };
+    }
 
     if (orgId) {
       // If an ID is present, fetch the specific organization with users and projects
@@ -237,7 +249,7 @@ export async function POST(request: Request) {
       });
     }
     try {
-      const emddORG = await prisma.container.findUnique({
+      const emddORG = await prisma.container.findMany({
         where: {
           type: 'O',
           name: 'EMD DD'
@@ -345,42 +357,50 @@ export async function POST(request: Request) {
           }
         ]
       }
-      // Step 2: Create the organization and link the admin user
-      const organization = await prisma.container.create({
-        data: {
-          name,
-          is_active: true,
-          type: "CO",
-          parent_id: emddORG?.id,
-          owner_id: adminUser.id, // Link the user as the org admin
-          created_by,
-          created_at: getUTCTime(new Date().toISOString()),
-          org_product_module: {
-            create: clientOrgModulePurchased
-          }
-        },
-      });
+      if (emddORG.length) {
+        // Step 2: Create the organization and link the admin user
+        const organization = await prisma.container.create({
+          data: {
+            name,
+            is_active: true,
+            type: "CO",
+            parent_id: emddORG[0].id,
+            owner_id: adminUser.id, // Link the user as the org admin
+            created_by,
+            created_at: getUTCTime(new Date().toISOString()),
+            org_product_module: {
+              create: clientOrgModulePurchased
+            }
+          },
+        });
 
-      // Step 3: Link the admin user as an organization user
-      await prisma.users.update({
-        where: {
-          id: adminUser.id,
-        },
-        data: {
-          organization_id: organization.id, // Associate user with the organization
-        },
-      });
-      return new Response(json(organization), {
+        // Step 3: Link the admin user as an organization user
+        await prisma.users.update({
+          where: {
+            id: adminUser.id,
+          },
+          data: {
+            organization_id: organization.id, // Associate user with the organization
+          },
+        });
+        return new Response(json(organization), {
+          headers: { "Content-Type": "application/json" },
+          status: SUCCESS,
+        });
+      }
+    } catch (error: any) {
+      return new Response(JSON.stringify({ error: error.message }), {
         headers: { "Content-Type": "application/json" },
-        status: SUCCESS,
+        status: BAD_REQUEST, // Adjust status code as needed
       });
-    } catch (error) {
-      console.error(error);
     } finally {
       await prisma.$disconnect();
     }
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { "Content-Type": "application/json" },
+      status: BAD_REQUEST, // Adjust status code as needed
+    });
   }
 }
 
@@ -396,6 +416,7 @@ export async function PUT(request: Request) {
         owner_id: primaryContactId,
         metadata,
         is_active,
+        updated_at: getUTCTime(new Date().toISOString()),
       },
       include: {
         owner: {

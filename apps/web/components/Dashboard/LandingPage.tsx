@@ -107,12 +107,6 @@ export default function LandingPage({
         setPopupPosition(popupPositionValue());
     }, []);
 
-    const renderTitleField = () => {
-        return <p className='form-title'>{`Edit ${organizationData?.name}`}</p>;
-    };
-
-
-
     return (
         <>
             <div className="space-y-2 mb-2">
@@ -171,7 +165,7 @@ export default function LandingPage({
                 </div>
                 }
                 <Popup
-                    titleRender={renderTitleField}
+                    title={`Edit ${organizationData?.name}`}
                     showTitle={true}
                     visible={editPopup}
                     showCloseButton={true}
@@ -184,11 +178,13 @@ export default function LandingPage({
                             fetchOrganizations={fetchOrganizationData}
                             myRoles={myRoles}
                             loggedInUser={userData.id}
+                            editPopup={editPopup}
                         />
                     )}
                     width={477}
                     height="100%"
                     position={popupPosition}
+                    dragEnabled={false}
                     onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}
                     wrapperAttr={{ class: "create-popup" }}
                 />

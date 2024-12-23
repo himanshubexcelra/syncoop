@@ -24,7 +24,7 @@ import { getProjectBreadCrumbs } from './breadCrumbs';
 type ProjectDetailsProps = {
     userData: UserData,
     actionsEnabled: string[]
-    organizationId: string,
+    organizationId: number,
 }
 
 export default function ProjectDetails({
@@ -46,6 +46,7 @@ export default function ProjectDetails({
     const createEnabled = actionsEnabled.includes('create_project')
     const breadcrumbs: BreadCrumbsObj[] = getProjectBreadCrumbs(
         organization,
+        userData?.myRoles,
         Number(organizationId),
     )
     useEffect(() => {
@@ -61,23 +62,32 @@ export default function ProjectDetails({
     // Fetching projects under organization OPT: 3
     const fetchOrganizations = async () => {
         let organization;
+        let projectList;
         if (myRoles?.includes("admin")) {
-            organization = await getOrganization({
-                withRelation: ['orgUser', 'user_role', 'projects']
-            });
-            const projectList = organization.map(
-                (org: OrganizationDataFields) => org.other_container).flat() || [];
+            if (organizationId) {
+                organization = await getOrganizationById({
+                    withRelation: ['orgUser', 'user_role', 'projects'],
+                    id: organizationId
+                });
+                projectList = organization?.other_container;
+                setOrganization([organization]);
+            } else {
+                organization = await getOrganization({
+                    withRelation: ['orgUser', 'user_role', 'projects']
+                });
+                projectList = organization.map(
+                    (org: OrganizationDataFields) => org.other_container).flat();
+                setOrganization(organization);
+            }
             setFilteredData(projectList);
             setOrgProjects(projectList);
             setUsers([]);
-            setOrganization(organization);
+
         } else {
             const tempOrganization = [];
             organization = await getOrganizationById({
                 withRelation: ['orgUser', 'user_role', 'projects'],
-                id: organizationId
-                    ? Number(organizationId)
-                    : userData?.organization_id
+                id: userData?.organization_id
             });
             setFilteredData(organization?.other_container);
             setOrgProjects(organization?.other_container);
@@ -138,6 +148,11 @@ export default function ProjectDetails({
         }
     }
 
+    let projectIcon = "/icons/project-logo.svg";
+    if (myRoles.includes("library_manager")) {
+        projectIcon = "/icons/home-icon.svg";
+    }
+
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbs} />
@@ -149,13 +164,14 @@ export default function ProjectDetails({
                         <div className="flex justify-between projects">
                             <main className="main padding-sub-heading">
                                 <Image
-                                    src="/icons/project-logo.svg"
+                                    src={projectIcon}
                                     width={33}
                                     height={30}
                                     alt="Project logo" />
-                                {userData.orgUser.type === OrganizationType.Internal ?
+                                {userData.orgUser.type === OrganizationType.Internal
+                                    || myRoles.includes('org_admin') ?
                                     <span>Projects</span>
-                                    : <span>{`Projects: ${userData?.orgUser?.name}`}</span>}
+                                    : <span>{`Home: ${userData?.orgUser?.name}`}</span>}
                             </main>
                             <div className='flex'>
                                 {createEnabled && <Button

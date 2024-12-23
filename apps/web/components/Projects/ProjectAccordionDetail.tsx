@@ -6,18 +6,22 @@ import toast from "react-hot-toast";
 import { Popup, Position } from "devextreme-react/popup";
 import { FormRef } from "devextreme-react/cjs/form";
 import { useRouter } from 'next/navigation';
-import { fetchMoleculeStatus, formatDetailedDate, popupPositionValue } from "@/utils/helpers";
+import {
+    fetchMoleculeStatus, formatDetailedDate, popupPositionValue,
+    formatDatetime
+} from "@/utils/helpers";
 import {
     FetchUserType,
+    MoleculeStatusLabel,
     OrganizationDataFields,
     ProjectDataFields,
-    StatusCode,
     User,
     UserData
 } from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { Messages } from "@/utils/message";
 import TextWithToggle from '@/ui/TextWithToggle';
+import { LoadIndicator } from 'devextreme-react';
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -50,6 +54,8 @@ export default function ProjectAccordionDetail({
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
     const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
+    const [loader, setLoader] = useState(false)
+    const [openButton, setOpenButton] = useState('Open')
     // Project's molecule count count OPT: 1
     const moleculeCount = data.other_container?.reduce((count, library) => {
         // Add the count of molecules in each library
@@ -64,7 +70,7 @@ export default function ProjectAccordionDetail({
 
     useEffect(() => {
         const sharedUser = data.sharedUsers?.find(u => u.user_id === userData.id);
-        const owner = data.ownerId === userData.id;
+        const owner = data.owner_id === userData.id;
         const admin = ['admin', 'org_admin'].some(
             (role) => myRoles?.includes(role));
 
@@ -91,9 +97,17 @@ export default function ProjectAccordionDetail({
         if (type === 'library') setIsExpanded(expandedDescription);
         else setProjectExpanded(expandedDescription);
     }
-
+    const openProject = () => {
+        setLoader(true)
+        setOpenButton('')
+        if (clickedOrg) {
+            router.push(`/organization/${clickedOrg}/projects/${data.id}`);
+        } else {
+            router.push(`/projects/${data.id}`);
+        }
+    }
     return (
-        <div className="accordion-content">
+        <div className="accordion-content" >
             <div className='flex justify-between'>
                 <div>
                     <div className='project-target flex'>
@@ -105,13 +119,22 @@ export default function ProjectAccordionDetail({
                 </div>
                 <div className='flex gap-[8px]'>
                     <button
-                        className='primary-button accordion-button'
-                        onClick={() => clickedOrg ?
-                            router.push(`/organization/${clickedOrg}/projects/${data.id}`)
-                            : router.push(`/projects/${data.id}`)}
+                        className={loader
+                            ? 'disableButton w-[57px] h-[37px]'
+                            : 'primary-button accordion-button'
+                        }
+                        onClick={openProject}
+                        disabled={loader}
                     >
-                        Open
+                        <LoadIndicator className={
+                            `button-indicator`
+                        }
+                            visible={loader}
+                            height={20}
+                            width={20} />
+                        {openButton}
                     </button>
+
                     {editEnabled &&
                         <button
                             className='secondary-button accordion-button'
@@ -155,7 +178,7 @@ export default function ProjectAccordionDetail({
                 }
             </div>
             <div className='row-details'>
-                <div className='flex justify-between'>
+                <div className='flex justify-between gap-[16px]'>
                     <div>
                         <Image
                             src="/icons/polygon.svg"
@@ -172,17 +195,20 @@ export default function ProjectAccordionDetail({
                         {moleculeCount > 0 && (
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
                                 {Object.entries(fetchMoleculeStatus(combinedLibrary))
-                                    .map(([status, count]) => {
-                                        let type = 'info';
-                                        if (status === 'Failed') {
-                                            type = 'error';
-                                        } else if (status === 'Done') {
-                                            type = 'success';
-                                        }
+                                    .map(([key, statusObject]) => {
+                                        const statusObj =
+                                            statusObject as { count: number, className: string };
                                         return (
-                                            <span key={status} className={`badge ${type}`}>
-                                                <b>{count as number}</b>
-                                                {(StatusCode as any)[status]}
+                                            <span key={key} className={
+                                                `text-normal 
+                                                badge 
+                                                ${statusObj.className} 
+                                                float-left`
+                                            }>
+                                                <b className="pr-[5px]">
+                                                    {statusObj.count}
+                                                </b>&nbsp;
+                                                {(MoleculeStatusLabel as any)[key]}
                                             </span>
                                         )
                                     })}
@@ -265,6 +291,7 @@ export default function ProjectAccordionDetail({
                     />
                     Last Updated by: <span>
                         {data.userWhoUpdated?.first_name} {data.userWhoUpdated?.last_name}
+                        {data?.updated_at ? ` at ${formatDatetime(data.updated_at)}` : ''}
                     </span>
                 </div>
             </div>
@@ -339,17 +366,20 @@ export default function ProjectAccordionDetail({
                             </div>
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
                                 {Object.entries(fetchMoleculeStatus(item))
-                                    .map(([status, count]) => {
-                                        let type = 'info';
-                                        if (status === 'Failed') {
-                                            type = 'error';
-                                        } else if (status === 'Done') {
-                                            type = 'success';
-                                        }
+                                    .map(([key, statusObject]) => {
+                                        const statusObj =
+                                            statusObject as { count: number, className: string };
                                         return (
-                                            <span key={status} className={`badge ${type}`}>
-                                                <b>{count as number}</b>
-                                                {(StatusCode as any)[status]}
+                                            <span key={key} className={
+                                                `text-normal 
+                                                badge 
+                                                ${statusObj.className} 
+                                                float-left`
+                                            }>
+                                                <b className="pr-[5px]">
+                                                    {statusObj.count}
+                                                </b>&nbsp;
+                                                {(MoleculeStatusLabel as any)[key]}
                                             </span>
                                         )
                                     })}
@@ -389,6 +419,7 @@ export default function ProjectAccordionDetail({
                         hideOnOutsideClick={true}
                         height="100%"
                         position={popupPosition}
+                        dragEnabled={false}
                         onHiding={() => {
                             formRef.current?.instance().reset();
                             setCreatePopupVisibility(false);

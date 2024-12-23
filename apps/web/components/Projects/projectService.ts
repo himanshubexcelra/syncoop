@@ -30,9 +30,9 @@ export async function getProjects({
     const data = await response.json();
     return data;
 }
-export async function getProjectsCountById(orgId?: number) {
+export async function getOverviewCounts(orgId?: number) {
     try {
-        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/overview`);
         if (orgId) {
             url.searchParams.append('orgId', String(orgId));
         }

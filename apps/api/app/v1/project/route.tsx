@@ -58,7 +58,12 @@ export async function GET(request: Request) {
                         },
                         where: {
                             type: 'L'
-                        }
+                        },
+                        orderBy: [
+                            {
+                                created_at: 'desc'
+                            }
+                        ]
                     }
                 }
             }
@@ -164,12 +169,15 @@ export async function POST(request: Request) {
 
     try {
         if (name && organization_id) {
-            const existingProject = await prisma.container.findUnique({
+            const existingProject = await prisma.container.findMany({
                 where: {
                     name,
+                    type: 'P',
+                    parent_id: organization_id
                 }
             });
-            if (existingProject) {
+            
+            if (existingProject.length) {
                 return new Response(JSON.stringify(PROJECT_EXISTS), {
                     headers: { "Content-Type": "application/json" },
                     status: INTERNAL_SERVER_ERROR,
@@ -284,13 +292,19 @@ export async function PUT(request: Request) {
         existingProject = organization?.projects.filter(project => project.id === id)[0]; */
 
         if (name && organization_id) {
-            const existingProject = await prisma.container.findUnique({
+            const existingProject = await prisma.container.findMany({
                 where: {
-                    parent_id: Number(organization_id),
-                    name
+                    AND: [
+                        { id: { not: Number(id) } },
+                        {
+                            name: name,
+                            type: 'P',
+                            parent_id: organization_id
+                        }
+                    ]
                 }
             });
-            if (existingProject) {
+            if (existingProject.length) {
                 return new Response(json(PROJECT_EXISTS), {
                     headers: { "Content-Type": "application/json" },
                     status: INTERNAL_SERVER_ERROR,

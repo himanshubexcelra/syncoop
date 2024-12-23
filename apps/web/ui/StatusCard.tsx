@@ -4,25 +4,24 @@ import StatusMark from "./StatusMark";
 import Image from "next/image";
 
 type StatusCardProps = {
+    id: number;
     stat: Status;
-    key?: number;
     hideCount?: boolean;
     customStyles?: boolean;
 };
 
 export default function StatusCard({
+    id,
     stat,
-    key,
     hideCount = false,
     customStyles = false }
-    :
-    StatusCardProps) {
+    : StatusCardProps) {
     return (
-        <div key={key}
+        <div key={id}
             className={`
                 ${stat?.background} p-2 flex flex-col 
-                justify-center items-center 
-                ${customStyles ? 'border border-neutral-200 w-[120px] h-[83px]' : ''}`}
+                justify-center items-center status-mark
+                ${customStyles ? 'border border-neutral-200 w-[140px] h-[83px]' : ''}`}
         >
             {hideCount &&
                 <div className="font-lato text-2xl font-normal">{stat?.number}</div>}
@@ -32,7 +31,7 @@ export default function StatusCard({
                 <div className={`font-lato text-xs font-normal leading-normal ${stat?.textColor}`}>
                     {stat?.text}</div>
                 <div className="flex gap-[3px]">
-                    <StatusMark status={stat?.text} />
+                    <StatusMark key={id} selectedStatus={stat} />
                 </div>
             </div>
         </div>

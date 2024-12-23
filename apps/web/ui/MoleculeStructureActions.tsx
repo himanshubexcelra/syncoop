@@ -18,6 +18,7 @@ type MoleculeStructureActionsProps = {
     enableEdit?: boolean;
     enableDelete?: boolean;
     enableZoomAction?: boolean;
+    structureName?: string;
 }
 
 const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
@@ -28,11 +29,12 @@ const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
     onDeleteClick,
     enableEdit = false,
     enableDelete = false,
-    enableZoomAction = true
+    enableZoomAction = true,
+    structureName = "",
 }) => {
     return (
         <div className="flex justify-center items-center">
-            <MoleculeStructure height={80} width={80}
+            <MoleculeStructure height={80} width={80} structureName={structureName}
                 svgMode={true} structure={smilesString} id={`smiles-${molecule_id}`} />
             {enableZoomAction && <Button onClick={onZoomClick} render={() =>
                 <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />}

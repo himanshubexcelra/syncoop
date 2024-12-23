@@ -14,6 +14,7 @@ import { delay } from '@/utils/helpers';
 import { LoadIndicator, Popup } from 'devextreme-react';
 import { DELAY } from '@/utils/constants';
 import RejectedDialog from '../AddMolecule/RejectedDialog';
+import { getDeAromatizeSmile } from '@/components/KetcherTool/service';
 
 const MoleculeStructure = dynamic(
     () => import("@/utils/MoleculeStructure"),
@@ -47,7 +48,7 @@ const EditMolecule = ({
     const [resetVisible, setResetVisible] = useState(false);
     const [updateVisible, setUpdateVisible] = useState(false)
     const [moleculeName, setMoleculeName] = useState<string>('')
-    const [editedMolecules, setEditedMolecules] = useState<any[]>([])
+    const [editedMolecules, setEditedMolecules] = useState<any[]>(editMolecules)
     const [, startTransition] = useTransition();
     const [rejected, setRejected] = useState<RejectedSmiles[]>([])
     const [showRejectedDialog, setShowRejectedDialog] = useState(false);
@@ -71,9 +72,11 @@ const EditMolecule = ({
     }
 
     const updateSmileChange = (update = false) => {
-        KetcherFunctions.exportSmile().then(async (str) => {
-            editedMolecules[moleculeIndex].smiles_string = str;
-            setEditedMolecules(editedMolecules);
+        KetcherFunctions?.exportSmile().then(async (str) => {
+            if (str !== "") {
+                editedMolecules[moleculeIndex].smiles_string = str;
+                setEditedMolecules(editedMolecules);
+            }
         })
         if (update) {
             setUpdateVisible(true);
@@ -90,10 +93,14 @@ const EditMolecule = ({
         const molList = JSON.stringify(editMolecules);
         setEditedMolecules(JSON.parse(molList))
     }
-    const onDiscardSubmit = () => {
+    const onDiscardSubmit = async () => {
         resetEditedList();
         const actualMol = editMolecules.filter((mol) => mol.id === editMolecules[moleculeIndex]?.id)
-        KetcherFunctions.renderFromCtab(actualMol.length ? actualMol[0].smiles_string : '')
+        const smile = actualMol.length
+            && actualMol[0].smiles_string
+
+        const updatedSmile = smile && await getDeAromatizeSmile(smile);
+        KetcherFunctions?.renderFromCtab(updatedSmile?.struct)
         setMoleculeName(actualMol.length ? actualMol[0].source_molecule_name : '')
     }
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
@@ -107,7 +114,7 @@ const EditMolecule = ({
             setLoader(true);
             setButtonText('');
         }
-        KetcherFunctions.exportSmile().then(async (str) => {
+        KetcherFunctions?.exportSmile().then(async (str) => {
             if (str) {
                 if (!inPopup) {
                     setSaveLoadIndicatorVisible(true);
@@ -148,7 +155,7 @@ const EditMolecule = ({
                         await delay(DELAY);
                         toast.remove(toastId);
                     })
-                    if (!inPopup) {
+                    if (inPopup) {
                         setLoader(false);
                         setButtonText('Add as New Molecule');
                     } else {
@@ -184,24 +191,26 @@ const EditMolecule = ({
 
     return (
         <>
-            <div className="flex gap-2">
+            <div className="flex gap-2 h-full">
                 {editedMolecules?.length > 1 ?
-                    <div className='w-[190px] max-h-96 overflow-y-auto overflow-x-hidden pr-2'>
+                    <div className={`w-[170px] overflow-y-auto pr-2`}>
                         {editedMolecules?.map((molecule: any, index: number) => (
                             <div
                                 key={molecule.id}
                                 onClick={() => handleMoleculeClick(index)}
                                 className={`${index === moleculeIndex
                                     ? styles.moleculeViewBoxHighlighted
-                                    : styles.moleculeViewBox} mb-4`}
+                                    : styles.moleculeViewBox} 
+                                    ${(index !== editedMolecules?.length - 1) ? 'mb-4' : ''}`}
                             >
                                 <div className='flex justify-center items-center'>
-                                    <MoleculeStructure
+                                    {molecule.smiles_string && <MoleculeStructure
                                         structure={molecule.smiles_string}
                                         id={molecule.id}
                                         width={140}
                                         height={120}
-                                    />
+                                        structureName={molecule.source_molecule_name}
+                                    />}
                                 </div>
                             </div>
                         ))}
@@ -209,8 +218,7 @@ const EditMolecule = ({
                 <div className={editMolecules?.length > 1 ? 'w-[calc(100%-190px)]' : 'w-[100%]'}>
                     <div className={styles.ketcherContainer}>
                         <KetcherDrawBox
-                            reactionString={editMolecules[moleculeIndex]?.smiles_string ||
-                                editMolecules[0]?.smiles_string} />
+                            reactionString={editedMolecules[moleculeIndex]?.smiles_string} />
                     </div>
                     <div className="flex flex-col gap-2 mt-5">
                         <label className='text-normal text-greyMessage'>
@@ -228,12 +236,16 @@ const EditMolecule = ({
                     <div className="flex justify-start gap-2 mt-5 ">
                         <button
                             className='primary-button'
+                            disabled={loadIndicatorVisibleSave}
                             onClick={() => updateSmileChange(true)}
                         >
                             Update Molecule
                         </button>
                         {editMolecules.length === 1 && <button
-                            className="secondary-button"
+                            disabled={loadIndicatorVisibleSave}
+                            className={loadIndicatorVisibleSave
+                                ? 'disableButton w-[151px]'
+                                : "secondary-button"}
                             onClick={() => saveMoleculeCall(moleculeDetails)}
                         > <LoadIndicator className={
                             `button-indicator ${styles.white}`
@@ -245,6 +257,7 @@ const EditMolecule = ({
                         </button>}
                         <button
                             className='button-no-border'
+                            disabled={loadIndicatorVisibleSave}
                             onClick={() => setResetVisible(true)}>
                             Reset
                         </button>

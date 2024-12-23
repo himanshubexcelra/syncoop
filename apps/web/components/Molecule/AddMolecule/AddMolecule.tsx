@@ -51,7 +51,7 @@ export default function AddMolecule({
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
     const [, startTransition] = useTransition()
-
+    const isLoading = loadIndicatorVisible || loadIndicatorVisibleSave
     const hidePopup = () => {
         setDiscardVisible(false);
     };
@@ -189,8 +189,8 @@ export default function AddMolecule({
             formData.append('organizationId', organizationId?.toString());
             startTransition(async () => {
                 await uploadMoleculeFile(formData).then(async (result) => {
-                    if (result.detail) {
-                        const toastId = toast.error(result.detail?.msg);
+                    if (result?.error) {
+                        const toastId = toast.error(result?.error?.detail);
                         await delay(DELAY);
                         toast.remove(toastId);
                     } else {
@@ -279,8 +279,11 @@ export default function AddMolecule({
                             />
                         </div>
                         <div className="flex gap-2">
-                            <button className="primary-button"
-                                onClick={() => handleUpload()}>
+                            <button className={loadIndicatorVisible
+                                ? 'disableButton w-[63px]'
+                                : 'primary-button'}
+                                onClick={() => handleUpload()}
+                                disabled={isLoading}>
                                 <LoadIndicator className={
                                     `button-indicator ${styles.white}`
                                 }
@@ -314,7 +317,11 @@ export default function AddMolecule({
                     />
                 </div>
                 <div className="flex justify-start gap-2 mt-5 ">
-                    <button className="primary-button"
+                    <button className={loadIndicatorVisibleSave
+                        ? 'disableButton w-[107px]'
+                        : 'primary-button'}
+                        disabled={isLoading}
+
                         onClick={() => saveMolecule()}>
                         <LoadIndicator className={
                             `button-indicator ${styles.white}`
@@ -324,6 +331,7 @@ export default function AddMolecule({
                             width={20} />{saveButtonText}</button>
                     <button
                         className='secondary-button'
+                        disabled={isLoading}
                         onClick={() => setDiscardVisible(true)}
                     >
                         Reset

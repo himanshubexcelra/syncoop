@@ -39,7 +39,7 @@ const data = {
     rganizationId: 1,
     created_at: '2024-10-17T08:18:35.505Z',
     updated_at: '2024-10-17T08:18:35.505Z',
-    ownerId: 1,
+    owner_id: 1,
     updated_by: 1,
     owner: {
         id: 1,
@@ -57,7 +57,7 @@ const data = {
             project_id: 2,
             created_at: '2024-10-17T09:53:33.045Z',
             updated_at: null,
-            ownerId: 7,
+            owner_id: 7,
             updated_by: null,
             owner: {
                 id: 1,
@@ -80,7 +80,7 @@ const data = {
             project_id: 2,
             created_at: '2024-10-17T09:53:33.070Z',
             updated_at: null,
-            ownerId: 7,
+            owner_id: 7,
             updated_by: null,
             owner: {
                 id: 1,
@@ -106,7 +106,7 @@ const libraryData = {
     project_id: 2,
     created_at: '2024-10-17T09:53:33.045Z',
     updated_at: null,
-    ownerId: 7,
+    owner_id: 7,
     updated_by: null,
     owner: {
         id: 1,
@@ -125,7 +125,7 @@ const libraryData1 = {
     project_id: 2,
     created_at: '2024-10-17T09:53:33.045Z',
     updated_at: null,
-    ownerId: 7,
+    owner_id: 7,
     updated_by: null,
     owner: {
         id: 1,

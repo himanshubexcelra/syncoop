@@ -1,58 +1,87 @@
 import prisma from "@/lib/prisma";
-import { json } from "@/utils/helper";
-import { STATUS_TYPE } from "@/utils/message";
+import { MoleculeStatusCode } from "@/utils/definition";
+import { getUTCTime, json } from "@/utils/helper";
+import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 
-const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
+const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 
 export async function GET(request: Request) {
+    const url = new URL(request.url);
+    const searchParams = new URLSearchParams(url.searchParams);
+    const library_id = searchParams.get("library_id");
+    const sample_molecule_id = searchParams.get("sample_molecule_id");
     try {
-        const url = new URL(request.url);
-        const searchParams = new URLSearchParams(url.searchParams);
-        const condition = searchParams.get('condition');
-        const organization_id = searchParams.get('organization_id');
+        const result = await prisma.$queryRaw`SELECT  
+            mo.*,
+            sc.status_name,
+            ufm.id as favourite_id,
+            CASE WHEN ufm.id IS NULL THEN false ELSE true END AS favourite,
+            mcd.value as reaction_data,
+            mad.value as adme_data,
+            mbd.value as functional_assays
+            FROM molecule mo
+            JOIN status_code sc ON sc.table_name = 'molecule' AND mo.status = sc.status_code::int
+            LEFT JOIN user_favourite_molecule ufm ON ufm.molecule_id = mo.id
+            /* 
 
-        const query: any = {};
-        if (condition === "count") {
-            if (organization_id) {
-                query.where = {
-                    organization_id: Number(organization_id)
-                }
-            }
+            Enable below 3 lines when live automation lab job is integrated
+            
+            LEFT JOIN molecule_chem_data mcd ON mcd.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done} 
+            LEFT JOIN molecule_bio_data mcd ON mbd.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done} 
+            LEFT JOIN molecule_adme_data mcd ON mad.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done} 
+
+            */
+
+            LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data 
+            WHERE molecule_id = ${Number(sample_molecule_id)} 
+            ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done} 
+            LEFT JOIN molecule_bio_data mbd ON mbd.molecule_id = mo.id and
+            mo.status = ${MoleculeStatusCode.Done} 
+            LEFT JOIN molecule_adme_data mad ON mad.molecule_id = mo.id and 
+            mo.status = ${MoleculeStatusCode.Done} 
+
+            /* LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data 
+            WHERE molecule_id = ${Number(sample_molecule_id)} 
+            ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done} 
+            LEFT JOIN molecule_bio_data mbd ON mo.status = ${MoleculeStatusCode.Done} 
+            and mbd.molecule_id = ${Number(sample_molecule_id)}
+            LEFT JOIN molecule_adme_data mad ON mo.status = ${MoleculeStatusCode.Done} 
+            and mad.molecule_id = ${Number(sample_molecule_id)}     
+            */
 
 
-            const count = await prisma.molecule.count(query)
-            return new Response(JSON.stringify(count), {
+            WHERE mo.library_id = ${Number(library_id)}
+            ORDER BY mo.status DESC`;
+
+        if (result) {
+            return new Response(json(result), {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
+        } else {
+            return new Response(JSON.stringify({
+                success: false,
+                errorMessage: MESSAGES.MOLECULE_ORDER_NOT_FOUND
+            }), {
+                status: NOT_FOUND,
+            });
         }
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            headers: { "Content-Type": "application/json" },
+        return new Response(JSON.stringify({
+            success: false,
+            errorMessage: `Webhook error: ${error}`
+        }), {
             status: BAD_REQUEST,
-        });
+        })
     }
 }
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { user_id, molecule_id, existingFavourite, favourite } = req;
+    const { user_id, molecule_id, favourite_id, favourite } = req;
 
     try {
         if (favourite) {
-            // Check if the favorite exists
-            if (existingFavourite) {
-                // If it exists, remove it
-                const favorite = await prisma.user_favourite_molecule.delete({
-                    where: {
-                        id: existingFavourite.id,
-                    },
-                });
-                return new Response(json(favorite), {
-                    headers: { "Content-Type": "application/json" },
-                    status: SUCCESS,
-                });
-            }
             // Create a new favorite entry
             const favorite = await prisma.user_favourite_molecule.create({
                 data: {
@@ -65,6 +94,20 @@ export async function POST(request: Request) {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
+        } else {
+            // Check if the favorite exists
+            if (favourite_id) {
+                // If it exists, remove it
+                const favorite = await prisma.user_favourite_molecule.delete({
+                    where: {
+                        id: favourite_id,
+                    },
+                });
+                return new Response(json(favorite), {
+                    headers: { "Content-Type": "application/json" },
+                    status: SUCCESS,
+                });
+            }
         }
     } catch (error) {
         console.error(error);
@@ -90,7 +133,7 @@ export async function PUT(request: Request) {
                     userWhoUpdated: {
                         connect: { id: userId }, // Associate the user who created/updated the project
                     },
-                    updated_at: new Date().toISOString(),
+                    updated_at: getUTCTime(new Date().toISOString()),
                 },
             });
         });

@@ -3,6 +3,7 @@ import Layout from '@/components/layout';
 import { getUserData } from '@/utils/auth';
 import { redirect } from 'next/navigation';
 import MoleculeOrderPage from '@/components/MoleculeOrder/MoleculeOrder';
+import { isOnlyLibraryManger } from '@/utils/helpers';
 
 export default async function MoleculeOrder() {
   const sessionData = await getUserData();
@@ -12,11 +13,15 @@ export default async function MoleculeOrder() {
     redirect('/');
   }
 
-  const { userData } = sessionData;
+  const { userData, actionsEnabled } = sessionData;
+  const { myRoles } = userData;
+  if (isOnlyLibraryManger(myRoles)) {
+    redirect('/');
+  }
 
   return (
     <Layout>
-      <MoleculeOrderPage userData={userData} />
+      <MoleculeOrderPage userData={userData} actionsEnabled={actionsEnabled} />
     </Layout>
   );
 

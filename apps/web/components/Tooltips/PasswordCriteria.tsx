@@ -1,10 +1,10 @@
 import React from 'react';
-import styles from './PasswordCriteria.module.css';
+import styles from './Tooltip.module.css';
 
 const PasswordCriteria = () => {
     return (
         <div className={styles.box}>
-            <p className={styles.heading}>Password must minimum:</p>
+            <p className={styles.heading}>Password must contain minimum:</p>
             <div className={styles.list}>
                 <p>8 characters</p>
                 <p>1 uppercase letter (A-Z)</p>

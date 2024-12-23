@@ -75,6 +75,9 @@ export default function RenderEditUser({
                 formRef.current!.instance().reset();
                 setCreatePopupVisibility(false);
                 await fetchData()
+                const toastId = toast.success(Messages.UPDATE_USER);
+                await delay(DELAY);
+                toast.remove(toastId);
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);

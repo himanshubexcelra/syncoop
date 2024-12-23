@@ -12446,8 +12446,7 @@ class PerspectiveCamera extends Camera {
 		this.type = 'PerspectiveCamera';
 
 		this.fov = fov;
-		/* this.zoom = 1; */
-		this.zoom = 0.5;
+		this.zoom = 1;
 
 		this.near = near;
 		this.far = far;
@@ -12571,7 +12570,7 @@ class PerspectiveCamera extends Camera {
 	 */
 	setViewOffset(fullWidth, fullHeight, x, y, width, height) {
 
-		this.aspect = this.width / fullHeight;
+		this.aspect = fullWidth / fullHeight;
 
 		if (this.view === null) {
 
@@ -12622,8 +12621,8 @@ class PerspectiveCamera extends Camera {
 
 		if (this.view !== null && this.view.enabled) {
 
-			const fullWidth = this.width;
-			const fullHeight = this.height;
+			const fullWidth = view.fullWidth,
+				fullHeight = view.fullHeight;
 
 			left += view.offsetX * width / fullWidth;
 			top -= view.offsetY * height / fullHeight;
@@ -16032,8 +16031,7 @@ class OrthographicCamera extends Camera {
 
 		this.type = 'OrthographicCamera';
 
-		/* this.zoom = 1; */
-		this.zoom = 0.5;
+		this.zoom = 1;
 		this.view = null;
 
 		this.left = left;
@@ -16120,11 +16118,11 @@ class OrthographicCamera extends Camera {
 
 		if (this.view !== null && this.view.enabled) {
 
-			const scaleW = (this.right - this.left) / this.width / this.zoom;
-			const scaleH = (this.top - this.bottom) / this.height / this.zoom;
+			const scaleW = (this.right - this.left) / this.view.fullWidth / this.zoom;
+			const scaleH = (this.top - this.bottom) / this.view.fullHeight / this.zoom;
 
 			left += scaleW * this.view.offsetX;
-			right = left + scaleW * this.width;
+			right = left + scaleW * this.view.width;
 			top -= scaleH * this.view.offsetY;
 			bottom = top - scaleH * this.view.height;
 
@@ -30518,6 +30516,10 @@ class WebGLRenderer {
 	}
 
 }
+
+class WebGL1Renderer extends WebGLRenderer { }
+
+WebGL1Renderer.prototype.isWebGL1Renderer = true;
 
 class Scene extends Object3D {
 
@@ -45995,7 +45997,6 @@ function createCommonjsModule(fn, basedir, module) {
 function commonjsRequire() {
 	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
 }
-
 var openchemlibMinimal = createCommonjsModule(function (module, exports) {
 	/**
 	 * openchemlib - Manipulate molecules
@@ -46234,6 +46235,10 @@ const LINE_CURVE_RADIUS = 5;
  */
 const HEXAGON_RADIUS = 10;
 /**
+* The default radius of a hexagon
+*/
+const CIRCLE_RADIUS = 15;
+/**
  * The default radius of a honeycomb badge
  */
 const HONEYCOMB_BADGE_RADIUS = 5;
@@ -46267,6 +46272,8 @@ const ReactionPathway = class {
 		this.displayReactionCondition = true;
 		this.width = window.innerWidth;
 		this.height = window.innerHeight;
+		this.currentReaction = -1;
+		this.updatedKey = null;
 	}
 	async componentWillLoad() {
 		if (this.nodes.length === 0)
@@ -46294,6 +46301,106 @@ const ReactionPathway = class {
 			return;
 		this.renderReactionPathway(this.tree);
 	}
+	componentWillUpdate() {
+		if (this.updatedKey === 'currentReaction') {
+			this.updateReactionSelected()
+		} else if (this.updatedKey === 'node') {
+			this.updateReactionConditions();
+		} else if (this.updatedKey === 'molecule') {
+			this.updateReactionMolecules(Number(this.currentReaction) + 1);
+		}
+	}
+
+	updateReactionMolecules(currReactionIndex) {
+		const objects = this.scene.children.filter(child =>
+			child.isObject3D && child.userData.type === 'molecule' &&
+			child.userData.reactionIndex.includes(currReactionIndex));
+		const mol2Index = this.scene.children.indexOf(objects[2]);
+		const tempPosition = objects[1].position.clone();
+		objects[1].position.set(objects[2].position.x, objects[2].position.y, objects[2].position.z);
+		objects[2].position.set(tempPosition.x, tempPosition.y, tempPosition.z);
+
+		// We need to find all objects (reactions and molecules) before the swapped reactions
+		const reactionsBeforeSwap = this.scene.children.slice(mol2Index + 1, this.scene.children.length);
+		const offsetY = objects[1].position.y - objects[2].position.y;
+		let lineReached = false;
+
+		reactionsBeforeSwap.forEach(object => {
+			// Adjust position of objects before the swapped reactions
+			if (object.userData.type === 'molecule') {
+				object.position.y += offsetY;
+			}
+			if (object.type == 'Line2' && object.userData.reactionIndex?.[0] == currReactionIndex - 1) {
+				lineReached = true;
+			}
+			if (lineReached) object.position.y += offsetY;
+
+		});
+		const sceneCenter = new Box3().setFromObject(this.scene).getCenter(new Vector3());
+		this.controls.target.set(sceneCenter.x, sceneCenter.y, 0);
+		this.camera.position.set(sceneCenter.x, sceneCenter.y, 200);
+		this.camera.updateProjectionMatrix();
+		this.controls.dispatchEvent({ type: "change" });
+	}
+
+	updateReactionConditions() {
+		const object = this.scene.children.find(child =>
+			child.isObject3D && child.userData.type === 'reaction' &&
+			child.children.length && child.userData.reactionIndex.includes(Number(this.currentReaction) + 1));
+		const nodeSelected = this.nodes.find(node => object.userData.id === node.id);
+		// Find the mesh that contains the TextGeometry (assuming it's directly in the object)
+		object.traverse((child) => {
+			if (child.isMesh && child.geometry instanceof TextGeometry) {
+				// Dispose of the old geometry (to free up memory)
+				child.geometry.dispose();
+
+				// Create a new TextGeometry with the updated text
+				const newGeometry = new TextGeometry(nodeSelected.condition, {
+					font: this.helvetiker, // Assuming you have a font loaded (replace with your font)
+					size: 5,
+					height: 0,
+					curveSegments: 12
+				});
+
+				// Assign the new geometry to the mesh
+				child.geometry = newGeometry;
+
+				// Optionally, modify material or other properties
+				child.material.color.set(this.getCSSVariableValue("--reaction-condition-color"));
+			}
+		});
+
+		// After modifying, you may want to trigger a render update
+		this.renderer.render(this.scene, this.camera);
+	}
+
+	updateReactionSelected() {
+		this.scene.children.forEach(child => {
+			if (child.isObject3D && child.userData.type === 'molecule') {
+				this.updateSmilesObject3D(child)
+			}
+		})
+		this.controls.dispatchEvent({ type: "change" });
+
+	}
+	updateSmilesObject3D(smilesObject3D) {
+		smilesObject3D.children.forEach(parent => {
+			parent.children.forEach(child => {
+				if (child.isMesh && child.material) {
+					if (!smilesObject3D.userData.reactionIndex.includes(Number(this.currentReaction) + 1)) {
+						let color = new Color(child.material.color);
+						let hsl = new Color().getHSL(color);
+						hsl.l = Math.min(0.2, hsl.l + 0.1);
+						color.setHSL(hsl.h, hsl.s, hsl.l);
+						child.material.color.set(color);
+					} else {
+						child.material.color.set(0x000000);
+					}
+				}
+			});
+		});
+	}
+
 	handlePointerDown(event) {
 		this.mouse.x = (event.offsetX / this.renderer.domElement.clientWidth) * 2 - 1;
 		this.mouse.y = -(event.offsetY / this.renderer.domElement.clientHeight) * 2 + 1;
@@ -46321,8 +46428,8 @@ const ReactionPathway = class {
 	 */
 	async zoomReset() {
 		const sceneCenter = new Box3().setFromObject(this.scene).getCenter(new Vector3());
-		this.camera.zoom = 0.5;
 		this.controls.target.set(sceneCenter.x, sceneCenter.y, 0);
+		this.camera.zoom = 1;
 		this.camera.position.set(sceneCenter.x, sceneCenter.y, 200);
 		this.camera.updateProjectionMatrix();
 		this.controls.dispatchEvent({ type: "change" });
@@ -46384,14 +46491,15 @@ const ReactionPathway = class {
 	renderReactionPathway(tree) {
 		// FIXME: This is a temporary fix for the width and height of the container
 		// The width and height should be calculated from the container's parent element
+		// const width = window.innerWidth;
+		// const height = window.innerHeight;
 		const width = this.width;
 		const height = this.height;
 		this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
-		const widthDesired = Math.floor(width / window.devicePixelRatio);
-		const widthDiff = width - widthDesired;
 		this.renderer.setSize(width, height);
 		this.renderer.setClearColor(0x000000, 0);
 		this.renderer.setPixelRatio(window.devicePixelRatio);
+
 		this.scene = new Scene();
 		this.scene.background = new Color(getComputedStyle(this.element).getPropertyValue("--background-color").trim());
 		this.fontLoader = new FontLoader();
@@ -46407,8 +46515,21 @@ const ReactionPathway = class {
 			.descendants()
 			.filter(node => node.data.type === "reaction")
 			.forEach(node => this.renderReaction(node));
+
+		// Get the size of the bounding box (width, height, depth)
+		const size = new Vector3();
+		const boundingBox = new Box3().setFromObject(this.scene);
+		boundingBox.getSize(size);
+		const boxWidth = size.x;
+		const boxHeight = size.y;
+		// Calculate the scale factor based on the window size and bounding box size
+		const scaleX = width / boxWidth;
+		const scaleY = height / boxHeight;
+		const scaleFactor = Math.min(scaleX, scaleY);
+		this.scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
 		const sceneCenter = new Box3().setFromObject(this.scene).getCenter(new Vector3());
-		this.camera = new OrthographicCamera(-(widthDesired + widthDiff * 2) / 2, (widthDesired + widthDiff * 2) / 2, height / 2, -height / 2, 1, 1000);
+		this.camera = new OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 1000);
 		this.addLigths();
 		this.container.appendChild(this.renderer.domElement);
 		// FIXME: Resolve initial positions
@@ -46417,7 +46538,6 @@ const ReactionPathway = class {
 		this.controls.mouseButtons = { LEFT: MOUSE.PAN, RIGHT: MOUSE.ROTATE };
 		this.controls.screenSpacePanning = true;
 		this.appendLabelRendererToContainer(width, height);
-		// to make image occupy all the available space
 		this.controls.target.set(sceneCenter.x, sceneCenter.y, 0);
 		this.camera.position.set(sceneCenter.x, sceneCenter.y, 200);
 		this.camera.updateProjectionMatrix();
@@ -46518,7 +46638,24 @@ const ReactionPathway = class {
 		const textElements = Array.from(data.xml.children).filter(child => child.nodeName === "text");
 		const textObject3D = this.createTextObject3D(textElements);
 		const shapeObject3D = this.createSVGMeshObject3D(data.paths);
+
 		const smilesObject3D = new Object3D().add(shapeObject3D, textObject3D);
+
+		// decrease saturation of unselected reactions
+		shapeObject3D.children.forEach(child => {
+			if (this.currentReaction !== 0 &&
+				child.isMesh && child.material && child.material.color &&
+				!molecule.data.reactionIndex.includes(this.currentReaction + 1)) {
+				let color = new Color(child.material.color);
+				let hsl = new Color().getHSL(color);
+				hsl.l = Math.min(0.2, hsl.l + 0.1);  // Increase lightness slightly, but don't exceed 0.2
+
+				// Set the modified color back to the material
+				color.setHSL(hsl.h, hsl.s, hsl.l);
+				child.material.color.set(color);
+			}
+		});
+
 		const smilesBoundingBox = new Box3().setFromObject(smilesObject3D);
 		const smilesBoundingBoxSize = new Vector3();
 		const smilesBoundingBoxCenter = new Vector3();
@@ -46684,7 +46821,55 @@ const ReactionPathway = class {
 		const line = new Line2(geometry, lineMaterial);
 		line.computeLineDistances();
 		line.scale.set(1, 1, 1);
+		// to add current index
+		line.userData.reactionIndex = reaction.data.reactionIndex;
 		this.scene.add(line);
+		// Create a circle of a aprticular color
+		const circleMaterial = new MeshBasicMaterial({ color: reaction.data.reactionColor });
+
+		// Create CircleGeometry with the defined radius
+		const circleGeometry = new CircleGeometry(CIRCLE_RADIUS, 32);
+
+		// Create the circle mesh
+		const circle = new Mesh(circleGeometry, circleMaterial);
+
+		// Calculate the center position of the line
+		const lineCenter = new Vector3();
+		geometry.computeBoundingBox(); // Ensure you compute the bounding box first
+		const boundingBox = geometry.boundingBox;
+		lineCenter.x = boundingBox.min.x - 5;
+		lineCenter.y = boundingBox.min.y;
+		lineCenter.z = 3; // Adjust if needed for your scene
+
+		// Position the circle at the center of the line
+		circle.position.copy(lineCenter);
+
+		// Add the circle to your scene
+		this.scene.add(circle);
+
+		const textGeometry = new TextGeometry(reaction.data.reactionIndex?.[0].toString(), {
+			font: this.helvetiker,
+			size: 7, // Adjust size as needed
+			height: 0.1, // Thickness of the text
+			curveSegments: 12,
+			bevelEnabled: false,
+		});
+
+		// Create a mesh for the text
+		const textMaterial = new MeshBasicMaterial({ color: 0xffffff });
+		const textMesh = new Mesh(textGeometry, textMaterial);
+
+		// Center the text mesh
+		textGeometry.computeBoundingBox();
+		const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+
+		if (reaction.data.reactionIndex?.[0] === 1)
+			textMesh.position.set(circle.position.x - textWidth / 2 - 2, circle.position.y - 3, circle.position.z); // Adjust y-position if needed
+		else
+			textMesh.position.set(circle.position.x - textWidth / 2, circle.position.y - 3, circle.position.z); // Adjust y-position if needed
+		// Add the text to the scene
+		this.scene.add(textMesh);
+		circle.userData = Object.assign(Object.assign({}, reaction.data.reactionIndex), { eventSource: reaction.data.reactionIndex });
 		const arrowTip = new ConeGeometry(2, 5, 3);
 		const arrowTipMaterial = new MeshBasicMaterial({ color });
 		const arrowTipMesh = new Mesh(arrowTip, arrowTipMaterial);
@@ -46883,7 +47068,7 @@ const ReactionPathway = class {
 			lines.forEach((line, index, initial) => {
 				const geometry = new TextGeometry(line, {
 					font: this.helvetikerBold,
-					size: 8,
+					size: 6,
 					height: 0,
 					curveSegments: 12,
 				});
@@ -46908,7 +47093,7 @@ const ReactionPathway = class {
 	 * @returns {THREE.Object3D} The object3D
 	 */
 	createReactionCondition3DObject(reaction) {
-		if (!reaction.data.condition)
+		if (!this.displayReactionCondition || !reaction.data.condition)
 			return;
 		const object = new Object3D();
 		const distance = Math.abs(reaction.parent !== null ? reaction.x - reaction.parent.x : 0);
@@ -46916,7 +47101,7 @@ const ReactionPathway = class {
 		lines.forEach((line, index, initial) => {
 			const geometry = new TextGeometry(line, {
 				font: this.helvetiker,
-				size: 6,
+				size: 5,
 				height: 0,
 				curveSegments: 12,
 			});
@@ -47078,7 +47263,11 @@ const ReactionPathway = class {
 	}
 	render() {
 		return (h("div", {
-			class: "container", ref: element => {
+			class: "container",
+			width: this.width,
+			currentReaction: this.currentReaction,
+			updatedKey: this.updatedKey,
+			ref: element => {
 				this.container = element;
 			}
 		}));

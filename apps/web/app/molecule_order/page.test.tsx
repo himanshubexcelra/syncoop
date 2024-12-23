@@ -40,7 +40,7 @@ describe('MoleculeOrder Component', () => {
   });
 
   it('renders MoleculeOrderPage with userData if session exists', async () => {
-    const mockUserData = { name: 'John Doe' };
+    const mockUserData = { name: 'John Doe', myRoles: ['researcher'] };
 
     // Mock getUserData to return user data
     mockGetUserData.mockResolvedValue({

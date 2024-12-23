@@ -30,6 +30,7 @@
   --themeGreyShadow: #DCDCE8;
   --themeGreyHeaderColor: #0F1A2E;
   --themeGreyBorderSecondaryColor: #e0e0e0;
+  --rowHoverColor: #ebf8ff;
   --tableRoleGrey: #616170;
   --borderLightBlue: #50a0de;
   --buttonBgWhiteBlue: #ecf5fc;
@@ -222,6 +223,10 @@ body {
   text-transform: unset;
 }
 
+.toolbar-item-spacing {
+  margin-right: 5px;
+}
+
 /* custom text normal text*/
 .text-normal,
 .dx-form .dx-field-item-label-text,
@@ -235,6 +240,22 @@ body {
   font-style: normal;
   font-weight: 700;
   line-height: normal;
+}
+
+.moleculeStatus,
+.moleculeOrderStatus {
+  position: relative;
+}
+
+.moleculeStatus .status-mark,
+.moleculeOrderStatus .status-mark {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-text,
@@ -276,17 +297,34 @@ body {
 /* no data found in accordion for project and library, accordion-header */
 .nodata,
 .nodata-project,
-.accordion-header-text {
+.accordion-header-text,
+.pathway-header {
   color: var(--themeGreyColor);
   font-family: Lato;
   font-size: 18px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  margin-top: 45px;
   display: flex;
 }
-.btn-disable.dx-button.dx-state-disabled.dx-button-mode-contained {background-color: var(--background) !important;
+
+.pathway-header {
+  color: var(--black);
+}
+
+.nodata,
+.nodata-project,
+.accordion-header-text {
+  margin-top: 45px;
+}
+
+/* Hide password reveal icon in MS Edge browser */
+::-ms-reveal {
+  display: none;
+}
+
+.btn-disable.dx-button.dx-state-disabled.dx-button-mode-contained {
+  background-color: var(--background) !important;
   border-radius: 4px;
   border: 2px solid var(--disabledBlueButton);
 
@@ -298,6 +336,19 @@ body {
     font-weight: 700;
     text-transform: unset;
   }
+}
+
+.disableButton {
+  background-color: rgba(15, 105, 175, 0.30) !important;
+  border-radius: 4px;
+  border: 2px solid #b5d0e5;
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 0.70);
+  font-family: Lato;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: unset;
 }
 
 /* Scrollbar width */
@@ -326,4 +377,64 @@ body {
 /* Hide password reveal icon in MS Edge browser */
 ::-ms-reveal {
   display: none;
+}
+
+.dx-texteditor::after {
+  position: relative;
+}
+
+.bg-red {
+  background-color: var(--themeStatsRedColor);
+}
+
+.dot-red {
+  background-color: var(--themeDotRedColor);
+}
+
+.text-red {
+  color: var(--textLightRed);
+}
+
+.bg-green {
+  background-color: var(--themeStatsGreenColor);
+}
+
+.dot-green {
+  background-color: var(--themeDotGreenColor);
+}
+
+.text-green {
+  color: var(--textLightGreen);
+}
+
+.bg-gray {
+  background-color: var(--themeSilverGreyColor);
+}
+
+.text-grey{
+  color: var(--themeGreyColor)
+}
+
+.dot-grey {
+  background-color: var(--themeDotGreyColor);
+}
+
+.bg-blue {
+  background-color: var(--themeStatsBlueColor);
+}
+
+.bg-light-blue {
+  background-color: var(--themeLightBlueColor);
+}
+
+.text-blue {
+  color: var(--themeBlueColor);
+}
+
+.dot-blue {
+  background-color: var(--themeDotBlueColor);
+}
+
+.bg-yellow {
+  background-color: var(--themeStatsYellowColor);
 }

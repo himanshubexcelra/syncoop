@@ -1,5 +1,5 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import DataGrid, {
     Column,
     Grouping,
@@ -17,8 +17,7 @@ import DataGrid, {
     RowDragging,
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
-import Image from 'next/image';
-import { Button, LoadIndicator } from 'devextreme-react';
+import { Button } from 'devextreme-react';
 import { ColumnConfig } from '@/lib/definition';
 
 interface ToolbarButtonConfig {
@@ -33,7 +32,7 @@ interface ToolbarButtonConfig {
 interface CustomDataGridProps<T> {
     data: any[];
     height?: string;
-    columns: ColumnConfig<T>[];
+    columns: ColumnConfig[];
     toolbarButtons?: ToolbarButtonConfig[];
     groupingColumn?: string;
     enableRowSelection?: boolean;
@@ -43,7 +42,6 @@ interface CustomDataGridProps<T> {
     enableSorting?: boolean;
     enableFiltering?: boolean;
     enableOptions?: boolean;
-    loadMoreData?: () => void;
     buttonText?: string;
     onButtonClick?: () => void;
     loader: boolean;
@@ -58,6 +56,10 @@ interface CustomDataGridProps<T> {
     enableToolbar?: boolean;
     onReorderFunc?: (e: any) => void;
     onEditorPreparing?: (e: any) => void;
+    onRowPrepared?: (e: any) => void;
+    onRowClick?: (e: any) => void;
+    cssClass?: string;
+    hoverStateEnabled?: boolean;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
@@ -69,13 +71,10 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableRowSelection = true,
     enableGrouping = true,
     enableInfiniteScroll = false,
-    enableAutoScroll = false,
     enableSorting = true,
     enableFiltering = true,
     enableSearchOption = true,
     enableOptions = true,
-    loadMoreData,
-    loader = true,
     enableHeaderFiltering = true,
     selectedRowKeys,
     onSelectionChanged,
@@ -84,21 +83,11 @@ const CustomDataGrid = <T extends Record<string, any>>({
     enableToolbar = true,
     onReorderFunc,
     onEditorPreparing,
+    onRowClick,
+    onRowPrepared,
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
-    const dataGridRef = useRef<any>(null);
-
-    const handleScroll = useCallback(() => {
-        if (dataGridRef.current) {
-            const instance = dataGridRef.current.instance;
-            const { scrollHeight, clientHeight, scrollTop } = instance.scrollable().scrollOffset();
-
-            if (scrollTop + clientHeight >= scrollHeight - 50) {
-                loadMoreData && loadMoreData();
-            }
-        }
-    }, [loadMoreData]);
 
     const onAutoExpandAllChanged = useCallback(() => {
         setAutoExpandAll((prev) => !prev);
@@ -108,31 +97,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
         setGroupingEnabled((prev) => !prev);
     }, []);
 
-
-    useEffect(() => {
-        if (enableAutoScroll && dataGridRef.current) {
-            const instance = dataGridRef.current.instance;
-            instance.scrollTo({ top: instance.totalItemsCount() * instance.rowHeight() });
-        }
-    }, [data, enableAutoScroll]);
-
-    // Add the scroll event listener
-    useEffect(() => {
-        if (dataGridRef.current && enableInfiniteScroll) {
-            const instance = dataGridRef.current.instance;
-            const scrollable = instance.scrollable();
-
-            if (scrollable) {
-                scrollable.on('scroll', handleScroll);
-            }
-
-            return () => {
-                if (scrollable) {
-                    scrollable.off('scroll', handleScroll);
-                }
-            };
-        }
-    }, [enableInfiniteScroll, handleScroll]);
 
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
@@ -146,7 +110,6 @@ const CustomDataGrid = <T extends Record<string, any>>({
     return (
         <div>
             <DataGrid
-                ref={dataGridRef}
                 dataSource={data}
                 keyExpr="id"
                 allowColumnReordering={false}
@@ -154,9 +117,11 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 height={height}
                 width="100%"
                 onCellPrepared={onCellPrepared}
+                onRowClick={onRowClick}
                 selectedRowKeys={selectedRowKeys}
                 onSelectionChanged={onSelectionChanged}
                 onEditorPreparing={onEditorPreparing}
+                onRowPrepared={onRowPrepared}
             >
                 {showDragIcons && <RowDragging
                     allowReordering={true}
@@ -170,7 +135,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
                 <Scrolling mode={enableInfiniteScroll ? 'infinite' : 'standard'} />
-                <LoadPanel enabled={!data.length} />
+                <LoadPanel enabled={!data?.length} />
                 {enableRowSelection && (
                     <Selection mode="multiple" selectAllMode={'allPages'}
                         showCheckBoxesMode={'always'} />
@@ -182,9 +147,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         key={String(column.dataField)}
                         dataField={String(column.dataField)}
                         visible={column.visible !== undefined ? column.visible : true}
-                        headerCellRender={column.type === 'bookmark' ? () => (
-                            <Image src="/icons/star.svg" width={24}
-                                height={24} alt="Bookmark" />) : undefined}
+                        headerCellRender={column.headerCellRenderer}
                         caption={typeof column.title === 'string' ? column.title : undefined}
                         width={column.width ? String(column.width) : undefined}
                         allowHeaderFiltering={column?.allowHeaderFiltering}
@@ -192,6 +155,9 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         alignment={column.alignment !== undefined ? column.alignment : "left"}
                         cellRender={column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}
+                        headerFilter={column.headerFilter}
+                        cssClass={column.cssClass}
+                        defaultSortOrder={column.defaultSortOrder}
                     />
                 ))}
 
@@ -203,8 +169,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         groupCellRender={groupCellRender}
                     />
                 )}
-                  {enableToolbar && <Toolbar>
-                    <Item name="searchPanel" location="before" />
+                {enableToolbar && <Toolbar>
                     {groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }
@@ -220,6 +185,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                             />
                         </Item>
                     ))}
+                    <Item name="searchPanel" location="after" />
                 </Toolbar>}
                 {enableSearchOption && <SearchPanel
                     visible={true}

@@ -1,7 +1,8 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AppContext } from "../../app/AppState";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
@@ -18,23 +19,14 @@ import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import {
     getLibraries,
-    getLibraryById,
+    /* getLibraryById, */
 } from './service';
-import { sortByDate } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
-import { delay, getUTCTime } from "@/utils/helpers";
+import { delay, getUTCTime, isAdmin } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import LibraryAccordion from './LibraryAccordion';
-import dynamic from 'next/dynamic';
-
-const MoleculeList = dynamic(
-    () => import("./MoleculeList"),
-    {
-        ssr: false,
-        loading: () => <LoadIndicator visible={true}></LoadIndicator>
-    }
-);
+import MoleculeList from './MoleculeList';
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -42,6 +34,7 @@ type breadCrumbParams = {
     projectSvg?: string,
     projectState?: boolean,
     orgData?: OrganizationDataFields
+    roles: string[],
 }
 
 const breadcrumbArr = ({
@@ -50,7 +43,10 @@ const breadcrumbArr = ({
     projectSvg = '',
     projectState = false,
     orgData,
+    roles,
 }: breadCrumbParams) => {
+    const admin = isAdmin(roles)
+
     return [
         {
             label: "Home",
@@ -69,7 +65,7 @@ const breadcrumbArr = ({
                 isActive: false,
             }]
             : []),
-        {
+        ...(admin ? [{
             label: 'Projects',
             svgPath: '/icons/project-inactive.svg',
             svgWidth: 16,
@@ -77,7 +73,7 @@ const breadcrumbArr = ({
             href: orgData ?
                 `/organization/${orgData?.id}/projects/`
                 : '/projects',
-        },
+        }] : []),
         {
             label: `Project: ${projectTitle}`,
             svgPath: projectSvg || "/icons/project-icon.svg",
@@ -109,7 +105,7 @@ const initialProjectData: ProjectDataFields = {
     updated_at: new Date(),
     user_id: undefined,
     owner: {} as User, // Provide a default owner object
-    ownerId: 0,
+    owner_id: 0,
     orgUser: undefined,
     created_at: getUTCTime(new Date().toISOString()),
     other_container: [] as LibraryFields[],
@@ -138,87 +134,52 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
     const [loader, setLoader] = useState(true);
     const [expanded, setExpanded] = useState(library_id ? false : true);
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
 
-
-    const [sortBy, setSortBy] = useState('recent');
-    const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
+    const [sortBy, setSortBy] = useState('Recent');
+    const [breadcrumbValue, setBreadCrumbs] =
+        useState(breadcrumbArr({ roles: userData.myRoles }));
 
     let toastShown = false;
 
     // OPT: 7
-    const getLibraryData = async (item: LibraryFields) => {
+    /* const getLibraryData = async (item: LibraryFields) => {
         setLibraryId(item.id);
         setSelectedLibraryName(item.name);
         const libraryData =
             await getLibraryById(['molecule'],
                 item.id.toString());
         setTableData(libraryData.libraryMolecules || []);
-    }
+    } */
+
     const fetchLibraries = async () => {
         const projectData = await getLibraries(['libraries'/* , 'organization' */], project_id);
 
         // let selectedLib = null;
-        let selectedLib = { name: '' };
-        if (library_id && projectData) {
+        /* let selectedLib = { name: '' }; */
+        /* if (library_id && !projectData.error) {
             selectedLib = projectData.other_container.find(
                 (library: LibraryFields) => Number(library.id) === Number(library_id));
-        }
-        if (projectData && !!selectedLib) {
-            const sortKey = 'created_at';
+        } */
+        if (!projectData.error /* && !!selectedLib */) {
+            /* const sortKey = 'created_at';
             const sortBy = 'desc';
-            const tempLibraries = sortByDate(projectData.other_container, sortKey, sortBy);
-            setProjects({ ...projectData, libraries: tempLibraries });
-            setInitProjects({ ...projectData, libraries: tempLibraries });
+            const tempLibraries = sortByDate(projectData.other_container, sortKey, sortBy); */
+            // setProjects({ ...projectData, libraries: tempLibraries });
+            // setInitProjects({ ...projectData, libraries: tempLibraries });
+            // OPT: 8
+            setProjects({ ...projectData });
+            setInitProjects({ ...projectData });
             setOrganizationId(projectData.parent_id);
-            let breadcrumbTemp = breadcrumbArr({
+            setSortBy('Recent');
+            const breadcrumbTemp = breadcrumbArr({
                 projectTitle: `${projectData.name}`,
                 projectHref: `/${project_id}`,
-                orgData: (organizationId) ? projectData.container: '',
+                orgData: (organizationId) ? projectData.container : '',
+                roles: userData.myRoles
             });
-            if (library_id) {
-                const libraryData = await getLibraryById(['molecule'], library_id.toString());
-                setTableData(libraryData.libraryMolecules || []);
-                const libName = libraryData.name;
-                setSelectedLibraryName(libName);
-                setLibraryId(library_id);
-                breadcrumbTemp = breadcrumbArr({
-                    projectTitle: `${projectData.name}`,
-                    projectHref: `/${project_id}`, projectSvg: "/icons/project-inactive.svg",
-                    orgData: (organizationId) ? projectData.container: ''
-                });
-                breadcrumbTemp = [
-                    ...breadcrumbTemp,
-                    {
-                        label: libName,
-                        svgPath: "/icons/library-active.svg",
-                        svgWidth: 16,
-                        svgHeight: 16,
-                        href: projectData.organization
-                            ? `/organization/${projectData.organization?.id}`
-                            + `/projects/${project_id}?library_id=${library_id}`
-                            : `/projects/${project_id}?library_id=${library_id}`,
-                        isActive: true,
-                    }];
-            } else {
-                if (tempLibraries.length) {
-                    const libraryData = await getLibraryById(['molecule'], tempLibraries[0]?.id);
-                    if (libraryData) {
-                        setTableData(libraryData.molecule || []);
-                        setLibraryId(libraryData.id);
-                    }
-                } 
-                const libName = tempLibraries[0]?.name || 'untitled';
-                setSelectedLibraryName(libName);
-                setLibraryId(tempLibraries[0]?.id);
-                setSortBy('recent');
-                setExpanded(true);
-                breadcrumbTemp = breadcrumbArr({
-                    projectTitle: `${projectData.name}`,
-                    projectHref: `/${project_id}`,
-                    projectSvg: '/icons/project-icon.svg', projectState: true,
-                    orgData: projectData.organization,
-                });
-            }
+
             setBreadCrumbs(breadcrumbTemp);
             setLoader(false);
         } else {
@@ -236,8 +197,47 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     useEffect(() => {
         setProjectId(params.id || params.projectId!)
         fetchLibraries();
-    }, [params.id, params.projectId, library_id]);
+    }, [params.id, params.projectId, appContext?.cartDetail]);
 
+
+    useEffect(() => {
+        if (projectData) {
+            const libraries = projectData.other_container;
+            if (libraries?.length) {
+                const libraryData = library_id ? libraries.find((library: LibraryFields) => {
+                    return Number(library.id) === Number(library_id)
+                }) : libraries[0];
+                if (libraryData) {
+
+                    // if (library_id != libraryData.id) {
+                    setLibraryId(libraryData.id);
+                    setSelectedLibraryName(libraryData.name);
+                    // }
+                    let breadcrumbTemp = breadcrumbArr({
+                        projectTitle: `${projectData.name}`,
+                        projectHref: `/${project_id}`,
+                        orgData: (organizationId) ? projectData.container : undefined,
+                        roles: userData.myRoles
+                    });
+                    breadcrumbTemp = [
+                        ...breadcrumbTemp,
+                        {
+                            label: libraryData.name,
+                            svgPath: "/icons/library-active.svg",
+                            svgWidth: 16,
+                            svgHeight: 16,
+                            href: projectData.container
+                                ? `/organization/${projectData.container.id}`
+                                + `/projects/${project_id}?library_id=${library_id}`
+                                : `/projects/${project_id}?library_id=${library_id}`,
+                            isActive: true,
+                        }
+                    ];
+                    setBreadCrumbs(breadcrumbTemp);
+                }
+            }
+        }
+    }, [library_id, projectData]);
 
     return (
         <>
@@ -281,9 +281,9 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     fetchLibraries={fetchLibraries}
                                     userData={userData}
                                     selectedLibraryId={library_id}
-                                    getLibraryData={getLibraryData}
-                                    setLibraryId={setLibraryId}
-                                    setSelectedLibraryName={setSelectedLibraryName}
+                                    /* getLibraryData={getLibraryData} */
+                                    setLibraryId={(library_id: number) => setLibraryId(library_id)}
+                                    /* setSelectedLibraryName={setSelectedLibraryName} */
                                     setExpanded={setExpanded}
                                 />
                             </div >

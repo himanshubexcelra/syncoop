@@ -66,7 +66,7 @@ export default function UsersTable({
     const formRefEdit = useRef<any>(null);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const context: any = useContext(AppContext);
-    const appContext = context.state;
+    const appContext = context.state.appContext;
 
     const hidePasswordPopup = () => {
         setPasswordPopupVisible(false)
@@ -101,12 +101,15 @@ export default function UsersTable({
                     setTableData(external);
                 }
                 context?.addToState({
-                    ...appContext, userCount: {
-                        externalUsers: externalUsers.length,
-                        internalUsers: internalUsers.length
-                    },
-                    refreshUsersTable: false,
-                })
+                    appContext: {
+                        ...appContext,
+                        userCount: {
+                            externalUsers: externalUsers.length,
+                            internalUsers: internalUsers.length
+                        },
+                        refreshUsersTable: false,
+                    }
+                });
             }
             else {
                 const users = await getUsers(['orgUser', 'user_role'], "", user_id, orgUser?.id);
@@ -230,6 +233,7 @@ export default function UsersTable({
                             <div className="flex gap-2 cursor-pointer">
                                 <Image
                                     src="/icons/edit.svg"
+                                    title="Edit user"
                                     width={24}
                                     height={24}
                                     onClick={() => showEditPopup(data)}
@@ -237,6 +241,7 @@ export default function UsersTable({
                                 <Image
                                     src="/icons/lock-password-icon.svg"
                                     width={16}
+                                    title="Generate password"
                                     height={18}
                                     onClick={() => showPasswordPopup(data)}
                                     alt="Reset" />
@@ -286,6 +291,7 @@ export default function UsersTable({
                                     />
                                 )}
                                 width={470}
+                                dragEnabled={false}
                                 hideOnOutsideClick={true}
                                 height="100%"
                                 position={popupPosition}
@@ -316,6 +322,7 @@ export default function UsersTable({
                                 )}
                                 width={470}
                                 height="100%"
+                                dragEnabled={false}
                                 position={popupPosition}
                                 onHiding={() => {
                                     formRefEdit.current?.instance().reset();

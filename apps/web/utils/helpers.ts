@@ -1,14 +1,18 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
-  CombinedLibraryType, LibraryFields, LoginFormSchema,
+  ColorSchemeFormat,
+  CombinedLibraryType,
+  LibraryFields,
+  LoginFormSchema,
   MoleculeOrder,
-  MoleculeStatusCode, MoleculeStatusLabels, MoleculeType,
+  MoleculeStatusCode,
+  MoleculeStatusLabel,
+  MoleculeType,
   Status,
-  StatusCode, StatusType,
+  StatusType,
   StatusTypes
 } from "@/lib/definition"
-import CustomFile from "./file";
-import { stats, CategoryCodeBg, StatusCodeType } from "./constants";
+import { CategoryCodeBg, COLOR_SCHEME, StatusCodeType } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -70,37 +74,6 @@ export function formatDate(date: Date) {
   return `${month}/${day}/${year}`;
 }
 
-export function getCountCardsDetails(
-  projectCount: number,
-  libraryCount: number,
-  moleculeCount: number,
-  customerOrgId?: number) {
-
-  return [
-    {
-      name: "Libraries",
-      svgPath: "/icons/library-icon.svg",
-      innerGap: "gap-5",
-      count: String(libraryCount),
-    },
-    {
-      name: "Projects",
-      svgPath: "/icons/project-icon.svg",
-      innerGap: "gap-2",
-      count: String(projectCount),
-      ...(customerOrgId ?
-        { href: `/organization/${customerOrgId}/projects` } :
-        { href: "/projects" }),
-    },
-    {
-      name: "Molecules",
-      svgPath: "/icons/molecule-icon.svg",
-      innerGap: "gap-2",
-      count: String(moleculeCount)
-    }
-  ];
-}
-
 export function formatDetailedDate(date: Date) {
   const today = new Date(date);
   const year = today.getFullYear();
@@ -130,7 +103,7 @@ export function formatDatetime(date: Date) {
     hour12: false,
   };
   const dateStr = new Date(date);
-  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)}, 
+  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)},
   ${dateStr.toLocaleTimeString('en-GB', optionsTime)}`;
   return formattedDate;
 }
@@ -166,60 +139,54 @@ type UnionMoleculeType = MoleculeType | StatusType;
 
 export function fetchMoleculeStatus(data: UnionLibType) {
 
-  let projectStatusCode: any = {};
   let projectStatusName: any = {};
+  let projectStatusCount: any = {};
   Object.entries(MoleculeStatusCode).forEach(([key, value]) => {
-    if (!isNaN(Number(key))) {
-      projectStatusCode = {
-        ...projectStatusCode,
-        [key]: 0
-      }
-    } else {
+    if (isNaN(Number(key))) {
       projectStatusName = {
         ...projectStatusName,
         [value]: key
       }
-    }
-  });
 
-  let projectStatusCount: any = {
-    [StatusCode.Ready]: 0,
-    [StatusCode.New]: 0,
-    [StatusCode.FailedRetro]: 0,
-    [StatusCode.InProgress]: 0,
-    [StatusCode.Done]: 0,
-  };
-
-  const keys: string[] = Object.keys(projectStatusCode);
-  const values: number[] = Object.values(projectStatusCode);
-  data.libraryMolecules.forEach((molecule: UnionMoleculeType) => {
-    const keyIndex = keys.indexOf(String(molecule.status) as any);
-    if (keyIndex > -1) {
-      const status_code = keys[keyIndex];
-      const status_name = projectStatusName[status_code];
-      if (projectStatusCount[status_name]) {
-        projectStatusCount = {
-          ...projectStatusCount,
-          [status_name]: projectStatusCount[status_name] + 1
-        }
-      } else {
-        projectStatusCount = {
-          ...projectStatusCount,
-          [status_name]: 1
-        }
+      let className = 'info';
+      if (Object(MoleculeStatusLabel as any)[key] === 'Failed') {
+        className = 'error';
+      } else if (Object(MoleculeStatusLabel as any)[key] === 'Done') {
+        className = 'success';
+      }
+      projectStatusCount = {
+        ...projectStatusCount,
+        [key]: { count: 0, className }
       }
     }
   });
 
+  const keys: string[] = Object.keys(projectStatusName);
+  data.libraryMolecules.forEach((molecule: UnionMoleculeType) => {
+    const keyIndex = keys.indexOf(String(molecule.status));
+    if (keyIndex > -1) {
+      const status_code = keys[keyIndex];
+      const status_name = projectStatusName[status_code];
+      if (Object(projectStatusCount).hasOwnProperty(status_name)) {
+
+        projectStatusCount[status_name] = {
+          ...projectStatusCount[status_name],
+          count: projectStatusCount[status_name].count + 1,
+        }
+      }
+    }
+  });
   return projectStatusCount;
 }
 
 export function isAdmin(myRoles: string[]) {
   return ['admin', 'org_admin'].some((role) => myRoles.includes(role));
 }
+
 export function isExternal(myRoles: string[]) {
   return ['library_manager', 'org_admin'].some((role) => myRoles.includes(role));
 }
+
 export function isInternal(myRoles: string[]) {
   return ['admin', 'protocol_approver', 'researcher'].some((role) => myRoles.includes(role));
 }
@@ -228,23 +195,44 @@ export function isSystemAdmin(myRoles: string[]) {
   return myRoles.includes('admin');
 }
 
+export function isOrgAdmin(myRoles: string[]) {
+  return myRoles.includes('org_admin');
+}
+
+export function isLibraryManger(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('library_manager');
+}
+
+export function isResearcher(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('researcher');
+}
+
+export function isProtocolAproover(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('protocol_approver');
+}
+
+export function isResearcherAndProtocolAproover(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('researcher') &&
+    myRoles.includes('protocol_approver');
+}
+
+export function isOnlyLibraryManger(myRoles: string[]) {
+  return myRoles.length === 1 && myRoles.includes('library_manager');
+}
+
+export function isOnlyResearcher(myRoles: string[]) {
+  return myRoles.length === 1 && myRoles.includes('researcher');
+}
+
+export function isOnlyProtocolApprover(myRoles: string[]) {
+  return myRoles.length === 1 && myRoles.includes('protocol_approver');
+}
+
 export function generateRandomDigitNumber() {
   // Generate a random number between 10000000 and 99999999
   const randomNum = Math.floor(10000000 + Math.random() * 90000000);
   return randomNum;
 }
-
-export const colorSchemeADME = (data: MoleculeType | MoleculeOrder) => {
-  let color: StatusCodeType = StatusTypes.Failed;
-  const value = data;
-  if (typeof value === 'number') {
-    if (value <= 0.5) color = StatusTypes.Failed;
-    else if (value > 0.5 && value < 1) color = StatusTypes.Info;
-    else if (value >= 1) color = StatusTypes.Done;
-  }
-  const background = CategoryCodeBg[color];
-  return background;
-};
 
 export const getUTCTime = (dateTimeString: string) => {
   const dt = new Date(dateTimeString);
@@ -256,14 +244,46 @@ export const getUTCTime = (dateTimeString: string) => {
   return dtUTC;
 }
 
-export const colorStatus = (status: number) => {
-  let foundStatus = stats.find((item: Status) => item?.text ===
-    MoleculeStatusLabels[status as MoleculeStatusCode]);
-  // If no match is found, fallback to the "NEW" status
-  if (!foundStatus) {
-    foundStatus = stats.find((item: Status) => item?.text === StatusTypes.New);
-  }
-  if (foundStatus) {
-    return foundStatus;
-  }
+export const getStatusObject = (statusList: Status[], status: string) => {
+  return statusList.filter((item: Status) => item?.text === status);
 };
+
+export function number_formatter(number: number) {
+  return new Intl.NumberFormat('en-IN', {}).format(
+    number,
+  )
+}
+
+export const capitalizeFirstLetter = (str: string | undefined) => {
+  if (!str) return 'NA';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const randomValue = (array: number[] | string[]) => {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+export const getAverage = (adme_data: ColorSchemeFormat[], key: string) => {
+  const solubilityData = adme_data.find(
+    (obj: ColorSchemeFormat) => obj.adme_test_name === key);
+  if (solubilityData) {
+    const value1 = Number(solubilityData.results[0].value);
+    const value2 = Number(solubilityData.results[1].value);
+    const average: number = (value1 + value2) / 2;
+    return { average, value1, value2 };
+  }
+  return null;
+}
+
+export const getADMEColorScheme = (average: number, key: string) => {
+  const formulaeFound = COLOR_SCHEME[key].formulaes.find((formulae: {
+    min: number,
+    max: number,
+    formulae: (value: string) => void
+  }) =>
+    average >= formulae.min && average < formulae.max
+  );
+  const { formulae } = formulaeFound;
+  const actualValue = formulae(average);
+  return actualValue;
+}

@@ -25,10 +25,20 @@ export async function GET(request: Request) {
         const user_id = searchParams.get('user_id');
         const project_id = searchParams.get('project_id');
         const organization_id = searchParams.get('organization_id');
+        const lab_job_cart = searchParams.get('lab_job_cart');
 
         const query: any = {
             where: {
                 created_by: Number(user_id),
+                ...(() => {
+                    if (lab_job_cart) {
+                        return {
+                            NOT: {
+                                molecule_order_id: null
+                            }
+                        }
+                    }
+                })()
             },
             include: {
                 molecule: {
@@ -37,6 +47,7 @@ export async function GET(request: Request) {
                         source_molecule_name: true,
                         is_added_to_cart: true,
                         smiles_string: true,
+                        status: true,
                         library: {
                             select: {
                                 id: true,
@@ -145,15 +156,43 @@ export async function DELETE(request: Request) {
         const library_id = Number(searchParams.get('library_id'));
         const project_id = Number(searchParams.get('project_id'));
         const user_id = Number(searchParams.get('user_id'));
-
-
+        const moleculeStatus = Number(searchParams.get('moleculeStatus'));
+        // Code For Remove All
         if (!molecule_id && !library_id && !project_id) {
+            const records = await prisma.molecule_cart.findMany({
+                where: {
+                    created_by: user_id,
+                },
+                select: {
+                    molecule_id: true,
+                },
+            });
+            const updatedIds = records.map(record => record.molecule_id);
+            await prisma.molecule.updateMany({
+                where: {
+                    id: { in: updatedIds }
+                },
+                data: {
+                    is_added_to_cart: true,
+                    status: moleculeStatus
+                },
+            });
             await prisma.molecule_cart.deleteMany({
                 where: {
                     created_by: user_id
                 }
             });
+
         }
+        // Code For Remove
+        await prisma.molecule.update({
+            where: {
+                id: molecule_id,
+            },
+            data: {
+                status: moleculeStatus,
+            },
+        })
 
         await prisma.molecule_cart.deleteMany({
             where: {

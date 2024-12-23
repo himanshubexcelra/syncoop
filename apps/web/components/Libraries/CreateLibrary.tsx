@@ -75,7 +75,7 @@ export default function CreateLibrary({
     <Form
       ref={formRef}
       showValidationSummary={true}
-      formData={!!library_idx ? projectData.other_container?.[library_idx] : {}
+      formData={library_idx !== -1 ? projectData.other_container?.[library_idx] : {}
       }>
       <SimpleItem
         dataField="organization"
@@ -108,14 +108,21 @@ export default function CreateLibrary({
       </SimpleItem>
       <SimpleItem
         dataField="name"
-        editorOptions={{ placeholder: "New Library" }}
+        editorOptions={{
+          placeholder: `${(library_idx !== -1 ? 'Edit' : 'New')} Library`,
+          value: library_idx !== -1 ?
+            projectData.other_container?.[library_idx].name : ''
+        }}
       >
         <Label text="Library name" />
         <RequiredRule message="Library name is required" />
       </SimpleItem>
       <SimpleItem
         dataField="target"
-        editorOptions={{ placeholder: "Target" }}
+        editorOptions={{
+          placeholder: "Target", value: library_idx !== -1 ?
+            projectData.other_container?.[library_idx].metadata.target : ''
+        }}
       >
         <Label text="Target" />
       </SimpleItem>

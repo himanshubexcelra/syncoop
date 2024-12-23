@@ -20,6 +20,7 @@
 .pathway-popup {
     .dx-popup-content {
         padding: 0 !important;
+        margin: 5px;
     }
 }
 
@@ -147,12 +148,14 @@
     .dx-collection {
         align-items: center !important;
     }
+
     .custom-password {
         .dx-texteditor {
             width: 320px;
             height: 40px;
         }
     }
+
     .dx-item {
         flex: auto !important;
     }

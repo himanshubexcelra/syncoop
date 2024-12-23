@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";
 import { ButtonTypes } from "devextreme-react/cjs/button";
-import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
+import PasswordCriteria from "../Tooltips/PasswordCriteria";
 import { LoginFormSchema, OrganizationType } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
@@ -70,6 +70,9 @@ export default function RenderCreateUser({
                 setCreatePopupVisibility(false);
                 fetchAndFilterData()
                 setValid('valid')
+                const toastId = toast.success(Messages.ADD_USER);
+                await delay(DELAY);
+                toast.remove(toastId);
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);

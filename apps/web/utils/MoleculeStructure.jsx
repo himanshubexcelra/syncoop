@@ -45,6 +45,7 @@ class MoleculeStructure extends Component {
      * RDKit-specific properties
      */
     structure: PropTypes.string.isRequired,
+    structureName: PropTypes.string,
     subStructure: PropTypes.string,
     extraDetails: PropTypes.object,
     drawingDelay: PropTypes.number
@@ -182,6 +183,7 @@ class MoleculeStructure extends Component {
     if (this.state.rdKitLoaded) {
       const shouldUpdateDrawing =
         prevProps.structure !== this.props.structure ||
+        prevProps.structureName !== this.props.structureName ||
         prevProps.svgMode !== this.props.svgMode ||
         prevProps.subStructure !== this.props.subStructure ||
         prevProps.width !== this.props.width ||
@@ -208,14 +210,16 @@ class MoleculeStructure extends Component {
 
     if (!isValidMol) {
       return (
-        <span title={`Cannot render structure: ${this.props.structure}`}>
+        <span title={`Cannot render structure: ${this.props.structure} / ${this.props.structureName}`}>
           Render Error.
         </span>
       );
     } else if (this.props.svgMode) {
       return (
         <div
-          title={this.props.structure}
+          title={this.props.structureName
+            ? `${this.props.structure} / ${this.props.structureName}`
+            : this.props.structure}
           className={"molecule-structure-svg " + (this.props.className || "")}
           style={{ width: this.props.width, height: this.props.height }}
           dangerouslySetInnerHTML={{ __html: this.state.svg }}
@@ -229,7 +233,9 @@ class MoleculeStructure extends Component {
           }
         >
           <canvas
-            title={this.props.structure}
+            title={this.props.structureName
+              ? `${this.props.structure} / ${this.props.structureName}`
+              : this.props.structure}
             id={this.props.id}
             width={this.props.width}
             height={this.props.height}

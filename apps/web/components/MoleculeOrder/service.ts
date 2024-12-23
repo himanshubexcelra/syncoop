@@ -8,11 +8,17 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_order`);
 
     // Add query parameters based on provided params
-    if (params.organization_id) {
+    /* if (params.organization_id) {
         url.searchParams.append("organization_id", params.organization_id.toString());
     }
     if (params.created_by) {
         url.searchParams.append("created_by", params.created_by.toString());
+    } */
+
+    if (params) {
+        Object.entries(params).map(([key, value]: any) => {
+            url.searchParams.append(key, value);
+        });
     }
 
     const response = await fetch(url.toString(), {
@@ -26,12 +32,11 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
     return data;
 }
 
-export async function getReactionPathway(molecule_id: number, pathwayIndex?: number) {
+export async function getReactionPathway(molecule_id: number, pathwayId?: string) {
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
     url.searchParams.append("molecule_id", molecule_id.toString());
-
-    if (pathwayIndex !== undefined) {
-        url.searchParams.append("pathway_index", pathwayIndex.toString());
+    if (pathwayId !== undefined) {
+        url.searchParams.append("id", pathwayId.toString());
     }
     try {
         const response = await fetch(url, {
@@ -82,7 +87,7 @@ export async function getSolventTemperature(name: string) {
 }
 
 export async function updateReaction(payLoad: any) {
-    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/reaction`);
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
     try {
         const response = await fetch(url.toString(), {
             method: "PUT",

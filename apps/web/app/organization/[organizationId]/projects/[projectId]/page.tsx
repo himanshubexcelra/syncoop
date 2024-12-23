@@ -2,6 +2,7 @@
 import Layout from "@/components/layout";
 import LibraryDetails from "@/components/Libraries/LibraryDetails";
 import { getUserData } from "@/utils/auth";
+import { isSystemAdmin } from "@/utils/helpers";
 import { redirect } from "next/navigation";
 
 type OrgProjectDetailProps = {
@@ -19,7 +20,11 @@ export default async function OrgProjectDetail({ params }: OrgProjectDetailProps
         redirect('/');
     }
 
-    const { userData, actionsEnabled } = sessionData
+    const { userData, actionsEnabled, } = sessionData;
+    const { myRoles } = userData;
+    if (!isSystemAdmin(myRoles)) {
+        redirect('/');
+    }
 
     return (
         <Layout>

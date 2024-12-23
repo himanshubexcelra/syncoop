@@ -28,6 +28,7 @@ import {
 import { TextBoxTypes } from 'devextreme-react/text-box';
 import { User } from "@/lib/definition";
 import { AppContext } from "@/app/AppState";
+import { Messages } from "@/utils/message";
 
 const functionalAssay = {
   functionalAssay1: '',
@@ -46,6 +47,7 @@ export interface OrganizationEditField {
   edit?: boolean,
   loggedInUser: number,
   orgAdminRole?: number,
+  editPopup: boolean,
 }
 
 export default function EditOrganization({
@@ -55,6 +57,7 @@ export default function EditOrganization({
   formRef,
   myRoles,
   loggedInUser,
+  editPopup,
 }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.owner_id);
@@ -73,7 +76,10 @@ export default function EditOrganization({
     setFormData(formValue);
     setPrimaryContactId(organizationData.owner_id);
     setMetaData(data);
-  }, [organizationData, formRef]);
+    if (editPopup) {
+      setMetaData(meta);
+    }
+  }, [organizationData, formRef, editPopup]);
 
 
   const handleSubmit = async () => {
@@ -86,6 +92,9 @@ export default function EditOrganization({
         fetchOrganizations();
         showEditPopup(false);
         context?.addToState({ ...appContext, refreshAssayTable: true })
+        const toastId = toast.success(Messages.UPDATE_ORGANIZATION);
+        await delay(DELAY);
+        toast.remove(toastId);
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
@@ -156,19 +165,20 @@ export default function EditOrganization({
           <RequiredRule message="Organization name is required" />
         </SimpleItem>
         <GroupItem colCount={2} cssClass="delete-button-group">
-        <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }}>
-          <RadioGroup
-            items={status}
-            disabled={!disableAllowed}
-            className={!disableAllowed ? "disabled-field" : ""}
-            defaultValue={formData.is_active ? ActionStatus.Enabled : ActionStatus.Disabled}
-            onValueChange={handleValueChange} />
+          <SimpleItem dataField="status" editorOptions={{ disabled: !disableAllowed }}>
+            <RadioGroup
+              items={status}
+              disabled={!disableAllowed}
+              className={!disableAllowed ? "disabled-field" : ""}
+              defaultValue={formData.is_active ? ActionStatus.Enabled : ActionStatus.Disabled}
+              onValueChange={handleValueChange} />
           </SimpleItem>
           <ButtonItem cssClass="delete-button">
             <ButtonOptions
               stylingMode="text"
               text={`Delete 
           ${formData.name}`}
+              visible={disableAllowed}
               disabled={true}
               elementAttr={{ class: 'lowercase' }} />
           </ButtonItem>

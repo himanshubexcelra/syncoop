@@ -397,7 +397,10 @@ const updateElement = (oldVnode, newVnode, isSvgMode, memberName) => {
     }
     // add new & update changed attributes
     for (memberName in newVnodeAttrs) {
-        setAccessor(elm, memberName, oldVnodeAttrs[memberName], newVnodeAttrs[memberName], isSvgMode, newVnode.$flags$);
+        if (oldVnodeAttrs[memberName]) {
+            // handle update
+            setAccessor(elm, memberName, newVnodeAttrs[memberName], oldVnodeAttrs[memberName], isSvgMode, newVnode.$flags$);
+        } else setAccessor(elm, memberName, oldVnodeAttrs[memberName], newVnodeAttrs[memberName], isSvgMode, newVnode.$flags$);
     }
 };
 /**
@@ -674,7 +677,11 @@ const updateChildren = (parentElm, oldCh, newVNode, newCh) => {
             }
         }
     }
-    if (oldStartIdx > oldEndIdx) {
+    if (oldCh !== newCh) {
+        // handle update
+        patch(newCh[0], oldCh[0]);
+    }
+    else if (oldStartIdx > oldEndIdx) {
         // we have some more new nodes to add which don't match up with old nodes
         addVnodes(parentElm, newCh[newEndIdx + 1] == null ? null : newCh[newEndIdx + 1].$elm$, newVNode, newCh, newStartIdx, newEndIdx);
     }
@@ -1024,6 +1031,8 @@ const postUpdateComponent = (hostRef) => {
         }
     }
     else {
+        // call update
+        safeCall(instance, 'componentWillUpdate');
         endPostUpdate();
     }
     {
@@ -1080,7 +1089,10 @@ const setValue = (ref, propName, newVal, cmpMeta) => {
     if ((!(flags & 8 /* HOST_FLAGS.isConstructingInstance */) || oldVal === undefined) && didValueChange) {
         // gadzooks! the property's value has changed!!
         // set our new value!
-        hostRef.$instanceValues$.set(propName, newVal);
+        if (Array.isArray(oldVal) && !Array.isArray(newVal)) {
+            hostRef.$instanceValues$.set(propName, JSON.parse(newVal));
+        }
+        else hostRef.$instanceValues$.set(propName, newVal);
         if (instance) {
             if ((flags & (2 /* HOST_FLAGS.hasRendered */ | 16 /* HOST_FLAGS.isQueuedForUpdate */)) === 2 /* HOST_FLAGS.hasRendered */) {
                 // looks like this value actually changed, so we've got work to do!
@@ -1190,15 +1202,11 @@ const proxyComponent = (Cstr, cmpMeta, flags) => {
             };
             // create an array of attributes to observe
             // and also create a map of html attribute name to js property name
-            Cstr.observedAttributes = members
-                // .filter(([_, m]) => m[0] & 15 /* MEMBER_FLAGS.HasAttribute */) // filter to only keep props that should match attributes
-                // .filter(([_, m]) => m[0]) // to include width and height
+            Cstr.observedAttributes = members.filter(([_, m]) => m[0]) // to include width and height
                 .map(([propName, m]) => {
-                    if ((m[0] & 15) || (['width', 'height'].includes(propName))) {
-                        const attrName = m[1] || propName;
-                        attrNameToPropName.set(attrName, propName);
-                        return attrName;
-                    }
+                    const attrName = m[1] || propName;
+                    attrNameToPropName.set(attrName, propName);
+                    return attrName;
                 });
         }
     }

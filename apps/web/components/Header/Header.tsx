@@ -4,8 +4,10 @@
 import {
     DeleteMoleculeCart,
     DropDownItem,
+    MoleculeStatusCode,
     UserData,
 } from '@/lib/definition';
+import { usePathname } from 'next/navigation'
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -24,6 +26,8 @@ import CartDetails from '../Libraries/CartDetails';
 import OrderDetails from '../Libraries/OrderDetails'
 import {
     isExternal,
+    isProtocolAproover,
+    isSystemAdmin,
 } from '@/utils/helpers';
 type HeaderProps = {
     userData: UserData,
@@ -31,6 +35,7 @@ type HeaderProps = {
 }
 
 export default function Header({ userData }: HeaderProps) {
+    const { myRoles } = userData;
     const context: any = useContext(AppContext);
     const appContext = context.state;
     const searchParams = useSearchParams();
@@ -44,12 +49,26 @@ export default function Header({ userData }: HeaderProps) {
     const [orderPopupVisible, setOrderPopupVisibility] = useState(false);
     const [cartData, setCartData] = useState([]);
     const [orderMsg, setOrderMsg] = useState<string>('');
+    const currentUrl = usePathname();
+    const containsProjects = currentUrl.includes("/projects");
+    const containsMoleculeOrder = currentUrl.includes("/molecule_order");
+
     const orderPopupClassName =
         isExternal(userData.myRoles) ? 'order-popup' : 'order-popup-internal'
 
     useEffect(() => {
         const fetchCartData = async () => {
-            const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
+            let params: object = {
+                user_id: userData.id
+            }
+            if (containsMoleculeOrder &&
+                (isSystemAdmin(myRoles) || isProtocolAproover(myRoles))) {
+                params = {
+                    ...params,
+                    lab_job_cart: true
+                }
+            }
+            const cartDataAvaialable: any = await getMoleculeCart(params);
             setCartData(cartDataAvaialable);
             /* context?.addToState({
                 ...appContext,
@@ -67,41 +86,60 @@ export default function Header({ userData }: HeaderProps) {
         setDropdownOpen(!dropdownOpen);
     };
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
-        const { molecule_id, library_id, project_id, moleculeName, created_by } = obj;
-        deleteMoleculeCart(created_by, molecule_id, library_id, project_id).then((res) => {
-            if (res) {
-                const filteredData = cartData.filter((item: any) =>
-                    !(
-                        item.molecule_id === molecule_id &&
-                        item.library_id === library_id &&
-                        item.project_id === project_id
-                    )
-                );
-                context?.addToState({
-                    ...appContext, cartDetail: [...filteredData]
-                })
-                const message = Messages.deleteMoleculeMessage(moleculeName);
-                toast.success(message);
-                setCartData(filteredData);
-                if (filteredData.length == 0) {
-                    setCreatePopupVisibility(false);
+        const { molecule_id, library_id, project_id, created_by } = obj;
+        const moleculeStatus = containsProjects ?
+            MoleculeStatusCode.New : MoleculeStatusCode.Validated;
+        deleteMoleculeCart(created_by, moleculeStatus, molecule_id, library_id, project_id).
+            then((res) => {
+                if (res) {
+                    const filteredData = cartData.filter((item: any) =>
+                        !(
+                            item.molecule_id === molecule_id &&
+                            item.library_id === library_id &&
+                            item.project_id === project_id
+                        )
+                    );
+
+                    context?.addToState({
+                        ...appContext,
+                        cartDetail: [...filteredData],
+                        refreshCart: !appContext.refreshCart,
+                    })
+                    const message = Messages.deleteMoleculeMessage(molecule_id);
+                    toast.success(message);
+                    setCartData(filteredData);
+                    if (filteredData.length == 0) {
+                        setCreatePopupVisibility(false);
+                    }
                 }
-            }
-        }).catch((error) => {
-            console.log(error);
-        })
+            }).catch((error) => {
+                console.log(error);
+            })
     }
 
     const removeAll = (user_id: number, type: string, msg: string) => {
-        deleteMoleculeCart(user_id).then((res) => {
+        let moleculeStatus = containsProjects ?
+            MoleculeStatusCode.New : MoleculeStatusCode.Validated;
+        if (type == "SubmitOrder") {
+            moleculeStatus = MoleculeStatusCode.Ordered
+        }
+        if (type == "LabJobOrder") {
+            moleculeStatus = MoleculeStatusCode.InProgress
+        }
+
+        deleteMoleculeCart(user_id, moleculeStatus).then((res) => {
+
             if (res) {
                 setCartData([]);
                 context?.addToState({
-                    ...appContext, cartDetail: []
+                    ...appContext,
+                    cartDetail: [],
+                    refreshCart: !appContext.refreshCart,
+
                 })
                 if (type === 'RemoveAll') {
                     setCreatePopupVisibility(false)
-                    toast.success(toast.success(msg));
+                    toast.success(msg);
                 }
                 else {
                     setCreatePopupVisibility(false)
@@ -258,25 +296,26 @@ export default function Header({ userData }: HeaderProps) {
                     </div>
                 </div>
             </header> {createPopupVisible && <CartPopup
-                title="Molecule Cart"
+                title={containsProjects ? "Molecule Cart" : "Synthesis Lab Job"}
                 visible={createPopupVisible}
                 onHiding={() => setCreatePopupVisibility(false)}
 
                 contentRender={() => (
                     <CartDetails
                         cartData={cartData}
-                        user_id={userData.id}
-                        orgType={userData.orgUser.type}
-                        setCreatePopupVisibility={setCreatePopupVisibility}
+                        userData={userData}
                         removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
                         removeAll={
                             (user_id: number, type: string, msg: string) =>
                                 removeAll(user_id, type, msg)
                         }
+                        containsProjects={containsProjects}
+                        close={() => setCreatePopupVisibility(false)}
                     />
                 )}
                 width={570}
                 // hideOnOutsideClick={true}
+                dragEnabled={false}
                 height="100vh"
                 position={popupPosition}
 
@@ -299,6 +338,7 @@ export default function Header({ userData }: HeaderProps) {
                 showCloseButton={false}
                 wrapperAttr={{ class: orderPopupClassName }}
                 showTitle={false}
+                dragEnabled={false}
                 style={{ backgroundColor: 'white' }}
             />}</>);
 }

@@ -5,7 +5,6 @@ import {
     addToFavouritesProps,
     MoleculeOrder,
     OrderType,
-    MoleculeStatusCode,
     SaveLabJobOrder,
     CreateLabJobOrder
 } from "@/lib/definition";
@@ -15,7 +14,7 @@ export async function getLibraries(withRelation: string[] = [], project_id: stri
     url.searchParams.append('project_id', project_id);
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
-    }    
+    }
     const response = await fetch(url, {
         mode: "no-cors",
         method: "GET",
@@ -45,48 +44,22 @@ export async function getLibraryById(withRelation: string[] = [], library_id: st
     return data;
 }
 
-export async function getLibraryCountById(organization_id?: number) {
-    try {
-        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library`);
-        if (organization_id) {
-            url.searchParams.append('organization_id', String(organization_id));
-        }
-        url.searchParams.append('condition', 'count');
-        const response = await fetch(url, {
-            mode: "no-cors",
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
+export async function getMoleculeData(params: object) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule`);
+    if (params) {
+        Object.entries(params).map(([key, value]: any) => {
+            url.searchParams.append(key, value);
         });
-        const data = await response.json();
-        return data;
     }
-    catch (error: any) {
-        return error;
-    }
-}
-
-export async function geMoleculeCountById(organization_id?: number) {
-    try {
-        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule`);
-        if (organization_id) {
-            url.searchParams.append('organization_id', String(organization_id));
-        }
-        url.searchParams.append('condition', 'count');
-        const response = await fetch(url, {
-            mode: "no-cors",
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-        const data = await response.json();
-        return data;
-    }
-    catch (error: any) {
-        return error;
-    }
+    const response = await fetch(url, {
+        mode: "no-cors",
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+    const data = await response.json();
+    return data;
 }
 
 export async function createLibrary(formData: FormData) {
@@ -139,10 +112,11 @@ export async function editLibrary(formData: FormData) {
     }
 }
 
-export async function addMoleculeToCart(moleculeData: CreateLabJobOrder[]) {
+export async function addMoleculeToCart(moleculeData: CreateLabJobOrder[],
+    status: number) {
     const payload = {
         molecules: moleculeData,
-        status: MoleculeStatusCode.NewInCart
+        status
     };
     try {
         const response: any = await fetch(
@@ -169,10 +143,15 @@ export async function addMoleculeToCart(moleculeData: CreateLabJobOrder[]) {
     }
 }
 
-export async function getMoleculeCart(user_id?: number, library_id?: number, project_id?: number) {
+export async function getMoleculeCart(params: object) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
-        if (library_id) {
+        if (params) {
+            Object.entries(params).map(([key, value]: any) => {
+                url.searchParams.append(key, value);
+            });
+        }
+        /* if (library_id) {
             url.searchParams.append('library_id', String(library_id));
         }
         if (user_id) {
@@ -180,7 +159,7 @@ export async function getMoleculeCart(user_id?: number, library_id?: number, pro
         }
         if (project_id) {
             url.searchParams.append('project_id', String(project_id));
-        }
+        } */
         const response = await fetch(url, {
             mode: "no-cors",
             method: "GET",
@@ -197,11 +176,38 @@ export async function getMoleculeCart(user_id?: number, library_id?: number, pro
     }
 }
 
+export async function getMoleculeOrder(params: object) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart_order/`);
+        if (params) {
+            Object.entries(params).map(([key, value]: any) => {
+                url.searchParams.append(key, value);
+            });
+        }
+
+        const response = await fetch(url, {
+            mode: "no-cors",
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
+        return error;
+    }
+}
+
+
 export async function deleteMoleculeCart(
     created_by?: number,
+    moleculeStatus?: number,
     molecule_id?: number,
     library_id?: number,
-    project_id?: number
+    project_id?: number,
 ) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
@@ -217,6 +223,11 @@ export async function deleteMoleculeCart(
         if (project_id) {
             url.searchParams.append('project_id', String(project_id));
         }
+        if (moleculeStatus) {
+            url.searchParams.append('moleculeStatus', String(moleculeStatus));
+        }
+
+
         const response = await fetch(url, {
             method: "DELETE",
             headers: {
@@ -258,12 +269,8 @@ export async function addToFavourites(formData: addToFavouritesProps) {
     }
 }
 
-export async function submitOrder(orderData: OrderType[]) {
+export async function submitOrder(orderData: OrderType) {
     try {
-        const payload = {
-            order: orderData,
-            status: MoleculeStatusCode.Ordered
-        };
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/molecule_order`,
             {
@@ -272,7 +279,7 @@ export async function submitOrder(orderData: OrderType[]) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(orderData),
             }
         );
 
@@ -378,8 +385,7 @@ export async function getLabJobOrderDetail(molecule_id: number) {
 export async function postLabJobOrder(data: SaveLabJobOrder) {
     try {
         const payload = {
-            order: data,
-            status: MoleculeStatusCode.InReview
+            order: data
         };
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/lab_job_order`,
@@ -401,6 +407,31 @@ export async function postLabJobOrder(data: SaveLabJobOrder) {
             return { status: response.status, error };
         }
     } catch (error: any) {
+        return error;
+    }
+}
+
+export async function getStatusCodes(params: object) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/status_code`);
+        if (params) {
+            Object.entries(params).map(([key, value]: any) => {
+                url.searchParams.append(key, value);
+            });
+        }
+        const response = await fetch(url, {
+            mode: "no-cors",
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        if (response) {
+            const data = await response.json();
+            return data;
+        }
+    }
+    catch (error: any) {
         return error;
     }
 }

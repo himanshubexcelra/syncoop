@@ -82,7 +82,7 @@
 
 .badge {
     font-weight: 400;
-    padding: 4px 8px;
+    padding: 4px 6px;
     gap: 10px;
     font-size: 10px;
     border-radius: 21px;
@@ -306,107 +306,125 @@
 .popup-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto;
     padding: 2px;
-    max-height: 80vh;
     overflow: hidden;
-  }
-  
-  .popup-grid {
+}
+
+.popup-grid {
     flex-grow: 1;
     overflow-y: auto;
     margin-bottom: 20px;
-  }
-  
-  .popup-buttons {
+}
+
+.popup-buttons {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 10px;
     margin-top: auto;
     width: 100%;
     padding-bottom: 10px;
-  }
+}
 
-  .order-popup {
+.order-popup {
     .container {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 20px;
         max-width: 100%;
-        height: 100%; 
+        height: 100%;
         box-sizing: border-box;
     }
+
     .image-column img {
         max-width: 100%;
         height: auto;
     }
+
     .text-column {
-        flex: 1; 
+        flex: 1;
         padding-bottom: 80px;
     }
+
     .btn-primary {
-        right:275px;
-        top:20px;
+        right: 275px;
+        top: 20px;
     }
+
     .text-column p {
         font-size: 20px;
         color: #000;
         font-weight: 400;
     }
+
     .action-button {
         padding: 10px 20px;
         right: 232px;
-        top:10px;
+        top: 10px;
     }
-  }
-  .order-popup-internal {
+}
+
+.order-popup-internal {
     .container {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 20px;
         max-width: 100%;
-        height: 100%; 
+        height: 100%;
         box-sizing: border-box;
     }
+
     .image-column img {
         max-width: 100%;
         height: auto;
     }
+
     .text-column {
-        flex: 1; 
+        flex: 1;
         padding-bottom: 80px;
     }
+
     .btn-primary {
-        right:286px;
-        top:40px;
+        right: 286px;
+        top: 40px;
     }
+
     .text-column p {
         font-size: 20px;
         color: #000;
         font-weight: 400;
         width: 266px;
-        height: 90px;
         margin-top: 30px;
     }
+
     .action-button {
         padding: 10px 20px;
         right: 232px;
-        top:10px;
+        top: 10px;
     }
-  }
-  .confirm-popup {
-    p {
-      font-size: 20px;
-      color: #281949;
-      font-weight: 700;
-  
-    }
+
     .confirmButton {
-      display: flex;
-      padding-top: 20px;
-      gap: 10px;
-  
+        display: flex;
+        padding-top: 20px;
+        gap: 10px;
+
     }
-  }
+}
+
+.confirm-popup {
+    p {
+        font-size: 20px;
+        color: #281949;
+        font-weight: 700;
+
+    }
+
+    .confirmButton {
+        display: flex;
+        padding-top: 20px;
+        gap: 10px;
+
+    }
+}

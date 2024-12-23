@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "@rdkit/rdkit": "2024.3.5-1.0.0",
-    "devextreme": "24.1",
+    "devextreme": "~24.1.6",
     "devextreme-react": "24.1",
     "next": "14.2.13",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
-    "streamsaver": "^2.0.6",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "streamsaver": "^2.0.6"
   },
   "devDependencies": {
     "@emotion/styled": "^11.11.5",
@@ -32,8 +32,9 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/streamsaver": "^2.0.1",
     "@types/socket.io-client": "^3.0.0",
+    "@types/streamsaver": "^2.0.1",
+    "copy-webpack-plugin": "^11.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.13",
     "graphology": "^0.25.4",
@@ -47,7 +48,6 @@
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
-    "copy-webpack-plugin": "^11.0.0",
     "zod": "^3.23.8"
   }
 }

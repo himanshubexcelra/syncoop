@@ -49,7 +49,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
     const organization = await getOrganization(
       {
         withRelation: ['orgUser', 'user_role'],
-        withCount: ['projects'],
+        withCount: ['projects', 'molecules'],
         type: OrganizationType.External
       });
     setTableData(organization);
@@ -125,21 +125,22 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             );
           }} />
         <Column
-          dataField="_count.projects"
+          dataField="_count.other_container"
           width={90}
           alignment="center"
           caption="Projects"
           cellRender={({ data }: any) => (
-            <span>{data._count?.projects}</span>
+            <span>{data._count?.other_container}</span>
           )}
           allowHeaderFiltering={false}
         />
         <Column
-          dataField="molecules"
+          dataField="_count.organizationMolecules"
           width={90}
           alignment="center"
-          cellRender={() => (
-            <span>0</span>
+          caption="Molecules"
+          cellRender={({ data }: any) => (
+            <span>{data._count?.organizationMolecules}</span>
           )}
           allowHeaderFiltering={false}
         />
@@ -169,7 +170,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           <HeaderFilter dataSource={statusHeaderFilter} />
         </Column>
         <Column
-          dataField="user.email_id"
+          dataField="owner.email_id"
           minWidth={350}
           caption="Organization Admin"
           cellRender={({ data }: any) => <span>{data.owner.email_id}</span>}
@@ -188,9 +189,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
         <Column
           dataField="updated_at"
           caption="Last Modified Date"
-          cellRender={({ data }) => (
-            <span>{formatDate(data.updated_at)}</span>
-          )}
+          cellRender={({ data }) =>
+          (
+            <span>{data.updated_at
+              &&
+              formatDate(data.updated_at)}</span>
+          )
+          }
           allowHeaderFiltering={false}
         />
         {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
@@ -206,6 +211,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                       width={24}
                       height={24}
                       alt="Edit Organization"
+                      title="Edit organization"
                     />
                   </>
                 )}
@@ -239,6 +245,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             <Popup
               title="Create Organization"
               visible={createPopupVisible}
+              dragEnabled={false}
               onShown={handlePopupShown}
               contentRender={() => (
                 <RenderCreateOrganization
@@ -262,6 +269,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             <Popup
               title={`Edit ${editField?.name}`}
               visible={editPopup}
+              dragEnabled={false}
               showCloseButton={true}
               hideOnOutsideClick={true}
               contentRender={() => (
@@ -272,6 +280,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                   fetchOrganizations={fetchOrganizations}
                   myRoles={myRoles}
                   loggedInUser={userData.id}
+                  editPopup={editPopup}
                 />
               )}
               width={550}

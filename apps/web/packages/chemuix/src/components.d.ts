@@ -80,6 +80,8 @@ export namespace Components {
     "zoomReset": () => Promise<void>;
     "width": number;
     "height": number;
+    "currentReaction": number;
+    "updatedAt": string;
   }
   interface ReactionPathwayTestWrapper {
     "displayHoneycomb": boolean;
@@ -176,6 +178,7 @@ declare namespace LocalJSX {
     "nodes"?: Omit<Node, "boundingBox">[];
     "width"?: number;
     "height"?: number;
+    "currentReaction"?: number;
     "onReaction-pathway-click"?: (event: ReactionPathwayCustomEvent<EventBody>) => void;
   }
   interface ReactionPathwayTestWrapper {

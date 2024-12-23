@@ -52,7 +52,7 @@ export default function CreateProject({
 
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
-      const filteredUser = filteredUsers.filter(u => u.id !== projectData.ownerId)
+      const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id)
       const updatedAllUsers = filteredUser.map(user => {
         const updatedUser = projectData?.sharedUsers?.find(u => u.user_id === user.id);
         return { ...user, permission: updatedUser ? updatedUser.role : 'View' };
@@ -259,7 +259,7 @@ export default function CreateProject({
           items: PROJECT_TYPES,
           searchEnabled: true,
           disabled: edit,
-          value: edit ? projectData?.metadata.type : ''
+          value: edit ? projectData?.metadata.type : PROJECT_TYPES[0]
         }}
       >
         <Label text="Project Type" />
@@ -294,7 +294,8 @@ export default function CreateProject({
         <Label text="Description" />
       </SimpleItem>
 
-      <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}>
+      <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}
+        visible={false}>
         <div className="">
           <Textbox
             placeholder="Search"
@@ -314,11 +315,13 @@ export default function CreateProject({
         </div>
       </GroupItem>
       {filteredData.length === 0 ? (
-        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}>
+        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}
+          visible={false}>
           <div className="nodata-project">No data</div>
         </GroupItem>
       ) : (
-        <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}>
+        <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}
+          visible={false}>
           <div style={{ width: '50%' }}>
             <DataGrid
               dataSource={filteredData}

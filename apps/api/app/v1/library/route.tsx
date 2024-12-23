@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     const { name, target, description, project_id, user_id } = req;
 
     try {
-        const existingLibrary = await prisma.container.findUnique({
+        const existingLibrary = await prisma.container.findMany({
             where: {
                 parent_id: Number(project_id),
                 name,
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         // Check if an library with the same name already exists (case insensitive)
         // const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase())[0];
 
-        if (existingLibrary) {
+        if (existingLibrary.length) {
             return new Response(JSON.stringify(LIBRARY_EXISTS), {
                 headers: { "Content-Type": "application/json" },
                 status: INTERNAL_SERVER_ERROR,
@@ -157,19 +157,22 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, target, description, project_id, user_id, id } = req;
+        const { name, target, description, user_id, project_id, id } = req;
 
-        const existingLibrary = await prisma.container.findUnique({
+        const existingLibrary = await prisma.container.findMany({
             where: {
-                parent_id: Number(project_id),
-                name,
-                type: 'L'
+                AND: [
+                    { id: { not: Number(id) } },
+                    { 
+                        name: name,
+                        type: 'L',
+                        parent_id: project_id
+                     }
+                ]
             }
         });
 
-        // const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase() && library.id !== id)[0];
-
-        if (existingLibrary) {
+        if (existingLibrary.length) {
             return new Response(JSON.stringify(LIBRARY_EXISTS), {
                 headers: { "Content-Type": "application/json" },
                 status: INTERNAL_SERVER_ERROR,

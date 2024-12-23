@@ -1,5 +1,5 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import DataGrid, {
     Column,
     Grouping,
@@ -10,21 +10,31 @@ import DataGrid, {
     Sorting,
     FilterRow,
     LoadPanel,
-    HeaderFilter
+    HeaderFilter,
+    Toolbar,
+    Item,
+    DataGridTypes,
+    RowDragging,
 } from 'devextreme-react/data-grid';
 import CheckBox from 'devextreme-react/check-box';
 import Image from 'next/image';
+import { Button } from 'devextreme-react';
+import { ColumnConfig } from '@/lib/definition';
 
-interface ColumnConfig<T> {
-    dataField: keyof T;
-    title?: string | React.ReactNode;
-    width?: number;
-    customRender?: (data: T) => React.ReactNode;
+interface ToolbarButtonConfig {
+    text: string;
+    onClick: () => void;
+    icon?: string;
+    class?: string;
+    disabled?: boolean;
+    visible?: boolean;
 }
 
 interface CustomDataGridProps<T> {
-    data: T[];
-    columns: ColumnConfig<T>[];
+    data: any[];
+    height?: string;
+    columns: ColumnConfig[];
+    toolbarButtons?: ToolbarButtonConfig[];
     groupingColumn?: string;
     enableRowSelection?: boolean;
     enableGrouping?: boolean;
@@ -33,37 +43,46 @@ interface CustomDataGridProps<T> {
     enableSorting?: boolean;
     enableFiltering?: boolean;
     enableOptions?: boolean;
-    loadMoreData?: () => void;
+    buttonText?: string;
+    onButtonClick?: () => void;
+    loader: boolean;
+    enableHeaderFiltering?: boolean;
+    handleSelectionChange?: (selectedRowsData: any) => void;
+    handleSelectedRows?: (e: any) => void;
+    enableSearchOption?: boolean;
+    selectedRowKeys?: any[];
+    onSelectionChanged?: (e: any) => void;
+    onCellPrepared?: (e: DataGridTypes.CellPreparedEvent) => void;
+    showDragIcons?: boolean;
+    enableToolbar?: boolean;
+    onReorderFunc?: (e: any) => void;
+    onEditorPreparing?: (e: any) => void;
 }
 
 const CustomDataGrid = <T extends Record<string, any>>({
     data,
+    height = '600px',
     columns,
+    toolbarButtons = [],
     groupingColumn,
     enableRowSelection = true,
     enableGrouping = true,
     enableInfiniteScroll = false,
-    enableAutoScroll = false,
     enableSorting = true,
     enableFiltering = true,
+    enableSearchOption = true,
     enableOptions = true,
-    loadMoreData,
+    enableHeaderFiltering = true,
+    selectedRowKeys,
+    onSelectionChanged,
+    onCellPrepared,
+    showDragIcons = false,
+    enableToolbar = true,
+    onReorderFunc,
+    onEditorPreparing,
 }: CustomDataGridProps<T>) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
-    const dataGridRef = useRef<any>(null);
-
-    const handleScroll = useCallback(() => {
-        if (dataGridRef.current) {
-            const instance = dataGridRef.current.instance;
-            const { scrollHeight, clientHeight, scrollTop } = instance.scrollable().scrollOffset();
-
-            if (scrollTop + clientHeight >= scrollHeight - 50) {
-                console.log('Infinite scroll triggered');
-                loadMoreData && loadMoreData();
-            }
-        }
-    }, [loadMoreData]);
 
     const onAutoExpandAllChanged = useCallback(() => {
         setAutoExpandAll((prev) => !prev);
@@ -73,48 +92,38 @@ const CustomDataGrid = <T extends Record<string, any>>({
         setGroupingEnabled((prev) => !prev);
     }, []);
 
-    useEffect(() => {
-        if (enableAutoScroll && dataGridRef.current) {
-            const instance = dataGridRef.current.instance;
-            instance.scrollTo({ top: instance.totalItemsCount() * instance.rowHeight() });
-        }
-    }, [data, enableAutoScroll]);
-
-    // Add the scroll event listener
-    useEffect(() => {
-        if (dataGridRef.current && enableInfiniteScroll) {
-            const instance = dataGridRef.current.instance;
-            const scrollable = instance.scrollable();
-
-            if (scrollable) {
-                scrollable.on('scroll', handleScroll);
-            }
-
-            return () => {
-                if (scrollable) {
-                    scrollable.off('scroll', handleScroll);
-                }
-            };
-        }
-    }, [enableInfiniteScroll, handleScroll]);
 
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
+    const onReorder = (event: any) => {
+        if (onReorderFunc) {
+            onReorderFunc(event)
+        }
+    };
+
     return (
         <div>
             <DataGrid
-                ref={dataGridRef}
                 dataSource={data}
                 keyExpr="id"
                 allowColumnReordering={false}
                 showBorders={true}
-                height="600px"
+                height={height}
                 width="100%"
+                onCellPrepared={onCellPrepared}
+                selectedRowKeys={selectedRowKeys}
+                onSelectionChanged={onSelectionChanged}
+                onEditorPreparing={onEditorPreparing}
             >
+                {showDragIcons && <RowDragging
+                    allowReordering={true}
+                    onReorder={onReorder}
+                    showDragIcons={showDragIcons}
+                />}
                 {enableGrouping && <GroupPanel visible={true} />}
 
-                <HeaderFilter visible={true} />
+                {enableHeaderFiltering && <HeaderFilter visible={true} />}
                 {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
@@ -130,11 +139,15 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     <Column
                         key={String(column.dataField)}
                         dataField={String(column.dataField)}
-                        // caption={column?.dataField !== 'bookmark' ? column.title : undefined}
-                        headerCellRender={column.dataField === 'bookmark' ? () => (
-                            <Image src="/icons/star.svg" width={24} height={24} alt="Bookmark" />
-                        ) : undefined}
+                        visible={column.visible !== undefined ? column.visible : true}
+                        headerCellRender={column.type === 'bookmark' ? () => (
+                            <Image src="/icons/star.svg" width={24}
+                                height={24} alt="Bookmark" />) : undefined}
+                        caption={typeof column.title === 'string' ? column.title : undefined}
                         width={column.width ? String(column.width) : undefined}
+                        allowHeaderFiltering={column?.allowHeaderFiltering}
+                        allowSorting={column?.allowSorting}
+                        alignment={column.alignment !== undefined ? column.alignment : "left"}
                         cellRender={column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}
                     />
@@ -148,17 +161,29 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         groupCellRender={groupCellRender}
                     />
                 )}
-
-                {/* <Toolbar>
-                    {groupingColumn && <Item name="groupPanel"></Item>}
-                    <Item name="searchPanel" locateInMenu='always' location='after'></Item>
-
-                </Toolbar> */}
-
-                <SearchPanel
+                {enableToolbar && <Toolbar>
+                    <Item name="searchPanel" location="before" />
+                    {groupingColumn &&
+                        <Item location="before" name="groupPanel" />
+                    }
+                    {toolbarButtons.map((button, index) => (
+                        <Item key={index} location="after">
+                            <Button
+                                text={button.text}
+                                onClick={() => button.onClick()}
+                                icon={button.icon}
+                                disabled={button.disabled}
+                                className={button.class || "btn-primary"}
+                                visible={button.visible !== undefined ? button.visible : true}
+                            />
+                        </Item>
+                    ))}
+                </Toolbar>}
+                {enableSearchOption && <SearchPanel
                     visible={true}
                     highlightSearchText={true}
-                />
+                />}
+
             </DataGrid>
 
             {enableOptions && (

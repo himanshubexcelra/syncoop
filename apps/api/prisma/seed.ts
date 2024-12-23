@@ -1,4 +1,10 @@
 import prisma from "@/lib/prisma";
+import {
+    MoleculeOrderStatusCode,
+    MoleculeOrderStatusLabel,
+    MoleculeStatusCode,
+    MoleculeStatusLabel
+} from "@/utils/definition";
 import { getUTCTime } from "@/utils/helper";
 
 async function main() {
@@ -75,7 +81,7 @@ async function main() {
     const sysAdminCreate = await prisma.users.create({
         data: {
             email_id: 'sys_admin@external.milliporesigma.com',
-            first_name: 'User System',
+            first_name: 'System',
             last_name: 'Admin',
             password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             is_active: true,
@@ -95,7 +101,7 @@ async function main() {
     const orgAdminCreate = await prisma.users.create({
         data: {
             email_id: 'org_admin@external.milliporesigma.com',
-            first_name: 'User Org',
+            first_name: 'Org',
             last_name: 'Admin',
             password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             is_active: true,
@@ -115,7 +121,7 @@ async function main() {
     await prisma.users.create({
         data: {
             email_id: 'lib_manager@external.milliporesigma.com',
-            first_name: 'User Library',
+            first_name: 'Library',
             last_name: 'Manager',
             password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             is_active: true,
@@ -135,7 +141,7 @@ async function main() {
     await prisma.users.create({
         data: {
             email_id: 'protocol_approver@external.milliporesigma.com',
-            first_name: 'User Protocol',
+            first_name: 'Protocol',
             last_name: 'Approver',
             password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             is_active: true,
@@ -155,7 +161,7 @@ async function main() {
     await prisma.users.create({
         data: {
             email_id: 'researcher@external.milliporesigma.com',
-            first_name: 'User Researcher',
+            first_name: 'Researcher',
             last_name: '',
             password_hash: '$2b$10$z8A02N6GcgfTZ./k4rge/.skIEZToeUW6ADhCz95A66BlT/PtV1Mm',
             is_active: true,
@@ -1565,8 +1571,197 @@ async function main() {
     await prisma.users.update({
         where: { email_id: 'protocol_approver@external.milliporesigma.com' },
         data: {
-            organization_id: fauxbioOrgCreate.id
+            organization_id: emddOrgCreate.id
         },
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.New),
+            status_name: MoleculeStatusLabel.New,
+            status_description: 'User creates/imports molecule',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.NewInCart),
+            status_name: MoleculeStatusLabel.NewInCart,
+            status_description: 'User adds molecule to Molecule Order',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+        }
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.Ordered),
+            status_name: MoleculeStatusLabel.Ordered,
+            status_description: 'User submits Molecule Order',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.InRetroQueue),
+            status_name: MoleculeStatusLabel.InRetroQueue,
+            status_description: 'User sends molecule to retrosynthesis',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.Failed),
+            status_name: MoleculeStatusLabel.Failed,
+            status_description: 'System fails to return synthesis prediction for molecule or Automation lab result fails',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.Ready),
+            status_name: MoleculeStatusLabel.Ready,
+            status_description: 'System returns synthesis prediction for molecule',
+            is_active: true,
+            created_by: sysAdminCreate.id,
+            created_at: getUTCTime(new Date().toISOString()),
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.InReview),
+            status_name: MoleculeStatusLabel.InReview,
+            status_description: 'Researcheer selects and tunes a pathway',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.Validated),
+            status_name: MoleculeStatusLabel.Validated,
+            status_description: 'Revalidation with replacement pathway or conditions',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.ValidatedInCart),
+            status_name: MoleculeStatusLabel.ValidatedInCart,
+            status_description: 'User re-adds to cart',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+        },
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.InProgress),
+            status_name: MoleculeStatusLabel.InProgress,
+            status_description: 'Automation lab job executes',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+        },
+    });
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.Done),
+            status_name: MoleculeStatusLabel.Done,
+            status_description: 'Automation lab job process completed',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id,
+
+        },
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule_order',
+            column_name: 'status',
+            status_code: String(MoleculeOrderStatusCode.InProgress),
+            status_name: MoleculeOrderStatusLabel.InProgress,
+            status_description: 'Order created',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule_order',
+            column_name: 'status',
+            status_code: String(MoleculeOrderStatusCode.Failed),
+            status_name: MoleculeOrderStatusLabel.Completed,
+            status_description: 'Order completed',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule_order',
+            column_name: 'status',
+            status_code: String(MoleculeOrderStatusCode.Failed),
+            status_name: MoleculeOrderStatusLabel.Failed,
+            status_description: 'Order failed',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
     });
 }
 

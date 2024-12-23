@@ -6,7 +6,6 @@ import CustomDataGrid from '@/ui/dataGrid';
 import {
   BreadCrumbsObj,
   MoleculeOrder,
-  MoleculeLabJob,
   MoleculeOrderParams,
   MoleculeStatusCode,
   OrganizationType,
@@ -20,10 +19,30 @@ import {
   ReactionDetailType,
   ReactionDetail,
   CreateLabJobOrder,
+  SelectedPathwayInstance,
+  CellData,
+  ColumnConfig,
+  Status,
+  MoleculeStatusLabel,
+  ReactionButtonNames
 } from '@/lib/definition';
 import Image from 'next/image';
-import { Button, CheckBox, LoadIndicator, Popup } from 'devextreme-react';
-import dxDataGrid, { SelectionChangedEvent, EditorPreparingEvent } from 'devextreme/ui/data_grid';
+import {
+  COLOR_SCHEME,
+  DEFAULT_TEMPERATURE,
+  moleculeStatus,
+  PATHWAY_BOX_WIDTH,
+  ReactionColors,
+  ReactionColorsType,
+  ReactionStatus,
+  sample_molecule_ids
+} from '@/utils/constants';
+import { Button, CheckBox, LoadIndicator, Popup, } from 'devextreme-react';
+import dxDataGrid, {
+  SelectionChangedEvent,
+  EditorPreparingEvent,
+  RowClickEvent
+} from 'devextreme/ui/data_grid';
 import {
   getMoleculesOrder, saveReactionPathway,
   getReactionPathway, getSolventTemperature, updateReaction
@@ -32,15 +51,24 @@ import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import {
-  colorSchemeADME,
-  colorStatus,
+  getADMEColorScheme,
+  getAverage,
+  getStatusObject,
+  isLibraryManger,
+  isOnlyProtocolApprover,
+  isProtocolAproover,
+  isResearcher,
+  isResearcherAndProtocolAproover,
   isSystemAdmin,
-  popupPositionValue
+  popupPositionValue,
+  randomValue
 } from '@/utils/helpers';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
+import CustomTooltip from '@/ui/CustomTooltip';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
 import {
-  addMoleculeToCart, getMoleculeCart,
+  addMoleculeToCart,
+  getMoleculeCart,
   updateMoleculeStatus,
 } from '@/components/Libraries/service'
 import PathwayImage from '../PathwayImage/PathwayImage';
@@ -56,23 +84,15 @@ import { delay } from "@/utils/helpers";
 import dxCheckBox, { ValueChangedEvent } from 'devextreme/ui/check_box';
 import StatusCard from '@/ui/StatusCard';
 import { PathwayData } from '@/public/data/pathway2';
-// import io from 'socket.io-client';
+// import { basename } from 'path';
+import dynamic from 'next/dynamic';
+import AdmeInfo from '../Tooltips/AdmeInfo';
 
 export type EditorPreparingEventEx<TRowData = any, TKey = any> =
   EditorPreparingEvent<TRowData, TKey> & {
     command?: string;
     type?: string;
   }
-
-interface ColumnConfig<T> {
-  dataField: keyof T;
-  title?: string | React.ReactNode;
-  width?: number;
-  minWidth?: number;
-  allowHeaderFiltering: boolean,
-  allowSorting?: boolean,
-  customRender?: (data: T) => React.ReactNode;
-}
 
 interface Reaction {
   reaction_id: number;
@@ -109,6 +129,8 @@ type ReactionMoleculeType = {
   reactionPart: string,
   molarRatio: number,
   dispenseTime: number,
+  role: string,
+  inventoryURL: string
 }
 
 type ReactionNameType = {
@@ -133,10 +155,25 @@ type ReactionJsonType = {
   rxnTemplateGroup: string,
   rxnSMILES: string,
 }
+type PathObjectType = {
+  pathIndex: number[]; // pathIndex is an array of numbers
+}
 
-const isSelectable = [MoleculeStatusCode.InRetroQueue, MoleculeStatusCode.Ready];
+const isSelectable = [MoleculeStatusLabel.Ordered];
+const isClickable = [MoleculeStatusLabel.Ordered, MoleculeStatusLabel.InRetroQueue];
+type MoleculeOrderPageTypeProps = {
+  userData: UserData,
+  actionsEnabled: string[],
+}
 
-const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
+const MoleculeStructure = dynamic(() => import("@/utils/MoleculeStructure"), {
+  ssr: false,
+});
+
+export default function MoleculeOrderPage({
+  userData,
+  actionsEnabled,
+}: MoleculeOrderPageTypeProps) {
   const { organization_id, orgUser, myRoles } = userData;
   const { type } = orgUser;
   const [loader, setLoader] = useState(false);
@@ -146,31 +183,65 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   const [nodeValue, setNodes] = useState<NodeType[][]>([]);
   const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
   const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
-  const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
+  const [isSendForSynthesisEnabled, setSendForSynthesisEnabled] = useState(true);
   const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
   const [reactions, setReactions] = useState(-1);
   const [moleculeData, setMoleculeData] = useState<MoleculeOrder[]>([]);
   const [inRetroData, setToIntroQueue] = useState<MoleculeOrder[]>([]);
-  // const [pathwayDataLocal, setPathwayData] = useState<Reaction[]>([]);
-  // const [socket, setSocket] = useState(null);
-  // const [message, setMessage] = useState(null);
-  // const [connected, setConnected] = useState(false);
-
+  const [updatedAt, setUpdatedAt] = useState(Date.now());
+  const [pathwayDataLocal, setPathwayData] = useState<NodeType[]>([]);
+  const [popupWidth, setPopupWidth] = useState(PATHWAY_BOX_WIDTH);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const context: any = useContext(AppContext);
   const appContext = context.state;
   const [reactionsData, setReactionsData] = useState<any[]>([]);
   const [solventList, setSolventList] = useState<SolventList>([]);
   const [temperatureList, setTemperatureList] = useState<TemperatureList>([]);
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [activeReaction, setActiveReaction] = useState<number>(0);
   const [nextReaction, setNextReaction] = useState<boolean>(false);
+  const [selectedRow, setSelectRow] = useState(-1);
   const [moleculeCompound, setMoleculeCompound] = useState<any[]>([]);
-  const [disabled, setDisabled] = useState(false);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const [isInnerOverlayVisible, setInnerOverlayVisible] = useState(false);
   const [reactionDetail, setReactionDetail] = useState<ReactionDetail>();
   const [confirm, setConfirm] = useState(false);
+  const [reactionIndexList, setReactionIndexList] = useState<PathObjectType[]>([]);
   const [selectedMoleculeId, setSelecterdMoleculeId] = useState<number>();
   const [selecteLabJobOrder, setSelecteLabJobOrder] = useState<CreateLabJobOrder[]>([]);
+  const [selectedMoleculeOrder, setSelectedMoleculeOrder] = useState<MoleculeOrder[]>([]);
+  const [pathwayReaction, setPathWayReaction] = useState([])
+  const [isEditpathWay, setEditPahway] = useState(true)
+  const [buttonClicked, setButtonClicked] = useState(false);
+  const permitSumbitSynthesis = actionsEnabled.includes('generate_pathway');
+  const permitEditReaction = actionsEnabled.includes("edit_reactions");
+  const permitSubmitLabJob = actionsEnabled.includes('create_modify_submit_synthesis_lab_job');
+  const [popupCords, setPopupCords] = useState({ x: 0, y: 0 });
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [updatedKey, setUpdatedKey] = useState('');
+  const [cellData, setCellData] = useState<CellData>({
+    smiles_string: "",
+    source_molecule_name: ''
+  });
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [resetReaction, setResetReaction] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingButtonIndex, setLoadingButtonIndex] = useState<number | null>();
+  const [isLabJobLoading, setIsLabJobLoading] = useState(false);
+  const [submittedTabs, setSubmittedTabs] = useState<boolean[]>([]);
+  const [formStates, setFormStates] = useState<boolean[]>([]);
+  const [pathwayID, setPathwayID] = useState<number>(0);
+
+  useEffect(() => {
+    fetchMoleculeOrders();
+  }, [appContext?.refreshCart])
+  const closeMagnifyPopup = (event: any) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      setPopupVisible(false);
+      setButtonClicked(false);
+    }
+  };
+  const permitValidatePathway = actionsEnabled.includes('validate_pathway');
+
   const selectionRef = useRef<{
     checkBoxUpdating: boolean,
     selectAllCheckBox: dxCheckBox | null
@@ -186,78 +257,655 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       svgWidth: 16, svgHeight: 16, href: '/projects', isActive: true
     },
   ];
+  const filterMoleculeStatus =
+    [
+      MoleculeStatusCode.Done,
+      MoleculeStatusCode.InProgress,
+      MoleculeStatusCode.Failed
+    ]
+  const clickableRow = (moleculeStatus: MoleculeStatusLabel) => {
+    let isClickableRow = !isClickable.includes(moleculeStatus);
+    if (isSystemAdmin(myRoles) || isResearcherAndProtocolAproover(myRoles)) {
+      isClickableRow = (moleculeStatus === MoleculeStatusLabel.Ready ||
+        moleculeStatus === MoleculeStatusLabel.InReview ||
+        moleculeStatus === MoleculeStatusLabel.Validated ||
+        moleculeStatus === MoleculeStatusLabel.InProgress ||
+        moleculeStatus === MoleculeStatusLabel.Failed ||
+        moleculeStatus === MoleculeStatusLabel.Done)
+    }
+    else if (isResearcher(myRoles)) {
+      // Researchers can click only if status is 'Ready'
+      isClickableRow = (moleculeStatus === MoleculeStatusLabel.Ready ||
+        moleculeStatus === MoleculeStatusLabel.InProgress ||
+        moleculeStatus === MoleculeStatusLabel.Done ||
+        moleculeStatus === MoleculeStatusLabel.Failed
+      )
+    } else if (isProtocolAproover(myRoles)) {
+      // Protocol approvers can click only if status is 'InReview' and 'Validated'
+      isClickableRow = (moleculeStatus === MoleculeStatusLabel.InReview
+        || moleculeStatus === MoleculeStatusLabel.Validated ||
+        moleculeStatus === MoleculeStatusLabel.InProgress ||
+        moleculeStatus === MoleculeStatusLabel.Done ||
+        moleculeStatus === MoleculeStatusLabel.Failed
+      )
+    }
 
-  const columns: ColumnConfig<MoleculeOrder>[] = [
+    return isClickableRow;
+  };
+
+  const columns: ColumnConfig[] = [
     {
       dataField: 'smiles_string',
       title: 'Structure',
-      minWidth: 400,
-      width: 400,
-      allowHeaderFiltering: true,
-      allowSorting: true,
+      minWidth: 200,
+      width: 200,
+      alignment: 'center',
+      allowHeaderFiltering: false,
+      allowSorting: false,
       customRender: (data) => (
         <MoleculeStructureActions
           smilesString={data.smiles_string}
-          molecule_id={data.id}
-          onZoomClick={() => handleStructureZoom()}
+          molecule_id={data.molecule_id}
+          structureName={data.source_molecule_name}
+          onZoomClick={(e: any) => {
+            e.event.stopPropagation();
+            setButtonClicked(true);
+            handleStructureZoom(e, data);
+          }}
         />
       ),
     },
+    /* 
+    Commented out but it's needed in beta phase
     {
-      dataField: 'organizationName', title: 'Customer',
-      allowHeaderFiltering: true, allowSorting: true
-    },
-    {
-      dataField: 'order_id', title: 'Order',
-      allowHeaderFiltering: true, allowSorting: true,
-    },
-    {
-      dataField: 'molecule_id', title: 'Molecule ID',
-      allowHeaderFiltering: true, allowSorting: true,
-      customRender: (data) => (
-        data.status === MoleculeStatusCode.Ready ?
-          <button onClick={() => {
-            setPath(data);
-            setActiveTab(0);
-          }}
-            className="text-themeBlueColor underline">
-            {data.molecule_id}</button> :
-          <p>{data.molecule_id}</p>
-      )
-    },
-    {
-      dataField: 'molecular_weight', title: 'Molecular Weight',
-      allowHeaderFiltering: true, allowSorting: true
-    },
-    {
-      dataField: 'status',
-      title: 'Status',
-      width: 170,
+      dataField: 'order_status', title: 'Order Status',
       allowHeaderFiltering: true,
       allowSorting: true,
+      width: 160,
+      cssClass: 'moleculeOrderStatus',
       customRender: (data: MoleculeOrder) => {
-        const status: any = colorStatus(data.status);
-        return (
-          <StatusCard key={data.molecule_id} stat={status} />
+        const status: Status[] = getStatusObject(moleculeOrderStatus, data.order_status);
+        if (status.length) {
+          return (
+            <StatusCard id={data.id} stat={status[0]} />
+          );
+        }
+      }
+    }, */
+    {
+      dataField: 'molecule_id',
+      title: 'Molecule ID',
+      allowHeaderFiltering: true,
+      allowSorting: true,
+      width: 140,
+      alignment: 'center',
+      customRender: (data) => {
+        const isClickableRow = clickableRow(data.molecule_status);
+        return isClickableRow ? (
+          <button
+            onClick={() => {
+              setPath(data);
+              setEditPahway(true);
+              setSelectedMoleculeOrder([data]);
+              setActiveTab(0);
+              setNextReaction(false);
+              setIsLabJobLoading(false);
+              setIsLoading(false);
+            }}
+            className="text-themeBlueColor underline"
+          >
+            {data.molecule_id}
+          </button>
+        ) : (
+          <p>{data.molecule_id}</p>
         );
       }
     },
     {
-      dataField: 'yield', title: 'Yield', width: 100,
-      allowHeaderFiltering: true, allowSorting: true
+      dataField: 'molecular_weight',
+      title: 'Molecular Weight',
+      width: 100,
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      alignment: 'center',
+      cssClass: 'moleculeStatus',
+      customRender: (data) => {
+        if (data.molecular_weight) {
+          const key = 'molecular_weight';
+          const formulaeFound = COLOR_SCHEME[key].formulaes.find((formulae: {
+            min: number,
+            max: number,
+            formulae: (value: string) => void
+          }) =>
+            data.molecular_weight >= formulae.min && data.molecular_weight < formulae.max
+          );
+          const { formulae } = formulaeFound;
+          const calculatedResult = formulae(data.molecular_weight);
+          const colorFound = COLOR_SCHEME[key].color.find((color: any) => {
+            return calculatedResult >= color.min && calculatedResult < color.max
+          });
+          return (
+            <span className={`${colorFound?.className} status-mark`}
+              title={calculatedResult.toFixed(2)}>
+              {Number(data.molecular_weight).toFixed(2)}
+            </span>
+          );
+        }
+        return '';
+      }
     },
     {
-      dataField: 'anlayse', title: 'Analyse', width: 100,
-      allowHeaderFiltering: true, allowSorting: true
+      dataField: 'molecule_status',
+      title: 'Molecule Status',
+      width: 160,
+      allowHeaderFiltering: true,
+      allowSorting: true,
+      alignment: 'center',
+      cssClass: 'moleculeStatus',
+      customRender: (data: MoleculeOrder) => {
+        const status: Status[] = getStatusObject(moleculeStatus, data.molecule_status);
+        if (status.length) {
+          return (
+            <StatusCard id={Number(data.id)} stat={status[0]} />
+          );
+        }
+      }
+    },
+    /* {
+      dataField: 'assay_1',
+      title: 'Assay 1',
+      width: 80,
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => data.organizationMetadata?.functionalAssay1
     },
     {
-      dataField: 'herg', title: 'HERG', width: 100,
-      allowHeaderFiltering: true, allowSorting: true
+      dataField: 'assay_2',
+      title: 'Assay 2',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      width: 80,
+      customRender: (data) => data.organizationMetadata?.functionalAssay2
     },
     {
-      dataField: 'caco2', title: 'Caco-2', width: 100,
-      allowHeaderFiltering: true, allowSorting: true
+      dataField: 'assay_3',
+      title: 'Assay 3',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      width: 80,
+      customRender: (data) => data.organizationMetadata?.functionalAssay3
     },
+    {
+      dataField: 'assay_4',
+      title: 'Assay 4',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      width: 80,
+      customRender: (data) => data.organizationMetadata?.functionalAssay4
+    }, */
+    {
+      dataField: 'yield',
+      title: 'Yield(%)',
+      width: 100,
+      alignment: "center",
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.reaction_data) {
+          const key = 'yield';
+          const { rxn_product_yield } = data.reaction_data;
+          const yieldValue = rxn_product_yield.split('%')[0];
+          const formulaeFound = COLOR_SCHEME[key].formulaes.find((formulae: {
+            min: number,
+            max: number,
+            formulae: (value: string) => void
+          }) =>
+            yieldValue >= formulae.min &&
+            yieldValue < formulae.max
+          );
+          const { formulae } = formulaeFound;
+          const calculatedResult = formulae(yieldValue);
+          const reference = COLOR_SCHEME[key].reference
+          const colorFound = COLOR_SCHEME[key].color.find((color: any) => {
+            return calculatedResult >= color.min && calculatedResult < color.max
+          });
+          const id = `${key}-${data.molecule_id}`
+          return (
+            <div className={`${colorFound?.className} status-mark`}>
+              <span id={id}>{rxn_product_yield}</span>
+              <CustomTooltip
+                id={id}
+              >
+                <AdmeInfo
+                  rawValues={[rxn_product_yield]}
+                  status={colorFound.status}
+                  reference={reference} />
+              </CustomTooltip>
+            </div>
+          );
+        }
+
+      }
+    },
+    {
+      dataField: 'analyse',
+      title: 'Analyse',
+      width: 80,
+      allowHeaderFiltering: false,
+      allowSorting: false,
+      customRender: (data) => {
+        if (data.reaction_data) {
+          /* const imgPath = basename(data.reaction_data.rxn_product_nmr);
+          const pdfPath = basename(data.reaction_data.rxn_product_lcms); */
+          const imgPath = '1001_nmr_image_3.png';
+          const pdfPath = '1001_lcms_report_3.pdf';
+          return (
+            <div className={`flex flex-col items-center 
+            justify-center text-themeBlueColor`}>
+              <div className="flex items-center">
+                <a href={`/images/${imgPath}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center">
+                  <span className="font-lato text-sm font-normal mr-2">NMR</span>
+                  <Image
+                    src={"/icons/new-tab-icon.svg"}
+                    alt="link tab"
+                    width={14}
+                    height={15}
+                  />
+                </a>
+              </div>
+              <div className="flex items-center">
+                <a href={`/data/${pdfPath}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center">
+                  <span className="font-lato text-sm font-normal mr-2">MS</span>
+                  <Image
+                    src={"/icons/new-tab-icon.svg"}
+                    alt="link tab"
+                    width={14}
+                    height={15}
+                  />
+                </a>
+              </div>
+            </div>)
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'Caco2_Papp',
+      title: 'Caco-2(cm/sec)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'Caco2_Papp';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toExponential(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'CLint_Human',
+      title: 'CLint Human(μL/min/mg)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'CLint_Human';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return ''
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'CLint_Rat',
+      title: 'CLint Rat(μL/min/mg)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'CLint_Rat';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'CLint_Mouse',
+      title: 'CLint Mouse(μL/min/mg)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'CLint_Mouse';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'Fub_Human',
+      title: 'Fub Human(%)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'Fub_Human';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'Fub_Rat',
+      title: 'Fub Rat(%)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'Fub_Rat';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'Fub_Mouse',
+      title: 'Fub Mouse(%)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'Fub_Mouse';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'HepG2_IC50',
+      title: 'HepG2 IC50(μM)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'HepG2_IC50';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'hERG_Ki',
+      title: 'hERG Ki(μM)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'hERG_Ki';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    },
+    {
+      dataField: 'solubility',
+      title: 'Solubility(μM)',
+      width: 80,
+      cssClass: 'moleculeStatus',
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data) => {
+        if (data.adme_data) {
+          const key = 'Solubility';
+          const result = getAverage(data.adme_data, key);
+          if (result) {
+            const { average, value1, value2 } = result;
+            const calculatedResult = getADMEColorScheme(average, key);
+            const reference = COLOR_SCHEME[key].reference
+            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
+              calculatedResult >= color.min && calculatedResult < color.max)
+            const id = `${key}-${data.molecule_id}`
+            return (
+              <div className={`${colorFound?.className} status-mark`}>
+                <span id={id}>{average.toFixed(2)}</span>
+                <CustomTooltip
+                  id={id}
+                >
+                  <AdmeInfo
+                    rawValues={[value1, value2]}
+                    status={colorFound.status}
+                    reference={reference} />
+                </CustomTooltip>
+              </div>
+            );
+          }
+          return '';
+        }
+        return '';
+      }
+    }
   ];
 
   // useEffect(() => {
@@ -319,17 +967,20 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
   const rowGroupName = () => {
     if (type === OrganizationType.External) {
+      if (isResearcher(myRoles) || isProtocolAproover(myRoles)) {
+        return "organization / Order";
+      }
       return "project / library";
     } else if (type === OrganizationType.Internal) {
-      return "organization / order";
+      return "organization / Order";
     }
   }
+
   const prepareLabOrderData = (data: MoleculeOrder) => {
-    const { molecule_id, id, library_id, project_id, organization_id } = data || {};
-    const selectedMolecule: MoleculeLabJob[] = [{
-      id: id,
+    const { molecule_id, molecule_order_id, library_id, project_id, organization_id } = data || {};
+    const selectedMolecule: CreateLabJobOrder[] = [{
       molecule_id: molecule_id,
-      order_id: id,
+      order_id: Number(molecule_order_id),
       library_id: library_id,
       project_id: project_id,
       organization_id: organization_id,
@@ -337,27 +988,33 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     }];
     setSelecteLabJobOrder(selectedMolecule)
   }
+
   const setPath = async (data: MoleculeOrder) => {
+    const reactionIndex: PathObjectType[] = [];
     prepareLabOrderData(data)
     if (data) {
       setSelecterdMoleculeId(data.molecule_id);
       const pathways = await getReactionPathway(data.molecule_id);
-      // setPathwayData(pathways?.data);
       let compounds: ReactionCompoundType[] = [];
-      const flattenedPathways = pathways?.data?.map((pathway: PathwayType) => {
+      const pathwayData = isOnlyProtocolApprover(myRoles)
+        || filterMoleculeStatus.includes(data.status)
+        ? [pathways.data[0]] : pathways.data;
+      const flattenedPathways = pathwayData?.map((pathway: PathwayType, pathIndex: number) => {
         // Create an array to hold the nodes
+
         const nodes: NodeType[] = [];
+        reactionIndex.push({ pathIndex: [] })
         // Create a reaction node for each pathway's reaction detail
 
         pathway.reaction_detail.reverse().map((reaction: ReactionDetailType, index: number) => {
+          reactionIndex[pathIndex].pathIndex.push(nodes.length ? nodes.length : 1);
           let conditions = '';
-          if (reaction.temperature) {
-            conditions += `${reaction.temperature}°C`;
-          }
           if (reaction.solvent) {
-            conditions += reaction.temperature ? ', ' : '';
             conditions += `${reaction.solvent}`;
           }
+          conditions += reaction.solvent ? ', ' : '';
+          conditions += reaction.temperature !== null ? `${reaction.temperature}°C` :
+            `${DEFAULT_TEMPERATURE}°C`;
           const idx = pathway.reaction_detail.length - index;
           const reactionNode: NodeType = {
             id: reaction.id, // Ensure the ID is a string
@@ -365,7 +1022,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             name: reaction.reaction_name,
             smiles: reaction.product_smiles_string,
             condition: conditions,
-            reactionIndex: idx,
+            reactionIndex: [idx],
+            pathway_instance_id: pathway.pathway_instance_id,
           };
           // Push the reaction node
           if (reaction.product_type === 'F') {
@@ -375,63 +1033,90 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
               compound.smiles_string === reaction.product_smiles_string);
             compounds = [];
             if (molecule) {
+              const moleculeIndex = nodes.findIndex(val =>
+                val.smiles === reaction.product_smiles_string);
+              nodes[moleculeIndex].reactionIndex.push(idx);
               reactionNode.id = molecule.id.toString();
             }
           }
 
           // Add the pathway itself as a molecule node
+          const reactionColor: ReactionColorsType = `R${idx}` as ReactionColorsType;
           const pathwayNode: NodeType = {
-            id: reaction.product_type === 'F' ? pathway.id : reaction.id,
+            // need to add R here since if compound and reaction both ahve same ids, pathway breaks
+            id: reaction.product_type === 'F' ? `${pathway.id}R` : `${reaction.id}R`,
             parentId: reactionNode.id?.toString(),
             type: "reaction",
             name: reactionNode.name,
             condition: reactionNode.condition,
-            reactionIndex: idx,
-          };
+            reactionIndex: [idx],
+            pathway_instance_id: reactionNode.pathway_instance_id,
 
+            reactionColor: ReactionColors[reactionColor],
+          };
           nodes.push(pathwayNode);
 
           // Create molecule nodes for each reaction compound
           reaction.reaction_compound.forEach((compound: ReactionCompoundType) => {
             compounds.push(compound);
-            if (compound.compound_type === 'R') {
+            if (compound.compound_type === COMPOUND_TYPE_R) {
               const compoundNode = {
                 id: compound.id.toString(), // Ensure the ID is a string
                 parentId: pathwayNode.id, // Parent is the reaction
                 type: "molecule",
                 smiles: compound.smiles_string,
-                reactionIndex: idx,
+                reactionIndex: [idx],
                 score: null, // Score is not defined for molecules in the provided format
               };
               nodes.push(compoundNode);
             }
           });
         });
-
+        reactionIndex[pathIndex].pathIndex.reverse();
         return nodes; // Return all nodes for the current pathway
       });
+
       setNodes(flattenedPathways);
       showOverlay(15000);
+      setReactionIndexList(reactionIndex);
       showPathway();
     }
   }
+
+  const updateMoleculeDataStatus = async (statusCode: number, statusLabel: any) => {
+    const moleculeData: any = [moleculeOrderData.find((item: any) =>
+      item.molecule_id === selectedMoleculeId)]
+    await updateMoleculeStatus(moleculeData, statusCode, userData.id);
+    setMoleculeStatus(moleculeData, statusLabel);
+  }
+
   const createLabJobOrder = () => {
-    const moleculeData: CreateLabJobOrder[] = selecteLabJobOrder;
+    setIsLabJobLoading(true);
+    const labjobOrder: CreateLabJobOrder[] = selecteLabJobOrder;
     context?.addToState({
-      ...appContext, cartDetail: [...moleculeData]
+      ...appContext,
+      cartDetail: [...labjobOrder]
     })
-    addMoleculeToCart(moleculeData)
+
+    addMoleculeToCart(labjobOrder, MoleculeStatusCode.ValidatedInCart)
       .then((res) => {
         if (res) {
           setPathwayView(false);
           setReactions(-1);
+          updateMoleculeDataStatus(
+            MoleculeStatusCode.ValidatedInCart, MoleculeStatusLabel.ValidatedInCart
+          );
           toast.success(Messages.CREATE_LAB_JOB_ORDER, {
             position: 'top-center'
           });
+          setIsLabJobLoading(false);
         }
       })
       .catch((error) => {
-        toast.success(error);
+        toast.success(error, {
+          position: 'top-center'
+        });
+        setIsLabJobLoading(false);
       })
   }
 
@@ -443,9 +1128,10 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       if (type === OrganizationType.External) {
         // External users: fetch records filtered by organization_id
         let params: MoleculeOrderParams = {
-          organization_id: organization_id
+          organization_id: organization_id,
+          sample_molecule_id: Number(randomValue(sample_molecule_ids))
         };
-        if (isSystemAdmin(myRoles) || myRoles.includes('library_manager')) {
+        if (isLibraryManger(myRoles)) {
           params = {
             ...params,
             created_by: userData.id
@@ -454,44 +1140,61 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
         data = await getMoleculesOrder(params);
       } else if (type === OrganizationType.Internal) {
         // Internal users: fetch all records without filters
-        data = await getMoleculesOrder({});
+        data = await getMoleculesOrder({
+          sample_molecule_id: Number(randomValue(sample_molecule_ids))
+        });
       } else {
         toast.error(Messages.USER_ROLE_CHECK);
       }
       if (!data.error) {
-        const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
-        const moleculeIds = cartDataAvaialable.map((item: any) => item.molecule_id);
-        const selectedMoleculeInCart = data
-          .filter((item: any) => moleculeIds.includes(item.molecule_id))
-          .map((item: any) => item.id);
-        setCartMolecule(selectedMoleculeInCart)
+        if (isSystemAdmin(myRoles) || isProtocolAproover(myRoles)) {
+          const params = {
+            user_id: Number(userData.id),
+            lab_job_cart: true
+          }
+          const cartDataAvaialable: any = await getMoleculeCart(params);
+          const moleculeIds = cartDataAvaialable.map((item: any) => item.molecule_id);
+          const selectedMoleculeInCart = data
+            .filter((item: any) => moleculeIds.includes(item.molecule_id))
+            .map((item: any) => item.id);
+          setCartMolecule(selectedMoleculeInCart);
+        }
         // Transform the fetched data if data is available
         transformedData = data?.map((item: any) => {
           const {
-            molecule,
-            organization,
             order_name,
-            project,
-            library,
+            organizationName,
+            molecular_weight,
+            smiles_string,
+            projectname,
+            libraryname,
+            status,
+            organizationMetadata,
             ...rest
           } = item;
-
           return {
             ...rest,
-            organizationName: organization?.name || 'Unknown',
-            molecular_weight: molecule?.molecular_weight || 0,
-            smiles_string: molecule?.smiles_string || '',
-            status: molecule?.status || 'Unknown',
+            organizationName,
+            molecular_weight,
+            smiles_string,
+            status,
             order_name,
+            organizationMetadata,
             ...(() => {
               if (type === OrganizationType.External) {
+                if (isResearcher(myRoles) || isProtocolAproover(myRoles)) {
+                  return {
+                    "organization / Order":
+                      `${organizationName} / ${order_name}`
+                  }
+                }
                 return {
-                  "project / library": `${project.name || 'Unknown'} / ${library.name || 'Unknown'}`
+                  "project / library": `${projectname} / ${libraryname}`
                 }
               } else if (type === OrganizationType.Internal) {
                 return {
-                  "organization / order":
-                    `${organization.name || 'Unknown'} / ${order_name || 'Unknown'}`
+                  "organization / Order":
+                    `${organizationName} / ${order_name}`
                 }
               }
             })()
@@ -513,21 +1216,27 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     }
   }
 
-  const handleStructureZoom = () => { };
+  const handleStructureZoom = (event: any, data: any) => {
+    const { x, y } = event.event.target.getBoundingClientRect();
+    const screenHeight = window.innerHeight;
+    setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
+    setPopupVisible(true);
+    setCellData(data);
+  }
 
   useEffect(() => {
     fetchMoleculeOrders();
     setSynthesisPopupPosition(popupPositionValue());
-  }, [])
+  }, []);
 
   const handleSendForSynthesis = () => {
     setSynthesisView(true);
   };
 
-  const setStatus = (moleculeArray: MoleculeOrder[], value: number) => {
+  const setMoleculeStatus = (moleculeArray: MoleculeOrder[], value: MoleculeStatusLabel) => {
     const newMolecules = moleculeOrderData.map((molecule: MoleculeOrder) => {
       if (moleculeArray.some(mol => mol.molecule_id === molecule.molecule_id)) {
-        return { ...molecule, status: value };
+        return { ...molecule, molecule_status: value };
       }
       return molecule;
     });
@@ -541,9 +1250,11 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       // reaction_id: index,
       compound_type: item.reactionPart.charAt(0).toUpperCase(),
       compound_name: item.reagentName,
-      compound_sequence_no: index,
+      role: item.role,
+      compound_label: String(index + 1),
       source: 'IN',
       inventory_id: item.inventoryID,
+      inventory_url: item.inventoryURL,
       created_by: userData.id,
       molar_ratio: item.molarRatio,
       dispense_time: Number(item.dispenseTime),
@@ -563,7 +1274,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       product_smiles_string: item.productSMILES,
       reaction_smiles_string: item.rxnSMILES,
       product_type: index === reaction.length - 1 ? "F" : "I",
-      status: 1,
+      status: ReactionStatus.New,
       created_by: userData.id,
       reaction_compound: prePareMolecule(item.molecules),
     }));
@@ -575,25 +1286,26 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     molecules.map(mol => {
       const pathwayData = data.target.pathways.map((pathway: PathwayJsonType) => ({
         molecule_id: mol.molecule_id,  //data.target.targetID,
-        pathway_instance_id: 0,
+        parent_id: 0,
+        pathway_instance_id: mol.pathway_instance_id,
         pathway_index: pathway.pathIndex,
         pathway_score: pathway.pathConfidence,
         description: pathway.description,
         selected: false,
         created_by: userData.id,
-
         reaction_detail: prepareReaction(pathway.reactions)
       }));
       synthesisData.push(...pathwayData);
     });
-
     try {
       setLoader(false);
       await saveReactionPathway(synthesisData);
+      await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
+      setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
     } catch (err) {
       if (err) {
-        await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
-        setStatus(moleculeData, MoleculeStatusCode.Ready);
+        await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Failed, userData.id);
+        setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
       }
     }
 
@@ -614,9 +1326,15 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     }, timeOut);
   }
 
+  const showInnerOverlay = (timeOut: number) => {
+    setInnerOverlayVisible(true);
+    setTimeout(() => {
+      setInnerOverlayVisible(false);
+    }, timeOut);
+  }
+
   const generateReactionPathway = async () => {
-    // const tempData = [...moleculeData];
-    // const data = [...inRetroData, ...moleculeData];
+    setSendForSynthesisEnabled(true);
     setLoader(true);
     const toastId = toast(Messages.sentForSynthesis(moleculeData.length), {
       icon: 'ℹ️',
@@ -626,11 +1344,10 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     });
     await delay(DELAY);
     toast.remove(toastId);
-    setStatus(moleculeData, MoleculeStatusCode.InRetroQueue);
+    setMoleculeStatus(moleculeData, MoleculeStatusLabel.InRetroQueue);
     setToIntroQueue(moleculeData);
     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
     setSelectedRows([]);
-    setIsAddToCartEnabled(true);
     extractJsonData(PathwayData, moleculeData);
     setMoleculeData([]);
 
@@ -677,23 +1394,11 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     // }
   }
 
-  const handleAddtoCart = () => {
-    context?.addToState({
-      ...appContext, cartDetail: [...moleculeData]
-    });
-    addMoleculeToCart(moleculeData as any)
-      .then((res) => {
-        toast.success(Messages.addMoleculeCartMessage(res.count));
-      })
-      .catch((error) => {
-        toast.success(error);
-      })
-  };
-
   const onEditorPreparing = useCallback((e: EditorPreparingEventEx<MoleculeOrder, number>) => {
     const dataGrid = e.component;
     if (e.type !== 'selection') return;
-    if (e.parentType === 'dataRow' && e.row && isSelectable.includes(e.row.data.status))
+    if (e.parentType === 'dataRow' && e.row &&
+      !isSelectable.includes(e.row.data.molecule_status as MoleculeStatusLabel))
       e.editorOptions.disabled = true;
     if (e.parentType === "headerRow") {
       e.editorOptions.onInitialized = (e: ValueChangedEvent) => {
@@ -725,7 +1430,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     dataGrid.getDataSource().store().load().then((data) => {
       items = data as MoleculeOrder[];
     });
-    const selectableItems = items.filter(val => !isSelectable.includes(val.status));
+    const selectableItems = items.filter(val => isSelectable.includes(
+      val.molecule_status as MoleculeStatusLabel));
     const selectedRowKeys = dataGrid.option("selectedRowKeys");
     if (!selectedRowKeys || !selectedRowKeys.length) {
       return false;
@@ -737,7 +1443,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     // disable selecting certain rows
     const deselectRowKeys: number[] = [];
     e.selectedRowsData.forEach((item) => {
-      if (isSelectable.includes(item.status)) {
+      if (!isSelectable.includes(item.molecule_status)) {
         deselectRowKeys.push(e.component.keyOf(item));
       }
     });
@@ -751,10 +1457,10 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     const selectedRows = e.selectedRowKeys.filter(key => !deselectRowKeys.includes(key));
     setSelectedRows(selectedRows)
     if (selectedRows.length > 0) {
-      setIsAddToCartEnabled(false)
+      setSendForSynthesisEnabled(false)
     }
     else {
-      setIsAddToCartEnabled(true)
+      setSendForSynthesisEnabled(true)
     }
     const selectedProjectMolecule: MoleculeOrder[] = e.selectedRowsData.filter(value =>
       !deselectRowKeys.includes(value.id)).map((item: any) => ({
@@ -776,29 +1482,15 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
   const toolbarButtons = [
     {
-      text: `Send for Retrosynthesis (${moleculeData.length})`, onClick: handleSendForSynthesis,
-      disabled: isAddToCartEnabled,
-      class: isAddToCartEnabled ? 'mol-ord-btn-disable' : 'btn-primary'
-    },
-    { text: "Add to Cart", onClick: handleAddtoCart, disabled: isAddToCartEnabled, visible: false },
+      text: `Send for Retrosynthesis (${moleculeData.length})`,
+      onClick: handleSendForSynthesis,
+      disabled: isSendForSynthesisEnabled,
+      class: isSendForSynthesisEnabled ? 'mol-ord-btn-disable' : 'btn-primary',
+      visible: permitSumbitSynthesis
+    }
   ];
 
-  const fieldNames: string[] = ["yield", "anlayse", "herg", "caco2"];
-
   const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
-    if (e.rowType === "data") {
-      if (e.column.dataField === "status") {
-        const status: any = colorStatus(e.data.status);
-        e.cellElement.classList.add(status?.background);
-      } else if (e?.column?.dataField && fieldNames.includes(e.column.dataField)) {
-        const value = e.data?.[e.column.dataField];
-        if (value !== undefined) {
-          const color = colorSchemeADME(value);
-          e.cellElement.classList.add(color);
-        }
-      }
-    }
-
     // Handling cart molecules
     if (isMoleculeInCart.includes(e.key)) {
       e.cellElement.style.pointerEvents = 'none';
@@ -808,16 +1500,25 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
 
   // Fetch Reaction Data
-  const fetchData = async (idx: number) => {
+  const fetchData = async (id: string, idx: number) => {
     try {
-      const pathwayReactionData = await getReactionPathway(Number(selectedMoleculeId), idx);
+      const pathwayReactionData = await getReactionPathway(Number(selectedMoleculeId), id);
+      setPathWayReaction(pathwayReactionData?.data)
       if (pathwayReactionData.data[0]) {
         const modifiedReactionData: Reaction[] = pathwayReactionData.data[0].reaction_detail || [];
         // Create a shallow copy and reverse it
         setReactionsData(modifiedReactionData || []);
+        if (modifiedReactionData?.length) {
+          const count = modifiedReactionData?.length + 1;
+          const noOfTabState = Array(count).fill(false);
+          setSubmittedTabs(noOfTabState);
+          setFormStates(noOfTabState);
+        }
         setReactions(idx);
+        setIsLoading(false)
       }
     } catch (error) {
+      setIsLoading(false)
       console.error('Error fetching data:', error);
     }
   };
@@ -842,38 +1543,146 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
   };
 
   // Save Reaction Changes
-  const handleSaveReaction = async () => {
+  const handleSaveReaction = async (type: number) => {
+    const { molecule_status } = selectedMoleculeOrder[0];
+    const moleculeStatus = isProtocolAproover(myRoles) || isSystemAdmin(myRoles) ?
+      MoleculeStatusCode.Validated : MoleculeStatusCode.InReview;
+    const moleculeStatusLabel = isProtocolAproover(myRoles)
+      || isSystemAdmin(myRoles) ? MoleculeStatusLabel.Validated : MoleculeStatusLabel.InReview;
+    const reactionStatus = isProtocolAproover(myRoles) || isSystemAdmin(myRoles) ?
+      ReactionStatus.Ready : ReactionStatus.Reviewed;
+    setIsLoading(true);
+    // in reactant list save button returns
+    if (activeTab === tabsDetails?.length - 1) {
+      const res: any = await updateMoleculeDataStatus(moleculeStatus, moleculeStatusLabel);
+      handleTabActions();
+      if (isResearcher(myRoles) && !isProtocolAproover(myRoles) &&
+        molecule_status === MoleculeStatusLabel.Ready && res) {
+        toast.success(Messages.UPDATE_PATHWAY_REACTION, {
+          position: 'top-center'
+        });
+      } else {
+        toast.success(Messages.UPDATE_PATHWAY_REACTION_VALIDATE, {
+          position: 'top-center'
+        });
+      }
+      handleTabActions();
+      setIsLoading(false);
+      return;
+    }
+    const reactionNo = activeTab + 1;
+    const message = type === ReactionButtonNames.SAVE ?
+      Messages.REACTION_SAVE_MSG(reactionNo, pathwayID) :
+      Messages.REACTION_VALIDATE_MSG(reactionNo, pathwayID);
     const { id, temperature, solvent } = reactionDetail || {};
-    setDisabled(true);
     setConfirm(false);
-
+    const selectedPathway: SelectedPathwayInstance = pathwayReaction[0];
+    const pathway_instance_id = selectedPathway?.pathway_instance_id;
+    const pathwayId = selectedPathway?.id;
     const payload = {
       data: {
         id: id,
         temperature: Number(temperature),
         solvent: solvent,
+        status: reactionStatus,
+        created_by: userData.id,
+        pathwayId,
       },
       molecules: moleculeCompound,
     };
-    const response = await updateReaction(payload);
-
-    if (response) {
-      setMoleculeCompound([]);
-      if (nextReaction && activeReaction < tabsDetails?.length - 1) {
-        setActiveTab(activeTab + 1);
-        setActiveReaction(activeReaction + 1);
-      } else if (activeReaction < tabsDetails?.length - 1) {
-        if (activeReaction === activeTab) {
-          setActiveReaction(activeReaction);
+    if (pathway_instance_id === 0 && isEditpathWay) {
+      const data = insertPathWayInstance(selectedPathway, payload);
+      const extractedReactionData = data.reaction_detail.map((data: any) => ({
+        reaction_template: data.reaction_template_master.name,
+        reaction_sequence_no: data.reaction_sequence_no,
+        reaction_name: data.reaction_name,
+        pathway_instance_id: data.pathway_instance_id,
+        reaction_sequence: data.reaction_sequence_no,
+        confidence: data.confidence,
+        temperature: data.temperature,
+        solvent: data.solvent,
+        product_smiles_string: data.product_smiles_string,
+        reaction_smiles_string: data.reaction_smiles_string,
+        product_type: data.product_type,
+        status: 2,
+        created_by: data.created_by,
+        reaction_compound: data.reaction_compound,
+      }));
+      const reactionDataInput: PathwayType[] = [{
+        id: data.id,
+        molecule_id: data.molecule_id,
+        parent_id: Number(data.parent_id),
+        pathway_instance_id: 1,
+        pathway_index: data.pathway_index,
+        pathway_score: data.pathway_score,
+        selected: data.selected,
+        created_by: data.created_by,
+        reaction_detail: extractedReactionData,
+        updated_by: userData.id
+      }];
+      try {
+        const insertedData = await saveReactionPathway(reactionDataInput);
+        setPathWayReaction(insertedData);
+        await fetchData(insertedData[0]?.id, reactions);
+        // await updateMoleculeDataStatus(moleculeStatus, moleculeStatusLabel)
+        setMoleculeCompound([]);
+        handleTabActions();
+        toast.success(message, {
+          position: 'top-center'
+        });
+        setIsLoading(false);
+      } catch (err: any) {
+        if (err) {
+          toast.error(err);
+          setIsLoading(false);
         }
       }
-      setDisabled(false);
-      toast.success(Messages.MOLECULES_SAVE_MSG);
-
+    }
+    else {
+      const response = await updateReaction(payload);
+      if (response) {
+        // await updateMoleculeDataStatus(moleculeStatus, moleculeStatusLabel)
+        setMoleculeCompound([]);
+        handleTabActions();
+        toast.success(message, {
+          position: 'top-center'
+        });
+        setIsLoading(false);
+      }
     }
   };
 
+  const insertPathWayInstance = (selectedPathway: SelectedPathwayInstance, payload: any) => {
+    const newObj = JSON.parse(JSON.stringify(selectedPathway));
+    newObj.pathway_instance_id = 1;
+    newObj.parent_id = newObj.id;
+    const reactionDetail = newObj.reaction_detail.find((reaction: any) =>
+      reaction.id === payload.data.id
+    );
+
+    if (reactionDetail) {
+      reactionDetail.reaction_sequence_no = reactionDetail.reaction_sequence_no;
+      reactionDetail.temperature = payload.data.temperature;
+      reactionDetail.solvent = payload.data.solvent;
+      reactionDetail.pathway_instance_id = 1;
+      reactionDetail.reaction_compound.forEach((compound: any) => {
+        compound.pathway_instance_id = 1
+        const matchingMolecule = payload.molecules.find(
+          (molecule: any) => molecule.id === compound.id);
+        if (matchingMolecule) {
+          compound.molar_ratio = matchingMolecule.molar_ratio ?? compound.molar_ratio;
+          compound.dispense_time = matchingMolecule.dispense_time ?? compound.dispense_time;
+          compound.compound_label = matchingMolecule.compound_label ?? compound.compound_label;
+          compound.compound_name = matchingMolecule.compound_name ?? compound.compound_name;
+          compound.smiles_string = matchingMolecule.smiles_string ?? compound.smiles_string
+        }
+      });
+    }
+    return newObj
+  }
+
   const handleDataChange = (input: ReactionInputData[]) => {
+    onFormChange(true);
     setMoleculeCompound(prevState => {
       const updatedState = [...prevState];
       input.forEach(item => {
@@ -893,9 +1702,39 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     });
   };
 
+  // update reaction when compounds swapped
+  const handleSwapReaction = (reagentCompounds: ReactionCompoundType[]) => {
+    const [first, second] = reagentCompounds;
+    const tempNode = [...nodeValue[reactions]];
+    const firstIndex = tempNode.findIndex(node => Number(node.id) === Number(first.id));
+    const secondIndex = tempNode.findIndex(node => Number(node.id) === Number(second.id));
+    const tempNodeData = tempNode[firstIndex];
+    tempNode[firstIndex] = tempNode[secondIndex];
+    tempNode[secondIndex] = tempNodeData;
+    setNodes(prevState => {
+      const updatedState = [...prevState];
+      updatedState[reactions] = tempNode;
+      return updatedState;
+    })
+    setUpdatedKey('molecule');
+  }
+
   const handleSolventChange = (solvent: string) => {
+    // update reaction
+    onFormChange(true);
+    const tempNode = [...nodeValue[reactions]];
+    const nodeIndex = reactionIndexList[reactions].pathIndex[activeTab];
+    const conditions = tempNode[nodeIndex].condition?.split(',') || [];
+    conditions[0] = solvent;
+    tempNode[nodeIndex].condition = conditions.join(',');
+    setNodes(prevState => {
+      const updatedState = [...prevState];
+      updatedState[reactions] = tempNode;
+      return updatedState;
+    })
+    setUpdatedKey('node');
+
     setReactionDetail((prevState) => {
-      // Ensure prevState is not undefined before spreading
       if (prevState) {
         return {
           ...prevState,
@@ -914,6 +1753,20 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
 
   const handleTemperatureChange = (temperature: number) => {
+    // update reaction
+    onFormChange(true);
+    const tempNode = [...nodeValue[reactions]];
+    const nodeIndex = reactionIndexList[reactions].pathIndex[activeTab];
+    const conditions = tempNode[nodeIndex].condition?.split(',') || [];
+    conditions[1] = `${temperature}°C`;
+    tempNode[nodeIndex].condition = conditions.join(',');
+    setNodes(prevState => {
+      const updatedState = [...prevState];
+      updatedState[reactions] = tempNode;
+      return updatedState;
+    })
+    setUpdatedKey('node');
+
     setReactionDetail((prevState) => {
       // Ensure prevState is not undefined before spreading
       if (prevState) {
@@ -932,9 +1785,13 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     });
   };
 
-  const consolidatedReagents: Compound[] = reactionsData?.flatMap((reaction) =>
-    reaction.reaction_compound.filter((compound: Compound) =>
-      compound.compound_type === COMPOUND_TYPE_R)
+  const consolidatedReagents: Compound[] = reactionsData?.flatMap((reaction, index) =>
+    reaction.reaction_compound
+      .filter((compound: Compound) => compound.compound_type === COMPOUND_TYPE_R)
+      .map((compound: Compound) => ({
+        ...compound,
+        related_to: index + 1,
+      }))
   );
 
   const tabsDetails: TabDetail[] = [
@@ -949,9 +1806,12 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
         temperatureList,
         onSolventChange: handleSolventChange,
         onTemperatureChange: handleTemperatureChange,
-        setReactionDetail: setReactionDetail
+        setReactionDetail: setReactionDetail,
+        handleSwapReaction: handleSwapReaction,
+        resetReaction,
+        status: selectedMoleculeOrder[0].molecule_status
       },
-    })),
+    })) || [],
     {
       title: 'Reactant List',
       Component: ReactionDetails,
@@ -962,14 +1822,160 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
     },
   ];
 
+  const onFormChange = (hasChanged: boolean) => {
+    const updatedFormStates = [...formStates];
+    updatedFormStates[activeTab] = hasChanged;
+    setFormStates(updatedFormStates);
+  };
+
+  // Handle tab submission
+  const handleTabActions = () => {
+    const updatedSubmittedTabs = [...submittedTabs];
+    const updatedFormStates = [...formStates];
+
+    updatedSubmittedTabs[activeTab] = true; // Mark current tab as submitted
+    updatedFormStates[activeTab] = false; // Reset form state for this tab
+    setSubmittedTabs(updatedSubmittedTabs);
+    setFormStates(updatedFormStates);
+
+    // Navigate to the next tab
+    if (nextReaction && activeTab < tabsDetails.length - 1) {
+      setActiveTab(activeTab + 1);
+      setUpdatedKey('currentReaction');
+    }
+  };
+
+  // Check if the last tab's button should be enabled
+  const isLastTabEnabled = () => {
+    const allPreviousTabsValidated = submittedTabs.slice(0, -1).every((submitted) => submitted);
+    const isLastTabNotSubmitted = !submittedTabs[tabsDetails.length - 1];
+    return allPreviousTabsValidated && isLastTabNotSubmitted;
+  };
+
+  // Check if all tabs are validated
+  const isAllTabsValidated = () => {
+    return submittedTabs.every((validated) => validated);
+  };
+
+  /* useEffect(() => {
+    // Reset the state when switching to the last tab
+    if (activeTab === tabsDetails.length - 1) {
+      const updatedSubmittedTabs = [...submittedTabs];
+      updatedSubmittedTabs[tabsDetails.length - 1] = false;
+      // Disable the last tab button initially
+      setSubmittedTabs(updatedSubmittedTabs);
+    }
+  }, [activeTab, tabsDetails.length]); */
+
+  useEffect(() => {
+    onFormChange(true);
+  }, [resetReaction]);
+
   const handleNextReaction = (Checked: boolean) => {
     setNextReaction(Checked);
   };
 
-  const handleOpenClick = async (index: number) => {
-    await fetchData(index);
+  const handleOpenClick = async (index: number, tab?: number) => {
+    // need to fetch by id since the index in which path show will not 
+    // match the actual pathway_index once pathway_instance_id is generated
+    const pathwayId = nodeValue[index][1].id.split('R')[0];
+    setPathwayID(Number(pathwayId));
+    setLoadingButtonIndex(index)
+    await fetchData(pathwayId, index);
+    setEditPahway(true)
+    setActiveTab(tab || 0);
+    setPathwayData(JSON.parse(JSON.stringify(nodeValue[index])));
+    setUpdatedKey('currentReaction');
+    setLoadingButtonIndex(null)
   };
 
+
+
+  const selectedReaction = (eventSource: number, pathwayId: number) => {
+    const index = eventSource - 1;
+    //open a pathway if itsnt already open
+    if (reactions === -1) {
+      handleOpenClick(pathwayId, index);
+    }
+    setActiveTab(index);
+    setUpdatedKey('currentReaction');
+  }
+
+  const handleResize = (e: any) => {
+    showOverlay(5000);
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+
+    resizeTimeoutRef.current = setTimeout(() => {
+      if (e.component.option("width") >= PATHWAY_BOX_WIDTH)
+        setPopupWidth(e.component.option("width"));
+      else setPopupWidth(PATHWAY_BOX_WIDTH);
+      setUpdatedAt(Date.now());
+    }, 1000);
+  };
+
+  const onRowClick = (e: RowClickEvent) => {
+    if (e.rowType === 'data') {
+      const rowData = e.data;
+      if (!buttonClicked) {
+        const isClickableRow = clickableRow(rowData.molecule_status);
+        if (isClickableRow) {
+          setPath(rowData);
+          setEditPahway(true);
+          setSelectedMoleculeOrder([rowData]);
+          setActiveTab(0);
+          setNextReaction(false);
+          setSelectRow(e.rowIndex);
+        }
+      }
+    }
+  };
+
+  const onRowPrepared = (e: any) => {
+    if (e.rowType === 'data') {
+      const isClickableRow = clickableRow(e.data.molecule_status);
+      if (isClickableRow) {
+        e.rowElement.style.cursor = 'pointer';
+        if (selectedRow === e.rowIndex)
+          e.rowElement.style.backgroundColor = 'var(--rowHoverColor)';
+      }
+    }
+  };
+
+
+  let isValidateButtonEnabled = false;
+  let isResearchButton = false;
+  if (selectedMoleculeOrder.length) {
+    const { molecule_status } = selectedMoleculeOrder[0];
+    isValidateButtonEnabled = (() => {
+      if (isSystemAdmin(myRoles) || isResearcherAndProtocolAproover(myRoles)) {
+        const statusList = [
+          MoleculeStatusLabel.Ready,
+          MoleculeStatusLabel.InReview,
+          MoleculeStatusLabel.Validated
+        ];
+        return statusList.includes(molecule_status);
+      }
+      else if (isProtocolAproover(myRoles)) {
+        const statusList = [
+          MoleculeStatusLabel.InReview,
+          MoleculeStatusLabel.Validated
+        ];
+        return statusList.includes(molecule_status);
+      }
+      return false;
+    })();
+
+    isResearchButton = isResearcher(myRoles) &&
+      molecule_status === MoleculeStatusLabel.Ready;
+  }
+  moleculeOrderData.map(d => {
+    if (d.molecule_id == 62) {
+      console.log(d);
+    }
+  })
+  console.log(moleculeOrderData)
   return (
     <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
@@ -978,9 +1984,10 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
           <Image src="/icons/molecule-order.svg" width={33} height={30} alt="Project logo" />
           <span>Molecule Orders</span>
         </main>
-        <div className="p-[20px]">
+        <div className="p-[20px]" onClick={closeMagnifyPopup}>
           <CustomDataGrid
             columns={columns}
+            onRowClick={onRowClick}
             data={moleculeOrderData}
             groupingColumn={rowGroupName()}
             enableRowSelection
@@ -997,6 +2004,7 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             onSelectionChanged={onSelectionChanged}
             onCellPrepared={onCellPrepared}
             onEditorPreparing={onEditorPreparing}
+            onRowPrepared={onRowPrepared}
           />
         </div>
 
@@ -1010,13 +2018,17 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
                 generateReactionPathway={generateReactionPathway}
                 setSynthesisView={setSynthesisView}
                 inRetroData={inRetroData}
+                closeMagnifyPopup={closeMagnifyPopup}
+                handleStructureZoom={handleStructureZoom}
               />
             )}
             width={700}
-            hideOnOutsideClick={true}
+            hideOnOutsideClick={false}
             height="100%"
+            dragEnabled={false}
             position={synthesisPopupPos}
             onHiding={() => {
+              setPopupVisible(false);
               setSynthesisView(false);
             }}
             showCloseButton={true}
@@ -1034,16 +2046,34 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             visible={pathwayView}
             contentRender={() => (
               <div className="bg-themelightGreyColor relative p-[16px]">
+                <span className="pathway-header">
+                  {reactions === -1 && `${nodeValue.length} Pathway(s) found`}
+                </span>
                 <div>
                   {reactions !== -1 &&
-                    <div className="flex justify-end">
+                    <div className="flex justify-between">
+                      <span className="pathway-header">
+                        {`Pathway ID: ${nodeValue[reactions][1].id.split('R')[0]}`}
+                      </span>
                       <Button
                         className="btn-secondary"
                         text="Pathway List"
                         icon="/icons/back-icon.svg"
-                        onClick={() =>
-                          setReactions(-1)
-                        }
+                        onClick={() => {
+                          setNodes(prevState => {
+                            const updatedState = [...prevState];
+                            updatedState[activeTab - 1] =
+                              JSON.parse(JSON.stringify(pathwayDataLocal));
+                            return updatedState;
+                          });
+                          setReactions(-1);
+                          setActiveTab(0);
+                          showOverlay(5000);
+                          setUpdatedAt(Date.now());
+                          setNextReaction(false);
+                          setIsLabJobLoading(false);
+                          setIsLoading(false);
+                        }}
                       />
                     </div>
                   }
@@ -1055,98 +2085,298 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
                     }}>{
                         nodeValue.map((node, idx) => {
                           if (reactions === -1 || reactions === idx) {
+                            const showLoader = loadingButtonIndex === idx;
                             return (
                               <div key={`node-${idx}`} className="mt-[10px] mb-[10px]">
                                 <div style={{ textAlign: 'right', padding: '10px' }}
                                   className="bg-white">
                                   {reactions === -1 &&
-                                    <button className="primary-button"
-                                      onClick={() => handleOpenClick(idx)}>
-                                      Open
+                                    <button className={showLoader
+                                      ? 'disableButton w-[53px] h-[37px]'
+                                      : 'primary-button'}
+                                      onClick={() =>
+                                        handleOpenClick(idx)}>
+                                      <LoadIndicator className="button-indicator"
+                                        visible={showLoader}
+                                        height={20}
+                                        width={20} />
+                                      {showLoader ? '' : 'Open'}
                                     </button>}
+
                                 </div>
-                                <PathwayImage pathwayId={`node-${idx}`} nodes={node}
-                                  style={{ position: 'relative' }} width={800} height={300}>
-                                  <PathwayAction pathwayId={`node-${idx}`} />
+                                {isInnerOverlayVisible && (
+                                  <div className="overlay"
+                                    style={{
+                                      height: 300,
+                                      position: 'relative',
+                                      background: '#fff'
+                                    }}>
+                                    <div className="overlay-content">
+                                      <LoadIndicator />
+                                    </div>
+                                  </div>
+                                )}
+                                <PathwayImage pathwayId={`node-${idx}-${updatedAt}`} nodes={node}
+                                  style={{ position: 'relative' }}
+                                  width={popupWidth - 30}
+                                  height={300}
+                                  currentReaction={activeTab}
+                                  updatedKey={updatedKey}
+                                  updatedAt={updatedAt}
+                                >
+                                  <PathwayAction pathwayId={`node-${idx}-${updatedAt}`}
+                                    selectedReaction={selectedReaction} updatedAt={updatedAt} />
                                 </PathwayImage>
                                 {reactions === idx && (
                                   <div className="border border-[var(--themeSecondaryGreyColor)] 
                         bg-white shadow-[0px_-3px_1px_rgb(190_185_185_/_90%)] pb-[38px]">
                                     <Tabs tabsDetails={tabsDetails} activeTab={activeTab}
-                                      onSelectedIndexChange={(tabIndex: number) =>
-                                        setActiveTab(tabIndex)}
+                                      onSelectedIndexChange={(tabIndex: number) => {
+                                        setActiveTab(tabIndex);
+                                      }}
                                     />
                                     {/* Bottom Fixed Section */}
                                     <div className={`fixed bottom-0 left-0 right-0 
                                     bg-themelightGreyColor py-[16px] pr-[40px] pl-[24px]
                                     border-t flex justify-between`}>
                                       <div className="flex items-center gap-4">
-                                        <Button disabled={activeTab === tabsDetails.length - 1
-                                          || disabled}
-                                          text="Save"
-                                          onClick={() => setConfirm(true)}
-                                          className="btn-primary"
-                                        />
-                                        <Button disabled={activeTab === tabsDetails.length - 1}
-                                          text="Cancel"
-                                          onClick={() => {
-                                            setReactions(-1);
-                                            setActiveTab(0);
-                                            setActiveReaction(0);
-                                            setNextReaction(false);
-                                          }
-                                          }
-                                          className="btn-secondary border-0 border-none"
-                                        />
-                                        <label className="flex items-center">
-                                          <CheckBox disabled={activeTab === tabsDetails.length - 1}
-                                            defaultValue={nextReaction}
-                                            elementAttr={{ 'aria-label': 'Next Reaction' }}
-                                            onValueChanged={(e) => handleNextReaction(e.value)}
-                                            className={nextReaction ? 'bg-themeBlueColor'
-                                              : 'bg-white'}
-                                          />
-                                          <span className="ml-2 text-themeBlueColor">
-                                            Next Reaction
-                                          </span>
-                                        </label>
+                                        {isValidateButtonEnabled &&
+                                          <>
+                                            <Button
+                                              disabled={isLoading ||
+                                                (submittedTabs[activeTab] &&
+                                                  !formStates[activeTab]) ||
+                                                (activeTab === tabsDetails.length - 1
+                                                  && !isLastTabEnabled())
+                                              }
+                                              onClick={() =>
+                                                handleSaveReaction(ReactionButtonNames.VALIDATE)}
+                                              className={
+                                                isLoading || ((submittedTabs[activeTab] &&
+                                                  !formStates[activeTab]) ||
+                                                  (activeTab === tabsDetails.length - 1
+                                                    && !isLastTabEnabled()))
+                                                  ? "mol-ord-btn-disable btn-primary w-[100px]"
+                                                  : "btn-primary w-[100px]"
+                                              }
+                                              text={isLoading ? '' : 'Validate'}
+                                              visible={permitValidatePathway}
+                                              style={{ cursor: isLoading ? 'default' : 'pointer' }}
+                                            >
+                                              {isLoading && (
+                                                <LoadIndicator
+                                                  className="button-indicator"
+                                                  style={{
+                                                    position: 'absolute',
+                                                    top: '50%',
+                                                    left: '50%',
+                                                    transform: 'translate(-50%, -50%)',
+                                                    color: 'var(--themeSilverGreyColor)'
+                                                  }}
+                                                  height={20}
+                                                  width={20}
+                                                />
+                                              )}
+                                            </Button>
+                                            <Button disabled={
+                                              (submittedTabs[activeTab] &&
+                                                !formStates[activeTab]) ||
+                                              (activeTab === tabsDetails.length - 1
+                                                ? !isLastTabEnabled()
+                                                : false)
+                                            }
+                                              text="Reset"
+                                              onClick={async () => {
+                                                setNodes(prevState => {
+                                                  const updatedState = [...prevState];
+                                                  updatedState[activeTab - 1] =
+                                                    JSON.parse(JSON.stringify(pathwayDataLocal));
+                                                  return updatedState;
+                                                });
+                                                setResetReaction(!resetReaction);
+                                                setUpdatedAt(Date.now());
+                                                showInnerOverlay(5000);
+                                                const updatedSubmittedTabs = [...submittedTabs];
+                                                updatedSubmittedTabs[activeTab] = false;
+                                                setSubmittedTabs(updatedSubmittedTabs);
+                                              }
+                                              }
+                                              className={
+                                                (submittedTabs[activeTab] &&
+                                                  !formStates[activeTab]) ||
+                                                  (activeTab === tabsDetails.length - 1
+                                                    ? !isLastTabEnabled()
+                                                    : false)
+                                                  ? "mol-ord-btn-disable btn-secondary"
+                                                  : "btn-secondary"
+                                              }
+                                            />
+                                          </>
+                                        }
+                                        {isResearchButton && !isValidateButtonEnabled &&
+                                          <>
+                                            <Button
+                                              disabled={
+                                                (isLoading || submittedTabs[activeTab] &&
+                                                  !formStates[activeTab]) ||
+                                                (activeTab === tabsDetails.length - 1
+                                                  ? !isLastTabEnabled()
+                                                  : false)
+                                              }
+                                              text={isLoading ? '' : 'Save'}
+                                              onClick={() => setConfirm(true)}
+                                              className={isLoading || (submittedTabs[activeTab] &&
+                                                !formStates[activeTab]) ||
+                                                (activeTab === tabsDetails.length - 1
+                                                  && !isLastTabEnabled())
+                                                ? "mol-ord-btn-disable btn-primary w-[75px]"
+                                                : "btn-primary w-[75px]"
+                                              }
+                                              visible={permitEditReaction}
+                                              style={{ cursor: isLoading ? 'default' : 'pointer' }}
+
+                                            >
+                                              {isLoading && (
+                                                <LoadIndicator
+                                                  className="button-indicator"
+                                                  style={{
+                                                    position: 'absolute',
+                                                    top: '50%',
+                                                    left: '50%',
+                                                    transform: 'translate(-50%, -50%)',
+                                                    color: 'var(--themeSilverGreyColor)'
+                                                  }}
+                                                  height={20}
+                                                  width={20}
+                                                />
+                                              )}
+                                            </Button>
+
+                                            <Button disabled={
+                                              (submittedTabs[activeTab] &&
+                                                !formStates[activeTab]) ||
+                                              (activeTab === tabsDetails.length - 1
+                                                ? !isLastTabEnabled()
+                                                : false)
+                                            }
+                                              text="Reset"
+                                              onClick={async () => {
+                                                setNodes(prevState => {
+                                                  const updatedState = [...prevState];
+                                                  updatedState[activeTab - 1] =
+                                                    JSON.parse(JSON.stringify(pathwayDataLocal));
+                                                  return updatedState;
+                                                });
+                                                setResetReaction(!resetReaction);
+                                                setUpdatedAt(Date.now());
+                                                showInnerOverlay(5000);
+                                                const updatedSubmittedTabs = [...submittedTabs];
+                                                updatedSubmittedTabs[activeTab] = false;
+                                                setSubmittedTabs(updatedSubmittedTabs);
+                                              }
+                                              }
+                                              className={
+                                                (submittedTabs[activeTab] &&
+                                                  !formStates[activeTab]) ||
+                                                  (activeTab === tabsDetails.length - 1
+                                                    ? !isLastTabEnabled()
+                                                    : false)
+                                                  ? "mol-ord-btn-disable btn-secondary"
+                                                  : "btn-secondary"
+                                              }
+                                            />
+                                          </>}
+                                        {(permitEditReaction && (isValidateButtonEnabled
+                                          || isResearchButton)) &&
+                                          <label className="flex items-center">
+                                            <CheckBox
+                                              disabled={activeTab === tabsDetails.length - 1}
+                                              value={nextReaction}
+                                              elementAttr={{ 'aria-label': 'Next Reaction' }}
+                                              onValueChanged={(e) =>
+                                                handleNextReaction(e.value)}
+                                              className={nextReaction ? 'bg-themeBlueColor'
+                                                : 'bg-white'}
+                                            />
+                                            <span className="ml-2 text-themeBlueColor">
+                                              Next Reaction
+                                            </span>
+                                          </label>}
                                       </div>
-                                      <div className="flex items-center gap-4">
-                                        {[...Array(tabsDetails?.length - 1)].map((_, i) => (
-                                          <div
-                                            key={i}
-                                            className={`w-8 h-8 rounded-full flex items-center 
-                                              justify-center 
-                                              ${activeReaction > i
-                                                ? 'bg-lightGrey text-white'
-                                                : i % 3 === 0
-                                                  ? 'bg-lightMerun text-white'
-                                                  : i % 3 === 1
-                                                    ? 'bg-lightBlue text-white'
-                                                    : 'bg-lightGrey text-white'
-                                              }`}
+                                      <div className="flex">
+                                        <div className="flex items-center gap-4 mr-[10px]">
+                                          {[...Array(tabsDetails?.length)].map((_, i) => {
+                                            const reactionColor: ReactionColorsType =
+                                              `R${i + 1}` as ReactionColorsType;
+                                            const isSubmitted = submittedTabs[i];
+                                            const isLastTab = i === tabsDetails.length - 1;
+
+                                            return (
+                                              <div
+                                                key={i}
+                                                className={`w-[25px] h-[25px] rounded-full flex 
+                                                  items-center justify-center ${isLastTab ?
+                                                    "bg-lightGrey text-white" : "text-white"
+                                                  }`}
+                                                style={{
+                                                  backgroundColor: isLastTab
+                                                    ? undefined
+                                                    : isSubmitted
+                                                      ? '#ccc' : ReactionColors[reactionColor]
+                                                }}
+                                              >
+                                                {isSubmitted && !isLastTab ? (
+                                                  <Image
+                                                    src="icons/tick-mark.svg"
+                                                    alt="tick-mark"
+                                                    height={25}
+                                                    width={25}
+                                                  />
+                                                ) : (
+                                                  isLastTab ? 'L' : i + 1
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        {isValidateButtonEnabled &&
+                                          <Button
+                                            disabled={!isAllTabsValidated() || isLabJobLoading}
+                                            onClick={createLabJobOrder}
+                                            visible={permitSubmitLabJob}
+                                            className={(isLabJobLoading ||
+                                              !isAllTabsValidated())
+                                              ? "mol-ord-btn-disable btn-primary w-[160px]"
+                                              : "btn-primary w-[160px]"
+                                            }
+                                            text={isLabJobLoading ? '' : 'Send For Lab Job'}
+                                            style={{
+                                              cursor: isLabJobLoading ?
+                                                'default' : 'pointer'
+                                            }}
                                           >
-                                            {activeReaction > i ? <Image src="icons/tick-mark.svg"
-                                              alt="tick-mark" height={25} width={25} /> : i + 1}
-                                          </div>
-                                        ))}
-                                        {/* on last tab this will be 'L' active  */}
-                                        {<div className='w-8 h-8 rounded-full flex items-center 
-                              justify-center border bg-lightGrey text-white'>
-                                          L
-                                        </div>}
+                                            {isLabJobLoading && (
+                                              <LoadIndicator
+                                                className="button-indicator"
+                                                style={{
+                                                  position: 'absolute',
+                                                  top: '50%',
+                                                  left: '50%',
+                                                  transform: 'translate(-50%, -50%)',
+                                                  color: 'var(--themeSilverGreyColor)'
+                                                }}
+                                                height={20}
+                                                width={20}
+                                              />
+                                            )}
+                                          </Button>
+                                        }
                                       </div>
-                                      <Button
-                                        className='btn-primary'
-                                        disabled={activeTab !== tabsDetails.length - 1 || disabled}
-                                        onClick={createLabJobOrder}
-                                      >
-                                        Send For Lab Job
-                                      </Button>
                                     </div>
                                     {/* ConfirmationDialog with onSave handler */}
                                     <ConfirmationDialog
-                                      onSave={handleSaveReaction}
+                                      onSave={() =>
+                                        handleSaveReaction(ReactionButtonNames.SAVE)}
                                       openConfirmation={confirm}
                                       setConfirm={setConfirm}
                                     />
@@ -1156,7 +2386,8 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
                           }
                         })}
                     </div>
-                  )}
+                  )
+                  }
 
                 </div>
 
@@ -1170,13 +2401,20 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
 
               </div>
             )}
-            width={800}
-            hideOnOutsideClick={true}
+            defaultWidth={PATHWAY_BOX_WIDTH}
+            minWidth={PATHWAY_BOX_WIDTH}
+            dragEnabled={false}
+            resizeEnabled={true}
+            onResize={handleResize}
             height="100%"
+            minHeight={'100%'}
             position={synthesisPopupPos}
             onHiding={() => {
               setPathwayView(false);
+              setSelectRow(-1);
               setReactions(-1);
+              setSubmittedTabs([]);
+              setFormStates([]);
             }}
             showCloseButton={true}
             wrapperAttr={
@@ -1186,14 +2424,45 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
             }
           />
         }
+        {popupVisible && (
+          <div
+            ref={popupRef}
+            style={{
+              top: `${popupCords.y}px`,
+              left: `${popupCords.x + 225}px`,
+              zIndex: 2000,
+            }}
+            className="fixed
+                            transform -translate-x-1/2 -translate-y-1/2
+                            bg-gray-100
+                            bg-opacity-80
+                            w-[250px]
+                            h-[250px]"
+          >
+            <div
+              className="absolute
+                                top-1/2
+                                left-1/2
+                                transform -translate-x-1/2 -translate-y-1/2"
+            >
+              <MoleculeStructure
+                structure={cellData?.smiles_string}
+                width={200}
+                height={200}
+                svgMode={true}
+                structureName={cellData.source_molecule_name}
+              />
+            </div>
+          </div>
+        )}
         <div className='flex justify-center mt-[25px]'>
-          <span className='text-themeGreyColor'>
+          {!!moleculeOrderData.length && <span className='text-themeGreyColor'>
             {moleculeOrderData.length}
             <span className='pl-[3px]'>
               {moleculeOrderData.length === 1 ? 'molecule' : 'molecules'}
             </span>
             <span className='pl-[2px]'> found</span>
-          </span>
+          </span>}
           {!!moleculeOrderData.length && <span>&nbsp;|&nbsp;</span>}
           {!!moleculeOrderData.length &&
             <span className={`text-themeSecondayBlue pl-[5px] font-bold pb-[10px]`}>
@@ -1203,7 +2472,4 @@ const MoleculeOrderPage = ({ userData }: { userData: UserData }) => {
       </div>
     </div>
   );
-
 };
-
-export default MoleculeOrderPage;

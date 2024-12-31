@@ -61,6 +61,7 @@ export default function SendMoleculesForSynthesis({
                     showBorders={true}
                     columnAutoWidth={false}
                     width="100%"
+                    style={{ maxHeight: '480px' }}
                 >
                     <Sorting mode="single" />
                     <Scrolling mode="infinite" />

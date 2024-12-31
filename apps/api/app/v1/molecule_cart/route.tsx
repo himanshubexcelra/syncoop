@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         const project_id = searchParams.get('project_id');
         const organization_id = searchParams.get('organization_id');
         const lab_job_cart = searchParams.get('lab_job_cart');
-
+        const source = searchParams.get('source');
         const query: any = {
             where: {
                 created_by: Number(user_id),
@@ -36,40 +36,42 @@ export async function GET(request: Request) {
                             NOT: {
                                 molecule_order_id: null
                             }
-                        }
+                        };
                     }
-                })()
+                    return {};
+                })(),
             },
-            include: {
-                molecule: {
-                    select: {
-                        molecular_weight: true,
-                        source_molecule_name: true,
-                        is_added_to_cart: true,
-                        smiles_string: true,
-                        status: true,
-                        library: {
-                            select: {
-                                id: true,
-                                name: true,
+            ...(source == "header" ? {} : {
+                include: {
+                    molecule: {
+                        select: {
+                            molecular_weight: true,
+                            source_molecule_name: true,
+                            is_added_to_cart: true,
+                            smiles_string: true,
+                            status: true,
+                            library: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
                             },
-                        },
-                        project: {
-                            select: {
-                                id: true,
-                                name: true,
+                            project: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
                             },
                         },
                     },
-                },
-                organization: {
-                    select: {
-                        name: true,
+                    organization: {
+                        select: {
+                            name: true,
+                        },
                     },
                 },
-            },
+            }),
         };
-
         if (library_id && project_id) {
             query.where = {
                 ...query.where,
@@ -84,9 +86,14 @@ export async function GET(request: Request) {
                 organization_id: Number(organization_id),
             };
         }
-
-        const molecule = await prisma.molecule_cart.findMany(query);
-        return new Response(json(molecule), {
+        let result;
+        if (source == "header") {
+            result = await prisma.molecule_cart.count(query);
+        }
+        else {
+            result = await prisma.molecule_cart.findMany(query);
+        }
+        return new Response(json(result), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });

@@ -4,12 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import DataGrid, {
     Item,
     Column,
-    SearchPanel,
     Toolbar as GridToolbar,
-    DataGridRef,
-    Paging,
-    Sorting,
-    HeaderFilter
+    DataGridRef
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
@@ -146,6 +142,15 @@ export default function UsersTable({
             filterValue
         ];
     };
+
+    const rowGroupName = () => {
+        if (type === OrganizationType.External) {
+            return "Organization";
+        }
+    }
+
+    const groupCellRender = (e: any) => <span>{e.value}</span>;
+
     return (
         <>
             {loader ? (
@@ -160,10 +165,25 @@ export default function UsersTable({
                     showBorders={true}
                     ref={grid}
                     className="no-padding-header"
-                >
-                    <Paging defaultPageSize={5} defaultPageIndex={0} />
-                    <Sorting mode="single" />
-                    <HeaderFilter visible={true} />
+                    scrolling={{
+                        mode: 'infinite'
+                    }}
+                    sorting={{ mode: 'single' }}
+                    height={'auto'}
+                    style={{ maxHeight: '400px' }}
+                    groupPanel={{
+                        visible: type == OrganizationType.External
+                    }}
+                    headerFilter={{
+                        visible: true
+                    }}
+                    grouping={{
+                        autoExpandAll: true
+                    }}
+                    searchPanel={{
+                        visible: true,
+                        highlightSearchText: true
+                    }}>
                     <Column
                         dataField="email_id"
                         caption="Email Address"
@@ -197,9 +217,10 @@ export default function UsersTable({
                         allowHeaderFiltering={false}
                     />
                     {type === OrganizationType.External && <Column
-                        allowHeaderFiltering={false}
                         dataField="orgUser.name"
                         caption="Organization"
+                        groupIndex={0}
+                        groupCellRender={groupCellRender}
                         width={130}
                     />}
                     <Column
@@ -251,6 +272,9 @@ export default function UsersTable({
                         caption="Actions"
                     />}
                     <GridToolbar>
+                        {rowGroupName() &&
+                            <Item location="before" name="groupPanel" />
+                        }
                         <Item location="after">
                             <Btn
                                 text="Add New User"
@@ -338,9 +362,10 @@ export default function UsersTable({
                                 contentProps
                             }} />
                         </Item>
-                        <Item name="searchPanel" location="before" />
+                        <Item
+                            name="searchPanel"
+                            location={type === OrganizationType.External ? 'after' : 'before'} />
                     </GridToolbar>
-                    <SearchPanel visible={true} highlightSearchText={true} />
                 </DataGrid>}
         </>
     );

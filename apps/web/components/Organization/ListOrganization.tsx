@@ -4,11 +4,8 @@ import { useRef, useState, useEffect } from "react";
 import DataGrid, {
   Item,
   Column,
-  SearchPanel,
   Toolbar as GridToolbar,
   DataGridRef,
-  Paging,
-  Sorting,
   HeaderFilter
 } from "devextreme-react/data-grid";
 import Image from "next/image";
@@ -105,10 +102,22 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
         showBorders={true}
         ref={grid}
         className="no-padding-header"
+        scrolling={{
+          mode: 'infinite'
+        }}
+        sorting={{
+          mode: 'single'
+        }}
+        height={'auto'}
+        style={{ maxHeight: '400px' }}
+        headerFilter={{
+          visible: true
+        }}
+        searchPanel={{
+          visible: true,
+          highlightSearchText: true
+        }}
       >
-        <Paging defaultPageSize={5} defaultPageIndex={0} />
-        <Sorting mode="single" />
-        <HeaderFilter visible={true} />
         <Column
           dataField="name"
           caption="Organization Name"
@@ -292,7 +301,6 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           </Item>
           <Item name="searchPanel" location="before" />
         </GridToolbar>
-        <SearchPanel visible={true} highlightSearchText={true} />
       </DataGrid>}
     </>
   );

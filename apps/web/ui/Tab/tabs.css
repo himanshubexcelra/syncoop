@@ -12,6 +12,5 @@
     background-color: var(--background);  
 }
 .dx-tabs-styling-mode-primary.dx-tab-indicator-position-bottom .dx-tab-selected::after{
-    background-color: var(--themeBlueColor);
     height: 10px;
 } 

@@ -25,6 +25,7 @@ import { getDashBoardBreadCrumbs } from "./breadCrumbs";
 import StatusComponent from "../StatusDetails/StatusComponent";
 import AssayTable from "../AssayTable/AssayTable";
 import Module from "../Module/Module";
+import ADMESelector from "../ADMEDetails/ADMESelector";
 
 
 type DashboardPageTypeProps = {
@@ -76,6 +77,11 @@ export default function LandingPage({
             title: "Overview",
             Component: StatusComponent,
             props: { myRoles, orgUser: orgDetail, customerOrgId }
+        },
+        {
+            title: "ADME",
+            Component: ADMESelector,
+            props: { orgUser: orgDetail }
         },
         {
             title: "Assays",

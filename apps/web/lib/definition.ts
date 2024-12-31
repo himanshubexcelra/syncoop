@@ -76,6 +76,18 @@ export interface metaDataType {
   functionalAssay4: string,
 }
 
+export type FORMULA_CONFIG = {
+  min: number,
+  max: number,
+}
+export interface ADMEConfigTypes {
+  [key: string]: FORMULA_CONFIG
+}
+
+export interface OrganizationConfigType {
+  ADMEParams: ADMEConfigTypes[],
+}
+
 export interface OrganizationDataFields {
   id: number;
   name: string;
@@ -87,6 +99,7 @@ export interface OrganizationDataFields {
   other_container?: ProjectDataFields[];
   owner_id: number;
   type: string;
+  config?: OrganizationConfigType;
 }
 
 export interface OrganizationTableProps {
@@ -125,6 +138,7 @@ export interface MoleculeType {
   created_by: number;
   finger_print: string;
   id: number;
+  molecule_id: number;
   inchi_key: string;
   library_id: number;
   project_id: number;
@@ -134,6 +148,7 @@ export interface MoleculeType {
   source_molecule_name: string;
   "project / library": string;
   "organization / order": string;
+  disabled: boolean;
   status: number;
   status_name: string;
   favourite_id: number;
@@ -272,6 +287,7 @@ export interface Assay {
 
 export interface AssayTableProps {
   orgUser: OrgUser;
+  color?: string;
 }
 
 export interface ModuleFeature {
@@ -288,6 +304,7 @@ export interface ModuleFeature {
 export interface ModuleTableProps {
   orgUser: OrgUser;
   myRoles?: string[];
+  color?: string;
 }
 
 export interface Status {
@@ -312,6 +329,7 @@ export interface StatusComponentProps {
   myRoles: string[];
   orgUser: OrgUser;
   customerOrgId?: number;
+  color?: string;
 }
 
 export type UserTableProps = {
@@ -324,6 +342,7 @@ export type UserTableProps = {
   user_id: number,
   actionsEnabled: string[],
   customerOrgId?: number,
+  color?: string,
 }
 
 // Define the type for the props of each tab
@@ -335,7 +354,9 @@ interface TabProps {
   temperatureList?: number[];
   onSolventChange?: (solvent: string) => void;
   onTemperatureChange?: (temperature: number) => void;
-  resetReaction?: boolean;
+  status?: string
+  color?: string;
+  resetReaction?: number;
 }
 
 export interface TabDetail {
@@ -502,6 +523,7 @@ export interface MoleculeOrder {
   adme_data: ColorSchemeFormat[],
   functional_assays: object[],
   reaction_data: any,
+  disabled: boolean;
   organizationMetadata: {
     functionalAssay1: string;
     functionalAssay2: string;
@@ -771,7 +793,7 @@ export type CreateLabJobOrder = {
   organization_id: number,
   project_id: number,
   user_id: number,
-  order_id: number,
+  order_id? : number,
 }
 export type SaveLabJobOrder = {
   molecule_id: number,
@@ -811,4 +833,33 @@ export type ReactionLabJobOrder = {
 export enum ReactionButtonNames {
   VALIDATE = 0,
   SAVE = 1
+}
+
+export interface ReactionDetailsProps {
+  isReactantList: boolean;
+  data: ReactionDetailType;
+  onDataChange: (changes: RowChange[]) => void;
+  solventList?: string[];
+  temperatureList?: number[];
+  onSolventChange: (value: string) => void;
+  onTemperatureChange: (value: number) => void;
+  setReactionDetail: (reactionDetail: {
+      solvent?: string;
+      temperature?: number;
+      id?: string | number;
+      reactionTemplate?: string;
+  }) => void;
+  handleSwapReaction: (value: ReactionCompoundType[]) => void;
+  resetReaction?: number;
+  status?: string;
+}
+
+export interface RowChange {
+  id: number;
+  [field: string]: any;
+}
+
+export enum ResetState {
+  SUBMIT = 0,
+  RESET = 1
 }

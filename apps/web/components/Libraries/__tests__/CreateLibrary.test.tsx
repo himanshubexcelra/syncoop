@@ -184,7 +184,7 @@ describe('Create/ Edit Library should work as expected', () => {
         (fetch as jest.Mock).mockClear();
     });
 
-    test.skip('create library works as expected with valid data', async () => {
+    test('create library works as expected with valid data', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
@@ -224,7 +224,42 @@ describe('Create/ Edit Library should work as expected', () => {
         await act(async () => { fireEvent.click(createButton) });
     });
 
-    test.skip('edit library works as expected with valid data', async () => {
+
+
+    test('create library throws error when mandatory fields are empty', async () => {
+        jest.mocked(useParams).mockReturnValue({ id: '1' });
+
+        (useSearchParams as jest.Mock).mockReturnValue({
+            get: jest.fn().mockReturnValue('2'),
+        });
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValueOnce(data),
+        });
+        await act(async () => {
+            render(
+                <CreateLibrary
+                    userData={userData}
+                    // @ts-expect-error params definiation mismatch
+                    projectData={projectData}
+                    fetchLibraries={fetchLibraries}
+                    formRef={mockFormRef}
+                    setCreatePopupVisibility={setCreatePopupVisibility}
+                    library_idx={-1}
+                />);
+        });
+
+        const mockResponse = { error: null };
+        act(() => { (createLibrary as jest.Mock).mockResolvedValue(mockResponse) });
+
+        expect(screen.getByText('Create Library')).toBeInTheDocument();
+
+        const createButton = screen.getByText('Create Library');
+        await act(async () => { fireEvent.click(createButton) });
+
+        expect(screen.getAllByText('Library name is required').length).toBeGreaterThan(0);
+    });
+
+    test('edit library works as expected with valid data', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({
@@ -262,5 +297,73 @@ describe('Create/ Edit Library should work as expected', () => {
 
         const updateButton = screen.getByText('Update');
         await act(async () => { fireEvent.click(updateButton) });
+    });
+
+    test('edit library works as expected with invalid data', async () => {
+        jest.mocked(useParams).mockReturnValue({ id: '1' });
+
+        (useSearchParams as jest.Mock).mockReturnValue({
+            get: jest.fn().mockReturnValue('2'),
+        });
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValueOnce(data),
+        });
+        await act(async () => {
+            render(
+                <CreateLibrary
+                    userData={userData}
+                    // @ts-expect-error params definiation mismatch
+                    projectData={projectData}
+                    fetchLibraries={fetchLibraries}
+                    formRef={mockFormRef}
+                    setCreatePopupVisibility={setCreatePopupVisibility}
+                    library_idx={2}
+                />);
+        });
+
+        const mockResponse = { error: 'Library name already exists' };
+        act(() => { (editLibrary as jest.Mock).mockResolvedValue(mockResponse) });
+        const inputField = screen.getByPlaceholderText('Edit Library');
+        expect(inputField).toBeInTheDocument();
+        await act(async () => {
+            fireEvent.change(inputField, {
+                target: {
+                    value: 'My New Library'
+                }
+            });
+        });
+
+        expect(screen.getByText('Update')).toBeInTheDocument();
+
+        const updateButton = screen.getByText('Update');
+        await act(async () => { fireEvent.click(updateButton) });
+    });
+
+    test('discard button works as expected', async () => {
+        jest.mocked(useParams).mockReturnValue({ id: '1' });
+
+        (useSearchParams as jest.Mock).mockReturnValue({
+            get: jest.fn().mockReturnValue('2'),
+        });
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValueOnce(data),
+        });
+        await act(async () => {
+            render(
+                <CreateLibrary
+                    userData={userData}
+                    // @ts-expect-error params definiation mismatch
+                    projectData={projectData}
+                    fetchLibraries={fetchLibraries}
+                    formRef={mockFormRef}
+                    setCreatePopupVisibility={setCreatePopupVisibility}
+                    library_idx={2}
+                />);
+        });
+
+        expect(screen.getByText('Discard')).toBeInTheDocument();
+
+        const discardButton = screen.getByText('Discard');
+        await act(async () => { fireEvent.click(discardButton) });
     });
 });

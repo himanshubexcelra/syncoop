@@ -411,7 +411,7 @@ body {
   background-color: var(--themeSilverGreyColor);
 }
 
-.text-grey{
+.text-grey {
   color: var(--themeGreyColor)
 }
 
@@ -437,4 +437,17 @@ body {
 
 .bg-yellow {
   background-color: var(--themeStatsYellowColor);
+}
+
+.dx-slider-bar {
+  margin: 0 !important;
+  height: 0 !important;
+}
+
+.dx-slider-handle {
+  z-index: 10;
+}
+
+.dx-tabs-styling-mode-primary.dx-tab-indicator-position-bottom .dx-tab-selected::after {
+  background-color: var(--tab-color, var(--themeBlueColor));
 }

@@ -427,4 +427,12 @@
         gap: 10px;
 
     }
+
+      
 }
+.dx-icon.dx-icon-export {
+    transform: scale(1.5); 
+}
+.dx-icon.dx-icon-column-chooser {
+    transform: scale(1.7); 
+}  

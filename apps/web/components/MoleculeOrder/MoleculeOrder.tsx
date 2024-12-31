@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import CustomDataGrid from '@/ui/dataGrid';
 import {
   BreadCrumbsObj,
@@ -24,7 +24,8 @@ import {
   ColumnConfig,
   Status,
   MoleculeStatusLabel,
-  ReactionButtonNames
+  ReactionButtonNames,
+  ResetState
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
@@ -38,8 +39,7 @@ import {
   sample_molecule_ids
 } from '@/utils/constants';
 import { Button, CheckBox, LoadIndicator, Popup, } from 'devextreme-react';
-import dxDataGrid, {
-  SelectionChangedEvent,
+import {
   EditorPreparingEvent,
   RowClickEvent
 } from 'devextreme/ui/data_grid';
@@ -63,25 +63,23 @@ import {
   popupPositionValue,
   randomValue
 } from '@/utils/helpers';
+import './MoleculeOrder.css';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import CustomTooltip from '@/ui/CustomTooltip';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
 import {
   addMoleculeToCart,
-  getMoleculeCart,
   updateMoleculeStatus,
 } from '@/components/Libraries/service'
 import PathwayImage from '../PathwayImage/PathwayImage';
 import PathwayAction from "@/components/PathwayImage/PathwayAction";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
-import { DataGridTypes } from 'devextreme-react/cjs/data-grid';
 import ReactionDetails from './ReactionDetails';
 import Tabs from '@/ui/Tab/Tabs';
 import ConfirmationDialog from './ConfirmationDialog';
 import { COMPOUND_TYPE_R, DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
-import dxCheckBox, { ValueChangedEvent } from 'devextreme/ui/check_box';
 import StatusCard from '@/ui/StatusCard';
 import { PathwayData } from '@/public/data/pathway2';
 // import { basename } from 'path';
@@ -159,12 +157,12 @@ type PathObjectType = {
   pathIndex: number[]; // pathIndex is an array of numbers
 }
 
-const isSelectable = [MoleculeStatusLabel.Ordered];
-const isClickable = [MoleculeStatusLabel.Ordered, MoleculeStatusLabel.InRetroQueue];
 type MoleculeOrderPageTypeProps = {
   userData: UserData,
   actionsEnabled: string[],
 }
+
+const isClickable = [MoleculeStatusLabel.Ordered, MoleculeStatusLabel.InRetroQueue];
 
 const MoleculeStructure = dynamic(() => import("@/utils/MoleculeStructure"), {
   ssr: false,
@@ -182,10 +180,9 @@ export default function MoleculeOrderPage({
   const [pathwayView, setPathwayView] = useState(false);
   const [nodeValue, setNodes] = useState<NodeType[][]>([]);
   const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
-  const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item IDs
   const [isSendForSynthesisEnabled, setSendForSynthesisEnabled] = useState(true);
   const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
-  const [reactions, setReactions] = useState(-1);
+  const [selectedPathwayIndex, setSelectedPathway] = useState(-1);
   const [moleculeData, setMoleculeData] = useState<MoleculeOrder[]>([]);
   const [inRetroData, setToIntroQueue] = useState<MoleculeOrder[]>([]);
   const [updatedAt, setUpdatedAt] = useState(Date.now());
@@ -223,13 +220,23 @@ export default function MoleculeOrderPage({
     source_molecule_name: ''
   });
   const popupRef = useRef<HTMLDivElement>(null);
-  const [resetReaction, setResetReaction] = useState<boolean>(false);
+  const [resetReaction, setResetReaction] = useState<number>(ResetState.RESET);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingButtonIndex, setLoadingButtonIndex] = useState<number | null>();
   const [isLabJobLoading, setIsLabJobLoading] = useState(false);
   const [submittedTabs, setSubmittedTabs] = useState<boolean[]>([]);
   const [formStates, setFormStates] = useState<boolean[]>([]);
   const [pathwayID, setPathwayID] = useState<number>(0);
+  const [viewImage, setViewImage] = useState(false);
+  const [selectionEnabledRows, setSelectionEnabledRows] = useState<object[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedValue = localStorage.getItem('pathway_box_width');
+      const width = storedValue ? Number(storedValue) : PATHWAY_BOX_WIDTH;
+      setPopupWidth(width);
+    }
+  }, []);
 
   useEffect(() => {
     fetchMoleculeOrders();
@@ -242,13 +249,13 @@ export default function MoleculeOrderPage({
   };
   const permitValidatePathway = actionsEnabled.includes('validate_pathway');
 
-  const selectionRef = useRef<{
+  /* const selectionRef = useRef<{
     checkBoxUpdating: boolean,
     selectAllCheckBox: dxCheckBox | null
   }>({
     checkBoxUpdating: false,
     selectAllCheckBox: null
-  });
+  }); */
 
   const breadcrumbs: BreadCrumbsObj[] = [
     { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
@@ -343,7 +350,7 @@ export default function MoleculeOrderPage({
         const isClickableRow = clickableRow(data.molecule_status);
         return isClickableRow ? (
           <button
-            onClick={() => {
+            /* onClick={() => {
               setPath(data);
               setEditPahway(true);
               setSelectedMoleculeOrder([data]);
@@ -351,7 +358,7 @@ export default function MoleculeOrderPage({
               setNextReaction(false);
               setIsLabJobLoading(false);
               setIsLoading(false);
-            }}
+            }} */
             className="text-themeBlueColor underline"
           >
             {data.molecule_id}
@@ -385,8 +392,7 @@ export default function MoleculeOrderPage({
             return calculatedResult >= color.min && calculatedResult < color.max
           });
           return (
-            <span className={`${colorFound?.className} status-mark`}
-              title={calculatedResult.toFixed(2)}>
+            <span className={`${colorFound?.className} status-mark`}>
               {Number(data.molecular_weight).toFixed(2)}
             </span>
           );
@@ -501,14 +507,20 @@ export default function MoleculeOrderPage({
           const imgPath = '1001_nmr_image_3.png';
           const pdfPath = '1001_lcms_report_3.pdf';
           return (
-            <div className={`flex flex-col items-center 
+            <div className={`flex flex-col items-center
             justify-center text-themeBlueColor`}>
               <div className="flex items-center">
+                <span
+                  className="font-lato text-sm font-normal mr-2 cursor-pointer"
+                  onClick={() => {
+                    setSelectedMoleculeOrder([data]);
+                    setViewImage(true)
+                  }}>NMR</span>
                 <a href={`/images/${imgPath}`}
                   target="_blank"
+                  download
                   rel="noopener noreferrer"
                   className="flex items-center">
-                  <span className="font-lato text-sm font-normal mr-2">NMR</span>
                   <Image
                     src={"/icons/new-tab-icon.svg"}
                     alt="link tab"
@@ -520,9 +532,14 @@ export default function MoleculeOrderPage({
               <div className="flex items-center">
                 <a href={`/data/${pdfPath}`}
                   target="_blank"
+                  rel="noopener noreferrer">
+                  <span className="font-lato text-sm font-normal mr-2">MS</span>
+                </a>
+                <a href={`/data/${pdfPath}`}
+                  target="_blank"
+                  download
                   rel="noopener noreferrer"
                   className="flex items-center">
-                  <span className="font-lato text-sm font-normal mr-2">MS</span>
                   <Image
                     src={"/icons/new-tab-icon.svg"}
                     alt="link tab"
@@ -1102,7 +1119,7 @@ export default function MoleculeOrderPage({
       .then((res) => {
         if (res) {
           setPathwayView(false);
-          setReactions(-1);
+          setSelectedPathway(-1);
           updateMoleculeDataStatus(
             MoleculeStatusCode.ValidatedInCart, MoleculeStatusLabel.ValidatedInCart
           );
@@ -1147,7 +1164,10 @@ export default function MoleculeOrderPage({
         toast.error(Messages.USER_ROLE_CHECK);
       }
       if (!data.error) {
-        if (isSystemAdmin(myRoles) || isProtocolAproover(myRoles)) {
+        const selectionEnabledRows = data.filter(
+          (row: MoleculeOrder) => !row.disabled);
+        setSelectionEnabledRows(selectionEnabledRows);
+        /* if (isSystemAdmin(myRoles) || isProtocolAproover(myRoles)) {
           const params = {
             user_id: Number(userData.id),
             lab_job_cart: true
@@ -1158,7 +1178,7 @@ export default function MoleculeOrderPage({
             .filter((item: any) => moleculeIds.includes(item.molecule_id))
             .map((item: any) => item.id);
           setCartMolecule(selectedMoleculeInCart);
-        }
+        } */
         // Transform the fetched data if data is available
         transformedData = data?.map((item: any) => {
           const {
@@ -1394,7 +1414,7 @@ export default function MoleculeOrderPage({
     // }
   }
 
-  const onEditorPreparing = useCallback((e: EditorPreparingEventEx<MoleculeOrder, number>) => {
+  /* const onEditorPreparing = useCallback((e: EditorPreparingEventEx<MoleculeOrder, number>) => {
     const dataGrid = e.component;
     if (e.type !== 'selection') return;
     if (e.parentType === 'dataRow' && e.row &&
@@ -1423,9 +1443,9 @@ export default function MoleculeOrderPage({
       }
     }
 
-  }, [])
+  }, []) */
 
-  function isSelectAll(dataGrid: dxDataGrid<MoleculeOrder, number>) {
+  /* function isSelectAll(dataGrid: dxDataGrid<MoleculeOrder, number>) {
     let items: MoleculeOrder[] = [];
     dataGrid.getDataSource().store().load().then((data) => {
       items = data as MoleculeOrder[];
@@ -1437,9 +1457,19 @@ export default function MoleculeOrderPage({
       return false;
     }
     return selectedRowKeys.length >= selectableItems.length ? true : undefined;
+  } */
+
+  const onSelectionUpdated = (selectedRowsKeys: number[], selectedRowsData: object[]) => {
+    setSelectedRows(selectedRowsKeys);
+    setMoleculeData(selectedRowsData as MoleculeOrder[]);
+    if (selectedRowsKeys.length) {
+      setSendForSynthesisEnabled(false)
+    } else {
+      setSendForSynthesisEnabled(true)
+    }
   }
 
-  const onSelectionChanged = async (e: SelectionChangedEvent) => {
+  /* const onSelectionChanged = async (e: SelectionChangedEvent) => {
     // disable selecting certain rows
     const deselectRowKeys: number[] = [];
     e.selectedRowsData.forEach((item) => {
@@ -1473,7 +1503,7 @@ export default function MoleculeOrderPage({
         project_id: item.project_id
       }));
     setMoleculeData(selectedProjectMolecule);
-  }
+  } */
 
   const showPathway = () => {
     setPathwayView(true);
@@ -1482,7 +1512,7 @@ export default function MoleculeOrderPage({
 
   const toolbarButtons = [
     {
-      text: `Send for Retrosynthesis (${moleculeData.length})`,
+      text: `Send for Retrosynthesis (${selectedRows.length})`,
       onClick: handleSendForSynthesis,
       disabled: isSendForSynthesisEnabled,
       class: isSendForSynthesisEnabled ? 'mol-ord-btn-disable' : 'btn-primary',
@@ -1490,13 +1520,13 @@ export default function MoleculeOrderPage({
     }
   ];
 
-  const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
+  /* const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
     // Handling cart molecules
     if (isMoleculeInCart.includes(e.key)) {
       e.cellElement.style.pointerEvents = 'none';
       e.cellElement.style.opacity = '0.5';
     }
-  };
+  }; */
 
 
   // Fetch Reaction Data
@@ -1514,7 +1544,7 @@ export default function MoleculeOrderPage({
           setSubmittedTabs(noOfTabState);
           setFormStates(noOfTabState);
         }
-        setReactions(idx);
+        setSelectedPathway(idx);
         setIsLoading(false)
       }
     } catch (error) {
@@ -1544,6 +1574,7 @@ export default function MoleculeOrderPage({
 
   // Save Reaction Changes
   const handleSaveReaction = async (type: number) => {
+    setResetReaction(ResetState.SUBMIT);
     const { molecule_status } = selectedMoleculeOrder[0];
     const moleculeStatus = isProtocolAproover(myRoles) || isSystemAdmin(myRoles) ?
       MoleculeStatusCode.Validated : MoleculeStatusCode.InReview;
@@ -1623,7 +1654,7 @@ export default function MoleculeOrderPage({
       try {
         const insertedData = await saveReactionPathway(reactionDataInput);
         setPathWayReaction(insertedData);
-        await fetchData(insertedData[0]?.id, reactions);
+        await fetchData(insertedData[0]?.id, selectedPathwayIndex);
         // await updateMoleculeDataStatus(moleculeStatus, moleculeStatusLabel)
         setMoleculeCompound([]);
         handleTabActions();
@@ -1631,6 +1662,7 @@ export default function MoleculeOrderPage({
           position: 'top-center'
         });
         setIsLoading(false);
+        setPathwayData(JSON.parse(JSON.stringify(nodeValue[selectedPathwayIndex])));
       } catch (err: any) {
         if (err) {
           toast.error(err);
@@ -1644,6 +1676,7 @@ export default function MoleculeOrderPage({
         // await updateMoleculeDataStatus(moleculeStatus, moleculeStatusLabel)
         setMoleculeCompound([]);
         handleTabActions();
+        setPathwayData(JSON.parse(JSON.stringify(nodeValue[selectedPathwayIndex])));
         toast.success(message, {
           position: 'top-center'
         });
@@ -1705,7 +1738,7 @@ export default function MoleculeOrderPage({
   // update reaction when compounds swapped
   const handleSwapReaction = (reagentCompounds: ReactionCompoundType[]) => {
     const [first, second] = reagentCompounds;
-    const tempNode = [...nodeValue[reactions]];
+    const tempNode = [...nodeValue[selectedPathwayIndex]];
     const firstIndex = tempNode.findIndex(node => Number(node.id) === Number(first.id));
     const secondIndex = tempNode.findIndex(node => Number(node.id) === Number(second.id));
     const tempNodeData = tempNode[firstIndex];
@@ -1713,7 +1746,7 @@ export default function MoleculeOrderPage({
     tempNode[secondIndex] = tempNodeData;
     setNodes(prevState => {
       const updatedState = [...prevState];
-      updatedState[reactions] = tempNode;
+      updatedState[selectedPathwayIndex] = tempNode;
       return updatedState;
     })
     setUpdatedKey('molecule');
@@ -1722,14 +1755,14 @@ export default function MoleculeOrderPage({
   const handleSolventChange = (solvent: string) => {
     // update reaction
     onFormChange(true);
-    const tempNode = [...nodeValue[reactions]];
-    const nodeIndex = reactionIndexList[reactions].pathIndex[activeTab];
+    const tempNode = [...nodeValue[selectedPathwayIndex]];
+    const nodeIndex = reactionIndexList[selectedPathwayIndex].pathIndex[activeTab];
     const conditions = tempNode[nodeIndex].condition?.split(',') || [];
     conditions[0] = solvent;
     tempNode[nodeIndex].condition = conditions.join(',');
     setNodes(prevState => {
       const updatedState = [...prevState];
-      updatedState[reactions] = tempNode;
+      updatedState[selectedPathwayIndex] = tempNode;
       return updatedState;
     })
     setUpdatedKey('node');
@@ -1755,14 +1788,14 @@ export default function MoleculeOrderPage({
   const handleTemperatureChange = (temperature: number) => {
     // update reaction
     onFormChange(true);
-    const tempNode = [...nodeValue[reactions]];
-    const nodeIndex = reactionIndexList[reactions].pathIndex[activeTab];
+    const tempNode = [...nodeValue[selectedPathwayIndex]];
+    const nodeIndex = reactionIndexList[selectedPathwayIndex].pathIndex[activeTab];
     const conditions = tempNode[nodeIndex].condition?.split(',') || [];
     conditions[1] = `${temperature}°C`;
     tempNode[nodeIndex].condition = conditions.join(',');
     setNodes(prevState => {
       const updatedState = [...prevState];
-      updatedState[reactions] = tempNode;
+      updatedState[selectedPathwayIndex] = tempNode;
       return updatedState;
     })
     setUpdatedKey('node');
@@ -1795,23 +1828,28 @@ export default function MoleculeOrderPage({
   );
 
   const tabsDetails: TabDetail[] = [
-    ...reactionsData.map((reaction, index) => ({
-      title: `Reaction ${index + 1}`,
-      Component: ReactionDetails,
-      props: {
-        isReactantList: false,
-        data: reaction,
-        onDataChange: handleDataChange,
-        solventList,
-        temperatureList,
-        onSolventChange: handleSolventChange,
-        onTemperatureChange: handleTemperatureChange,
-        setReactionDetail: setReactionDetail,
-        handleSwapReaction: handleSwapReaction,
-        resetReaction,
-        status: selectedMoleculeOrder[0].molecule_status
-      },
-    })) || [],
+    ...reactionsData.map((reaction, index) => {
+      const reactionColor: ReactionColorsType =
+        `R${index + 1}` as ReactionColorsType;
+      return {
+        title: `Reaction ${index + 1}`,
+        Component: ReactionDetails,
+        props: {
+          isReactantList: false,
+          data: reaction,
+          onDataChange: handleDataChange,
+          solventList,
+          temperatureList,
+          onSolventChange: handleSolventChange,
+          onTemperatureChange: handleTemperatureChange,
+          setReactionDetail: setReactionDetail,
+          handleSwapReaction: handleSwapReaction,
+          resetReaction,
+          status: selectedMoleculeOrder[0].molecule_status,
+          color: ReactionColors[reactionColor]
+        },
+      }
+    }) || [],
     {
       title: 'Reactant List',
       Component: ReactionDetails,
@@ -1891,13 +1929,13 @@ export default function MoleculeOrderPage({
 
 
 
-  const selectedReaction = (eventSource: number, pathwayId: number) => {
-    const index = eventSource - 1;
+  const selectedReaction = (eventSource: number, pathwayIndex: number) => {
+    const tab = eventSource - 1;
     //open a pathway if itsnt already open
-    if (reactions === -1) {
-      handleOpenClick(pathwayId, index);
+    if (selectedPathwayIndex === -1) {
+      handleOpenClick(pathwayIndex, tab);
     }
-    setActiveTab(index);
+    setActiveTab(tab);
     setUpdatedKey('currentReaction');
   }
 
@@ -1970,12 +2008,32 @@ export default function MoleculeOrderPage({
     isResearchButton = isResearcher(myRoles) &&
       molecule_status === MoleculeStatusLabel.Ready;
   }
-  moleculeOrderData.map(d => {
-    if (d.molecule_id == 62) {
-      console.log(d);
+
+  const resetNodes = (showOuter?: boolean) => {
+    setNodes(prevState => {
+      const updatedState = [...prevState];
+      updatedState[selectedPathwayIndex] =
+        JSON.parse(JSON.stringify(pathwayDataLocal));
+      return updatedState;
+    });
+    setUpdatedAt(Date.now());
+    if (showOuter) {
+      showOverlay(5000);
+      setSelectedPathway(-1);
+      setActiveTab(0);
+      setNextReaction(false);
+      setIsLabJobLoading(false);
+      setIsLoading(false);
+    } else {
+      showInnerOverlay(5000);
+      setResetReaction((prev) => prev + 1);
+      const updatedSubmittedTabs = [...submittedTabs];
+      updatedSubmittedTabs[activeTab] = false;
+      setSubmittedTabs(updatedSubmittedTabs);
     }
-  })
-  console.log(moleculeOrderData)
+  }
+
+
   return (
     <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
@@ -1992,18 +2050,18 @@ export default function MoleculeOrderPage({
             groupingColumn={rowGroupName()}
             enableRowSelection
             enableGrouping
-            enableInfiniteScroll={false}
             enableSorting
             enableFiltering={false}
             enableOptions={false}
+            enableColumnChooser={true}
             toolbarButtons={toolbarButtons}
             loader={loader}
             enableHeaderFiltering
             enableSearchOption
-            selectedRowKeys={selectedRows}
-            onSelectionChanged={onSelectionChanged}
-            onCellPrepared={onCellPrepared}
-            onEditorPreparing={onEditorPreparing}
+            selectionEnabledRows={selectionEnabledRows}
+            scrollMode={'standard'}
+            cssClass='molecule-order-list'
+            onSelectionUpdated={onSelectionUpdated}
             onRowPrepared={onRowPrepared}
           />
         </div>
@@ -2047,32 +2105,20 @@ export default function MoleculeOrderPage({
             contentRender={() => (
               <div className="bg-themelightGreyColor relative p-[16px]">
                 <span className="pathway-header">
-                  {reactions === -1 && `${nodeValue.length} Pathway(s) found`}
+                  {selectedPathwayIndex === -1 && `${nodeValue.length} Pathway(s) found`}
                 </span>
                 <div>
-                  {reactions !== -1 &&
+                  {selectedPathwayIndex !== -1 &&
                     <div className="flex justify-between">
                       <span className="pathway-header">
-                        {`Pathway ID: ${nodeValue[reactions][1].id.split('R')[0]}`}
+                        {`Pathway ID: ${nodeValue[selectedPathwayIndex][1].id.split('R')[0]}`}
                       </span>
                       <Button
                         className="btn-secondary"
                         text="Pathway List"
                         icon="/icons/back-icon.svg"
                         onClick={() => {
-                          setNodes(prevState => {
-                            const updatedState = [...prevState];
-                            updatedState[activeTab - 1] =
-                              JSON.parse(JSON.stringify(pathwayDataLocal));
-                            return updatedState;
-                          });
-                          setReactions(-1);
-                          setActiveTab(0);
-                          showOverlay(5000);
-                          setUpdatedAt(Date.now());
-                          setNextReaction(false);
-                          setIsLabJobLoading(false);
-                          setIsLoading(false);
+                          resetNodes(true);
                         }}
                       />
                     </div>
@@ -2084,13 +2130,13 @@ export default function MoleculeOrderPage({
                         ? 'none' : 'block',
                     }}>{
                         nodeValue.map((node, idx) => {
-                          if (reactions === -1 || reactions === idx) {
+                          if (selectedPathwayIndex === -1 || selectedPathwayIndex === idx) {
                             const showLoader = loadingButtonIndex === idx;
                             return (
                               <div key={`node-${idx}`} className="mt-[10px] mb-[10px]">
                                 <div style={{ textAlign: 'right', padding: '10px' }}
                                   className="bg-white">
-                                  {reactions === -1 &&
+                                  {selectedPathwayIndex === -1 &&
                                     <button className={showLoader
                                       ? 'disableButton w-[53px] h-[37px]'
                                       : 'primary-button'}
@@ -2127,12 +2173,13 @@ export default function MoleculeOrderPage({
                                   <PathwayAction pathwayId={`node-${idx}-${updatedAt}`}
                                     selectedReaction={selectedReaction} updatedAt={updatedAt} />
                                 </PathwayImage>
-                                {reactions === idx && (
+                                {selectedPathwayIndex === idx && (
                                   <div className="border border-[var(--themeSecondaryGreyColor)] 
                         bg-white shadow-[0px_-3px_1px_rgb(190_185_185_/_90%)] pb-[38px]">
                                     <Tabs tabsDetails={tabsDetails} activeTab={activeTab}
                                       onSelectedIndexChange={(tabIndex: number) => {
                                         setActiveTab(tabIndex);
+                                        setUpdatedKey('currentReaction');
                                       }}
                                     />
                                     {/* Bottom Fixed Section */}
@@ -2149,8 +2196,9 @@ export default function MoleculeOrderPage({
                                                 (activeTab === tabsDetails.length - 1
                                                   && !isLastTabEnabled())
                                               }
-                                              onClick={() =>
-                                                handleSaveReaction(ReactionButtonNames.VALIDATE)}
+                                              onClick={() => {
+                                                handleSaveReaction(ReactionButtonNames.VALIDATE);
+                                              }}
                                               className={
                                                 isLoading || ((submittedTabs[activeTab] &&
                                                   !formStates[activeTab]) ||
@@ -2187,18 +2235,7 @@ export default function MoleculeOrderPage({
                                             }
                                               text="Reset"
                                               onClick={async () => {
-                                                setNodes(prevState => {
-                                                  const updatedState = [...prevState];
-                                                  updatedState[activeTab - 1] =
-                                                    JSON.parse(JSON.stringify(pathwayDataLocal));
-                                                  return updatedState;
-                                                });
-                                                setResetReaction(!resetReaction);
-                                                setUpdatedAt(Date.now());
-                                                showInnerOverlay(5000);
-                                                const updatedSubmittedTabs = [...submittedTabs];
-                                                updatedSubmittedTabs[activeTab] = false;
-                                                setSubmittedTabs(updatedSubmittedTabs);
+                                                resetNodes();
                                               }
                                               }
                                               className={
@@ -2224,7 +2261,9 @@ export default function MoleculeOrderPage({
                                                   : false)
                                               }
                                               text={isLoading ? '' : 'Save'}
-                                              onClick={() => setConfirm(true)}
+                                              onClick={() => {
+                                                setConfirm(true);
+                                              }}
                                               className={isLoading || (submittedTabs[activeTab] &&
                                                 !formStates[activeTab]) ||
                                                 (activeTab === tabsDetails.length - 1
@@ -2261,18 +2300,7 @@ export default function MoleculeOrderPage({
                                             }
                                               text="Reset"
                                               onClick={async () => {
-                                                setNodes(prevState => {
-                                                  const updatedState = [...prevState];
-                                                  updatedState[activeTab - 1] =
-                                                    JSON.parse(JSON.stringify(pathwayDataLocal));
-                                                  return updatedState;
-                                                });
-                                                setResetReaction(!resetReaction);
-                                                setUpdatedAt(Date.now());
-                                                showInnerOverlay(5000);
-                                                const updatedSubmittedTabs = [...submittedTabs];
-                                                updatedSubmittedTabs[activeTab] = false;
-                                                setSubmittedTabs(updatedSubmittedTabs);
+                                                resetNodes();
                                               }
                                               }
                                               className={
@@ -2401,7 +2429,7 @@ export default function MoleculeOrderPage({
 
               </div>
             )}
-            defaultWidth={PATHWAY_BOX_WIDTH}
+            defaultWidth={popupWidth}
             minWidth={PATHWAY_BOX_WIDTH}
             dragEnabled={false}
             resizeEnabled={true}
@@ -2412,9 +2440,12 @@ export default function MoleculeOrderPage({
             onHiding={() => {
               setPathwayView(false);
               setSelectRow(-1);
-              setReactions(-1);
+              setSelectedPathway(-1);
               setSubmittedTabs([]);
               setFormStates([]);
+              if (typeof window !== "undefined") {
+                localStorage.setItem('pathway_box_width', JSON.stringify(popupWidth));
+              }
             }}
             showCloseButton={true}
             wrapperAttr={
@@ -2424,6 +2455,63 @@ export default function MoleculeOrderPage({
             }
           />
         }
+        {viewImage && (
+          <Popup
+            title={selectedMoleculeOrder[0]?.source_molecule_name
+              ? `${selectedMoleculeOrder[0]?.source_molecule_name} Analysis`
+              : `Analysis`}
+            visible={viewImage}
+            contentRender={() => (
+              <>
+                <div className="flex flex-col items-center
+                                        justify-center w-full h-full">
+                  <div className="flex justify-end w-full">
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = '/images/1001_nmr_image_3.png';
+                        link.download = '1001_nmr_image_3.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="primary-button"
+                    >
+                      Download
+                    </button>
+                  </div>
+                  <div className="relative w-full h-full">
+                    <Image
+                      src="/images/1001_nmr_image_3.png"
+                      alt="Viewed Image"
+                      layout="fill"
+                      objectFit="contain"
+                      priority
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+            resizeEnabled={true}
+            hideOnOutsideClick={true}
+            defaultWidth={870}
+            minWidth={870}
+            minHeight={'100%'}
+            defaultHeight={'100%'}
+            position={{
+              my: { x: 'right', y: 'top' },
+              at: { x: 'right', y: 'top' },
+            }}
+            onHiding={() => {
+              setViewImage(false);
+            }}
+            dragEnabled={false}
+            showCloseButton={true}
+            wrapperAttr={{
+              class: "create-popup mr-[15px]"
+            }}
+          />
+        )}
         {popupVisible && (
           <div
             ref={popupRef}

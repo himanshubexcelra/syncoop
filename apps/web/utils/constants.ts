@@ -288,6 +288,7 @@ export const sample_molecule_ids = [
 
 export const COLOR_SCHEME: any = {
   Solubility: {
+    unit: 'μM',
     color: [
       {
         min: 0,
@@ -303,7 +304,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'Good'
       }
@@ -325,7 +326,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 100,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -334,6 +335,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Poor (≤ 1), Moderate (1 to <100), Good (≥ 100)'
   },
   CLint_Human: {
+    unit: 'μL/min/mg',
     color: [
       {
         min: 0,
@@ -349,7 +351,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -371,7 +373,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 10,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -380,6 +382,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 1μL/min/mg), Medium (1 to <10μL/min/mg), High (≥ 10μL/min/mg)',
   },
   CLint_Rat: {
+    unit: 'μL/min/mg',
     color: [
       {
         min: 0,
@@ -395,7 +398,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -417,7 +420,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 10,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -426,6 +429,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 1μL/min/mg), Medium (1 to <10μL/min/mg), High (≥ 10μL/min/mg)',
   },
   CLint_Mouse: {
+    unit: 'μL/min/mg',
     color: [
       {
         min: 0,
@@ -441,7 +445,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -463,7 +467,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 10,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -472,6 +476,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 1μL/min/mg), Medium (1 to <10μL/min/mg), High (≥ 10μL/min/mg)',
   },
   Fub_Human: {
+    unit: '%',
     color: [
       {
         min: 0,
@@ -487,7 +492,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -509,7 +514,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 0.5,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -518,6 +523,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 0.1), Moderate (0.1 to <0.5), High (≥ 0.5)'
   },
   Fub_Rat: {
+    unit: '%',
     color: [
       {
         min: 0,
@@ -533,7 +539,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -555,7 +561,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 0.5,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -564,6 +570,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 0.1), Moderate (0.1 to <0.5), High (≥ 0.5)'
   },
   Fub_Mouse: {
+    unit: '%',
     color: [
       {
         min: 0,
@@ -579,7 +586,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -601,7 +608,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 0.5,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -610,6 +617,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 0.1), Moderate (0.1 to <0.5), High (≥ 0.5)'
   },
   Caco2_Papp: {
+    unit: 'cm/sec',
     color: [
       {
         min: 0,
@@ -625,7 +633,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High'
       }
@@ -647,7 +655,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 0.000005,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -656,6 +664,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Low (≤ 1.0 x 10⁻⁶),  Medium (1.0 x 10⁻⁶ to <1.0 x 10⁻⁵), High (≥ 1.0 x 10⁻⁵)'
   },
   HepG2_IC50: {
+    unit: 'μM',
     color: [
       {
         min: 0,
@@ -671,7 +680,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'Safe'
       }
@@ -693,7 +702,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 10,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -702,6 +711,7 @@ export const COLOR_SCHEME: any = {
     reference: 'Safe (≥ 10), Caution (1 to <10), Risk (≤ 1)'
   },
   hERG_Ki: {
+    unit: 'μM',
     color: [
       {
         min: 0,
@@ -717,7 +727,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'Safe'
       }
@@ -739,7 +749,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 10,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 1;
         }
@@ -763,7 +773,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
         status: 'High Yield'
       }
@@ -807,7 +817,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 1,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         className: 'bg-green',
       }
     ],
@@ -842,7 +852,7 @@ export const COLOR_SCHEME: any = {
       },
       {
         min: 750,
-        max: Number.POSITIVE_INFINITY,
+        max: Number.MAX_SAFE_INTEGER,
         formulae: (value: number) => {
           return 0;
         }

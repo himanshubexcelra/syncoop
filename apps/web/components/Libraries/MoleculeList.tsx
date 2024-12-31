@@ -3,10 +3,13 @@
 import { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import Image from "next/image";
 import toast from "react-hot-toast";
+import DeleteConfirmation from './DeleteConfirmation';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
+import Workbook from 'exceljs';
+import { saveAs } from 'file-saver';
+import { exportDataGrid } from 'devextreme/excel_exporter';
 import { AppContext } from "../../app/AppState";
 import {
-    CartDetail,
     CellData,
     ColumnConfig,
     MoleculeStatusCode,
@@ -18,11 +21,9 @@ import {
 } from '@/lib/definition';
 import {
     addToFavourites,
-    /* getLibraryById, */
     addMoleculeToCart,
-    getMoleculeCart,
-    getMoleculeOrder,
-    getMoleculeData
+    getMoleculeData,
+    deleteMolecule
 } from './service';
 import {
     COLOR_SCHEME, DELAY,
@@ -32,9 +33,7 @@ import {
 import {
     delay, getStatusObject, randomValue,
     getADMEColorScheme,
-    getAverage,
-    isAdmin,
-    isLibraryManger
+    getAverage
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
@@ -46,6 +45,7 @@ import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
 import StatusCard from '@/ui/StatusCard';
 import dynamic from 'next/dynamic';
 /* import { basename } from 'path'; */
+import './MoleculeList.css';
 import CustomTooltip from '@/ui/CustomTooltip';
 import AdmeInfo from '../Tooltips/AdmeInfo';
 
@@ -70,21 +70,15 @@ const MoleculeStructure = dynamic(
 );
 
 export default function MoleculeList({
-    /* moleculeLoader, */
     expanded,
-    /* tableData, */
     userData,
-    /* setMoleculeLoader, */
-    /* setTableData, */
     actionsEnabled,
     selectedLibrary,
     library_id,
-    projectData,
     projectId,
     organizationId,
     fetchLibraries
 }: MoleculeListType) {
-    const { myRoles } = userData;
     const context: any = useContext(AppContext);
     const appContext = context.state;
     const cartEnabled = actionsEnabled.includes('create_molecule_order');
@@ -93,21 +87,23 @@ export default function MoleculeList({
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
     const [selectedRowsData, setSelectedRowsData] = useState([])
     const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
-    const [isMoleculeInCart, setCartMolecule] = useState<number[]>([]); // Store selected item ID
-    const [inOrderMolecules, setOrderMolecule] = useState<number[]>([]); // Store selected item ID
-    const [tableData, setTableData] = useState([]);
-    const [moleculeData, setMoleculeData] = useState([]);
+    const [tableData, setTableData] = useState<[]>([]);
     const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
     const [reloadMolecules, setReloadMolecules] = useState(false);
     const [popupVisible, setPopupVisible] = useState(false);
+    const [viewImage, setViewImage] = useState(false)
     const [cellData, setCellData] = useState<CellData>({
         smiles_string: "",
         source_molecule_name: ''
     });
-    const [inDoneMolecules, setDoneMolecule] = useState<number[]>([]);
     const [popupCords, setPopupCords] = useState({ x: 0, y: 0 });
     const popupRef = useRef<HTMLDivElement>(null);
     const [moleculeLoader, setMoleculeLoader] = useState(false);
+    const [confirm, setConfirm] = useState(false);
+    const [deleteMoleculeId, setDeleteMolecules] = useState<number>(0);
+    const [selectionEnabledRows, setSelectionEnabledRows] = useState<[]>([]);
+    const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
+
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
@@ -121,7 +117,7 @@ export default function MoleculeList({
         setCellData(data);
     }
 
-    const fetchMoleculeData = async (library_id: number) => {
+    const fetchMoleculeData = async (library_id: number, isFavoriteSelected = false) => {
         setMoleculeLoader(true);
         try {
             const params = {
@@ -129,6 +125,11 @@ export default function MoleculeList({
                 sample_molecule_id: randomValue(sample_molecule_ids)
             }
             const moleculeData = await getMoleculeData(params);
+            if (!isFavoriteSelected) {
+                const selectionEnabledRows = moleculeData.filter(
+                    (row: MoleculeType) => !row.disabled);
+                setSelectionEnabledRows(selectionEnabledRows);
+            }
             setTableData(moleculeData);
             setMoleculeLoader(false);
         } catch (error) {
@@ -190,10 +191,12 @@ export default function MoleculeList({
                     smilesString={data.smiles_string}
                     structureName={data.source_molecule_name}
                     molecule_id={data.id}
+                    molecule_status={data.status}
                     onZoomClick={(e: any) => handleStructureZoom(e, data)}
                     enableEdit={actionsEnabled.includes('edit_molecule')}
                     enableDelete={actionsEnabled.includes('delete_molecule')}
                     onEditClick={() => showEditMolecule(data)}
+                    onDeleteClick={() => deleteMoleculeCart(data)}
                 />
             ),
         },
@@ -238,8 +241,7 @@ export default function MoleculeList({
                         return calculatedResult >= color.min && calculatedResult < color.max
                     });
                     return (
-                        <span className={`${colorFound?.className} status-mark`}
-                            title={calculatedResult.toFixed(2)}>
+                        <span className={`${colorFound?.className} status-mark`}>
                             {Number(data.molecular_weight).toFixed(2)}
                         </span>
                     );
@@ -322,14 +324,20 @@ export default function MoleculeList({
                     const imgPath = '1001_nmr_image_3.png';
                     const pdfPath = '1001_lcms_report_3.pdf';
                     return (
-                        <div className={`flex flex-col items-center 
+                        <div className={`flex flex-col items-center
                         justify-center text-themeBlueColor`}>
                             <div className="flex items-center">
+                                <span
+                                    className="font-lato text-sm font-normal mr-2 cursor-pointer"
+                                    onClick={() => {
+                                        setEditMolecules([data])
+                                        setViewImage(true)
+                                    }}>NMR</span>
                                 <a href={`/images/${imgPath}`}
                                     target="_blank"
+                                    download
                                     rel="noopener noreferrer"
                                     className="flex items-center">
-                                    <span className="font-lato text-sm font-normal mr-2">NMR</span>
                                     <Image
                                         src={"/icons/new-tab-icon.svg"}
                                         alt="link tab"
@@ -341,9 +349,14 @@ export default function MoleculeList({
                             <div className="flex items-center">
                                 <a href={`/data/${pdfPath}`}
                                     target="_blank"
+                                    rel="noopener noreferrer">
+                                    <span className="font-lato text-sm font-normal mr-2">MS</span>
+                                </a>
+                                <a href={`/data/${pdfPath}`}
+                                    target="_blank"
+                                    download
                                     rel="noopener noreferrer"
                                     className="flex items-center">
-                                    <span className="font-lato text-sm font-normal mr-2">MS</span>
                                     <Image
                                         src={"/icons/new-tab-icon.svg"}
                                         alt="link tab"
@@ -376,6 +389,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["Caco2_Papp"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toExponential(2)}</span>
@@ -414,6 +428,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["CLint_Human"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -451,6 +466,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["CLint_Rat"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -489,6 +505,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["CLint_Mouse"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -527,6 +544,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["Fub_Human"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -565,6 +583,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["Fub_Rat"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -603,6 +622,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["Fub_Mouse"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -641,6 +661,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["HepG2_IC50"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -679,6 +700,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["hERG_Ki"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -717,6 +739,7 @@ export default function MoleculeList({
                         const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
                             calculatedResult >= color.min && calculatedResult < color.max)
                         const id = `${key}-${data.molecule_id}`
+                        data["solubility"] = average.toExponential(2);
                         return (
                             <div className={`${colorFound?.className} status-mark`}>
                                 <span id={id}>{average.toFixed(2)}</span>
@@ -738,7 +761,7 @@ export default function MoleculeList({
         }
     ];
 
-    const fetchCartData = async () => {
+    /* const fetchCartData = async () => {
         // OPT: 5
         const params: object = {
             user_id: userData.id,
@@ -757,10 +780,8 @@ export default function MoleculeList({
         }
 
         const moleculeOrder = await getMoleculeOrder(params);
-
         const inOrderMolecule: number[] = [];
         const inOrderMoleculewithDone: number[] = [];
-
         moleculeOrder.forEach((order: any) => {
             if (order.status !== MoleculeStatusCode.New) {
                 inOrderMolecule.push(order.molecule_id);
@@ -770,16 +791,15 @@ export default function MoleculeList({
                 inOrderMoleculewithDone.push(order.molecule_id);
             }
         });
-
         setDoneMolecule(inOrderMoleculewithDone);
         setOrderMolecule(inOrderMolecule)
-    };
+    }; */
 
-    useEffect(() => {
+    /* useEffect(() => {
         fetchCartData();
-    }, [library_id, userData.id, appContext]);
+    }, [library_id, userData.id, appContext]); */
 
-    const onCellPrepared = (e: any) => {
+    /* const onCellPrepared = (e: any) => {
         if (isMoleculeInCart.includes(e.key)) {
             e.cellElement.style.pointerEvents = 'none';
             e.cellElement.style.opacity = 0.5;
@@ -788,7 +808,25 @@ export default function MoleculeList({
             e.cellElement.style.pointerEvents = 'none';
             e.cellElement.style.opacity = 0.5;
         }
-    };
+    }; */
+
+    const onExporting = (e: any) => {
+        const workbook = new Workbook();
+        const worksheet = workbook.addWorksheet('Molecule List');
+        exportDataGrid({
+            component: e.component,
+            worksheet: worksheet,
+            customizeCell: function (options) {
+                options.excelCell.font = { name: 'Arial', size: 12 };
+                options.excelCell.alignment = { horizontal: 'left' };
+            }
+        }).then(function () {
+            workbook.csv.writeBuffer().then(function (buffer: any) {
+                saveAs(new Blob([buffer], { type: "application/octet-stream" }), "MoleculList.csv");
+            });
+
+        });
+    }
 
     const addToFavourite = async (data: MoleculeType, existingFavourite: boolean) => {
         const dataField: addToFavouritesProps = {
@@ -802,7 +840,7 @@ export default function MoleculeList({
         if (!response.error) {
             /* const libraryData =
                 await getLibraryById(['molecule'], data.library_id.toString()); */
-            fetchMoleculeData(data.library_id);
+            fetchMoleculeData(data.library_id, true);
 
         } else {
             const toastId = toast.error(`${response.error}`);
@@ -811,7 +849,13 @@ export default function MoleculeList({
         }
     }
 
-    const onSelectionChanged = async (e: any) => {
+    const onSelectionUpdated = (selectedRowsKeys: number[], selectedRowsData: object[]) => {
+        setIsAddToCartEnabled(!selectedRowsKeys.length);
+        setSelectedRows(selectedRowsKeys);
+        setSelectedRowsData(selectedRowsData as []);
+    }
+
+    /* const onSelectionChanged = async (e: any) => {
         setIsAddToCartEnabled(!e.selectedRowKeys.length);
 
         const totalOrderedMolecules = [...inOrderMolecules, ...isMoleculeInCart];
@@ -844,27 +888,60 @@ export default function MoleculeList({
             !totalOrderedMolecules.includes(item.molecule_id));
         setMoleculeData(updatedMoleculeCart);
         // If the check box is unchecked
-    };
+    }; */
 
     const showEditMolecule = useCallback((data?: MoleculeType) => {
         const moleculesToEdit = data ? [data] : selectedRowsData;
-        setEditMolecules(moleculesToEdit.filter(d => !isMoleculeInCart.includes(d.id)));
+        setEditMolecules(moleculesToEdit)
+        /* setEditMolecules(moleculesToEdit.filter(
+            (d: any) => !isMoleculeInCart.includes(d.id))); */
         setViewEditMolecule(true);
     }, [selectedRowsData]);
 
+    const deleteMoleculeCart = (data?: MoleculeType) => {
+        setConfirm(true)
+        if (data?.status === MoleculeStatusCode.New) {
+            setDeleteMolecules(data.id)
+            setConfirm(true)
+        }
+    }
+
+    const handleDeleteMolecule = async () => {
+        const result = await deleteMolecule(deleteMoleculeId);
+        if (result) {
+            setDeleteMolecules(0)
+            setReloadMolecules(true);
+        }
+    }
+
+    const handleCancel = () => {
+        setConfirm(false)
+    }
+
     const addProductToCart = () => {
-        context?.addToState({
-            ...appContext, cartDetail: [...moleculeData]
-        })
+        setLoadingCartEnabled(true);
+        const moleculeData = selectedRowsData.map((row: MoleculeType) => ({
+            molecule_id: row.molecule_id,
+            library_id: row.library_id,
+            organization_id: row.organization_id,
+            project_id: row.project_id,
+            user_id: userData.id
+        }));
 
         addMoleculeToCart(moleculeData, MoleculeStatusCode.NewInCart)
             .then((res) => {
+                context?.addToState({
+                    ...appContext,
+                    cartDetail: [...moleculeData]
+                });
+                setLoadingCartEnabled(false);
                 toast.success(Messages.addMoleculeCartMessage(res.count));
                 setReloadMolecules(true);
                 setIsAddToCartEnabled(true)
             })
             .catch((error) => {
                 toast.success(error);
+                setLoadingCartEnabled(false);
             })
     }
 
@@ -875,9 +952,6 @@ export default function MoleculeList({
                 setSelectedRowsData([]);
                 setSelectedRows([]);
                 if (selectedLibrary) {
-                    /* const libraryData =
-                        await getLibraryById(['molecule'], selectedLibrary.toString());
-                    setTableData(libraryData.libraryMolecules || []); */
                     await fetchMoleculeData(selectedLibrary);
                 }
                 setReloadMolecules(false);
@@ -897,8 +971,7 @@ export default function MoleculeList({
     const addMolecule = () => {
         setViewAddMolecule(true)
     }
-    const rowsNotInCartLength =
-        (selectedRows.filter(value => !isMoleculeInCart.includes(value)).length)
+
     const toolbarButtons = [
         {
             text: "Add Molecule",
@@ -908,26 +981,24 @@ export default function MoleculeList({
             class: 'btn-primary toolbar-item-spacing',
         },
         {
-            text: `Edit (${rowsNotInCartLength})`,
+            text: `Edit (${selectedRows.length})`,
             onClick: showEditMolecule,
-            class: !selectedRows.length ||
-                !rowsNotInCartLength
+            class: !selectedRows.length
                 ? 'btn-disable toolbar-item-spacing' : 'btn-secondary toolbar-item-spacing',
-            disabled: !selectedRows.length ||
-                !rowsNotInCartLength,
+            disabled: !selectedRows.length,
             visible: actionsEnabled.includes('edit_molecule') && !!library_id
         },
         {
-            text: `Add to Cart (${rowsNotInCartLength})`,
+            text: `Add to Cart (${selectedRows.length})`,
             onClick: addProductToCart,
-            class: isAddToCartEnabled ||
-                !rowsNotInCartLength
+            class: isAddToCartEnabled
                 ? 'btn-disable' : 'btn-secondary',
-            disabled: isAddToCartEnabled ||
-                !rowsNotInCartLength,
-            visible: cartEnabled && !!library_id
+            disabled: isAddToCartEnabled,
+            visible: cartEnabled && !!library_id,
+            loader: loadingCartEnabled
         }
     ];
+
     const renderTitleField = () => {
         return (
             <div className="flex items-center relative">
@@ -968,8 +1039,18 @@ export default function MoleculeList({
             </div>
         );
     };
+
     return (
         <>
+            {confirm && (
+                <DeleteConfirmation
+                    onSave={() => handleDeleteMolecule()}
+                    openConfirmation={confirm}
+                    setConfirm={() => handleCancel()}
+                    msg={Messages.DELETE_MOLECULE}
+                    title={Messages.DELETE_MOLECULE_TITLE}
+                />
+            )}
             {moleculeLoader ?
                 <LoadIndicator
                     visible={moleculeLoader}
@@ -982,17 +1063,19 @@ export default function MoleculeList({
                         data={tableData}
                         enableRowSelection
                         enableGrouping
-                        enableInfiniteScroll={false}
                         enableSorting
                         enableFiltering={false}
                         enableOptions={false}
+                        enableExport={true}
+                        enableColumnChooser={true}
                         toolbarButtons={toolbarButtons}
                         loader={moleculeLoader}
                         enableHeaderFiltering
                         enableSearchOption={!expanded}
-                        selectedRowKeys={selectedRows}
-                        onSelectionChanged={onSelectionChanged}
-                        onCellPrepared={onCellPrepared}
+                        cssClass='molecule-list'
+                        onSelectionUpdated={onSelectionUpdated}
+                        selectionEnabledRows={selectionEnabledRows}
+                        onExporting={onExporting}
                     />
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}
@@ -1065,15 +1148,73 @@ export default function MoleculeList({
                             }
                         } />
                     }
+                    {viewImage && (
+                        <Popup
+                            title={editMolecules[0]?.source_molecule_name
+                                ? `${editMolecules[0]?.source_molecule_name} Analysis`
+                                : `Analysis`}
+                            visible={viewImage}
+                            contentRender={() => (
+                                <>
+                                    <div className="flex flex-col items-center
+                                        justify-center w-full h-full">
+                                        <div className="flex justify-end w-full">
+                                            <button
+                                                onClick={() => {
+                                                    const link = document.createElement('a');
+                                                    link.href = '/images/1001_nmr_image_3.png';
+                                                    link.download = '1001_nmr_image_3.png';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                }}
+                                                className="primary-button"
+                                            >
+                                                Download
+                                            </button>
+                                        </div>
+                                        <div className="relative w-full h-full">
+                                            <Image
+                                                src="/images/1001_nmr_image_3.png"
+                                                alt="Viewed Image"
+                                                layout="fill"
+                                                objectFit="contain"
+                                                priority
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            resizeEnabled={true}
+                            hideOnOutsideClick={true}
+                            defaultWidth={870}
+                            minWidth={870}
+                            minHeight={'100%'}
+                            defaultHeight={'100%'}
+                            position={{
+                                my: { x: 'right', y: 'top' },
+                                at: { x: 'right', y: 'top' },
+                            }}
+                            onHiding={() => {
+                                setViewImage(false);
+                            }}
+                            dragEnabled={false}
+                            showCloseButton={true}
+                            wrapperAttr={{
+                                class: "create-popup mr-[15px]"
+                            }}
+                        />
+                    )}
                     <div className='flex justify-center mt-[25px]'>
                         <span className='text-themeGreyColor'>
                             {tableData.length}
                             <span className='pl-[3px]'>
-                                {tableData.length === 1 ? 'molecule' : 'molecules'}
+                                {tableData.length > 1 ? 'molecules' : 'molecule'}
                             </span>
                             <span className='pl-[2px]'> found</span>
                         </span>
                         {!!tableData.length && <span>&nbsp;|&nbsp;</span>}
+
                         {!!tableData.length &&
                             <span className={
                                 `text-themeSecondayBlue 

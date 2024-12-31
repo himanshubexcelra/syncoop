@@ -213,7 +213,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 
   const req = await request.json();
-  const { name, first_name, last_name, email_id, role_id, created_by, password_hash } = req;
+  const { name, first_name, last_name, email_id, role_id, created_by, password_hash, config } = req;
   // Check if an organization with the same name already exists (case insensitive)
   try {
     const existingOrganization = await prisma.container.findFirst({
@@ -368,6 +368,7 @@ export async function POST(request: Request) {
             owner_id: adminUser.id, // Link the user as the org admin
             created_by,
             created_at: getUTCTime(new Date().toISOString()),
+            config: config,
             org_product_module: {
               create: clientOrgModulePurchased
             }
@@ -407,7 +408,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, primaryContactId, is_active, metadata } = req;
+    const { id, primaryContactId, is_active, metadata, config } = req;
 
     // Update the organization and user details
     const updatedOrganization = await prisma.container.update({
@@ -417,6 +418,7 @@ export async function PUT(request: Request) {
         metadata,
         is_active,
         updated_at: getUTCTime(new Date().toISOString()),
+        config,
       },
       include: {
         owner: {

@@ -13,9 +13,11 @@ export async function GET(request: Request) {
     try {
         const result = await prisma.$queryRaw`SELECT  
             mo.*,
+            mo.id as molecule_id,
             sc.status_name,
             ufm.id as favourite_id,
             CASE WHEN ufm.id IS NULL THEN false ELSE true END AS favourite,
+            CASE WHEN mo.status = ${MoleculeStatusCode.New} THEN false ELSE true END AS disabled,
             mcd.value as reaction_data,
             mad.value as adme_data,
             mbd.value as functional_assays
@@ -151,5 +153,25 @@ export async function PUT(request: Request) {
         });
     } finally {
         await prisma.$disconnect();
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const molecule_id = searchParams.get('molecule_id');
+        const result = await prisma.molecule.delete({
+            where: { id: Number(molecule_id) },
+        });
+        return new Response(json(result), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // BAD_REQUEST
+        });
     }
 }

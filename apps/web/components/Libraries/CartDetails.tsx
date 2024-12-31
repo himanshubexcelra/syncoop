@@ -31,6 +31,7 @@ interface CartDetailsProps {
   removeItemFromCart: (item: DeleteMoleculeCart) => void;
   removeAll: (user_id: number, type: string, msg: string) => void;
   close: () => void;
+  loader: boolean
 }
 export default function CartDetails({
   cartData,
@@ -39,6 +40,7 @@ export default function CartDetails({
   removeItemFromCart,
   removeAll,
   close,
+  loader,
 }: CartDetailsProps) {
   const [isDisable, setDisableButton] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -74,6 +76,7 @@ export default function CartDetails({
     "Project / Library": `${item.molecule.project.name} / ${item.molecule.library.name}`,
     "Organization / Order": `${item.organization.name} / ${item.molecule_order_id}`,
   }));
+
   const handleStructureZoom = (event: any, data: any) => {
     const { x, y } = event.event.target.getBoundingClientRect();
     const screenHeight = window.innerHeight;
@@ -81,6 +84,7 @@ export default function CartDetails({
     setPopupVisible(true);
     setCellData({ ...data, source_molecule_name: data.moleculeName });
   }
+
   const columns: ColumnConfig[] = [
     {
       dataField: "molecule_id",
@@ -237,77 +241,80 @@ export default function CartDetails({
   };
 
   return (
+
     <>
-      {cartData.length > 0 ? (
-        <div className="popup-content">
-          <div className="popup-grid"
-            onClick={closeMagnifyPopup}>
-            <CustomDataGrid
-              columns={columns}
-              height="auto"
-              data={cartDetails}
-              groupingColumn={rowGroupName()}
-              enableGrouping
-              enableInfiniteScroll={false}
-              enableSorting={false}
-              enableFiltering={false}
-              enableOptions={false}
-              enableRowSelection={false}
-              enableSearchOption={false}
-              loader={false}
-            />
-          </div>
-
-          <div className="popup-buttons">
-            <Btn
-              className={
-                isSubmitOrderLoading
-                  ? "mol-ord-btn-disable btn-primary w-[130px]"
-                  : "btn-primary w-[130px]"
-              }
-              disabled={isDisable || isSubmitOrderLoading}
-              onClick={handleClick}
-              text={isSubmitOrderLoading ? '' : 'Submit Order'}
-
-            >
-              {isSubmitOrderLoading && (
-                <LoadIndicator
-                  className="button-indicator"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    color: 'var(--themeSilverGreyColor)'
-                  }}
-                  height={20}
-                  width={20}
+      {
+        loader ? <div style={{ marginTop: '300px', marginLeft: '255px' }}><LoadIndicator /></div>
+          : cartData.length > 0 ? (
+            <div className="popup-content">
+              <div className="popup-grid"
+                onClick={closeMagnifyPopup}>
+                <CustomDataGrid
+                  columns={columns}
+                  height="auto"
+                  data={cartDetails}
+                  groupingColumn={rowGroupName()}
+                  enableGrouping
+                  enableSorting={false}
+                  enableFiltering={false}
+                  enableOptions={false}
+                  enableRowSelection={false}
+                  enableSearchOption={false}
+                  loader={false}
+                  scrollMode={'infinite'}
                 />
-              )}
-            </Btn>
-            <Btn
-              className="btn-secondary"
-              onClick={() => {
-                close();
-                setSubmitOrderLoading(false);
-              }}
-              text="Close"
-            />
-            <Link
-              href="#"
-              onClick={() =>
-                removeAll(userData.id, "RemoveAll", Messages.REMOVE_ALL_MESSAGE)
-              }
-              className="text-themeBlueColor font-bold"
-              style={{ marginLeft: "10px", marginTop: "10px" }}
-            >
-              Remove All
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <>No Items in the cart</>
-      )}
+              </div>
+
+              <div className="popup-buttons">
+                <Btn
+                  className={
+                    isSubmitOrderLoading
+                      ? "mol-ord-btn-disable btn-primary w-[130px]"
+                      : "btn-primary w-[130px]"
+                  }
+                  disabled={isDisable || isSubmitOrderLoading}
+                  onClick={handleClick}
+                  text={isSubmitOrderLoading ? '' : 'Submit Order'}
+
+                >
+                  {isSubmitOrderLoading && (
+                    <LoadIndicator
+                      className="button-indicator"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: 'var(--themeSilverGreyColor)'
+                      }}
+                      height={20}
+                      width={20}
+                    />
+                  )}
+                </Btn>
+                <Btn
+                  className="btn-secondary"
+                  onClick={() => {
+                    close();
+                    setSubmitOrderLoading(false);
+                  }}
+                  text="Close"
+                />
+                <Link
+                  href="#"
+                  onClick={() =>
+                    removeAll(userData.id, "RemoveAll", Messages.REMOVE_ALL_MESSAGE)
+                  }
+                  className="text-themeBlueColor font-bold"
+                  style={{ marginLeft: "10px", marginTop: "10px" }}
+                >
+                  Remove All
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>No Items in the cart</>
+          )}
       {confirm && (
         <ConfirmationDialog
           onSave={handleLabJobOrder}
@@ -326,17 +333,17 @@ export default function CartDetails({
             zIndex: 2000,
           }}
           className="fixed
-                            transform -translate-x-1/2 -translate-y-1/2
-                            bg-gray-100
-                            bg-opacity-80
-                            w-[250px]
-                            h-[250px]"
+                                transform -translate-x-1/2 -translate-y-1/2
+                                bg-gray-100
+                                bg-opacity-80
+                                w-[250px]
+                                h-[250px]"
         >
           <div
             className="absolute
-                                top-1/2
-                                left-1/2
-                                transform -translate-x-1/2 -translate-y-1/2"
+                                    top-1/2
+                                    left-1/2
+                                    transform -translate-x-1/2 -translate-y-1/2"
           >
             <MoleculeStructure
               structure={cellData.smiles_string}

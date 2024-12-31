@@ -151,15 +151,7 @@ export async function getMoleculeCart(params: object) {
                 url.searchParams.append(key, value);
             });
         }
-        /* if (library_id) {
-            url.searchParams.append('library_id', String(library_id));
-        }
-        if (user_id) {
-            url.searchParams.append('user_id', String(user_id));
-        }
-        if (project_id) {
-            url.searchParams.append('project_id', String(project_id));
-        } */
+
         const response = await fetch(url, {
             mode: "no-cors",
             method: "GET",
@@ -432,6 +424,28 @@ export async function getStatusCodes(params: object) {
         }
     }
     catch (error: any) {
+        return error;
+    }
+}
+
+export async function deleteMolecule(molecule_id?: number) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule/`);
+
+        if (molecule_id) {
+            url.searchParams.append('molecule_id', String(molecule_id));
+        }
+        const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
         return error;
     }
 }

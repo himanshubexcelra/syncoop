@@ -30,7 +30,8 @@ export async function GET(request: Request) {
         mo.id AS molecule_order_id,
         org.name AS "organizationName",
         org.metadata AS "organizationMetadata",
-        sc.status_name as molecule_status
+        sc.status_name as molecule_status,
+        CASE WHEN m.status = ${MoleculeStatusCode.Ordered} THEN false ELSE true END AS disabled
         /* sco.status_name as order_status */
         FROM molecule_order mo
         JOIN molecule m ON m.id = ANY(mo.ordered_molecules)

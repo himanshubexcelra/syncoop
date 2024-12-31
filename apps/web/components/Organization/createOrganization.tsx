@@ -11,7 +11,7 @@ import {
   GroupItem,
   Item,
 } from "devextreme-react/form";
-import { delay, generatePassword } from "@/utils/helpers";
+import { delay, generatePassword, setConfig } from "@/utils/helpers";
 import { createOrganization } from "./service";
 import {
   FetchUserType,
@@ -48,6 +48,7 @@ type OrganizationCreateFields = {
   data?: UserData,
   created_by: number
 }
+
 export default function RenderCreateOrganization({
   setCreatePopupVisibility,
   formRef,
@@ -58,11 +59,16 @@ export default function RenderCreateOrganization({
   const appContext = context.state.appContext;
   const [password_hash, setPassword] = useState('');
   const [role_id, setRoleId] = useState(-1);
-  let copyPassword = password_hash
+  let copyPassword = password_hash;
+
   const handleSubmit = async () => {
     const values = formRef.current!.instance().option("formData");
+
     if (formRef.current!.instance().validate().isValid) {
-      const response = await createOrganization({ ...values, created_by }, role_id);
+      const ADMEParams = setConfig();
+      const response = await createOrganization({
+        ...values, created_by, config: { ADMEParams }
+      }, role_id);
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();
@@ -90,6 +96,7 @@ export default function RenderCreateOrganization({
     }
     editor.repaint();
   }, []);
+
   const handleGeneratePassword = () => {
     const generatedPassword = generatePassword();
     setPassword(generatedPassword);
@@ -113,7 +120,7 @@ export default function RenderCreateOrganization({
 
   const fetchRoles = async () => {
     const roles = await getFilteredRoles();
-    const role = roles.find(
+    const role = roles?.find(
       (role: UserRole) => role.type === 'org_admin');
     if (role) {
       setRoleId(role.id)
@@ -149,7 +156,7 @@ export default function RenderCreateOrganization({
       </SimpleItem>
       <SimpleItem
         dataField="email_id"
-        editorOptions={{ placeholder: "Enter admin email id address" }}
+        editorOptions={{ placeholder: "Enter admin email address" }}
       >
         <Label text="Organization Admin Email Address" />
         <RequiredRule message={Messages.EMAIL_REQUIRED} />

@@ -1,5 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
+  ADMEConfigTypes,
   ColorSchemeFormat,
   CombinedLibraryType,
   LibraryFields,
@@ -286,4 +287,19 @@ export const getADMEColorScheme = (average: number, key: string) => {
   const { formulae } = formulaeFound;
   const actualValue = formulae(average);
   return actualValue;
+}
+
+export const setConfig = () => {
+  const keys: string[] = [];
+  const rangeArray: ADMEConfigTypes[] = [];
+  const unwantedFields = ['molecular_weight', 'yield'];
+  Object.entries(COLOR_SCHEME).map(([key, value]: [string, any]) => {
+    const name = key.split('_')[0];
+    if (!unwantedFields.includes(key) && !keys.includes(name)) {
+      rangeArray.push({ [name]: { min: value.formulaes[0].min, max: value.formulaes[2].max } })
+      keys.push(name);
+    }
+    return value;
+  });
+  return rangeArray;
 }

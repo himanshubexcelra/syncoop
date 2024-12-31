@@ -8,7 +8,10 @@ import {
     ColumnConfig,
     MoleculeStatusLabel,
     ReactionCompoundType,
+    ReactionDetailsProps,
     ReactionDetailType,
+    RowChange,
+    ResetState,
 } from '@/lib/definition';
 import { COMPOUND_TYPE_A, COMPOUND_TYPE_R, DEFAULT_TEMPERATURE } from '@/utils/constants';
 import { capitalizeFirstLetter } from '@/utils/helpers';
@@ -18,32 +21,6 @@ const MoleculeStructure = dynamic(
     () => import("@/utils/MoleculeStructure"),
     { ssr: false }
 );
-
-// Define Types for Props
-interface ReactionDetailsProps {
-    isReactantList: boolean;
-    data: ReactionDetailType | []; // Array of ReactionData objects
-    onDataChange: (changes: RowChange[]) => void;
-    solventList?: string[];
-    temperatureList?: number[];
-    onSolventChange: (value: string) => void;
-    onTemperatureChange: (value: number) => void;
-    setReactionDetail: (reactionDetail: {
-        solvent?: string;
-        temperature?: number;
-        id?: string | number;
-        reactionTemplate?: string;
-    }) => void;
-    handleSwapReaction: (value: ReactionCompoundType[]) => void;
-    resetReaction?: boolean;
-    status?: string;
-}
-
-// RowChange type for changes (updated to be more specific)
-interface RowChange {
-    id: number;
-    [field: string]: any;
-}
 
 const ReactionDetails = ({
     isReactantList,
@@ -61,8 +38,7 @@ const ReactionDetails = ({
 
     const [reactionData, setReactionData] =
         useState<ReactionDetailType | []>(data);
-
-    const [resetReactionData,] =
+    const [resetReactionData, setResetReactionData] =
         useState<ReactionDetailType | []>(data);
     const [tableData, setTableData] =
         useState<ReactionCompoundType[]>([]);
@@ -70,6 +46,11 @@ const ReactionDetails = ({
         useState<string>('');
     const [selectedTemperature, setSelectedTemperature] =
         useState<number>();
+    const agentList: ReactionCompoundType[] =
+        data?.reaction_compound?.filter(
+            (item: ReactionCompoundType) => item.compound_type === COMPOUND_TYPE_A
+        ) || [];
+    const [agentsList,] = useState<ReactionCompoundType[]>(agentList);
     const readOnly = status === MoleculeStatusLabel.InProgress ||
         status === MoleculeStatusLabel.Done || status === MoleculeStatusLabel.Failed;
 
@@ -128,10 +109,24 @@ const ReactionDetails = ({
         updateInitialData(reactionData);
     }, [reactionData]);
 
-    // Update when `resetReaction` triggers
     useEffect(() => {
-        setReactionData(resetReactionData);
-        updateInitialData(resetReactionData);
+        if (resetReaction === ResetState.SUBMIT) {
+            const updatedData = {
+                solvent: selectedSolvent,
+                temperature: selectedTemperature,
+                reaction_compound: tableData,
+            };
+            setReactionData((prev) => ({
+                ...prev,
+                ...updatedData,
+            }));
+            setResetReactionData((prev) => ({
+                ...prev,
+                ...updatedData,
+            }));
+        } else {
+            updateInitialData(resetReactionData);
+        }
     }, [resetReaction]);
 
     const reagentCompounds: ReactionCompoundType[] = Array.isArray(tableData)
@@ -190,7 +185,6 @@ const ReactionDetails = ({
         onDataChange(changes);
     };
 
-
     // Render compound name (dropdown or span)
     const renderCompoundName = (data: ReactionCompoundType) =>
         data.compound_type === COMPOUND_TYPE_A ? (
@@ -200,14 +194,11 @@ const ReactionDetails = ({
                 defaultValue={data.compound_name}
                 onChange={(e) => handleRowChange(data.id, 'compound_name', e.target.value)}
             >
-                {tableData
-                    .filter((item: ReactionCompoundType) =>
-                        item.compound_type === COMPOUND_TYPE_A)
-                    .map((agent: ReactionCompoundType, index: number) => (
-                        <option key={index} value={agent.compound_name}>
-                            {capitalizeFirstLetter(agent.compound_name)}
-                        </option>
-                    ))}
+                {agentsList.map((agent: ReactionCompoundType, index: number) => (
+                    <option key={index} value={agent.compound_name}>
+                        {capitalizeFirstLetter(agent.compound_name)}
+                    </option>
+                ))}
             </select>
         ) : (
             <span title={capitalizeFirstLetter(data.compound_name)}>
@@ -344,19 +335,19 @@ const ReactionDetails = ({
 
         // Create a new array where only the swapped compounds will be updated
         const updatedData = tableData.map((compound: ReactionCompoundType) => {
-            if (compound.compound_id === first.compound_id) {
+            if (compound?.compound_id === first?.compound_id) {
                 // Swap compound_name and smiles_string with second
                 return {
                     ...compound,
-                    smiles_string: second.smiles_string,
-                    compound_name: second.compound_name,
+                    smiles_string: second?.smiles_string,
+                    compound_name: second?.compound_name,
                 };
-            } else if (compound.compound_id === second.compound_id) {
+            } else if (compound?.compound_id === second?.compound_id) {
                 // Swap compound_name and smiles_string with first
                 return {
                     ...compound,
-                    smiles_string: first.smiles_string,
-                    compound_name: first.compound_name,
+                    smiles_string: first?.smiles_string,
+                    compound_name: first?.compound_name,
                 };
             }
             // Return other compounds unchanged
@@ -420,17 +411,18 @@ const ReactionDetails = ({
                 <div className={`${!isReactantList ? 'px-[20px] pt-[10px] pb-[20px]' : ''}`}>
                     <h1 className="subHeading mb-6 flex items-center">
                         {(reactionData as ReactionDetailType)
-                            .reaction_name.toUpperCase()}
+                            ?.reaction_name?.toUpperCase() || "NA"}
                     </h1>
                     <div className="flex flex-row justify-evenly items-center w-full">
                         <div className="flex flex-row w-full sm:w-[340px] p-4 pl-0">
                             <div className="flex flex-col">
                                 <span
                                     title=
-                                    {capitalizeFirstLetter(reagentCompounds[0]?.role)}
+                                    {capitalizeFirstLetter(reagentCompounds[0]?.role) || "NA"}
                                     className={` ${styles.reactionLabel} 
                                 ${styles.reAgentLabel}`}>
-                                    <b>{capitalizeFirstLetter(reagentCompounds[0]?.role)}</b>
+                                    <b>{capitalizeFirstLetter(reagentCompounds[0]?.role)
+                                        || "NA"}</b>
                                 </span>
                                 <span className={styles.moleculeCustomBox}>
                                     <MoleculeStructure
@@ -459,10 +451,11 @@ const ReactionDetails = ({
 
                             <div className="flex flex-col relative">
                                 <span
-                                    title={capitalizeFirstLetter(reagentCompounds[1]?.role)}
+                                    title={capitalizeFirstLetter(reagentCompounds[1]?.role) || "NA"}
                                     className={` ${styles.reactionLabel} 
                                 ${styles.reAgentLabel}`}>
-                                    <b>{capitalizeFirstLetter(reagentCompounds[1]?.role)}</b>
+                                    <b>{capitalizeFirstLetter(reagentCompounds[1]?.role)
+                                        || "NA"}</b>
                                 </span>
                                 <span className={styles.moleculeCustomBox}>
                                     <MoleculeStructure
@@ -487,7 +480,7 @@ const ReactionDetails = ({
                                                 className={`${styles.reactionLabel}
                                              ${styles.agentLabel}`}
                                             >
-                                                {capitalizeFirstLetter(agent?.role)}:&nbsp;
+                                                {capitalizeFirstLetter(agent?.role) || "NA"}:&nbsp;
                                                 <b>{agent?.compound_name || 'NA'}</b>
                                             </span>
                                         ))}
@@ -555,13 +548,11 @@ const ReactionDetails = ({
             <CustomDataGrid
                 columns={!isReactantList ? reactionCompoundColumns : reactantListColumns}
                 data={tableData}
-                height='auto'
                 loader={false}
                 enableRowSelection={false}
                 enableHeaderFiltering={false}
                 enableSearchOption={false}
                 enableGrouping={false}
-                enableInfiniteScroll={false}
                 enableAutoScroll={false}
                 enableSorting={true}
                 enableFiltering={false}
@@ -569,6 +560,9 @@ const ReactionDetails = ({
                 enableToolbar={false}
                 showDragIcons={!isReactantList ? true : false}
                 onReorderFunc={handleReorder}
+                height='auto'
+                maxHeight='270px'
+                scrollMode={'infinite'}
             />
         </div>
     );

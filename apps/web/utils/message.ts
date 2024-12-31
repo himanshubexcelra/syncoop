@@ -66,5 +66,9 @@ export const Messages = {
     },
     REACTION_SAVE_MSG(reactionNo: number, pathwayId: number) {
         return `Reaction ${reactionNo} for pathway ${pathwayId} saved successfully`;
-    }
+    },
+    DELETE_MOLECULE_TITLE: 'Delete Molecule',
+    DELETE_MOLECULE: 'Are you sure you want to delete ?',
+    TYPE_DELETE: `Type 'delete' in the field below`
+
 }

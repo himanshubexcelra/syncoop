@@ -408,7 +408,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, primaryContactId, is_active, metadata, config } = req;
+    const { id, primaryContactId, is_active, metadata, config, inherits_configuration } = req;
 
     // Update the organization and user details
     const updatedOrganization = await prisma.container.update({
@@ -419,6 +419,7 @@ export async function PUT(request: Request) {
         is_active,
         updated_at: getUTCTime(new Date().toISOString()),
         config,
+        inherits_configuration,
       },
       include: {
         owner: {

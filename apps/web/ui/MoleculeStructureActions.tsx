@@ -25,7 +25,6 @@ type MoleculeStructureActionsProps = {
 const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
     smilesString,
     molecule_id,
-    molecule_status,
     onZoomClick,
     onEditClick,
     onDeleteClick,
@@ -42,7 +41,7 @@ const MoleculeStructureActions: React.FC<MoleculeStructureActionsProps> = ({
                 <Image src="/icons/zoom.svg" width={24} height={24} alt="zoom" />} />}
             {enableEdit && <Button onClick={onEditClick} render={() =>
                 <Image src="/icons/edit.svg" width={24} height={24} alt="edit" />} />}
-            {(enableDelete && molecule_status === 1) &&
+            {enableDelete &&
                 <Button onClick={onDeleteClick} render={() =>
                     <Image src="/icons/delete.svg" width={24} height={24} alt="delete" />} />}
         </div>

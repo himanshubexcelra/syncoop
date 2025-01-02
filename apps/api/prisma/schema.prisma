@@ -590,6 +590,7 @@ model users {
   created_by                                              Int?
   updated_at                                              DateTime?                 @db.Timestamptz(6)
   updated_by                                              Int?
+  primary_contact_id                                      Int?
   container_container_created_byTousers                   container[]               @relation("container_created_byTousers")
   // container_container_owner_idTousers                            container[]               @relation("container_owner_idTousers")
   owner                                                   container[]               @relation("container_owner_idTousers")
@@ -634,7 +635,8 @@ model users {
 
   // container_users_organization_idTocontainer                     container?                @relation("users_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_users_org_id")
   orgUser container? @relation("users_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_users_org_id")
-
+  primary_contact users?     @relation("usersTousers", fields: [primary_contact_id], references: [id], onDelete: Cascade, map: "con_fk_users_primary_contact_id")
+  other_users     users[]    @relation("usersTousers")
   @@index([is_active], map: "idx_user_is_active")
 }
 

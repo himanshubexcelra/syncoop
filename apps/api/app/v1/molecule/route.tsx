@@ -161,6 +161,12 @@ export async function DELETE(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const molecule_id = searchParams.get('molecule_id');
+        const favourite_id = searchParams.get('favourite_id');
+        if(favourite_id) {
+            await prisma.user_favourite_molecule.delete({
+                where: { id: Number(favourite_id) },
+            });
+        }    
         const result = await prisma.molecule.delete({
             where: { id: Number(molecule_id) },
         });

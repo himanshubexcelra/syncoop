@@ -33,7 +33,7 @@ interface ToolbarButtonConfig {
     loader?: boolean;
 }
 
-interface CustomDataGridProps<T> {
+interface CustomDataGridProps {
     data: any[];
     selectionEnabledRows?: any[];
     height?: string;
@@ -70,7 +70,7 @@ interface CustomDataGridProps<T> {
     hoverStateEnabled?: boolean;
 }
 
-const CustomDataGrid = <T extends Record<string, any>>({
+const CustomDataGrid = ({
     data,
     selectionEnabledRows = data,
     height,
@@ -97,9 +97,10 @@ const CustomDataGrid = <T extends Record<string, any>>({
     onEditorPreparing,
     onRowClick,
     onRowPrepared,
-}: CustomDataGridProps<T>) => {
+}: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
     const [gridHeight, setGridHeight] = useState(window.innerHeight - 100); // Default height
 
@@ -145,19 +146,12 @@ const CustomDataGrid = <T extends Record<string, any>>({
         }
     }
     const exportFormats = ['csv'];
-    const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
     const onSelectionChanged = (e: any) => {
         console.log(2, e, e.selectedRowKeys);
         setSelectedRowKeys([...e.selectedRowKeys]);
         if (onSelectionUpdated)
             onSelectionUpdated(e.selectedRowKeys, e.selectedRowsData);
-    };
-
-    // Function to check if a row can be selected
-    const rowSelected = (rowData: any) => {
-        // Disable selection if the 'disabled' field is true
-        return !rowData.disabled;
     };
 
     // onCellPrepared to disable the checkbox
@@ -260,7 +254,7 @@ const CustomDataGrid = <T extends Record<string, any>>({
                     defaultFilterValue={false}
                     showInColumnChooser={false}
                     headerCellRender={() => (
-                        <div className="custom-header" style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                             <CheckBox
                                 value={isHeaderCheckboxChecked}
                                 onValueChanged={handleSelectAll}
@@ -319,7 +313,8 @@ const CustomDataGrid = <T extends Record<string, any>>({
                                     disabled={button.disabled}
                                     className={`${button.class || 'btn-primary'} w-40`}
                                     visible={button.visible !== undefined ? button.visible : true}>
-                                    <LoadIndicator width={20} height={20} className="button-indicator" visible={button.loader} />
+                                    <LoadIndicator width={20} height={20}
+                                        className="button-indicator" visible={button.loader} />
                                 </Button>}
                         </Item>
                     ))}
@@ -331,6 +326,24 @@ const CustomDataGrid = <T extends Record<string, any>>({
                 />}
 
             </DataGrid>
+            <div className='flex justify-center'>
+                <span className='text-themeGreyColor'>
+                    {data.length}
+                    <span className='pl-[3px]'>
+                        {data.length > 1 ? 'records' : 'record'}
+                    </span>
+                    <span className='pl-[2px]'> found</span>
+                </span>
+                {!!data.length && <span>&nbsp;|&nbsp;</span>}
+
+                {!!data.length &&
+                    <a onClick={() =>
+                        handleSelectAll({ value: !selectedRowKeys.length })}
+                        className={
+                            `text-themeSecondayBlue pl-[5px] font-bold pb-[10px] cursor-pointer`
+                        }>Select All {data.length}
+                    </a>}
+            </div>
 
             {enableOptions && (
                 <div className="options">

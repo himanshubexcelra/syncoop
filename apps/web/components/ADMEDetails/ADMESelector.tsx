@@ -1,26 +1,46 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import React, { useEffect, useState } from 'react';
 import RangeSlider, { Tooltip } from 'devextreme-react/range-slider';
-import { ADMEConfigTypes, AssayTableProps, FORMULA_CONFIG, OrganizationDataFields } from '@/lib/definition';
+import Switch from 'devextreme-react/switch';
+import {
+    ADMEConfigTypes, ADMEProps,
+    FORMULA_CONFIG, OrganizationDataFields
+} from '@/lib/definition';
 import toast from "react-hot-toast";
 import { editOrganization, getOrganizationById } from '../Organization/service';
 import { Messages } from "@/utils/message";
 import { delay, setConfig } from "@/utils/helpers";
 import { COLOR_SCHEME, DELAY } from "@/utils/constants";
 import { LoadIndicator } from 'devextreme-react';
+import { editProject } from '../Projects/projectService';
+import { editLibrary } from '../Libraries/service';
 
-const ADMESelector = ({ orgUser }: AssayTableProps) => {
+const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
     const [sliderValues, setSliderValues] = useState<ADMEConfigTypes[]>([]);
-    const [organizationData, setOrganizationData] = useState<OrganizationDataFields>({} as OrganizationDataFields);
+    const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
+    const [organizationData, setOrganizationData] = useState<OrganizationDataFields>(
+        {} as OrganizationDataFields);
     const [loader, setLoader] = useState(true);
+    const [inherited, setInherited] = useState(true);
+    const [disableSave, setDisableSave] = useState(false);
     const [unit, setUnit] = useState<string[]>([]);
-    const orgId = orgUser?.id;
+    const orgId = organizationId;
 
     const fetchData = async () => {
-        const orgData = await getOrganizationById({ withRelation: [], id: orgId });
-        setOrganizationData(orgData);
-        const rangeArray = orgData?.config &&
-            orgData.config?.ADMEParams && typeof orgData.config.ADMEParams === 'object'
-            ? orgData.config.ADMEParams : setConfig();
+        setLoader(true);
+        let config;
+        if (!type) {
+            const orgData = await getOrganizationById({ withRelation: [], id: orgId });
+            setOrganizationData(orgData);
+            config = orgData?.config;
+        } else {
+            config = data?.config;
+            setDisableSave(data?.container?.inherits_configuration ?? true);
+            setInherited(data?.inherits_configuration ?? true);
+        }
+        const rangeArray = config && config?.ADMEParams
+            && typeof config.ADMEParams === 'object'
+            ? config.ADMEParams : setConfig();
         setSliderValues(rangeArray);
         const keys: string[] = [];
         const units: string[] = [];
@@ -50,7 +70,9 @@ const ADMESelector = ({ orgUser }: AssayTableProps) => {
     };
 
     const getSliderBackground = (rangeValue: FORMULA_CONFIG) => {
-        return `linear-gradient(to right, red 0%, red ${rangeValue.min}%, yellow ${rangeValue.min}%, yellow ${rangeValue.max}%, green ${rangeValue.max}%, green 100%)`;
+        return `linear-gradient(to right, red 0%, red ${rangeValue.min}%, 
+            yellow ${rangeValue.min}%, yellow ${rangeValue.max}%, 
+            green ${rangeValue.max}%, green 100%)`;
     };
 
     function format(value: number) {
@@ -58,16 +80,45 @@ const ADMESelector = ({ orgUser }: AssayTableProps) => {
     }
 
     const saveADMEConfig = async () => {
-        const formValue = { ...organizationData, config: { ...organizationData.config, ADMEParams: sliderValues } };
-        const response = await editOrganization(formValue);
+        setLoadIndicatorVisible(true);
+        let formValue;
+        let response;
+        let success = Messages.admeConfigUpdated('organization');
+        if (!type) {
+            formValue = {
+                ...organizationData, config: {
+                    ...organizationData.config, ADMEParams: sliderValues
+                },
+                inherits_configuration: inherited
+            };
+            response = await editOrganization(formValue);
+        } else if (type === 'P') {
+            formValue = {
+                ...data, config: { ...organizationData.config, ADMEParams: sliderValues },
+                organization_id: Number(data?.parent_id), user_id: data?.owner_id,
+                inherits_configuration: inherited
+            };
+            response = await editProject(formValue);
+            success = Messages.admeConfigUpdated('project');
+        } else if (type === 'L') {
+            formValue = {
+                ...data, config: { ...organizationData.config, ADMEParams: sliderValues },
+                project_id: Number(data?.parent_id), user_id: data?.owner_id,
+                inherits_configuration: inherited
+            };
+            response = await editLibrary(formValue);
+            success = Messages.admeConfigUpdated('library');
+        }
         if (!response.error) {
-            const toastId = toast.success(Messages.UPDATE_ORGANIZATION);
+            const toastId = toast.success(success);
             await delay(DELAY);
             toast.remove(toastId);
+            setLoadIndicatorVisible(false);
         } else {
             const toastId = toast.error(`${response.error}`);
             await delay(DELAY);
             toast.remove(toastId);
+            setLoadIndicatorVisible(false);
         }
     }
 
@@ -78,26 +129,54 @@ const ADMESelector = ({ orgUser }: AssayTableProps) => {
                     <LoadIndicator visible={loader} />
                 </div>
             ) : (
-                <div className='m-[20px]'>
+                <div className={type != 'L' ? 'm-[20px]' : ''}>
                     <div className='flex justify-end'>
-                        <button
+                        {type != 'L' && (
+                            <div className="dx-field block pr-[10px]">
+                                <div>Inherited</div>
+                                <div className="mt-[5px]">
+                                    <Switch
+                                        value={inherited}
+                                        onValueChanged={() => setInherited(!inherited)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <button className={
+                            loadIndicatorVisible
+                                ? 'disableButton w-[70px] h-[50px]'
+                                : 'primary-button'}
+                            onClick={() => saveADMEConfig()}
+                            disabled={loadIndicatorVisible}>
+                            <LoadIndicator className={
+                                `button-indicator`
+                            }
+                                visible={loadIndicatorVisible}
+                                height={20}
+                                width={20}
+                            />
+                            Save</button>
+                        {/* <button
                             className='primary-button'
                             onClick={() => saveADMEConfig()}
                         >
                             Save
-                        </button>
+                        </button> */}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className={`${!type ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : ''}`}>
                         {sliderValues.map((range, index) => {
                             const rangeValue = Object.values(range)[0];
                             return (
                                 <div key={index}>
-                                    <div className='flex items-center h-[100px] pl-[20px] pr-[20px]'>
+                                    <div className='flex pl-[20px] pr-[20px]'>
                                         <div>
                                             <h3 className='w-[135px]'>{Object.keys(range)[0]}</h3>
                                             <div>{unit[index]}</div>
                                         </div>
-                                        <div style={{ width: '100%', position: 'relative' }}>
+                                        <div style={{
+                                            width: '100%',
+                                            position: 'relative', top: '10px'
+                                        }}>
                                             <RangeSlider
                                                 defaultValue={[rangeValue.min, rangeValue.max]}
                                                 min={0}
@@ -107,11 +186,14 @@ const ADMESelector = ({ orgUser }: AssayTableProps) => {
                                                 style={{
                                                     width: '100%',
                                                 }}
+                                                disabled={disableSave}
                                             >
-                                                <Tooltip enabled={true} format={format} showMode="always" position="bottom" />
+                                                <Tooltip enabled={true} format={format}
+                                                    showMode="always" position="bottom" />
                                             </RangeSlider>
 
-                                            {/* Applying a custom gradient background to the slider */}
+                                            {/* Applying a custom gradient 
+                                            background to the slider */}
                                             <div
                                                 style={{
                                                     position: 'absolute',

@@ -27,6 +27,9 @@ export const Messages = {
     projectAddedUpdated(status: string) {
         return `Project ${status} successfully`;
     },
+    admeConfigUpdated(type: string) {
+        return `ADME config details for ${type} updated successfully`;
+    },
     LIBRARY_LIST_EMPTY:
         "Your library list is empty, add a library to import molecules",
     ADD_MOLECULE_SUCCESS: 'Molecule added successfully',
@@ -69,6 +72,12 @@ export const Messages = {
     },
     DELETE_MOLECULE_TITLE: 'Delete Molecule',
     DELETE_MOLECULE: 'Are you sure you want to delete ?',
-    TYPE_DELETE: `Type 'delete' in the field below`
+    TYPE_DELETE: `Type 'delete' in the field below`,
+    deleteMoleculeMsg(molecule_name: string) {
+        return `Molecule ${molecule_name} deleted successfully`;
+    },
 
+    deleteUserMsg(user_name: string) {
+        return `User ${user_name} deleted successfully`;
+    }
 }

@@ -30,8 +30,6 @@ export default function RenderCreateUser({
     setTableData,
     formRef,
     tableData,
-    password_hash,
-    setPassword,
     roles,
     organizationData,
     myRoles,
@@ -43,7 +41,7 @@ export default function RenderCreateUser({
     const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
     const [organization, setOrganization] = useState(organizationData);
     const [valid, setValid] = useState<any>('valid');
-
+    const [password_hash, setPassword] = useState('');
     const passwordButton = useMemo<ButtonTypes.Properties>(
         () => ({
             icon: passwordMode === "text" ? "eyeclose" : "eyeopen",

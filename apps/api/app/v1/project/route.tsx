@@ -103,6 +103,7 @@ export async function GET(request: Request) {
                     select: {
                         id: true,
                         name: true,
+                        inherits_configuration: true,
                     }
                 },
                 // sharedUsers: true, // Include shared users for each project
@@ -164,6 +165,7 @@ export async function POST(request: Request) {
         description,
         organization_id,
         user_id,
+        config,
         /* sharedUsers */
     } = req;
 
@@ -176,7 +178,7 @@ export async function POST(request: Request) {
                     parent_id: organization_id
                 }
             });
-            
+
             if (existingProject.length) {
                 return new Response(JSON.stringify(PROJECT_EXISTS), {
                     headers: { "Content-Type": "application/json" },
@@ -225,6 +227,7 @@ export async function POST(request: Request) {
                         id: user_id
                     }, // Associate the user who created the project
                 },
+                config,
                 /* sharedUsers: {
                     create: sharedUsers?.map(({ id: user_id, permission, first_name }: { id: number, permission: string, first_name: string }) => ({
                         user: {
@@ -251,7 +254,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, metadata, target, description, organization_id, user_id, /* sharedUsers, */ id } = req;
+        const { name, metadata, target, description,
+            organization_id, user_id, /* sharedUsers, */ id, config, inherits_configuration } = req;
 
         // Check if user is associated with another organization
         /* const organization = await prisma.container.findUnique({
@@ -331,6 +335,8 @@ export async function PUT(request: Request) {
                     ...metadata,
                     target,
                 },
+                config,
+                inherits_configuration,
                 userWhoUpdated: {
                     connect: { id: user_id }, // Associate the user who created/updated the project
                 },

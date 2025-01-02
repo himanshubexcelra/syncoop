@@ -88,7 +88,7 @@ export async function createLibrary(formData: FormData) {
     }
 }
 
-export async function editLibrary(formData: FormData) {
+export async function editLibrary(formData: any) {
     try {
         const response = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/library`,
@@ -428,12 +428,15 @@ export async function getStatusCodes(params: object) {
     }
 }
 
-export async function deleteMolecule(molecule_id?: number) {
+export async function deleteMolecule(molecule_id?: number, favourite_id?: number) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule/`);
 
         if (molecule_id) {
             url.searchParams.append('molecule_id', String(molecule_id));
+        }
+        if (favourite_id) {
+            url.searchParams.append('favourite_id', String(favourite_id));
         }
         const response = await fetch(url, {
             method: "DELETE",

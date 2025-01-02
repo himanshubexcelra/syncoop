@@ -29,6 +29,7 @@ describe('ProfileInfo Component', () => {
             orgUser: { name: 'FauxBio' },
             user_role: [{ role: { name: 'Admin' } }],
             status: 'Enabled',
+            is_active: true,
         },
     ];
 

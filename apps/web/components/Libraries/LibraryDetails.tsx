@@ -23,6 +23,8 @@ import {
 } from './service';
 import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
+import Accordion, { Item } from 'devextreme-react/accordion';
+import ADMESelector from "../ADMEDetails/ADMESelector";
 import { delay, getUTCTime, isAdmin } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import LibraryAccordion from './LibraryAccordion';
@@ -109,6 +111,7 @@ const initialProjectData: ProjectDataFields = {
     orgUser: undefined,
     created_at: getUTCTime(new Date().toISOString()),
     other_container: [] as LibraryFields[],
+    inherits_configuration: true,
 };
 
 type LibraryDetailsProps = {
@@ -124,6 +127,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const searchParams = useSearchParams();
     const params = useParams<{ id?: string, projectId?: string }>();
     const [library_id, setLibraryId] = useState<number>(Number(searchParams.get('library_id')));
+    const [libLoader, setLibLoader] = useState(false);
     const [project_id, setProjectId] = useState(params.projectId || params.projectId!);
     const [organization_id, setOrganizationId] = useState(organizationId);
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
@@ -132,6 +136,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     /* const [selectedLibrary, setSelectedLibrary] =
         useState(library_id ? Number(library_id) : -1); */
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
+    const [selectedLibraryData, setSelectedLibraryData] = useState<any>({});
     const [loader, setLoader] = useState(true);
     const [expanded, setExpanded] = useState(library_id ? false : true);
     const context: any = useContext(AppContext);
@@ -207,8 +212,9 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                 const libraryData = library_id ? libraries.find((library: LibraryFields) => {
                     return Number(library.id) === Number(library_id)
                 }) : libraries[0];
+                setSelectedLibraryData(libraryData);
+                setLibLoader(false);
                 if (libraryData) {
-
                     // if (library_id != libraryData.id) {
                     setLibraryId(libraryData.id);
                     setSelectedLibraryName(libraryData.name);
@@ -238,6 +244,11 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
             }
         }
     }, [library_id, projectData]);
+
+    const selectLibrary = (libId: number) => {
+        setLibLoader(true);
+        setLibraryId(libId);
+    }
 
     return (
         <>
@@ -282,27 +293,53 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     userData={userData}
                                     selectedLibraryId={library_id}
                                     /* getLibraryData={getLibraryData} */
-                                    setLibraryId={(library_id: number) => setLibraryId(library_id)}
+                                    setLibraryId={(library_id: number) => selectLibrary(library_id)}
                                     /* setSelectedLibraryName={setSelectedLibraryName} */
                                     setExpanded={setExpanded}
                                 />
                             </div >
                             )}
-                            <MoleculeList
-                                expanded={expanded}
-                                tableData={tableData}
-                                userData={userData}
-                                setTableData={setTableData}
-                                actionsEnabled={actionsEnabled}
-                                selectedLibrary={library_id}
-                                library_id={library_id}
-                                projectData={projectData}
-                                projectId={project_id}
-                                fetchLibraries={fetchLibraries}
-                                organizationId={organization_id || ''}
-                            />
-                        </div >
-                    </div >
+                            <div className={`${expanded ? 'w-3/5' : 'w-full'}`}>
+                                {expanded && library_id != 0 && (
+                                    libLoader ?
+                                        <LoadIndicator
+                                            visible={libLoader}
+                                        /> : (
+                                            <Accordion multiple={true} collapsible={true}>
+                                                <Item titleRender={() => 'Assays'}>
+                                                    <ADMESelector type="L"
+                                                        organizationId={
+                                                            userData.organization_id
+                                                        }
+                                                        data={{
+                                                            ...selectedLibraryData,
+                                                            container: {
+                                                                inherits_configuration:
+                                                                    projectData.
+                                                                        inherits_configuration
+                                                            }
+                                                        }}
+                                                    />
+                                                </Item>
+                                            </Accordion>
+                                        )
+                                )}
+                                <MoleculeList
+                                    expanded={expanded}
+                                    tableData={tableData}
+                                    userData={userData}
+                                    setTableData={setTableData}
+                                    actionsEnabled={actionsEnabled}
+                                    selectedLibrary={library_id}
+                                    library_id={library_id}
+                                    projectData={projectData}
+                                    projectId={project_id}
+                                    fetchLibraries={fetchLibraries}
+                                    organizationId={organization_id || ''}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 }
             </ div >
         </>

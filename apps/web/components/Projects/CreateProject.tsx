@@ -134,7 +134,7 @@ export default function CreateProject({
             ...values,
             sharedUsers,
             organization_id,
-            user_id: userData.id
+            user_id: userData.id,
           })
       }
       else response = await createProject(
@@ -142,7 +142,8 @@ export default function CreateProject({
           ...values,
           sharedUsers,
           organization_id,
-          user_id: userData.id
+          user_id: userData.id,
+          config: { ...organizationData[0].config },
         });
       if (!response.error) {
         formRef.current!.instance().reset();

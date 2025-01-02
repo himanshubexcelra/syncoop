@@ -89,7 +89,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { name, target, description, project_id, user_id } = req;
+    const { name, target, description, project_id, user_id, config } = req;
 
     try {
         const existingLibrary = await prisma.container.findMany({
@@ -137,6 +137,7 @@ export async function POST(request: Request) {
                             id: project_id, // Associate the project with the organization
                         },
                     },
+                    config,
                 },
             });
 
@@ -157,17 +158,17 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, target, description, user_id, project_id, id } = req;
+        const { name, target, description, user_id, project_id, id, config, inherits_configuration } = req;
 
         const existingLibrary = await prisma.container.findMany({
             where: {
                 AND: [
                     { id: { not: Number(id) } },
-                    { 
+                    {
                         name: name,
                         type: 'L',
                         parent_id: project_id
-                     }
+                    }
                 ]
             }
         });
@@ -193,6 +194,8 @@ export async function PUT(request: Request) {
                     }, // Associate the user who created/updated the project
                 },
                 updated_at: getUTCTime(new Date().toISOString()),
+                config,
+                inherits_configuration
             },
         });
 

@@ -67,6 +67,7 @@ const EditMolecule = ({
     }
 
     const rejectContentProps = {
+        visible: showRejectedDialog,
         rejected,
         onClose: hideRejectPopUp,
     }

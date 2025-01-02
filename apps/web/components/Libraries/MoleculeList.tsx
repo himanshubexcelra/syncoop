@@ -5,7 +5,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import DeleteConfirmation from './DeleteConfirmation';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
-import Workbook from 'exceljs';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { exportDataGrid } from 'devextreme/excel_exporter';
 import { AppContext } from "../../app/AppState";
@@ -100,7 +100,8 @@ export default function MoleculeList({
     const popupRef = useRef<HTMLDivElement>(null);
     const [moleculeLoader, setMoleculeLoader] = useState(false);
     const [confirm, setConfirm] = useState(false);
-    const [deleteMoleculeId, setDeleteMolecules] = useState<number>(0);
+    const [loader, setLoader] = useState(false);
+    const [deleteMoleculeId, setDeleteMolecules] = useState({ id: 0, name: '', favourite_id: 0 });
     const [selectionEnabledRows, setSelectionEnabledRows] = useState<[]>([]);
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
 
@@ -191,10 +192,10 @@ export default function MoleculeList({
                     smilesString={data.smiles_string}
                     structureName={data.source_molecule_name}
                     molecule_id={data.id}
-                    molecule_status={data.status}
                     onZoomClick={(e: any) => handleStructureZoom(e, data)}
                     enableEdit={actionsEnabled.includes('edit_molecule')}
-                    enableDelete={actionsEnabled.includes('delete_molecule')}
+                    enableDelete={data.status === MoleculeStatusCode.New &&
+                        actionsEnabled.includes('delete_molecule')}
                     onEditClick={() => showEditMolecule(data)}
                     onDeleteClick={() => deleteMoleculeCart(data)}
                 />
@@ -811,7 +812,7 @@ export default function MoleculeList({
     }; */
 
     const onExporting = (e: any) => {
-        const workbook = new Workbook();
+        const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Molecule List');
         exportDataGrid({
             component: e.component,
@@ -901,16 +902,25 @@ export default function MoleculeList({
     const deleteMoleculeCart = (data?: MoleculeType) => {
         setConfirm(true)
         if (data?.status === MoleculeStatusCode.New) {
-            setDeleteMolecules(data.id)
+            setDeleteMolecules(
+                {
+                    id: data.id,
+                    name: data.source_molecule_name,
+                    favourite_id: data.favourite_id
+                })
             setConfirm(true)
         }
     }
 
     const handleDeleteMolecule = async () => {
-        const result = await deleteMolecule(deleteMoleculeId);
+        setLoader(true);
+        const result =
+            await deleteMolecule(deleteMoleculeId.id, deleteMoleculeId.favourite_id);
         if (result) {
-            setDeleteMolecules(0)
+            toast.success(Messages.deleteMoleculeMsg(deleteMoleculeId.name));
+            setDeleteMolecules({ id: 0, name: '', favourite_id: 0 });
             setReloadMolecules(true);
+            setLoader(false);
         }
     }
 
@@ -1046,6 +1056,7 @@ export default function MoleculeList({
                 <DeleteConfirmation
                     onSave={() => handleDeleteMolecule()}
                     openConfirmation={confirm}
+                    isLoader={loader}
                     setConfirm={() => handleCancel()}
                     msg={Messages.DELETE_MOLECULE}
                     title={Messages.DELETE_MOLECULE_TITLE}
@@ -1056,7 +1067,7 @@ export default function MoleculeList({
                     visible={moleculeLoader}
                 /> :
                 <div className={
-                    `pb-[10px] ${expanded ? 'w-3/5' : 'w-full'}`}
+                    `pb-[10px] w-[100%]`}
                     onClick={closeMagnifyPopup}>
                     <CustomDataGrid
                         columns={columns}
@@ -1204,26 +1215,8 @@ export default function MoleculeList({
                                 class: "create-popup mr-[15px]"
                             }}
                         />
-                    )}
-                    <div className='flex justify-center mt-[25px]'>
-                        <span className='text-themeGreyColor'>
-                            {tableData.length}
-                            <span className='pl-[3px]'>
-                                {tableData.length > 1 ? 'molecules' : 'molecule'}
-                            </span>
-                            <span className='pl-[2px]'> found</span>
-                        </span>
-                        {!!tableData.length && <span>&nbsp;|&nbsp;</span>}
-
-                        {!!tableData.length &&
-                            <span className={
-                                `text-themeSecondayBlue 
-                                                pl-[5px] 
-                                                font-bold pb-[10px]`
-                            }>Select All {tableData.length}
-                            </span>}
-                    </div>
-                </div >
+                    )}                    
+                </div>
             }
             {popupVisible && (
                 <div

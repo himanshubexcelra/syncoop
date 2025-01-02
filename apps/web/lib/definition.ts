@@ -100,6 +100,7 @@ export interface OrganizationDataFields {
   owner_id: number;
   type: string;
   config?: OrganizationConfigType;
+  inherits_configuration: boolean;
 }
 
 export interface OrganizationTableProps {
@@ -188,7 +189,11 @@ export interface LibraryFields {
   owner_id: number;
   created_at: Date;
   status?: MoleculeStatus[];
-  libraryMolecules: [];
+  libraryMolecules: StatusType[];
+  container?: OrganizationDataFields;
+  config?: OrganizationConfigType;
+  inherits_configuration: boolean;
+  parent_id?: number;
 }
 
 export interface StatusType {
@@ -218,9 +223,11 @@ export interface ProjectDataFields {
   metadata: {
     target: string,
     type: string
-  },
-  created_at: Date,
-  combinedLibrary?: CombinedLibraryType
+  };
+  created_at: Date;
+  combinedLibrary?: CombinedLibraryType;
+  config?: OrganizationConfigType;
+  inherits_configuration: boolean;
 }
 
 export interface UserRole {
@@ -237,7 +244,7 @@ interface Organization {
 export interface User {
   id: number;
   first_name: string;
-  name?: string;
+  name: string;
   email_id: string;
   status: string;
   last_name: string;
@@ -249,6 +256,7 @@ export interface User {
 }
 
 export interface UserRoleType {
+  id?:number
   role: UserRole
   role_id: number
 }
@@ -262,6 +270,7 @@ export interface UserData {
   email_id: string;
   first_name: string;
   last_name: string;
+  is_active: boolean;
   user_role: UserRoleType[];
   organization?: object;
   organization_id: number;
@@ -274,6 +283,7 @@ export interface UserData {
     type: string;
 
   }];
+  primary_contact_id?: number
 }
 export interface projectType {
   id: number,
@@ -288,6 +298,13 @@ export interface Assay {
 export interface AssayTableProps {
   orgUser: OrgUser;
   color?: string;
+}
+
+export interface ADMEProps {
+  color?: string;
+  type?: string;
+  organizationId: number;
+  data?: ProjectDataFields | LibraryFields;
 }
 
 export interface ModuleFeature {
@@ -362,7 +379,7 @@ interface TabProps {
 export interface TabDetail {
   title?: string;
   Component?: React.ComponentType<any>;
-  props?: AssayTableProps | ModuleTableProps | StatusComponentProps
+  props?: AssayTableProps | ModuleTableProps | StatusComponentProps | ADMEProps
   | UserTableProps | TabProps;
 }
 
@@ -844,10 +861,10 @@ export interface ReactionDetailsProps {
   onSolventChange: (value: string) => void;
   onTemperatureChange: (value: number) => void;
   setReactionDetail: (reactionDetail: {
-      solvent?: string;
-      temperature?: number;
-      id?: string | number;
-      reactionTemplate?: string;
+    solvent?: string;
+    temperature?: number;
+    id?: string | number;
+    reactionTemplate?: string;
   }) => void;
   handleSwapReaction: (value: ReactionCompoundType[]) => void;
   resetReaction?: number;

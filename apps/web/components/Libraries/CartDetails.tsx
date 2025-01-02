@@ -1,3 +1,4 @@
+
 /*eslint max-len: ["error", { "code": 100 }]*/
 import { useRef, useState } from "react";
 import CustomDataGrid from "@/ui/dataGrid";
@@ -236,7 +237,6 @@ export default function CartDetails({
   };
 
   const handleCancel = (val: boolean) => {
-    setSubmitOrderLoading(val);
     setConfirm(val);
   };
 

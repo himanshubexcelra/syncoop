@@ -76,7 +76,7 @@ describe('Create Organization should work as expected', () => {
                     />
                 </AppContext.Provider>
             );
-        }, 60000);
+        });
 
         const mockResponse = { error: null };
         act(() => { (createOrganization as jest.Mock).mockResolvedValue(mockResponse) });
@@ -144,7 +144,7 @@ describe('Create Organization should work as expected', () => {
         const createButton = screen.getByText('Create Organization');
         expect(createButton).toBeInTheDocument();
         await act(async () => { fireEvent.click(createButton) });
-    });
+    }, 60000);
 
     test('create organization works as expected with invalid data', async () => {
         const getFilteredRoles = jest.fn();

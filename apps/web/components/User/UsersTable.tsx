@@ -11,8 +11,8 @@ import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import RenderCreateUser from "./createUser";
-import { OrganizationType, UserTableProps } from "@/lib/definition";
-import { getUsers } from "./service";
+import { OrganizationType, UserData, UserTableProps } from "@/lib/definition";
+import { getUsers, deleteUserData } from "./service";
 import { User } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
 import DialogPopUp from "@/ui/DialogPopUp";
@@ -20,6 +20,11 @@ import ResetPassword from "../Profile/ResetPassword";
 import RenderEditUser from "./editUserDetails";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
+import { isOnlyLibraryManger } from "@/utils/helpers";
+import DeleteConfirmation from "../Libraries/DeleteConfirmation";
+import { Messages } from "@/utils/message";
+import toast from "react-hot-toast";
+
 
 const resetDialogProperties = {
     width: 480,
@@ -55,7 +60,6 @@ export default function UsersTable({
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [tableData, setTableData] = useState<User[]>([]);
-    const [password, setPassword] = useState('');
     const [loader, setLoader] = useState(true);
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<any>(null);
@@ -63,6 +67,8 @@ export default function UsersTable({
     const [popupPosition, setPopupPosition] = useState({} as any);
     const context: any = useContext(AppContext);
     const appContext = context.state.appContext;
+    const [deletePopup, setDeletePopup] = useState(false)
+    const [deleteUserId, setDeleteUserData] = useState({ user_id: 0, name: '', role_id: 0 });
 
     const hidePasswordPopup = () => {
         setPasswordPopupVisible(false)
@@ -76,16 +82,18 @@ export default function UsersTable({
         setPasswordPopupVisible(true)
     }
     const contentProps = {
+        visible: passwordPopupVisible,
         onClose: hidePasswordPopup,
         email_id: editRow?.email_id
     }
     const fetchAndFilterData = async () => {
         setLoader(true);
+        const fetchDetails = ['orgUser', 'user_role', 'projects']
         try {
             if (myRoles.includes("admin") && !customerOrgId) {
                 const [internal, external] = await Promise.all([
-                    getUsers(['orgUser', 'user_role'], OrganizationType.Internal, user_id),
-                    getUsers(['orgUser', 'user_role'], OrganizationType.External, user_id)
+                    getUsers(fetchDetails, OrganizationType.Internal, user_id),
+                    getUsers(fetchDetails, OrganizationType.External, user_id)
                 ])
                 setInternalUsers(internal);
                 setExternalUsers(external);
@@ -108,7 +116,7 @@ export default function UsersTable({
                 });
             }
             else {
-                const users = await getUsers(['orgUser', 'user_role'], "", user_id, orgUser?.id);
+                const users = await getUsers(fetchDetails, "", user_id, orgUser?.id);
                 setTableData(users);
             }
         } catch (error) {
@@ -147,6 +155,31 @@ export default function UsersTable({
         if (type === OrganizationType.External) {
             return "Organization";
         }
+    }
+    const handleCancel = () => {
+        setDeletePopup(false)
+    }
+    const deleteUser = (data: UserData) => {
+        setDeleteUserData(
+            {
+                user_id: data.id,
+                name: data?.first_name,
+                role_id: Number(data.user_role[0].id)
+            }
+        )
+        setDeletePopup(true)
+    }
+
+
+    const handleDelete = () => {
+        setLoader(true);
+        deleteUserData(deleteUserId.user_id, deleteUserId.role_id)
+            .then(() => {
+                toast.success(Messages.deleteUserMsg(deleteUserId.name));
+                setDeleteUserData({ user_id: 0, name: '', role_id: 0 })
+                setLoader(false);
+                fetchAndFilterData();
+            })
     }
 
     const groupCellRender = (e: any) => <span>{e.value}</span>;
@@ -271,6 +304,28 @@ export default function UsersTable({
                         )}
                         caption="Actions"
                     />}
+                    {(actionsEnabled.includes('delete_user')) && <Column
+                        width={60}
+                        alignment="left"
+                        allowHeaderFiltering={false}
+                        cellRender={({ data }: any) => {
+                            const enableDelete = isOnlyLibraryManger(
+                                data?.user_role?.map((item: any) => item.role.type))
+                                && data.owner?.length === 0
+                            return (
+                                enableDelete && <div className="flex gap-2 cursor-pointer">
+                                    <Image
+                                        src="/icons/delete-blue-sm.svg"
+                                        title="Delete user"
+                                        width={24}
+                                        height={24}
+                                        onClick={() => deleteUser(data)}
+                                        alt="del" />
+                                </div>
+                            )
+                        }}
+                        caption="Delete"
+                    />}
                     <GridToolbar>
                         {rowGroupName() &&
                             <Item location="before" name="groupPanel" />
@@ -304,8 +359,6 @@ export default function UsersTable({
                                         setCreatePopupVisibility={setCreatePopupVisibility}
                                         setTableData={setTableData}
                                         tableData={tableData}
-                                        password_hash={password}
-                                        setPassword={setPassword}
                                         organizationData={[orgUser]}
                                         roles={filteredRoles}
                                         myRoles={myRoles}
@@ -320,7 +373,6 @@ export default function UsersTable({
                                 height="100%"
                                 position={popupPosition}
                                 onHiding={() => {
-                                    setPassword('')
                                     setCreatePopupVisibility(false);
                                     formRef.current?.instance().reset();
                                 }}
@@ -342,6 +394,7 @@ export default function UsersTable({
                                         fetchData={fetchAndFilterData}
                                         isMyProfile={false}
                                         customerOrgId={customerOrgId}
+                                        allUsers={tableData}
                                     />
                                 )}
                                 width={470}
@@ -361,6 +414,16 @@ export default function UsersTable({
                                 hidePopup: hidePasswordPopup,
                                 contentProps
                             }} />
+                            {deletePopup && (
+                                <DeleteConfirmation
+                                    onSave={() => handleDelete()}
+                                    openConfirmation={deletePopup}
+                                    setConfirm={() => handleCancel()}
+                                    msg={"Delete"}
+                                    title={"Delete User"}
+                                    isLoader={false}
+                                />
+                            )}
                         </Item>
                         <Item
                             name="searchPanel"

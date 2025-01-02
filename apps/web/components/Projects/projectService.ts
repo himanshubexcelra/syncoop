@@ -77,7 +77,7 @@ export async function createProject(formData: FormData) {
     }
 }
 
-export async function editProject(formData: FormData) {
+export async function editProject(formData: any) {
     try {
         const response = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/project`,

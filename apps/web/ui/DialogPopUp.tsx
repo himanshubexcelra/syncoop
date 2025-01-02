@@ -2,6 +2,7 @@ import { RejectedSmiles } from '@/lib/definition';
 import { Popup } from 'devextreme-react/popup';
 
 interface ContentProps {
+    visible: boolean;
     onClose: () => void;
     onSubmit?: () => void;
     email_id?: string;
@@ -42,6 +43,7 @@ export default function DialogPopUp({
                 width={width}
                 height={height}
                 contentRender={() => <Content
+                    visible={visible}
                     onClose={hidePopup}
                     onSubmit={onSubmit}
                     {...contentProps} />}

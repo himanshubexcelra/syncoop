@@ -22,6 +22,8 @@ import CreateProject from "./CreateProject";
 import { Messages } from "@/utils/message";
 import TextWithToggle from '@/ui/TextWithToggle';
 import { LoadIndicator } from 'devextreme-react';
+import Accordion, { Item } from 'devextreme-react/accordion';
+import ADMESelector from "../ADMEDetails/ADMESelector";
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -86,6 +88,10 @@ export default function ProjectAccordionDetail({
             .then(() => toast.success(Messages.urlCopied(type, name)))
             .catch(() => toast.error(Messages.URL_COPY_ERROR));
     }
+
+    const renderTitle = (title: string) => (
+        <div className="header-text text-themeGreyColor">{title}</div>
+    );
 
     const toggleExpanded = (id: number, type: string) => {
         let expandedDescription = (type === 'library') ?
@@ -294,6 +300,18 @@ export default function ProjectAccordionDetail({
                         {data?.updated_at ? ` at ${formatDatetime(data.updated_at)}` : ''}
                     </span>
                 </div>
+            </div>
+            <div className='mb-[10px]'>
+                <Accordion collapsible={true}>
+                    <Item titleRender={
+                        () => renderTitle('Assays')}>
+                        <ADMESelector
+                            type="P"
+                            organizationId={userData.organization_id}
+                            data={data}
+                        />
+                    </Item>
+                </Accordion>
             </div>
             <div className='libraries'>
                 <div className="flex-container">

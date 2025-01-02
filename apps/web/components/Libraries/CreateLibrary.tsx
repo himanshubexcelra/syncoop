@@ -45,7 +45,8 @@ export default function CreateLibrary({
           {
             ...values,
             user_id: userData.id,
-            project_id: projectData.id
+            project_id: projectData.id,
+            config: { ...projectData.config },
           });
       }
       if (!response.error) {

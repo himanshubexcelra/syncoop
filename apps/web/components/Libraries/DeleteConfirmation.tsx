@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Popup } from 'devextreme-react';
 import { Messages } from '@/utils/message';
-
+import { LoadIndicator } from 'devextreme-react/load-indicator';
 
 interface ConfirmationDialogProps {
     onSave: () => void;
     openConfirmation: boolean;
+    isLoader: boolean;
     setConfirm: React.Dispatch<React.SetStateAction<boolean>>;
     title: string;
     msg: string;
@@ -14,21 +15,27 @@ interface ConfirmationDialogProps {
 const DeleteConfirmation = ({
     onSave,
     openConfirmation,
+    isLoader,
     setConfirm,
     msg,
 }: ConfirmationDialogProps) => {
     const [visible, setVisible] = useState(openConfirmation);
     const [isDisable, setDisable] = useState(true);
+    const [isLoading, setLoading] = useState(false);
     // Update the visibility whenever openConfirmation state changes
     useEffect(() => {
         setVisible(openConfirmation);
     }, [openConfirmation]);
 
+    useEffect(() => {
+        setLoading(isLoader);
+    }, [isLoader]);
+
     // Handle Confirm (Save the action)
     const handleConfirm = () => {
         if (!isDisable) {
-            onSave(); // Call the onSave function passed from parent
-            setConfirm(false); // Close the confirmation dialog
+            onSave();
+            setConfirm(false);
         }
     };
 
@@ -70,18 +77,22 @@ const DeleteConfirmation = ({
                         </div>
 
                         <div className='confirmButton'>
+
                             <button
                                 className={isDisable
-                                    ? 'primary-button w-[100px] text-sm disableButton'
-                                    : 'primary-button w-[100px] text-sm'}
+                                    ? 'primary-button w-[62px] h-[32px] text-sm disableButton'
+                                    : 'primary-button w-[62px] h-[32px] text-sm'}
                                 onClick={handleConfirm}
-                            >Delete</button>
+                            >
+                                <LoadIndicator className="button-indicator"
+                                    visible={isLoading}
+                                    height={20}
+                                    width={20} />
+                                {isLoader ? '' : 'Delete'} </button>
                             <button
-                                className={"secondary-button w-[80px] text-sm"}
+                                className={"secondary-button w-[58px] h-[32px] text-sm"}
                                 onClick={handleCancel}
                             >Cancel</button>
-                            {/* <Button className="btn-primary" text="Confirm" onClick={handleConfirm} /> */}
-                            {/* <Btn className="btn-primary" text="No" onClick={handleCancel} /> */}
                         </div>
                     </div>
 

@@ -218,7 +218,7 @@ export function isResearcherAndProtocolAproover(myRoles: string[]) {
 }
 
 export function isOnlyLibraryManger(myRoles: string[]) {
-  return myRoles.length === 1 && myRoles.includes('library_manager');
+  return myRoles?.length === 1 && myRoles?.includes('library_manager');
 }
 
 export function isOnlyResearcher(myRoles: string[]) {

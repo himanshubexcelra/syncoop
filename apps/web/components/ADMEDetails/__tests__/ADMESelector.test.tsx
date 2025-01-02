@@ -3,9 +3,170 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import { editOrganization, getOrganizationById } from '@/components/Organization/service';
 import ADMESelector from '../ADMESelector';
 
-const orgUser = {
+const orgDetails = {
     id: 24, name: 'org2', type: 'CO'
 };
+
+const userData = {
+    id: 1,
+    organization_id: 1,
+    email_id: "forum.tanna@external.milliporesigma.com",
+    first_name: "Forum",
+    last_name: "Tanna",
+    myRoles: [],
+    status: 'active',
+    user_role: [{
+        role: {
+            id: 6,
+            priority: 1,
+            type: "admin",
+            number: 1,
+            name: "admin"
+        },
+        role_id: 6
+    }],
+    orgUser: {
+        id: 1, name: 'System Admin', first_name: "Forum",
+        last_name: "Tanna",
+        email_id: "forum.tanna@external.milliporesigma.com",
+        status: "active",
+        type: "Internal",
+        user_role: [{
+            role: {
+                id: 6,
+                priority: 1,
+                type: "admin",
+                number: 1,
+                name: "admin"
+            },
+            role_id: 6
+        }],
+        organization: {
+            id: 1,
+            name: 'Merck',
+            description: 'Merck Corporation',
+            logo: 'logo.jpg',
+            created_by: 1,
+            created_at: '2024-08-05T15:44:09.158Z',
+            updated_at: '2024-08-05T15:44:09.158Z',
+            status: 'active',
+            type: 'Internal',
+            user_role: [{
+                role: {
+                    id: 6,
+                    priority: 1,
+                    type: "admin",
+                    number: 1,
+                    name: "admin"
+                },
+                role_id: 6
+            }]
+        },
+        user_id: 1,
+    }
+}
+
+const projectMockData = {
+    id: 1,
+    name: 'Proj2',
+    target: '',
+    type: 'Optimization',
+    description: 'Example data',
+    rganizationId: 1,
+    created_at: new Date(),
+    updated_at: new Date(),
+    owner_id: 1,
+    updated_by: 1,
+    owner: userData.orgUser,
+    container: {
+        id: 1,
+        name: 'Merck',
+        description: 'Merck Corporation',
+        logo: 'logo.jpg',
+        created_by: 1,
+        created_at: '2024-08-05T15:44:09.158Z',
+        updated_at: '2024-08-05T15:44:09.158Z',
+        status: 'active',
+        user_role: [{
+            role: {
+                id: 6,
+                priority: 1,
+                type: "admin",
+                number: 1,
+                name: "admin"
+            }
+        }],
+        email_id: 'abc@email.com',
+        is_active: true,
+        orgUser: [userData.orgUser],
+        metadata: {
+            functionalAssay1: '',
+            functionalAssay2: '',
+            functionalAssay3: '',
+            functionalAssay4: '',
+        },
+        inherits_configuration: true,
+        owner_id: 1,
+        type: 'Retrosynthesis',
+    },
+    user: userData,
+    sharedUsers: [userData.orgUser],
+    userWhoUpdated: userData,
+    userWhoCreated: userData,
+    metadata: { type: 'Retrosynthesis', target: '' }, inherits_configuration: true,
+}
+
+const libMockData = {
+    id: 40,
+    parent_id: 31,
+    type: "L",
+    name: "new test lib",
+    description: '',
+    owner_id: 11,
+    inherits_configuration: true,
+    project: projectMockData,
+    metadata: {},
+    is_active: true,
+    created_at: new Date(),
+    created_by: 11,
+    updated_at: new Date(),
+    updated_by: 11,
+    libraryMolecules: [],
+    owner: userData.orgUser,
+    userWhoUpdated: userData,
+    userWhoCreated: userData,
+    container: {
+        id: 1,
+        name: 'Merck',
+        description: 'Merck Corporation',
+        logo: 'logo.jpg',
+        created_by: 1,
+        created_at: '2024-08-05T15:44:09.158Z',
+        updated_at: '2024-08-05T15:44:09.158Z',
+        status: 'active',
+        user_role: [{
+            role: {
+                id: 6,
+                priority: 1,
+                type: "admin",
+                number: 1,
+                name: "admin"
+            }
+        }],
+        email_id: 'abc@email.com',
+        is_active: true,
+        orgUser: [userData.orgUser],
+        metadata: {
+            functionalAssay1: '',
+            functionalAssay2: '',
+            functionalAssay3: '',
+            functionalAssay4: '',
+        },
+        inherits_configuration: true,
+        owner_id: 1,
+        type: 'Retrosynthesis',
+    }
+}
 
 const mockData = {
     "id": "24",
@@ -77,11 +238,31 @@ describe('ADME details sliders should work as expected', () => {
         (getOrganizationById as jest.Mock).mockResolvedValue(mockData);
     });
 
-    test('Changing slider should work as expected', async () => {
+    test('Changing slider should work as expected for organization', async () => {
         await act(async () => {
             render(
                 <ADMESelector
-                    orgUser={orgUser}
+                    organizationId={orgDetails.id}
+                />
+            );
+        });
+
+        const sliders = screen.getAllByRole('slider');
+        expect(sliders.length).not.toBe(0);
+        // Here we simulate the slider handle being moved
+        fireEvent.mouseDown(sliders[0], { clientX: 10.4 });
+        // Simulate mouse move (moving the slider)
+        fireEvent.mouseMove(sliders[0], { clientX: 60 });
+        fireEvent.mouseUp(sliders[0]);  // Simulate releasing the slider handle
+    }, 60000);
+
+    test('Changing slider should work as expected for project and library', async () => {
+        await act(async () => {
+            render(
+                <ADMESelector
+                    data={projectMockData}
+                    type="P"
+                    organizationId={24}
                 />
             );
         });
@@ -101,7 +282,41 @@ describe('ADME details sliders should work as expected', () => {
         await act(async () => {
             render(
                 <ADMESelector
-                    orgUser={orgUser}
+                    organizationId={orgDetails.id}
+                />
+            );
+        });
+        const saveButton = screen.getByText('Save');
+        expect(saveButton).toBeInTheDocument();
+        fireEvent.click(saveButton);
+    }, 60000);
+
+    test('save button should work as expected for project', async () => {
+        const mockResponse = { error: null };
+        act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
+        await act(async () => {
+            render(
+                <ADMESelector
+                    data={projectMockData}
+                    type="P"
+                    organizationId={24}
+                />
+            );
+        });
+        const saveButton = screen.getByText('Save');
+        expect(saveButton).toBeInTheDocument();
+        fireEvent.click(saveButton);
+    }, 60000);
+
+    test('save button should work as expected for library', async () => {
+        const mockResponse = { error: null };
+        act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
+        await act(async () => {
+            render(
+                <ADMESelector
+                    data={libMockData}
+                    type="L"
+                    organizationId={24}
                 />
             );
         });
@@ -116,7 +331,7 @@ describe('ADME details sliders should work as expected', () => {
         await act(async () => {
             render(
                 <ADMESelector
-                    orgUser={orgUser}
+                    organizationId={orgDetails.id}
                 />
             );
         });

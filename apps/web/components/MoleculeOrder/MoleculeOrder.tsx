@@ -2543,20 +2543,6 @@ export default function MoleculeOrderPage({
             </div>
           </div>
         )}
-        <div className='flex justify-center mt-[25px]'>
-          {!!moleculeOrderData.length && <span className='text-themeGreyColor'>
-            {moleculeOrderData.length}
-            <span className='pl-[3px]'>
-              {moleculeOrderData.length === 1 ? 'molecule' : 'molecules'}
-            </span>
-            <span className='pl-[2px]'> found</span>
-          </span>}
-          {!!moleculeOrderData.length && <span>&nbsp;|&nbsp;</span>}
-          {!!moleculeOrderData.length &&
-            <span className={`text-themeSecondayBlue pl-[5px] font-bold pb-[10px]`}>
-              Select All {moleculeOrderData.length}
-            </span>}
-        </div>
       </div>
     </div>
   );

@@ -153,8 +153,18 @@ const userData = {
 } as any;
 
 const projectData = {
-    ...data,
-    organization: {
+    id: 1,
+    name: 'Proj2',
+    target: '',
+    type: 'Optimization',
+    description: 'Example data',
+    rganizationId: 1,
+    created_at: new Date(),
+    updated_at: new Date(),
+    owner_id: 1,
+    updated_by: 1,
+    owner: userData,
+    container: {
         id: 1,
         name: 'Merck',
         description: 'Merck Corporation',
@@ -171,11 +181,25 @@ const projectData = {
                 number: 1,
                 name: "admin"
             }
-        }]
+        }],
+        email_id: 'abc@email.com',
+        is_active: true,
+        orgUser: userData,
+        metadata: {
+            functionalAssay1: '',
+            functionalAssay2: '',
+            functionalAssay3: '',
+            functionalAssay4: '',
+        },
+        inherits_configuration: true,
+        owner_id: 1,
+        type: 'Retrosynthesis',
     },
     user: userData,
-    sharedUser: [userData.orgUser],
-    updated_by: {}
+    sharedUsers: [userData.orgUser],
+    userWhoUpdated: userData,
+    userWhoCreated: userData,
+    metadata: { type: 'Retrosynthesis', target: '' }, inherits_configuration: true,
 }
 
 describe('Create/ Edit Library should work as expected', () => {
@@ -197,7 +221,6 @@ describe('Create/ Edit Library should work as expected', () => {
             render(
                 <CreateLibrary
                     userData={userData}
-                    // @ts-expect-error params definiation mismatch
                     projectData={projectData}
                     fetchLibraries={fetchLibraries}
                     formRef={mockFormRef}
@@ -239,7 +262,6 @@ describe('Create/ Edit Library should work as expected', () => {
             render(
                 <CreateLibrary
                     userData={userData}
-                    // @ts-expect-error params definiation mismatch
                     projectData={projectData}
                     fetchLibraries={fetchLibraries}
                     formRef={mockFormRef}
@@ -272,7 +294,6 @@ describe('Create/ Edit Library should work as expected', () => {
             render(
                 <CreateLibrary
                     userData={userData}
-                    // @ts-expect-error params definiation mismatch
                     projectData={projectData}
                     fetchLibraries={fetchLibraries}
                     formRef={mockFormRef}
@@ -312,7 +333,6 @@ describe('Create/ Edit Library should work as expected', () => {
             render(
                 <CreateLibrary
                     userData={userData}
-                    // @ts-expect-error params definiation mismatch
                     projectData={projectData}
                     fetchLibraries={fetchLibraries}
                     formRef={mockFormRef}
@@ -352,7 +372,6 @@ describe('Create/ Edit Library should work as expected', () => {
             render(
                 <CreateLibrary
                     userData={userData}
-                    // @ts-expect-error params definiation mismatch
                     projectData={projectData}
                     fetchLibraries={fetchLibraries}
                     formRef={mockFormRef}

@@ -63,6 +63,7 @@ export default function AddMolecule({
         setViewAddMolecule(false)
     }
     const rejectContentProps = {
+        visible: showRejectedDialog,
         rejected,
         onClose: hideRejectPopUp,
     }

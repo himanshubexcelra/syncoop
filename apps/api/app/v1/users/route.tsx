@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
 import { getUTCTime, json } from "@/utils/helper";
 
-const { EMAIL_ALREADY_EXIST, } = MESSAGES;
+const { EMAIL_ALREADY_EXIST, NOTFOUND } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST } = STATUS_TYPE;
 
 export async function GET(request: Request) {
@@ -36,13 +36,29 @@ export async function GET(request: Request) {
                     ...query.include,
                     user_role: {
                         select: {
+                            id:true,
                             role_id: true,
                             role: {
                                 select: {
                                     name: true,
+                                    type: true,
                                 },
                             },
                         },
+                    },
+                }
+            }
+            if (joins.includes('projects')) {
+                query.include = {
+                    ...query.include,
+                    owner: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                        where: {
+                            type: { in: ['L', 'P'] }
+                        }
                     },
                 }
             }
@@ -144,7 +160,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { email_id, first_name, last_name,
+        const { email_id, first_name, last_name, is_active, primary_contact_id,
             oldPassword, newPassword, organization, roles } = req;
 
         const existingUser = await prisma.users.findUnique({
@@ -191,6 +207,36 @@ export async function PUT(request: Request) {
         if (organization) {
             updatedData.organization_id = organization;
         }
+        if (is_active !== undefined) {
+            updatedData.is_active = is_active;
+            if (is_active === true) {
+                updatedData.primary_contact_id = null;
+            } else if (is_active === false) {
+                const primaryContact = await prisma.users.findUnique({
+                    where: { id: primary_contact_id }
+                });
+
+                if (!primaryContact) {
+                    return new Response(
+                        JSON.stringify({ error: NOTFOUND('Primary Contact') }),
+                        {
+                            headers: { "Content-Type": "application/json" },
+                            status: STATUS_TYPE.NOT_FOUND,
+                        }
+                    );
+                }
+
+                updatedData.primary_contact_id = primary_contact_id;
+
+                await prisma.container.updateMany({
+                    where: {
+                        owner_id: existingUser.id,
+                        type: { in: ['L', 'P'] }
+                    },
+                    data: { owner_id: primaryContact.id }
+                });
+            }
+        }
         if (roles && Array.isArray(roles)) {
             await prisma.user_role.deleteMany({
                 where: { user_id: existingUser.id },
@@ -231,6 +277,30 @@ export async function PUT(request: Request) {
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { "Content-Type": "application/json" },
             status: BAD_REQUEST,
+        });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const user_id = searchParams.get('user_id');
+        const role_id = searchParams.get('role_id');
+        await prisma.user_role.delete({
+            where: { id: Number(role_id) },
+        });
+        const result = await prisma.users.delete({
+            where: { id: Number(user_id) },
+        });
+        return new Response(json(result), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // BAD_REQUEST
         });
     }
 }

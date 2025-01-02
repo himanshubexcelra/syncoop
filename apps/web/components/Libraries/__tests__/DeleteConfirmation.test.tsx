@@ -28,6 +28,7 @@ describe('DeleteConfirmation Component', () => {
         render(
             <DeleteConfirmation
                 onSave={onSave}
+                isLoader={false}
                 openConfirmation={true}
                 setConfirm={setConfirm}
                 msg="Are you sure you want to delete?"
@@ -45,6 +46,7 @@ describe('DeleteConfirmation Component', () => {
         render(
             <DeleteConfirmation
                 onSave={onSave}
+                isLoader={false}
                 openConfirmation={true}
                 setConfirm={setConfirm}
                 msg="Are you sure you want to delete?"
@@ -61,6 +63,7 @@ describe('DeleteConfirmation Component', () => {
         render(
             <DeleteConfirmation
                 onSave={onSave}
+                isLoader={false}
                 openConfirmation={true}
                 setConfirm={setConfirm}
                 msg="Are you sure you want to delete?"
@@ -82,6 +85,7 @@ describe('DeleteConfirmation Component', () => {
         render(
             <DeleteConfirmation
                 onSave={onSave}
+                isLoader={false}
                 openConfirmation={true}
                 setConfirm={setConfirm}
                 msg="Are you sure you want to delete?"
@@ -100,6 +104,7 @@ describe('DeleteConfirmation Component', () => {
         render(
             <DeleteConfirmation
                 onSave={onSave}
+                isLoader={false}
                 openConfirmation={false}
                 setConfirm={setConfirm}
                 msg="Are you sure you want to delete?"

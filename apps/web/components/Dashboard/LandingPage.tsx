@@ -81,7 +81,7 @@ export default function LandingPage({
         {
             title: "ADME",
             Component: ADMESelector,
-            props: { orgUser: orgDetail }
+            props: { organizationId: orgDetail.id }
         },
         {
             title: "Assays",

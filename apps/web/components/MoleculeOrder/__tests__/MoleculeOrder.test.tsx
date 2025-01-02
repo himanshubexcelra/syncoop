@@ -44,7 +44,8 @@ const mockUserData: UserData = {
     user_role: [],
     email_id: '',
     first_name: '',
-    last_name: ''
+    last_name: '',
+    is_active: true,
 };
 const actionsEnabledMock = [
     "view_molecule_order"

@@ -1,8 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
 import toast from "react-hot-toast";
-import { useState, useEffect, useMemo, useRef, useContext } from "react";
-import { AppContext } from "@/app/AppState";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Form,
   SimpleItem,
@@ -15,7 +14,7 @@ import {
 import Image from 'next/image';
 import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
 import { delay } from "@/utils/helpers";
-import { createProjectApi, editProject } from "./projectService";
+import { createProject, editProject } from "./projectService";
 import {
   ProjectCreateFields,
   OrganizationDataFields,
@@ -41,8 +40,6 @@ export default function CreateProject({
   edit,
   clickedOrg
 }: ProjectCreateFields) {
-  const context: any = useContext(AppContext);
-  const appContext = context.state;
   const [filteredData, setFilteredData] = useState<User[]>(users);
   const [userList, setUsers] = useState<User[]>([]);
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
@@ -53,13 +50,11 @@ export default function CreateProject({
   const [showIcon, setShowIcon] = useState('arrow-both');
   const dataGridRef = useRef<DataGridRef>(null);
 
-  const projectTypeEditorOptions = { items: PROJECT_TYPES, searchEnabled: true, disabled: edit };
-
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
-      const filteredUser = filteredUsers.filter(u => u.id !== projectData.ownerId)
+      const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id)
       const updatedAllUsers = filteredUser.map(user => {
-        const updatedUser = projectData.sharedUsers.find(u => u.user_id === user.id);
+        const updatedUser = projectData?.sharedUsers?.find(u => u.user_id === user.id);
         return { ...user, permission: updatedUser ? updatedUser.role : 'View' };
       });
       setFilteredData(updatedAllUsers);
@@ -139,15 +134,16 @@ export default function CreateProject({
             ...values,
             sharedUsers,
             organization_id,
-            user_id: userData.id
+            user_id: userData.id,
           })
       }
-      else response = await createProjectApi(
+      else response = await createProject(
         {
           ...values,
           sharedUsers,
           organization_id,
-          user_id: userData.id
+          user_id: userData.id,
+          config: { ...organizationData[0].config },
         });
       if (!response.error) {
         formRef.current!.instance().reset();
@@ -158,7 +154,6 @@ export default function CreateProject({
         const toastId = toast.success(message);
         await delay(DELAY);
         toast.remove(toastId);
-        context?.addToState({ ...appContext, refreshCart: true })
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
@@ -237,7 +232,7 @@ export default function CreateProject({
             {
               placeholder: "Organization name",
               disabled: true,
-              value: edit ? projectData?.organization?.name : (
+              value: edit ? projectData?.container?.name : (
                 clickedOrg ?
                   organizationData[0]?.name
                   : userData?.orgUser?.name)
@@ -261,7 +256,12 @@ export default function CreateProject({
       <SimpleItem
         editorType="dxSelectBox"
         dataField="type"
-        editorOptions={projectTypeEditorOptions}
+        editorOptions={{
+          items: PROJECT_TYPES,
+          searchEnabled: true,
+          disabled: edit,
+          value: edit ? projectData?.metadata.type : PROJECT_TYPES[0]
+        }}
       >
         <Label text="Project Type" />
         <RequiredRule message="Project type is required" />
@@ -275,7 +275,10 @@ export default function CreateProject({
       </SimpleItem>
       <SimpleItem
         dataField="target"
-        editorOptions={{ placeholder: "Target" }}
+        editorOptions={{
+          placeholder: "Target",
+          value: (projectData?.metadata.target) ? projectData.metadata.target : ''
+        }}
       >
         <Label text="Target" />
       </SimpleItem>
@@ -292,7 +295,8 @@ export default function CreateProject({
         <Label text="Description" />
       </SimpleItem>
 
-      <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}>
+      <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}
+        visible={false}>
         <div className="">
           <Textbox
             placeholder="Search"
@@ -312,11 +316,13 @@ export default function CreateProject({
         </div>
       </GroupItem>
       {filteredData.length === 0 ? (
-        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}>
+        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}
+          visible={false}>
           <div className="nodata-project">No data</div>
         </GroupItem>
       ) : (
-        <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}>
+        <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}
+          visible={false}>
           <div style={{ width: '50%' }}>
             <DataGrid
               dataSource={filteredData}

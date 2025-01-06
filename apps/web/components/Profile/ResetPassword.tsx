@@ -2,13 +2,12 @@
 "use client";
 import toast from "react-hot-toast";
 import Image from 'next/image';
-import styles from './ProfileInfo.module.css';
 import { Button, TextBox, Tooltip, Validator } from 'devextreme-react';
 import { Button as TextBoxButton } from 'devextreme-react/text-box';
 import { CustomRule, RequiredRule } from 'devextreme-react/cjs/data-grid';
 import { LoginFormSchema } from '@/lib/definition';
 import { Messages } from '@/utils/message';
-import PasswordCriteria from '../PasswordCriteria/PasswordCriteria';
+import PasswordCriteria from '../Tooltips/PasswordCriteria';
 import { useMemo, useRef, useState } from 'react';
 import { delay, generatePassword } from "@/utils/helpers";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";
@@ -152,7 +151,7 @@ export default function ResetPassword({ onClose, email_id }: ChangePasswordProps
                 <Button
                     text="Generate"
                     onClick={handleGeneratePassword}
-                    className={styles.secondaryButton}
+                    className="btn-secondary"
                 />
             </div>
         );

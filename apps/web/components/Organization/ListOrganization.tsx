@@ -4,25 +4,27 @@ import { useRef, useState, useEffect } from "react";
 import DataGrid, {
   Item,
   Column,
-  SearchPanel,
   Toolbar as GridToolbar,
   DataGridRef,
-  Paging,
-  Sorting,
   HeaderFilter
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
-import { OrganizationDataFields, OrganizationType, UserData, UserRole } from "@/lib/definition";
+import {
+  ActionStatus,
+  OrganizationDataFields,
+  OrganizationType,
+  UserData
+} from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
 import { getOrganization } from "@/components/Organization/service";
 import { formatDate } from "@/utils/helpers";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
-import { getFilteredRoles } from "../Role/service";
+import { FormRef } from "devextreme-react/cjs/form";
 
 type ListOrganizationProps = {
   userData: UserData, actionsEnabled: string[]
@@ -30,51 +32,33 @@ type ListOrganizationProps = {
 
 export default function ListOrganization({ userData, actionsEnabled }: ListOrganizationProps) {
   const [editPopup, showEditPopup] = useState(false);
-  const [editField, setEditField] = useState({ name: '', email_id: '' });
+  const [editField, setEditField] =
+    useState<OrganizationDataFields>({} as OrganizationDataFields);
   const [createPopupVisible, setCreatePopupVisibility] = useState(false);
   const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
   const [loader, setLoader] = useState(true);
-  const [orgAdminRole, setRole] = useState(-1);
 
   const { myRoles } = userData;
   const context: any = useContext(AppContext);
   const appContext = context.state;
 
   const fetchOrganizations = async () => {
-    let organization = await getOrganization(
+    const organization = await getOrganization(
       {
         withRelation: ['orgUser', 'user_role'],
-        withCount: ['projects']
+        withCount: ['projects', 'molecules'],
+        type: OrganizationType.External
       });
-    organization = organization.filter
-      ((organization: OrganizationDataFields) => organization.type !== OrganizationType.Internal);
     setTableData(organization);
     setLoader(false);
   }
-
-  const fetchRoles = async () => {
-    const roles = await getFilteredRoles();
-    const role = roles.find(
-      (role: UserRole) => role.type === 'org_admin');
-    if (role) {
-      setRole(role.id)
-    }
-  };
 
   useEffect(() => {
     fetchOrganizations();
   }, [appContext?.userCount]);
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
-
   const grid = useRef<DataGridRef>(null);
-  const formRef = useRef<any>(null);
-
-  const renderTitleField = () => {
-    return <p className='form-title'>{`Edit ${editField?.name}`}</p>;
-  };
+  const formRef = useRef<FormRef>(null);
 
   const showEditPopupForm = (data: any) => {
     setEditField(data);
@@ -96,8 +80,8 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   }, []);
 
   const statusHeaderFilter = [
-    { value: 'Enabled', text: 'Enabled' },
-    { value: 'Disabled', text: 'Disabled' },
+    { value: ActionStatus.Enabled, text: 'Enabled' },
+    { value: ActionStatus.Disabled, text: 'Disabled' },
   ]
 
   const handlePopupShown = () => {
@@ -113,15 +97,27 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           visible={loader}
         />
       </div>}
-      <DataGrid
+      {!loader && <DataGrid
         dataSource={tableData}
         showBorders={true}
         ref={grid}
         className="no-padding-header"
+        scrolling={{
+          mode: 'infinite'
+        }}
+        sorting={{
+          mode: 'single'
+        }}
+        height={'auto'}
+        style={{ maxHeight: '400px' }}
+        headerFilter={{
+          visible: true
+        }}
+        searchPanel={{
+          visible: true,
+          highlightSearchText: true
+        }}
       >
-        <Paging defaultPageSize={5} defaultPageIndex={0} />
-        <Sorting mode="single" />
-        <HeaderFilter visible={true} />
         <Column
           dataField="name"
           caption="Organization Name"
@@ -138,21 +134,22 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             );
           }} />
         <Column
-          dataField="_count.projects"
+          dataField="_count.other_container"
           width={90}
           alignment="center"
           caption="Projects"
           cellRender={({ data }: any) => (
-            <span>{data._count?.projects}</span>
+            <span>{data._count?.other_container}</span>
           )}
           allowHeaderFiltering={false}
         />
         <Column
-          dataField="molecules"
+          dataField="_count.organizationMolecules"
           width={90}
           alignment="center"
-          cellRender={() => (
-            <span>0</span>
+          caption="Molecules"
+          cellRender={({ data }: any) => (
+            <span>{data._count?.organizationMolecules}</span>
           )}
           allowHeaderFiltering={false}
         />
@@ -167,17 +164,25 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           allowHeaderFiltering={false}
         />
         <Column
-          dataField="status"
+          dataField="is_active"
           alignment="center"
           caption="Organization Status"
+          calculateCellValue={({ is_active }) =>
+            (is_active ? ActionStatus.Enabled : ActionStatus.Disabled)
+          }
+          cellRender={({ data }: any) => (
+            <span>{
+              data.is_active ? ActionStatus.Enabled : ActionStatus.Disabled
+            }</span>
+          )}
         >
           <HeaderFilter dataSource={statusHeaderFilter} />
         </Column>
         <Column
-          dataField="user.email_id"
+          dataField="owner.email_id"
           minWidth={350}
           caption="Organization Admin"
-          cellRender={({ data }: any) => <span>{data.user.email_id}</span>}
+          cellRender={({ data }: any) => <span>{data.owner.email_id}</span>}
           allowHeaderFiltering={false}
         />
         <Column
@@ -193,9 +198,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
         <Column
           dataField="updated_at"
           caption="Last Modified Date"
-          cellRender={({ data }) => (
-            <span>{formatDate(data.updated_at)}</span>
-          )}
+          cellRender={({ data }) =>
+          (
+            <span>{data.updated_at
+              &&
+              formatDate(data.updated_at)}</span>
+          )
+          }
           allowHeaderFiltering={false}
         />
         {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
@@ -211,6 +220,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                       width={24}
                       height={24}
                       alt="Edit Organization"
+                      title="Edit organization"
                     />
                   </>
                 )}
@@ -244,13 +254,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             <Popup
               title="Create Organization"
               visible={createPopupVisible}
+              dragEnabled={false}
               onShown={handlePopupShown}
               contentRender={() => (
                 <RenderCreateOrganization
                   formRef={formRef}
                   setCreatePopupVisibility={setCreatePopupVisibility}
                   fetchOrganizations={fetchOrganizations}
-                  role_id={orgAdminRole}
                   created_by={userData.id}
                 />
               )}
@@ -266,9 +276,9 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
               wrapperAttr={{ class: "create-popup mr-[15px]" }}
             />
             <Popup
-              titleRender={renderTitleField}
-              showTitle={true}
+              title={`Edit ${editField?.name}`}
               visible={editPopup}
+              dragEnabled={false}
               showCloseButton={true}
               hideOnOutsideClick={true}
               contentRender={() => (
@@ -279,10 +289,10 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                   fetchOrganizations={fetchOrganizations}
                   myRoles={myRoles}
                   loggedInUser={userData.id}
-                  orgAdminRole={orgAdminRole}
+                  editPopup={editPopup}
                 />
               )}
-              width={477}
+              width={550}
               height="100%"
               position={popupPosition}
               onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}
@@ -291,8 +301,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           </Item>
           <Item name="searchPanel" location="before" />
         </GridToolbar>
-        <SearchPanel visible={true} highlightSearchText={true} />
-      </DataGrid>
+      </DataGrid>}
     </>
   );
 }

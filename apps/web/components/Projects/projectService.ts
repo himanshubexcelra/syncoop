@@ -30,9 +30,9 @@ export async function getProjects({
     const data = await response.json();
     return data;
 }
-export async function getProjectsCountById(orgId?: number) {
+export async function getOverviewCounts(orgId?: number) {
     try {
-        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/overview`);
         if (orgId) {
             url.searchParams.append('orgId', String(orgId));
         }
@@ -51,7 +51,7 @@ export async function getProjectsCountById(orgId?: number) {
         return error;
     }
 }
-export async function createProjectApi(formData: FormData) {
+export async function createProject(formData: FormData) {
     try {
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/project`,
@@ -61,7 +61,7 @@ export async function createProjectApi(formData: FormData) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
 
@@ -77,7 +77,7 @@ export async function createProjectApi(formData: FormData) {
     }
 }
 
-export async function editProject(formData: FormData) {
+export async function editProject(formData: any) {
     try {
         const response = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/project`,
@@ -87,7 +87,7 @@ export async function editProject(formData: FormData) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData }),
             }
         );
         if (response.status === 200) {

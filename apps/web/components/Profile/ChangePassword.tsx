@@ -7,7 +7,7 @@ import { Button as TextBoxButton } from 'devextreme-react/text-box';
 import { CustomRule, RequiredRule } from 'devextreme-react/cjs/data-grid';
 import { LoginFormSchema } from '@/lib/definition';
 import { Messages } from '@/utils/message';
-import PasswordCriteria from '../PasswordCriteria/PasswordCriteria';
+import PasswordCriteria from '../Tooltips/PasswordCriteria';
 import { useMemo, useRef, useState } from 'react';
 import { delay, generatePassword } from "@/utils/helpers";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";

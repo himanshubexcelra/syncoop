@@ -199,7 +199,7 @@ const parsePropertyValue = (propValue, propType) => {
     // so no need to change to a different type
     return propValue;
 };
-const getElement = (ref) => (getHostRef(ref).$hostElement$ );
+const getElement = (ref) => (getHostRef(ref).$hostElement$);
 const createEvent = (ref, name, flags) => {
     const elm = getElement(ref);
     return {
@@ -397,7 +397,10 @@ const updateElement = (oldVnode, newVnode, isSvgMode, memberName) => {
     }
     // add new & update changed attributes
     for (memberName in newVnodeAttrs) {
-        setAccessor(elm, memberName, oldVnodeAttrs[memberName], newVnodeAttrs[memberName], isSvgMode, newVnode.$flags$);
+        if (oldVnodeAttrs[memberName]) {
+            // handle update
+            setAccessor(elm, memberName, newVnodeAttrs[memberName], oldVnodeAttrs[memberName], isSvgMode, newVnode.$flags$);
+        } else setAccessor(elm, memberName, oldVnodeAttrs[memberName], newVnodeAttrs[memberName], isSvgMode, newVnode.$flags$);
     }
 };
 /**
@@ -422,7 +425,7 @@ const createElm = (oldParentVNode, newParentVNode, childIndex, parentElm) => {
         }
         // create element
         elm = newVNode.$elm$ = (doc.createElementNS(isSvgMode ? SVG_NS : HTML_NS, newVNode.$tag$)
-            );
+        );
         if (isSvgMode && newVNode.$tag$ === 'foreignObject') {
             isSvgMode = false;
         }
@@ -674,7 +677,11 @@ const updateChildren = (parentElm, oldCh, newVNode, newCh) => {
             }
         }
     }
-    if (oldStartIdx > oldEndIdx) {
+    if (oldCh !== newCh) {
+        // handle update
+        patch(newCh[0], oldCh[0]);
+    }
+    else if (oldStartIdx > oldEndIdx) {
         // we have some more new nodes to add which don't match up with old nodes
         addVnodes(parentElm, newCh[newEndIdx + 1] == null ? null : newCh[newEndIdx + 1].$elm$, newVNode, newCh, newStartIdx, newEndIdx);
     }
@@ -816,7 +823,7 @@ const renderVdom = (hostRef, renderFnResults, isInitialLoad = false) => {
     rootVnode.$tag$ = null;
     rootVnode.$flags$ |= 4 /* VNODE_FLAGS.isHost */;
     hostRef.$vnode$ = rootVnode;
-    rootVnode.$elm$ = oldVNode.$elm$ = (hostElm.shadowRoot || hostElm );
+    rootVnode.$elm$ = oldVNode.$elm$ = (hostElm.shadowRoot || hostElm);
     {
         scopeId = hostElm['s-sc'];
     }
@@ -841,7 +848,7 @@ const scheduleUpdate = (hostRef, isInitialLoad) => {
     // has already fired off its lifecycle update then
     // fire off the initial update
     const dispatch = () => dispatchHooks(hostRef, isInitialLoad);
-    return writeTask(dispatch) ;
+    return writeTask(dispatch);
 };
 /**
  * Dispatch initial-render and update lifecycle hooks, enqueuing calls to
@@ -855,7 +862,7 @@ const scheduleUpdate = (hostRef, isInitialLoad) => {
  */
 const dispatchHooks = (hostRef, isInitialLoad) => {
     const endSchedule = createTime('scheduleUpdate', hostRef.$cmpMeta$.$tagName$);
-    const instance = hostRef.$lazyInstance$ ;
+    const instance = hostRef.$lazyInstance$;
     // We're going to use this variable together with `enqueue` to implement a
     // little promise-based queue. We start out with it `undefined`. When we add
     // the first function to the queue we'll set this variable to be that
@@ -977,7 +984,7 @@ const updateComponent = async (hostRef, instance, isInitialLoad) => {
  */
 const callRender = (hostRef, instance, elm, isInitialLoad) => {
     try {
-        instance = instance.render() ;
+        instance = instance.render();
         {
             hostRef.$flags$ &= ~16 /* HOST_FLAGS.isQueuedForUpdate */;
         }
@@ -1004,7 +1011,7 @@ const postUpdateComponent = (hostRef) => {
     const tagName = hostRef.$cmpMeta$.$tagName$;
     const elm = hostRef.$hostElement$;
     const endPostUpdate = createTime('postUpdate', tagName);
-    const instance = hostRef.$lazyInstance$ ;
+    const instance = hostRef.$lazyInstance$;
     const ancestorComponent = hostRef.$ancestorComponent$;
     if (!(hostRef.$flags$ & 64 /* HOST_FLAGS.hasLoadedComponent */)) {
         hostRef.$flags$ |= 64 /* HOST_FLAGS.hasLoadedComponent */;
@@ -1024,6 +1031,8 @@ const postUpdateComponent = (hostRef) => {
         }
     }
     else {
+        // call update
+        safeCall(instance, 'componentWillUpdate');
         endPostUpdate();
     }
     {
@@ -1072,7 +1081,7 @@ const setValue = (ref, propName, newVal, cmpMeta) => {
     const hostRef = getHostRef(ref);
     const oldVal = hostRef.$instanceValues$.get(propName);
     const flags = hostRef.$flags$;
-    const instance = hostRef.$lazyInstance$ ;
+    const instance = hostRef.$lazyInstance$;
     newVal = parsePropertyValue(newVal, cmpMeta.$members$[propName][0]);
     // explicitly check for NaN on both sides, as `NaN === NaN` is always false
     const areBothNaN = Number.isNaN(oldVal) && Number.isNaN(newVal);
@@ -1080,7 +1089,10 @@ const setValue = (ref, propName, newVal, cmpMeta) => {
     if ((!(flags & 8 /* HOST_FLAGS.isConstructingInstance */) || oldVal === undefined) && didValueChange) {
         // gadzooks! the property's value has changed!!
         // set our new value!
-        hostRef.$instanceValues$.set(propName, newVal);
+        if (Array.isArray(oldVal) && !Array.isArray(newVal)) {
+            hostRef.$instanceValues$.set(propName, JSON.parse(newVal));
+        }
+        else hostRef.$instanceValues$.set(propName, newVal);
         if (instance) {
             if ((flags & (2 /* HOST_FLAGS.hasRendered */ | 16 /* HOST_FLAGS.isQueuedForUpdate */)) === 2 /* HOST_FLAGS.hasRendered */) {
                 // looks like this value actually changed, so we've got work to do!
@@ -1109,7 +1121,7 @@ const proxyComponent = (Cstr, cmpMeta, flags) => {
         const prototype = Cstr.prototype;
         members.map(([memberName, [memberFlags]]) => {
             if ((memberFlags & 31 /* MEMBER_FLAGS.Prop */ ||
-                    ((flags & 2 /* PROXY_FLAGS.proxyState */) && memberFlags & 32 /* MEMBER_FLAGS.State */))) {
+                ((flags & 2 /* PROXY_FLAGS.proxyState */) && memberFlags & 32 /* MEMBER_FLAGS.State */))) {
                 // proxyComponent - prop
                 Object.defineProperty(prototype, memberName, {
                     get() {
@@ -1190,13 +1202,12 @@ const proxyComponent = (Cstr, cmpMeta, flags) => {
             };
             // create an array of attributes to observe
             // and also create a map of html attribute name to js property name
-            Cstr.observedAttributes = members
-                .filter(([_, m]) => m[0] & 15 /* MEMBER_FLAGS.HasAttribute */) // filter to only keep props that should match attributes
+            Cstr.observedAttributes = members.filter(([_, m]) => m[0]) // to include width and height
                 .map(([propName, m]) => {
-                const attrName = m[1] || propName;
-                attrNameToPropName.set(attrName, propName);
-                return attrName;
-            });
+                    const attrName = m[1] || propName;
+                    attrNameToPropName.set(attrName, propName);
+                    return attrName;
+                });
         }
     }
     return Cstr;
@@ -1316,7 +1327,7 @@ const connectedCallback = (elm) => {
             // since they would have been removed when disconnected
             addHostEventListeners(elm, hostRef, cmpMeta.$listeners$);
             // fire off connectedCallback() on component instance
-            if (hostRef === null || hostRef === void 0 ? void 0 : hostRef.$lazyInstance$) ;
+            if (hostRef === null || hostRef === void 0 ? void 0 : hostRef.$lazyInstance$);
             else if (hostRef === null || hostRef === void 0 ? void 0 : hostRef.$onReadyPromise$) {
                 hostRef.$onReadyPromise$.then(() => fireConnectedCallback());
             }
@@ -1335,7 +1346,7 @@ const disconnectedCallback = async (elm) => {
                 hostRef.$rmListeners$ = undefined;
             }
         }
-        if (hostRef === null || hostRef === void 0 ? void 0 : hostRef.$lazyInstance$) ;
+        if (hostRef === null || hostRef === void 0 ? void 0 : hostRef.$lazyInstance$);
         else if (hostRef === null || hostRef === void 0 ? void 0 : hostRef.$onReadyPromise$) {
             hostRef.$onReadyPromise$.then(() => disconnectInstance());
         }
@@ -1503,22 +1514,22 @@ const loadModule = (cmpMeta, hostRef, hmrVersionId) => {
     // loadModuleImport
     const exportName = cmpMeta.$tagName$.replace(/-/g, '_');
     const bundleId = cmpMeta.$lazyBundleId$;
-    const module = cmpModules.get(bundleId) ;
+    const module = cmpModules.get(bundleId);
     if (module) {
         return module[exportName];
     }
     /*!__STENCIL_STATIC_IMPORT_SWITCH__*/
     return import(
-    /* @vite-ignore */
-    /* webpackInclude: /\.entry\.js$/ */
-    /* webpackExclude: /\.system\.entry\.js$/ */
-    /* webpackMode: "lazy" */
-    `./${bundleId}.entry.js${''}`).then((importedModule) => {
-        {
-            cmpModules.set(bundleId, importedModule);
-        }
-        return importedModule[exportName];
-    }, consoleError);
+        /* @vite-ignore */
+        /* webpackInclude: /\.entry\.js$/ */
+        /* webpackExclude: /\.system\.entry\.js$/ */
+        /* webpackMode: "lazy" */
+        `./${bundleId}.entry.js${''}`).then((importedModule) => {
+            {
+                cmpModules.set(bundleId, importedModule);
+            }
+            return importedModule[exportName];
+        }, consoleError);
 };
 const styles = /*@__PURE__*/ new Map();
 const win = typeof window !== 'undefined' ? window : {};
@@ -1534,13 +1545,13 @@ const plt = {
 };
 const promiseResolve = (v) => Promise.resolve(v);
 const supportsConstructableStylesheets = /*@__PURE__*/ (() => {
-        try {
-            new CSSStyleSheet();
-            return typeof new CSSStyleSheet().replaceSync === 'function';
-        }
-        catch (e) { }
-        return false;
-    })()
+    try {
+        new CSSStyleSheet();
+        return typeof new CSSStyleSheet().replaceSync === 'function';
+    }
+    catch (e) { }
+    return false;
+})()
     ;
 const queueDomReads = [];
 const queueDomWrites = [];

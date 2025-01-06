@@ -37,7 +37,7 @@ export function sortString(data: any, field: string, sortBy: string, object?: bo
 }
 
 export function sortByDate(data: any, field: string, sortBy: string): any[] {
-    const sortedLibraries = data.sort((a: any, b: any) => {
+    const sortedLibraries = data?.sort((a: any, b: any) => {
         return sortBy === 'asc'
             ? new Date(a[field]).getTime() - new Date(b[field]).getTime()
             : new Date(b[field]).getTime() - new Date(a[field]).getTime();

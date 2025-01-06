@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { TextBoxTypes } from "devextreme-react/cjs/text-box";
 import { ButtonTypes } from "devextreme-react/cjs/button";
-import PasswordCriteria from "../PasswordCriteria/PasswordCriteria";
+import PasswordCriteria from "../Tooltips/PasswordCriteria";
 import { LoginFormSchema, OrganizationType } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
@@ -30,19 +30,18 @@ export default function RenderCreateUser({
     setTableData,
     formRef,
     tableData,
-    password_hash,
-    setPassword,
     roles,
     organizationData,
     myRoles,
     type,
     fetchAndFilterData,
-    customerOrgId,
+    customerOrgId
 }: any) {
     const passwordLabel = { 'aria-label': 'Password' };
     const [passwordMode, setPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
     const [organization, setOrganization] = useState(organizationData);
     const [valid, setValid] = useState<any>('valid');
+    const [password_hash, setPassword] = useState('');
     const passwordButton = useMemo<ButtonTypes.Properties>(
         () => ({
             icon: passwordMode === "text" ? "eyeclose" : "eyeopen",
@@ -69,6 +68,9 @@ export default function RenderCreateUser({
                 setCreatePopupVisibility(false);
                 fetchAndFilterData()
                 setValid('valid')
+                const toastId = toast.success(Messages.ADD_USER);
+                await delay(DELAY);
+                toast.remove(toastId);
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);
@@ -182,8 +184,9 @@ export default function RenderCreateUser({
                 displayExpr: "name",
                 valueExpr: "id",
                 value: myRoles.includes('admin')
-                    ? ((type === OrganizationType.External && !customerOrgId)
-                        ? "" : organization && organization[0].id)
+                    ? (type === OrganizationType.External && !customerOrgId
+                        ? ""
+                        : organization && organization[0].id)
                     : organization[0].id,
                 disabled: !myRoles.includes('admin') || type === OrganizationType.Internal
                     || customerOrgId,

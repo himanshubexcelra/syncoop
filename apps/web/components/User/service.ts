@@ -98,3 +98,26 @@ export async function getUserModulePermissions(userData: any) {
         return error;
     }
 }
+
+export async function deleteUserData(user_id?: number, role_id?: number) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/users/`);
+        if (user_id) {
+            url.searchParams.append('user_id', String(user_id));
+        }
+        if (role_id) {
+            url.searchParams.append('role_id', String(role_id));
+        }
+        const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        return error;
+    }
+}

@@ -1,5 +1,5 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DataGrid, {
     Column,
     Grouping,
@@ -14,12 +14,15 @@ import DataGrid, {
     Toolbar,
     Item,
     DataGridTypes,
+    RowDragging,
+    Export,
+    ColumnChooser
 } from 'devextreme-react/data-grid';
+
 import CheckBox from 'devextreme-react/check-box';
-import Image from 'next/image';
 import { Button, LoadIndicator } from 'devextreme-react';
 import { ColumnConfig } from '@/lib/definition';
-
+import './dataGrid.css';
 interface ToolbarButtonConfig {
     text: string;
     onClick: () => void;
@@ -27,69 +30,97 @@ interface ToolbarButtonConfig {
     class?: string;
     disabled?: boolean;
     visible?: boolean;
-
+    loader?: boolean;
 }
 
-interface CustomDataGridProps<T> {
+interface CustomDataGridProps {
     data: any[];
-    columns: ColumnConfig<T>[];
+    selectionEnabledRows?: any[];
+    height?: string;
+    maxHeight?: string;
+    columns: ColumnConfig[];
     toolbarButtons?: ToolbarButtonConfig[];
     groupingColumn?: string;
     enableRowSelection?: boolean;
+    showFooter?: boolean;
     enableGrouping?: boolean;
-    enableInfiniteScroll?: boolean;
+    scrollMode?: any;
     enableAutoScroll?: boolean;
     enableSorting?: boolean;
     enableFiltering?: boolean;
+    enableExport?: boolean,
+    enableColumnChooser?: boolean,
     enableOptions?: boolean;
-    loadMoreData?: () => void;
     buttonText?: string;
     onButtonClick?: () => void;
-    loader: boolean;
+    loader?: boolean;
     enableHeaderFiltering?: boolean;
     handleSelectionChange?: (selectedRowsData: any) => void;
     handleSelectedRows?: (e: any) => void;
-
     enableSearchOption?: boolean;
-    selectedRowKeys?: any[];
-    onSelectionChanged?: (e: any) => void;
-    onCellPrepared?: (e: DataGridTypes.CellPreparedEvent) => void;
+    onSelectionUpdated?: (selectedRowsKeys: number[], selectionEnabledRows: any[]) => void;
+    showDragIcons?: boolean;
+    enableToolbar?: boolean;
+    onReorderFunc?: (e: any) => void;
+    onEditorPreparing?: (e: any) => void;
+    onToolbarPreparing?: (e: any) => void;
+    onRowPrepared?: (e: any) => void;
+    onRowClick?: (e: any) => void;
+    onExporting?: (e: any) => void;
+    cssClass?: string;
+    hoverStateEnabled?: boolean;
 }
 
-const CustomDataGrid = <T extends Record<string, any>>({
+const CustomDataGrid = ({
     data,
+    selectionEnabledRows = data,
+    height,
+    maxHeight,
     columns,
     toolbarButtons = [],
     groupingColumn,
     enableRowSelection = true,
+    showFooter = false,
     enableGrouping = true,
-    enableInfiniteScroll = false,
-    enableAutoScroll = false,
+    scrollMode,
     enableSorting = true,
     enableFiltering = true,
+    enableExport = false,
+    enableColumnChooser = false,
     enableSearchOption = true,
     enableOptions = true,
-    loadMoreData,
-    loader = true,
     enableHeaderFiltering = true,
-    selectedRowKeys,
-    onSelectionChanged,
-    onCellPrepared
-}: CustomDataGridProps<T>) => {
+    cssClass,
+    onSelectionUpdated,
+    onExporting,
+    showDragIcons = false,
+    enableToolbar = true,
+    onReorderFunc,
+    onEditorPreparing,
+    onRowClick,
+    onRowPrepared,
+}: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
-    const dataGridRef = useRef<any>(null);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
-    const handleScroll = useCallback(() => {
-        if (dataGridRef.current) {
-            const instance = dataGridRef.current.instance;
-            const { scrollHeight, clientHeight, scrollTop } = instance.scrollable().scrollOffset();
+    const [gridHeight, setGridHeight] = useState(window.innerHeight - 100); // Default height
 
-            if (scrollTop + clientHeight >= scrollHeight - 50) {
-                loadMoreData && loadMoreData();
-            }
-        }
-    }, [loadMoreData]);
+    // Function to adjust grid height dynamically
+    const adjustGridHeight = () => {
+        const newHeight = window.innerHeight; // Subtract any offset if needed
+        setGridHeight(newHeight);
+    };
+
+    useEffect(() => {
+        // Adjust height when the window is resized
+        window.addEventListener('resize', adjustGridHeight);
+
+        // Cleanup the event listener on component unmount
+        return () => {
+            window.removeEventListener('resize', adjustGridHeight);
+        };
+    }, []);
 
     const onAutoExpandAllChanged = useCallback(() => {
         setAutoExpandAll((prev) => !prev);
@@ -100,71 +131,148 @@ const CustomDataGrid = <T extends Record<string, any>>({
     }, []);
 
 
-    useEffect(() => {
-        if (enableAutoScroll && dataGridRef.current) {
-            const instance = dataGridRef.current.instance;
-            instance.scrollTo({ top: instance.totalItemsCount() * instance.rowHeight() });
-        }
-    }, [data, enableAutoScroll]);
-
-    // Add the scroll event listener
-    useEffect(() => {
-        if (dataGridRef.current && enableInfiniteScroll) {
-            const instance = dataGridRef.current.instance;
-            const scrollable = instance.scrollable();
-
-            if (scrollable) {
-                scrollable.on('scroll', handleScroll);
-            }
-
-            return () => {
-                if (scrollable) {
-                    scrollable.off('scroll', handleScroll);
-                }
-            };
-        }
-    }, [enableInfiniteScroll, handleScroll]);
-
     // Custom render function for grouping cell to show only the value
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
+    const onReorder = (event: any) => {
+        if (onReorderFunc) {
+            onReorderFunc(event)
+        }
+    };
+
+    const onToolbarPreparing = (e: any) => {
+        if (enableExport) {
+            const customConfiguration = e?.toolbarOptions?.items[0].options.items;
+            customConfiguration[0].text = "Export all data to CSV";
+            customConfiguration[0].icon = "export";
+        }
+    }
+    const exportFormats = ['csv'];
+
+    const onSelectionChanged = (e: any) => {
+        console.log(2, e, e.selectedRowKeys);
+        setSelectedRowKeys([...e.selectedRowKeys]);
+        if (onSelectionUpdated)
+            onSelectionUpdated(e.selectedRowKeys, e.selectedRowsData);
+    };
+
+    // onCellPrepared to disable the checkbox
+    const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
+        if (e.rowType === 'data') {
+            if (e.column.type === 'selection') {
+                const rowData = e.row.data;
+
+                // Disable the checkbox for rows where 'disabled' is true
+                if (rowData.disabled) {
+                    // Set pointer-events to 'none' to disable interaction with the checkbox
+                    e.cellElement.style.pointerEvents = 'none';
+
+                    // Optional: Add some visual feedback like reducing opacity
+                    e.cellElement.style.opacity = '0.2';
+                }
+            }
+        }
+    };
+
+    // Handle the 'Select All' logic in the header checkbox
+    const handleSelectAll = (args: any) => {
+        let selectedRowsKeys: number[] = [];
+        if (args.value) {
+            selectedRowsKeys = selectionEnabledRows.map(
+                (row: object) => (row as any).id);
+            setSelectedRowKeys(selectedRowsKeys);
+        } else if (args.value !== null) {
+            setSelectedRowKeys([]);
+        }
+        if (onSelectionUpdated)
+            onSelectionUpdated(selectedRowsKeys, selectionEnabledRows);
+    }
+
+    // Determine if the header checkbox should be checked or not
+
+    let isHeaderCheckboxChecked: any = false;
+    if (selectedRowKeys.length === selectionEnabledRows.length) {
+        isHeaderCheckboxChecked = true;
+    } else if (selectedRowKeys.length && selectedRowKeys.length < selectionEnabledRows.length) {
+        isHeaderCheckboxChecked = null;
+    }
 
     return (
         <div>
             <DataGrid
-                ref={dataGridRef}
                 dataSource={data}
                 keyExpr="id"
                 allowColumnReordering={false}
                 showBorders={true}
-                height="600px"
+                height={height ?? gridHeight}
                 width="100%"
                 onCellPrepared={onCellPrepared}
+                onRowClick={onRowClick}
                 selectedRowKeys={selectedRowKeys}
                 onSelectionChanged={onSelectionChanged}
+                onEditorPreparing={onEditorPreparing}
+                onRowPrepared={onRowPrepared}
+                onExporting={onExporting}
+                onToolbarPreparing={(e) => { onToolbarPreparing(e) }}
+                style={{ maxHeight }}
+                className={cssClass}
             >
+                {scrollMode && <Scrolling mode={scrollMode} />}
+                {enableColumnChooser &&
+                    <ColumnChooser
+                        enabled={true}
+                        mode="select"
+                        height={800}
+                        width={290}
+                        title='Choose Columns'
+                    />
+                }
+                {enableExport && <Export enabled={true} formats={exportFormats} />}
+
+                {showDragIcons && <RowDragging
+                    allowReordering={true}
+                    onReorder={onReorder}
+                    showDragIcons={showDragIcons}
+                />}
                 {enableGrouping && <GroupPanel visible={true} />}
 
                 {enableHeaderFiltering && <HeaderFilter visible={true} />}
                 {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
-                <Scrolling mode={enableInfiniteScroll ? 'infinite' : 'standard'} />
-                <LoadPanel enabled={!data.length} />
+                <LoadPanel enabled={!data?.length} />
                 {enableRowSelection && (
-                    <Selection mode="multiple" selectAllMode={'allPages'}
-                        showCheckBoxesMode={'always'} />
+                    <Selection mode="multiple" />
                 )}
+                <Export enabled={true} allowExportSelectedData={true} />
 
-                {/* Render columns specified in the configuration passed from the parent */}
+                {enableRowSelection && <Column
+                    dataField="id"
+                    caption="Select All"
+                    width={'auto'}
+                    cellRender={() => null} // Empty cell renderer for this column
+                    allowSorting={false}
+                    allowFiltering={false}
+                    defaultFilterValue={false}
+                    showInColumnChooser={false}
+                    allowExporting={false}
+                    headerCellRender={() => (
+                        <div>
+                            <CheckBox
+                                value={isHeaderCheckboxChecked}
+                                onValueChanged={handleSelectAll}
+                            />
+                        </div>
+                    )}
+                    alignment="center"
+                />}
+
                 {columns.map((column) => (
                     <Column
                         key={String(column.dataField)}
                         dataField={String(column.dataField)}
                         visible={column.visible !== undefined ? column.visible : true}
-                        headerCellRender={column.type === 'bookmark' ? () => (
-                            <Image src="/icons/star.svg" width={24}
-                                height={24} alt="Bookmark" />) : undefined}
+                        headerCellRender={column.headerCellRenderer}
                         caption={typeof column.title === 'string' ? column.title : undefined}
                         width={column.width ? String(column.width) : undefined}
                         allowHeaderFiltering={column?.allowHeaderFiltering}
@@ -172,9 +280,11 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         alignment={column.alignment !== undefined ? column.alignment : "left"}
                         cellRender={column.customRender ? ({ data }) =>
                             column.customRender!(data) : undefined}
+                        headerFilter={column.headerFilter}
+                        cssClass={column.cssClass}
+                        defaultSortOrder={column.defaultSortOrder}
                     />
                 ))}
-
 
                 {groupingColumn && (
                     <Column
@@ -184,30 +294,64 @@ const CustomDataGrid = <T extends Record<string, any>>({
                         groupCellRender={groupCellRender}
                     />
                 )}
-                <Toolbar>
+                {enableToolbar && <Toolbar>
                     {groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }
+                    {enableExport && <Item name="exportButton" location="after" />}
+                    {enableColumnChooser &&
+                        <Item name='columnChooserButton' widget='dxButton' location="after" />}
                     {toolbarButtons.map((button, index) => (
                         <Item key={index} location="after">
-                            <Button
+                            {!button.loader ? <Button
                                 text={button.text}
                                 onClick={() => button.onClick()}
                                 icon={button.icon}
                                 disabled={button.disabled}
                                 className={button.class || "btn-primary"}
-                                visible={button.visible !== undefined ? button.visible : true}
-                            />
+                                visible={button.visible !== undefined ? button.visible : true}>
+                            </Button> :
+                                <Button
+                                    onClick={() => button.onClick()}
+                                    icon={button.icon}
+                                    disabled={button.disabled}
+                                    className={`${button.class || 'btn-primary'} w-40`}
+                                    visible={button.visible !== undefined ? button.visible : true}>
+                                    <LoadIndicator width={20} height={20}
+                                        className="button-indicator" visible={button.loader} />
+                                </Button>}
                         </Item>
                     ))}
                     <Item name="searchPanel" location="after" />
-                </Toolbar>
+                </Toolbar>}
                 {enableSearchOption && <SearchPanel
                     visible={true}
                     highlightSearchText={true}
                 />}
 
             </DataGrid>
+
+            {showFooter && <div className='flex justify-center'>
+                <span className='text-themeGreyColor'>
+                    {data.length}
+                    <span className='pl-[3px]'>
+                        {data.length > 1 ? 'records' : 'record'}
+                    </span>
+                    <span className='pl-[2px]'> found</span>
+                </span>
+
+                {!!data.length && enableRowSelection &&
+                    <>
+                        <span>&nbsp;|&nbsp;</span>
+                        <a onClick={() =>
+                            handleSelectAll({ value: !selectedRowKeys.length })}
+                            className={
+                                `text-themeSecondayBlue pl-[5px] font-bold pb-[10px] cursor-pointer`
+                            }>{(selectedRowKeys.length === selectionEnabledRows.length) ?
+                                'Un-Select' : 'Select'} All {selectionEnabledRows.length}
+                        </a>
+                    </>}
+            </div>}
 
             {enableOptions && (
                 <div className="options">

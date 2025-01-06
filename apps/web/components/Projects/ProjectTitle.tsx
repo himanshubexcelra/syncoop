@@ -4,9 +4,10 @@ import Image from "next/image";
 import { ProjectDataFields } from '@/lib/definition';
 
 export default function ProjectTitle(data: ProjectDataFields) {
-    const libraryCount = data.libraries?.length || 0;
-    const moleculeCount = data.libraries.reduce((count, library: any) => {
-        return count + library._count.molecule; // Add the count of molecules in each library
+    const libraryCount = data.other_container?.length || 0;
+    const moleculeCount = data.other_container?.reduce((count, library: any) => {
+        // Add the count of molecules in each library
+        return count + library._count.libraryMolecules;
     }, 0);
     return (
         <div>

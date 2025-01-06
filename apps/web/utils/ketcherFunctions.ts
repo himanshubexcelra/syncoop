@@ -66,7 +66,7 @@ export const KetcherAPI = (ketcherInstance: any) => {
       return highlights;
     },
     resetMolecule: function () {
-      ketcherInstance.setMolecule('');
+      ketcherInstance.setMolecule(' ');
     },
   };
 };

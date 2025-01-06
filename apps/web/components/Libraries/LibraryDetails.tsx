@@ -1,7 +1,8 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AppContext } from "../../app/AppState";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
@@ -18,16 +19,16 @@ import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import {
     getLibraries,
-    getLibraryById,
+    /* getLibraryById, */
 } from './service';
-import { sortByDate } from '@/utils/sortString';
 import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
-import { delay, getUTCTime } from "@/utils/helpers";
+import Accordion, { Item } from 'devextreme-react/accordion';
+import ADMESelector from "../ADMEDetails/ADMESelector";
+import { delay, getUTCTime, isAdmin } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
-import MoleculeList from './MoleculeList';
 import LibraryAccordion from './LibraryAccordion';
-
+import MoleculeList from './MoleculeList';
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -35,6 +36,7 @@ type breadCrumbParams = {
     projectSvg?: string,
     projectState?: boolean,
     orgData?: OrganizationDataFields
+    roles: string[],
 }
 
 const breadcrumbArr = ({
@@ -43,7 +45,10 @@ const breadcrumbArr = ({
     projectSvg = '',
     projectState = false,
     orgData,
+    roles,
 }: breadCrumbParams) => {
+    const admin = isAdmin(roles)
+
     return [
         {
             label: "Home",
@@ -62,7 +67,7 @@ const breadcrumbArr = ({
                 isActive: false,
             }]
             : []),
-        {
+        ...(admin ? [{
             label: 'Projects',
             svgPath: '/icons/project-inactive.svg',
             svgWidth: 16,
@@ -70,7 +75,7 @@ const breadcrumbArr = ({
             href: orgData ?
                 `/organization/${orgData?.id}/projects/`
                 : '/projects',
-        },
+        }] : []),
         {
             label: `Project: ${projectTitle}`,
             svgPath: projectSvg || "/icons/project-icon.svg",
@@ -88,21 +93,25 @@ const initialProjectData: ProjectDataFields = {
     name: '',
     id: 0,
     description: '',
-    organization_id: undefined,
-    organization: {} as OrganizationDataFields, // Provide a default organization object
+    parent_id: undefined,
+    container: {} as OrganizationDataFields, // Provide a default organization object
     user: {} as userType, // Provide a default user object
     sharedUsers: [],
     target: '',
-    type: '',
+    metadata: {
+        target: '',
+        type: ''
+    },
     userWhoUpdated: {} as userType, // Provide a default user object
     userWhoCreated: {} as userType, // Provide a default user object
     updated_at: new Date(),
     user_id: undefined,
     owner: {} as User, // Provide a default owner object
-    ownerId: 0,
+    owner_id: 0,
     orgUser: undefined,
     created_at: getUTCTime(new Date().toISOString()),
-    libraries: [] as LibraryFields[],
+    other_container: [] as LibraryFields[],
+    inherits_configuration: true,
 };
 
 type LibraryDetailsProps = {
@@ -117,101 +126,66 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = useParams<{ id?: string, projectId?: string }>();
-    const [library_id, setLibraryId] = useState(searchParams.get('library_id') || '');
-    const [project_id, setProjectId] = useState(params.id || params.projectId!);
+    const [library_id, setLibraryId] = useState<number>(Number(searchParams.get('library_id')));
+    const [libLoader, setLibLoader] = useState(false);
+    const [project_id, setProjectId] = useState(params.projectId || params.projectId!);
     const [organization_id, setOrganizationId] = useState(organizationId);
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
-    const [projects, setProjects] = useState<ProjectDataFields>(initialProjectData);
-    const [initProjects, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
-    const [selectedLibrary, setSelectedLibrary] =
-        useState(library_id ? Number(library_id) : -1);
+    const [projectData, setProjects] = useState<ProjectDataFields>(initialProjectData);
+    const [projectInitial, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
+    /* const [selectedLibrary, setSelectedLibrary] =
+        useState(library_id ? Number(library_id) : -1); */
     const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
+    const [selectedLibraryData, setSelectedLibraryData] = useState<any>({});
     const [loader, setLoader] = useState(true);
-    const [moleculeLoader, setMoleculeLoader] = useState(false);
     const [expanded, setExpanded] = useState(library_id ? false : true);
-
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
 
     const [sortBy, setSortBy] = useState('Recent');
-    const [breadcrumbValue, setBreadCrumbs] = useState(breadcrumbArr({}));
+    const [breadcrumbValue, setBreadCrumbs] =
+        useState(breadcrumbArr({ roles: userData.myRoles }));
 
     let toastShown = false;
 
-    const getLibraryData = async (item: LibraryFields) => {
-        setMoleculeLoader(true)
-        setSelectedLibrary(item.id);
+    // OPT: 7
+    /* const getLibraryData = async (item: LibraryFields) => {
+        setLibraryId(item.id);
         setSelectedLibraryName(item.name);
         const libraryData =
             await getLibraryById(['molecule'],
                 item.id.toString());
-        setTableData(libraryData.molecule || []);
-        setMoleculeLoader(false)
-    }
+        setTableData(libraryData.libraryMolecules || []);
+    } */
+
     const fetchLibraries = async () => {
-        const projectData = await getLibraries(['libraries', 'organization'], project_id);
+        const projectData = await getLibraries(['libraries'/* , 'organization' */], project_id);
 
         // let selectedLib = null;
-        let selectedLib = { name: '' };
-        if (library_id && projectData) {
-            selectedLib = projectData.libraries.find(
+        /* let selectedLib = { name: '' }; */
+        /* if (library_id && !projectData.error) {
+            selectedLib = projectData.other_container.find(
                 (library: LibraryFields) => Number(library.id) === Number(library_id));
-        }
-        if (projectData && !!selectedLib) {
-            const sortKey = 'created_at';
+        } */
+        if (!projectData.error /* && !!selectedLib */) {
+            /* const sortKey = 'created_at';
             const sortBy = 'desc';
-            const tempLibraries = sortByDate(projectData.libraries, sortKey, sortBy);
-            setProjects({ ...projectData, libraries: tempLibraries });
-            setInitProjects({ ...projectData, libraries: tempLibraries });
-            setOrganizationId(projectData.organization_id);
-            let breadcrumbTemp = breadcrumbArr({
+            const tempLibraries = sortByDate(projectData.other_container, sortKey, sortBy); */
+            // setProjects({ ...projectData, libraries: tempLibraries });
+            // setInitProjects({ ...projectData, libraries: tempLibraries });
+            // OPT: 8
+            setProjects({ ...projectData });
+            setInitProjects({ ...projectData });
+            setOrganizationId(projectData.parent_id);
+            setSortBy('Recent');
+            const breadcrumbTemp = breadcrumbArr({
                 projectTitle: `${projectData.name}`,
                 projectHref: `/${project_id}`,
-                orgData: projectData.organization,
+                orgData: (organizationId) ? projectData.container : '',
+                roles: userData.myRoles
             });
-            if (library_id) {
-                const libraryData = await getLibraryById(['molecule'], library_id);
-                setTableData(libraryData.molecule || []);
-                const libName = libraryData.name;
-                setSelectedLibraryName(libName);
-                setSelectedLibrary(parseInt(library_id));
-                breadcrumbTemp = breadcrumbArr({
-                    projectTitle: `${projectData.name}`,
-                    projectHref: `/${project_id}`, projectSvg: "/icons/project-inactive.svg",
-                    orgData: projectData.organization,
-                });
-                breadcrumbTemp = [
-                    ...breadcrumbTemp,
-                    {
-                        label: libName,
-                        svgPath: "/icons/library-active.svg",
-                        svgWidth: 16,
-                        svgHeight: 16,
-                        href: projectData.organization
-                            ? `/organization/${projectData.organization?.id}`
-                            + `/projects/${project_id}/library_id/${library_id}`
-                            : `/projects/${project_id}?library_id/${library_id}`,
-                        isActive: true,
-                    }];
-            } else {
-                if (tempLibraries.length) {
-                    const libraryData = await getLibraryById(['molecule'], tempLibraries[0]?.id);
-                    if (libraryData) {
-                        setTableData(libraryData.molecule || []);
-                        setLibraryId(libraryData.id);
-                    }
-                } const libName = tempLibraries[0]?.name || 'untitled';
-                setSelectedLibraryName(libName);
-                setSelectedLibrary(tempLibraries[0]?.id);
-                setSortBy('Recent');
-                setExpanded(true);
-                breadcrumbTemp = breadcrumbArr({
-                    projectTitle: `${projectData.name}`,
-                    projectHref: `/${project_id}`,
-                    projectSvg: '/icons/project-icon.svg', projectState: true,
-                    orgData: projectData.organization,
-                });
-            }
+
             setBreadCrumbs(breadcrumbTemp);
-            setMoleculeLoader(false);
             setLoader(false);
         } else {
             if (!toastShown) {
@@ -228,8 +202,52 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     useEffect(() => {
         setProjectId(params.id || params.projectId!)
         fetchLibraries();
-    }, [params.id, params.projectId, library_id]);
+    }, [params.id, params.projectId, appContext?.cartDetail]);
 
+    useEffect(() => {
+        if (projectData) {
+            const libraries = projectData.other_container;
+            if (libraries?.length) {
+                const libraryData = library_id ? libraries.find((library: LibraryFields) => {
+                    return Number(library.id) === Number(library_id)
+                }) : libraries[0];
+                setSelectedLibraryData(libraryData);
+                setLibLoader(false);
+                if (libraryData) {
+                    // if (library_id != libraryData.id) {
+                    setLibraryId(libraryData.id);
+                    setSelectedLibraryName(libraryData.name);
+                    // }
+                    let breadcrumbTemp = breadcrumbArr({
+                        projectTitle: `${projectData.name}`,
+                        projectHref: `/${project_id}`,
+                        orgData: (organizationId) ? projectData.container : undefined,
+                        roles: userData.myRoles
+                    });
+                    breadcrumbTemp = [
+                        ...breadcrumbTemp,
+                        {
+                            label: libraryData.name,
+                            svgPath: "/icons/library-active.svg",
+                            svgWidth: 16,
+                            svgHeight: 16,
+                            href: projectData.container
+                                ? `/organization/${projectData.container.id}`
+                                + `/projects/${project_id}?library_id=${library_id}`
+                                : `/projects/${project_id}?library_id=${library_id}`,
+                            isActive: true,
+                        }
+                    ];
+                    setBreadCrumbs(breadcrumbTemp);
+                }
+            }
+        }
+    }, [library_id, projectData]);
+
+    const selectLibrary = (libId: number) => {
+        setLibLoader(true);
+        setLibraryId(libId);
+    }
 
     return (
         <>
@@ -259,43 +277,70 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                 />
                             </main>
                         </div>
-                        <div className='flex gap-[20px]'>
+                        <div className='flex'>
                             {expanded && (<div className='w-2/5 projects'>
                                 <LibraryAccordion
-                                    projects={projects}
+                                    projectData={projectData}
                                     setLoader={setLoader}
                                     setSortBy={setSortBy}
                                     setProjects={setProjects}
-                                    initProjects={initProjects}
+                                    projectInitial={projectInitial}
                                     projectId={project_id}
                                     sortBy={sortBy}
                                     actionsEnabled={actionsEnabled}
                                     fetchLibraries={fetchLibraries}
                                     userData={userData}
-                                    selectedLibrary={selectedLibrary}
-                                    getLibraryData={getLibraryData}
-                                    setSelectedLibrary={setSelectedLibrary}
-                                    setSelectedLibraryName={setSelectedLibraryName}
+                                    selectedLibraryId={library_id}
+                                    /* getLibraryData={getLibraryData} */
+                                    setLibraryId={(library_id: number) => selectLibrary(library_id)}
+                                    /* setSelectedLibraryName={setSelectedLibraryName} */
                                     setExpanded={setExpanded}
                                 />
                             </div >
                             )}
-                            <MoleculeList
-                                moleculeLoader={moleculeLoader}
-                                expanded={expanded}
-                                tableData={tableData}
-                                userData={userData}
-                                setMoleculeLoader={setMoleculeLoader}
-                                setTableData={setTableData}
-                                actionsEnabled={actionsEnabled}
-                                selectedLibrary={selectedLibrary}
-                                library_id={library_id}
-                                projects={projects}
-                                projectId={project_id}
-                                organizationId={organization_id || ''}
-                            />
-                        </div >
-                    </div >
+                            <div className={`${expanded ? 'w-3/5' : 'w-full'}`}>
+                                {expanded && library_id != 0 && (
+                                    libLoader ?
+                                        <LoadIndicator
+                                            visible={libLoader}
+                                        /> : (
+                                            <Accordion multiple={true} collapsible={true}>
+                                                <Item titleRender={() => 'Assays'}>
+                                                    <ADMESelector type="L"
+                                                        organizationId={
+                                                            userData.organization_id
+                                                        }
+                                                        data={{
+                                                            ...selectedLibraryData,
+                                                            container: {
+                                                                config:
+                                                                    projectData.
+                                                                        config
+                                                            }
+                                                        }}
+                                                    />
+                                                </Item>
+                                            </Accordion>
+                                        )
+                                )}
+                                <MoleculeList
+                                    selectedLibraryName={selectedLibraryName}
+                                    expanded={expanded}
+                                    tableData={tableData}
+                                    userData={userData}
+                                    setTableData={setTableData}
+                                    actionsEnabled={actionsEnabled}
+                                    selectedLibrary={library_id}
+                                    library_id={library_id}
+                                    projectData={projectData}
+                                    projectId={project_id}
+                                    fetchLibraries={fetchLibraries}
+                                    organizationId={organization_id || ''}
+                                    config={selectedLibraryData.config}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 }
             </ div >
         </>

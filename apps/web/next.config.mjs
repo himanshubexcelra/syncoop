@@ -3,6 +3,10 @@ import CopyPlugin from 'copy-webpack-plugin';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack(config, { isServer }) {
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      maxSize: 200000,  // 200 KB (adjust as needed)
+    },
     config.plugins.push(
       new CopyPlugin({
         patterns: [

@@ -11,7 +11,7 @@ export const getProfileBreadCrumbs = (
             svgPath: '/icons/home-icon.svg',
             svgWidth: 16,
             svgHeight: 16,
-            href: '/dashboard'
+            href: '/'
         },
         ...(isMyProfile
             ? [

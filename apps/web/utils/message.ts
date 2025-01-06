@@ -27,12 +27,15 @@ export const Messages = {
     projectAddedUpdated(status: string) {
         return `Project ${status} successfully`;
     },
+    admeConfigUpdated(type: string) {
+        return `ADME config details for ${type} updated successfully`;
+    },
     LIBRARY_LIST_EMPTY:
         "Your library list is empty, add a library to import molecules",
     ADD_MOLECULE_SUCCESS: 'Molecule added successfully',
     ADD_MOLECULE_ERROR: 'Failed to add molecule for reason : ',
-    deleteMoleculeMessage(status: string) {
-        return `${status} deleted successfully`;
+    deleteMoleculeMessage(moleculeId: number) {
+        return `Molecule ${moleculeId} deleted from cart successfully`;
     },
     addMoleculeCartMessage(totalItem: number) {
         const response = totalItem === 1 ? 'Molecule is added to cart' : 'Molecules are added to cart';
@@ -41,5 +44,40 @@ export const Messages = {
     REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",
     SUBMIT_ORDER: "Molecules order submitted successfully.",
     USER_ROLE_CHECK: "User role not supported or missing required parameters.",
-    UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully"
+    sentForSynthesis(count: number) {
+        return `${count} molecule(s) sent for retro synthesis!`;
+    },
+    UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully",
+    CREATE_LAB_JOB_ORDER: "Pathway has been added to synthesis lab job cart",
+    LAP_JOB_CONFIRMATION_TITLE: 'Synthesis order confirmation',
+    displayLabJobMessage(count: number) {
+        return `You are ordering the synthesis of ${count} Molecule.`;
+    },
+    MOLECULES_VALIDATE_MSG: "Molecule have been validate successfully.",
+    ADD_USER: 'User created successfully',
+    ADD_ORGANIZATION: 'Organization Created successfully',
+    ORGANIZATION_NAME_REQUIRED: 'Organization name is required',
+    ORGANIZATION_ADMIN_FIRST_NAME_REQUIRED: 'Organization Admin First Name is required',
+    ORGANIZATION_ADMIN_LAST_NAME_REQUIRED: 'Organization Admin Last Name is required',
+    EMAIL_REQUIRED: 'Email is required',
+    UPDATE_USER: 'User details updated successfully',
+    UPDATE_ORGANIZATION: 'Organization updated successfully',
+    UPDATE_PATHWAY_REACTION: 'Pathway has been updated successfully and sent for validation',
+    UPDATE_PATHWAY_REACTION_VALIDATE: 'Pathway has been updated successfully and sent for validated',
+    REACTION_VALIDATE_MSG(reactionNo: number, pathwayId: number) {
+        return `Reaction ${reactionNo} for pathway ${pathwayId} validated successfully`;
+    },
+    REACTION_SAVE_MSG(reactionNo: number, pathwayId: number) {
+        return `Reaction ${reactionNo} for pathway ${pathwayId} saved successfully`;
+    },
+    DELETE_MOLECULE_TITLE: 'Delete Molecule',
+    DELETE_MOLECULE: 'Are you sure you want to delete ?',
+    TYPE_DELETE: `Type 'delete' in the field below`,
+    deleteMoleculeMsg(molecule_name: string) {
+        return `Molecule ${molecule_name} deleted successfully`;
+    },
+
+    deleteUserMsg(user_name: string) {
+        return `User ${user_name} deleted successfully`;
+    }
 }

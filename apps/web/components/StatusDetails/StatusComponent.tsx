@@ -1,44 +1,83 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
-import { StatusComponentProps } from "@/lib/definition"
+import { Status, StatusComponentProps } from "@/lib/definition"
 import CountCards from "@/ui/CountCards";
-import StatusCards from "@/ui/StatusCard";
-import { getCountCardsDetails } from "@/utils/helpers";
-import { stats } from "@/utils/constants";
 import { useEffect, useState } from "react";
-import { getProjectsCountById } from "../Projects/projectService";
-import { getLibraryCountById, geMoleculeCountById } from "../Libraries/service";
+import StatusCard from "@/ui/StatusCard";
+import { getOverviewCounts } from "../Projects/projectService";
+import { DashboardStatuses, getCountCardsDetails, moleculeStatus } from "@/utils/constants";
+import { isSystemAdmin } from "@/utils/helpers";
 
 export default function StatusComponent({ myRoles, orgUser, customerOrgId }: StatusComponentProps) {
-    const { id } = orgUser
+    const { id } = orgUser;
     const [projectNumber, setProjectNumber] = useState<number>(0);
     const [libraryNumber, setLibraryNumber] = useState<number>(0);
     const [moleculeNumber, setMoleculeNumber] = useState<number>(0);
-    const countCardsDetails = getCountCardsDetails(projectNumber, libraryNumber,
-        moleculeNumber, customerOrgId);
-    const fetchData = async () => {
-        let projectCount, libraryCount, moleculeCount;
+    const [moleculeStatusCount, setMoleculeStatusCount] = useState<[]>([]);
+    const countCardsDetails = getCountCardsDetails(
+        projectNumber,
+        libraryNumber,
+        moleculeNumber,
+        customerOrgId
+    );
 
-        if (myRoles.includes('admin') && !customerOrgId) {
-            projectCount = await getProjectsCountById();
-            libraryCount = await getLibraryCountById();
-            moleculeCount = await geMoleculeCountById();
-        } else {
-            projectCount = await getProjectsCountById(id);
-            libraryCount = await getLibraryCountById(id);
-            moleculeCount = await geMoleculeCountById(id);
-        }
+    const fetchData = async () => {
+
+        const {
+            molecule_status_count,
+            projectCount,
+            libraryCount,
+            moleculeCount
+        } = await getOverviewCounts(customerOrgId ??
+            (!isSystemAdmin(myRoles) ? orgUser.id : undefined));
+
         setLibraryNumber(libraryCount)
         setProjectNumber(projectCount)
         setMoleculeNumber(moleculeCount)
+        setMoleculeStatusCount(molecule_status_count);
     }
 
     useEffect(() => {
         fetchData();
-    }, [id, myRoles])
+    }, [id, myRoles]);
+
     return (
-        <div className="h-[177px] items-center flex justify-center gap-[47px]">
-            <CountCards {... { countCardsDetails }} />
-            <StatusCards {...{ stats }} />
+        <div className="flex items-center h-[177px]">
+            <div className="flex w-1/2 justify-around">
+                <CountCards {... { countCardsDetails }} />
+            </div>
+            <div className="flex w-1/2">
+                {moleculeStatus.filter((stat: Status) =>
+                    DashboardStatuses.includes(stat.text)
+                ).map((stat: Status, index: number) => {
+                    moleculeStatusCount.forEach(
+                        (statCount: { status: number, _count: number }) => {
+                            if (Array.isArray(stat.code) && stat.code.includes(statCount.status)) {
+                                stat = {
+                                    ...stat,
+                                    number: stat.number + statCount._count
+                                }
+                            } else if (stat.code === statCount.status) {
+                                stat = {
+                                    ...stat,
+                                    number: statCount._count
+                                }
+                            }
+                        }
+                    );
+                    return (
+                        <StatusCard
+                            key={index}
+                            id={index}
+                            stat={stat}
+                            hideCount={true}
+                            customStyles={true}
+                        />
+                    );
+
+                })}
+
+            </div>
         </div>
     )
 }

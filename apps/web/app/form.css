@@ -17,6 +17,14 @@
     font-weight: 400;
 }
 
+.pathway-popup {
+    .dx-popup-content {
+        padding: 0 !important;
+        margin: 5px;
+    }
+}
+
+.order-popup,
 .create-popup {
     .dx-popup-normal {
         box-shadow: -18px 0px 18px 0px rgba(0, 0, 0, 0.25);
@@ -112,11 +120,11 @@
 
 /* radio button to be in same row */
 
-.dx-collection {
+.dx-radiogroup .dx-collection {
     display: flex !important;
 }
 
-.dx-collection .dx-radiobutton:not(:first-child) {
+.dx-radiogroup .dx-collection .dx-radiobutton:not(:first-child) {
     padding-inline-start: 2rem;
 }
 
@@ -140,12 +148,14 @@
     .dx-collection {
         align-items: center !important;
     }
+
     .custom-password {
         .dx-texteditor {
             width: 320px;
             height: 40px;
         }
     }
+
     .dx-item {
         flex: auto !important;
     }

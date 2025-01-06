@@ -1,7 +1,11 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
 
-import { DeleteMoleculeCart, DropDownItem, UserData } from '@/lib/definition';
+import {
+    DropDownItem,
+    UserData,
+} from '@/lib/definition';
+import { usePathname } from 'next/navigation'
 import { PopupBox } from '@/ui/popupBox';
 import { clearSession } from '@/utils/auth';
 import Image from 'next/image';
@@ -9,15 +13,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Popup as CartPopup } from "devextreme-react/popup";
-import { Popup as OrderPopup } from "devextreme-react/popup";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
-import { Messages } from "@/utils/message";
-import toast from "react-hot-toast";
-import { deleteMoleculeCart, getMoleculeCart } from '../Libraries/service';
-import CartDetails from '../Libraries/CartDetails';
-import OrderDetails from '../Libraries/OrderDetails'
+import { getMoleculeCart } from '../Libraries/service';
+import CartPopupComponent from './CartPopupComponent';
+import OrderPopupComponent from './OrderPopupComponent';
+import {
+    isProtocolAproover,
+    isSystemAdmin,
+} from '@/utils/helpers';
 
 type HeaderProps = {
     userData: UserData,
@@ -26,30 +30,41 @@ type HeaderProps = {
 
 export default function Header({ userData }: HeaderProps) {
     const context: any = useContext(AppContext);
-    const appContext = context.state;
     const searchParams = useSearchParams();
     const library_id = searchParams.get('library_id') ? searchParams.get('library_id') : 0;
     const cartDetail = useMemo(() => context.state.cartDetail || [], [context.state.cartDetail]);
     const [shortName, setShortName] = useState<string>('');
     const [dropDownItems, setDropdownItems] = useState<DropDownItem[]>([]);
     const [popupPosition, setPopupPosition] = useState({} as any);
-    const [orderPopupPosition, setOrderPopupPosition] = useState({} as any);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [orderPopupVisible, setOrderPopupVisibility] = useState(false);
-    const [cartData, setCartData] = useState([]);
-
+    const [orderMsg, setOrderMsg] = useState<string>('');
+    const [cartCount, setCartCount] = useState<number>(0);
+    const currentUrl = usePathname();
+    const containsProjects = currentUrl.includes("/projects");
+    const containsMoleculeOrder = currentUrl.includes("/molecule_order");
+    const { myRoles } = userData;
     useEffect(() => {
-        const fetchCartData = async () => {
-            const cartDataAvaialable: any = await getMoleculeCart(Number(userData.id));
-            setCartData(cartDataAvaialable);
-            context?.addToState({
-                ...appContext,
-                refreshCart: false,
-            })
-        };
 
-        fetchCartData();
-    }, [library_id, cartDetail, userData.id, appContext?.refreshCart]);
+        const getTotalMolecules = async () => {
+            if (userData.id) {
+                let params: object = {
+                    user_id: userData.id,
+                    source: 'header'
+                }
+                if (containsMoleculeOrder &&
+                    (isSystemAdmin(myRoles) || isProtocolAproover(myRoles))) {
+                    params = {
+                        ...params,
+                        lab_job_cart: true,
+                    }
+                }
+                const moleculeCount: number = await getMoleculeCart(params);
+                setCartCount(moleculeCount);
+            }
+        }
+        getTotalMolecules();
+    }, [library_id, cartDetail, userData.id])
 
     const router = useRouter();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -58,58 +73,6 @@ export default function Header({ userData }: HeaderProps) {
         setDropdownOpen(!dropdownOpen);
     };
 
-    const removeItemFromCart = (obj: DeleteMoleculeCart) => {
-        const { molecule_id, library_id, project_id, moleculeName, created_by } = obj;
-        deleteMoleculeCart(created_by, molecule_id, library_id, project_id).then((res) => {
-            if (res) {
-                const filteredData = cartData.filter((item: any) =>
-                    !
-                    (
-                        item.molecule_id === molecule_id &&
-                        item.library_id === library_id &&
-                        item.project_id === project_id
-                    )
-                );
-                context?.addToState({
-                    ...appContext, cartDetail: [...filteredData]
-                })
-                const message = Messages.deleteMoleculeMessage(moleculeName);
-                toast.success(message);
-                setCartData(filteredData);
-                if (filteredData.length == 0) {
-                    setCreatePopupVisibility(false);
-                }
-            }
-        })
-            .catch((error) => {
-                console.log(error);
-            })
-
-
-    }
-
-    const removeAll = (user_id: number, type: string) => {
-        deleteMoleculeCart(user_id).then((res) => {
-            if (res) {
-                setCartData([]);
-                context?.addToState({
-                    ...appContext, cartDetail: []
-                })
-                if (type === 'RemoveAll') {
-                    setCreatePopupVisibility(false)
-                    toast.success(Messages.REMOVE_ALL_MESSAGE);
-                }
-                else {
-                    setCreatePopupVisibility(false)
-                    setOrderPopupVisibility(true)
-                }
-
-            }
-        })
-            .catch((error) => {
-                console.log(error);
-            })
-    }
     const onItemSelected = async (item: DropDownItem) => {
         if (item.link) {
             router.push(item.link);
@@ -121,24 +84,11 @@ export default function Header({ userData }: HeaderProps) {
         setDropdownOpen(false)
     }
 
-    const closeOrderPopup = () => {
-        setOrderPopupVisibility(false);
-    }
-
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setPopupPosition({
                 my: 'top right',
                 at: 'top right',
-                of: window,
-            });
-        }
-    }, []);
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setOrderPopupPosition({
-                my: 'center',
-                at: 'center',
                 of: window,
             });
         }
@@ -166,10 +116,13 @@ export default function Header({ userData }: HeaderProps) {
             ]);
         }
     }, [userData])
-
+    const setOrderData = (msg: string, visible: boolean) => {
+        setOrderMsg(msg)
+        setOrderPopupVisibility(visible)
+    }
     return (
         <>
-            <header className="top-0 left-0 w-full h-10 bg-themeBlueColor
+            <header className="top-0 left-0 w-full h-10 bg-themeBlueColor 
             flex items-center justify-between px-6 shadow-sm">
                 <div className="flex items-center">
                     <Link href="/">
@@ -182,13 +135,18 @@ export default function Header({ userData }: HeaderProps) {
                     </Link>
                 </div>
                 <div className="flex items-center gap-8">
-                    <Image
-                        className="icon-help"
-                        src={"/icons/help-icon.svg"}
-                        alt="Help"
-                        width={20}
-                        height={20}
-                    />
+                    <a href="/data/Example_help_documentation.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center">
+                        <Image
+                            className="icon-help"
+                            src="/icons/help-icon.svg"
+                            alt="Help"
+                            width={20}
+                            height={20}
+                        />
+                    </a>
                     <Image
                         className="icon-bell"
                         src={"/icons/bell-icon.svg"}
@@ -206,10 +164,9 @@ export default function Header({ userData }: HeaderProps) {
                     <Link href="#"
                         onClick={() =>
                             setCreatePopupVisibility(
-                                cartData.length > 0 ? !createPopupVisible : createPopupVisible
+                                cartCount > 0 ? !createPopupVisible : createPopupVisible
                             )
                         }
-
                     >
                         <div className="relative flex items-center justify-center">
                             <Image priority
@@ -219,19 +176,19 @@ export default function Header({ userData }: HeaderProps) {
                                 width={33}
                                 height={22}
                             />
-                            <div className="absolute flex items-center
+                            <div className="absolute flex items-center 
                             justify-center w-5 h-5 rounded-full bg-themeYellowColor right-0"
                             >
                                 <span
                                     className="text-black text-sm"
                                     onClick={() =>
                                         setCreatePopupVisibility(
-                                            cartData.length > 0 ?
+                                            cartCount > 0 ?
                                                 !createPopupVisible : createPopupVisible
                                         )
                                     }
                                 >
-                                    {cartData.length}
+                                    {cartCount}
                                 </span>
 
                             </div>
@@ -239,7 +196,7 @@ export default function Header({ userData }: HeaderProps) {
                     </Link>
                     <div>
                         <div
-                            className="flex items-center justify-center w-[24px] h-[24px]
+                            className="flex items-center justify-center w-[24px] h-[24px] 
     text-white rounded-full border-2 border-white cursor-pointer"
                             onClick={toggleDropdown}
                         >
@@ -252,45 +209,20 @@ export default function Header({ userData }: HeaderProps) {
                             items={dropDownItems} />
                     </div>
                 </div>
-            </header>
-            {createPopupVisible && <CartPopup
-                title="Molecule Cart"
-                visible={createPopupVisible}
-                onHiding={() => setCreatePopupVisibility(false)}
-
-                contentRender={() => (
-                    <CartDetails
-                        cartData={cartData}
-                        user_id={userData.id}
-                        orgType={userData.orgUser.type}
-                        removeItemFromCart={(obj: DeleteMoleculeCart) => removeItemFromCart(obj)}
-                        removeAll={(user_id: number, type: string) => removeAll(user_id, type)}
-                    />
-                )}
-                width={570}
-                // hideOnOutsideClick={true}
-                height="100vh"
-                position={popupPosition}
-
-                showCloseButton={true}
-                wrapperAttr={{ class: "create-popup" }}
+            </header> {createPopupVisible && <CartPopupComponent
+                createPopupVisible={createPopupVisible}
+                setCreatePopupVisibility={setCreatePopupVisibility}
+                userData={userData}
+                library_id={Number(library_id)}
+                containsProjects={containsProjects}
+                setOrderData={(msg: string, visible: boolean) => setOrderData(msg, visible)}
+                containsMoleculeOrder={containsMoleculeOrder}
+                popupPosition={popupPosition}
             />}
-            {orderPopupVisible && <OrderPopup
-                visible={orderPopupVisible}
-                onHiding={() => setOrderPopupVisibility(false)}
-                contentRender={() => (
-                    <OrderDetails
-                        closeOrderPopup={closeOrderPopup}
-                    />
-                )}
-                width={577}
-                // hideOnOutsideClick={true}
-                height={236}
-                position={orderPopupPosition}
-                showCloseButton={false}
-                wrapperAttr={{ class: "order-popup" }}
-                showTitle={false}
-                style={{ backgroundColor: 'white' }}
-            />}
-        </>);
+            {orderPopupVisible && <OrderPopupComponent
+                orderPopupVisible={orderPopupVisible}
+                setOrderPopupVisibility={setOrderPopupVisibility}
+                orderMsg={orderMsg}
+                closeOrderPopup={() => setOrderPopupVisibility(false)}
+            />}</>);
 }

@@ -12,12 +12,15 @@
   },
   "dependencies": {
     "@rdkit/rdkit": "2024.3.5-1.0.0",
-    "devextreme": "24.1",
-    "devextreme-react": "24.1",
+    "devextreme": "~24.1.6",
+    "devextreme-react": "~24.1.6",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "next": "14.2.13",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "socket.io-client": "^4.8.1",
     "streamsaver": "^2.0.6"
   },
   "devDependencies": {
@@ -27,11 +30,14 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
+    "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.13",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/socket.io-client": "^3.0.0",
     "@types/streamsaver": "^2.0.1",
+    "copy-webpack-plugin": "^11.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.13",
     "graphology": "^0.25.4",
@@ -42,10 +48,10 @@
     "ketcher-react": "^2.25.0",
     "ketcher-standalone": "^2.25.0",
     "postcss": "^8",
+    "react": "^18.3.1",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
-    "copy-webpack-plugin": "^11.0.0",
     "zod": "^3.23.8"
   }
 }

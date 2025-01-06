@@ -1,0 +1,115 @@
+.moleculeBox {
+    border: 1px solid var(--foreground);
+    height: 135px;
+    width: 135px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.moleculeCustomBox {
+    position: relative;
+    border: 1px solid var(--themeBlueColor);
+    height: 135px;
+    width: 135px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.reactionLabel {
+    color: var(--foreground);
+    font-family: Lato;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.agentLabel {
+    border-radius: 10px;
+    padding: 4px;
+    background: var(--themeLightBlueColor);
+    max-width: 230px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border: 1px solid var(--themeBlueColor);
+}
+
+.reAgentLabel {
+    width: 135px;
+    padding: 4px 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    background: var(--themeLightBlueColor);
+    border: 1px solid var(--themeBlueColor);
+    border-bottom: none;
+}
+
+.moleculeBorder {
+    border: 1px solid var(--themeBlueColor);
+}
+
+.selectLabel {
+    color: var(--grayMessage);
+    font-family: Lato;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 14.4px;
+}
+
+.selectBox {
+    display: flex;
+    padding: 3px 10px 3px 12px;
+    align-items: flex-start;
+    gap: 10px;
+    align-self: stretch;
+    font-family: Lato;
+    border-radius: 4px;
+    border: 1.5px solid var(--themeBlueColor);
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 32px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 25.2px
+}
+
+.moleculeSelect {
+    width: 95px;
+}
+
+.boxContentTable {
+    display: flex;
+    padding: 3px 10px 3px 12px;
+    align-items: center;
+    gap: 10px;
+    font-family: Lato;
+    border-radius: 4px;
+    border: 1.5px solid var(--themeBlueColor);
+    height: 32px;
+    max-width: 100px;
+    min-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 25.2px
+}
+
+.boxContentTable span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+}

@@ -45,7 +45,8 @@ export default function CreateLibrary({
           {
             ...values,
             user_id: userData.id,
-            project_id: projectData.id
+            project_id: projectData.id,
+            config: { ...projectData.config },
           });
       }
       if (!response.error) {
@@ -56,8 +57,8 @@ export default function CreateLibrary({
         const message = Messages.libraryAddedUpdated(status);
         const toastId = toast.success(message);
         await delay(DELAY);
-        toast.remove(toastId);
         context?.addToState({ ...appContext, refreshCart: true })
+        toast.remove(toastId);
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
@@ -75,7 +76,7 @@ export default function CreateLibrary({
     <Form
       ref={formRef}
       showValidationSummary={true}
-      formData={library_idx !== undefined ? projectData.libraries[library_idx] : {}
+      formData={library_idx !== -1 ? projectData.other_container?.[library_idx] : {}
       }>
       <SimpleItem
         dataField="organization"
@@ -83,7 +84,7 @@ export default function CreateLibrary({
           {
             placeholder: "Organization name",
             disabled: true,
-            value: projectData.organization?.name
+            value: projectData?.container?.name
           }}
       >
         <Label text="Organization Name*" />
@@ -108,14 +109,21 @@ export default function CreateLibrary({
       </SimpleItem>
       <SimpleItem
         dataField="name"
-        editorOptions={{ placeholder: "New Library" }}
+        editorOptions={{
+          placeholder: `${(library_idx !== -1 ? 'Edit' : 'New')} Library`,
+          value: library_idx !== -1 ?
+            projectData.other_container?.[library_idx].name : ''
+        }}
       >
         <Label text="Library name" />
         <RequiredRule message="Library name is required" />
       </SimpleItem>
       <SimpleItem
         dataField="target"
-        editorOptions={{ placeholder: "Target" }}
+        editorOptions={{
+          placeholder: "Target", value: library_idx !== -1 ?
+            projectData.other_container?.[library_idx].metadata.target : ''
+        }}
       >
         <Label text="Target" />
       </SimpleItem>

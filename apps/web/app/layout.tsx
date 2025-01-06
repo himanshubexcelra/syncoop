@@ -23,8 +23,8 @@ const openSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Millipore App",
-  description: "Millipore App",
+  title: "SynCoOp App",
+  description: "Millipore SynCoOp App",
 };
 
 import "devextreme/dist/css/dx.material.blue.light.css";

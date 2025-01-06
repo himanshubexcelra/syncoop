@@ -24,7 +24,7 @@ const dialogProperties = {
 
 type AddMoleculeProps = {
     userData: UserData;
-    libraryId: string;
+    libraryId: number;
     projectId: string;
     organizationId: string;
     setViewAddMolecule: (val: boolean) => void;
@@ -51,7 +51,7 @@ export default function AddMolecule({
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
     const [, startTransition] = useTransition()
-
+    const isLoading = loadIndicatorVisible || loadIndicatorVisibleSave
     const hidePopup = () => {
         setDiscardVisible(false);
     };
@@ -133,7 +133,7 @@ export default function AddMolecule({
     };
 
     const validateFile = (file: any) => {
-        const validTypes = ['.csv', '.sdf'];
+        const validTypes = ['.csv', '.sdf', '.mol'];
         const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
         const maxSizeBytes = 10 * 1024 * 1024;
         if (!validTypes.includes(fileExtension)) {
@@ -189,8 +189,8 @@ export default function AddMolecule({
             formData.append('organizationId', organizationId?.toString());
             startTransition(async () => {
                 await uploadMoleculeFile(formData).then(async (result) => {
-                    if (result.detail) {
-                        const toastId = toast.error(result.detail?.msg);
+                    if (result?.error) {
+                        const toastId = toast.error(result?.error?.detail);
                         await delay(DELAY);
                         toast.remove(toastId);
                     } else {
@@ -248,9 +248,8 @@ export default function AddMolecule({
                         type="file"
                         className="hidden"
                         onChange={handleFileSelect}
-                        accept=".csv,.sdf"
+                        accept=".csv,.sdf,.mol"
                         ref={fileInputRef}
-                        data-testid="file-input"
                     />
                     <div className="flex items-center justify-center">
                         <p className={`${styles.subMessage} p-4`}>
@@ -280,8 +279,11 @@ export default function AddMolecule({
                             />
                         </div>
                         <div className="flex gap-2">
-                            <button className="primary-button"
-                                onClick={() => handleUpload()}>
+                            <button className={loadIndicatorVisible
+                                ? 'disableButton w-[63px]'
+                                : 'primary-button'}
+                                onClick={() => handleUpload()}
+                                disabled={isLoading}>
                                 <LoadIndicator className={
                                     `button-indicator ${styles.white}`
                                 }
@@ -304,7 +306,7 @@ export default function AddMolecule({
             </div>
             <div>
                 <div className="flex flex-col gap-2 mt-5">
-                    <label className='text-normal text-greyMessage'>Molecule name (optional)</label>
+                    <label className='text-normal text-grayMessage'>Molecule name (optional)</label>
                     <input
                         type="text"
                         name="molecule"
@@ -315,7 +317,11 @@ export default function AddMolecule({
                     />
                 </div>
                 <div className="flex justify-start gap-2 mt-5 ">
-                    <button className="primary-button"
+                    <button className={loadIndicatorVisibleSave
+                        ? 'disableButton w-[107px]'
+                        : 'primary-button'}
+                        disabled={isLoading}
+
                         onClick={() => saveMolecule()}>
                         <LoadIndicator className={
                             `button-indicator ${styles.white}`
@@ -325,6 +331,7 @@ export default function AddMolecule({
                             width={20} />{saveButtonText}</button>
                     <button
                         className='secondary-button'
+                        disabled={isLoading}
                         onClick={() => setDiscardVisible(true)}
                     >
                         Reset

@@ -4,19 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import DataGrid, {
     Item,
     Column,
-    SearchPanel,
     Toolbar as GridToolbar,
-    DataGridRef,
-    Paging,
-    Sorting,
-    HeaderFilter
+    DataGridRef
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import RenderCreateUser from "./createUser";
-import { OrganizationType, UserTableProps } from "@/lib/definition";
-import { getUsers } from "./service";
+import { OrganizationType, UserData, UserTableProps } from "@/lib/definition";
+import { getUsers, deleteUserData } from "./service";
 import { User } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
 import DialogPopUp from "@/ui/DialogPopUp";
@@ -24,6 +20,11 @@ import ResetPassword from "../Profile/ResetPassword";
 import RenderEditUser from "./editUserDetails";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
+import { isOnlyLibraryManger } from "@/utils/helpers";
+import DeleteConfirmation from "../Libraries/DeleteConfirmation";
+import { Messages } from "@/utils/message";
+import toast from "react-hot-toast";
+
 
 const resetDialogProperties = {
     width: 480,
@@ -59,14 +60,15 @@ export default function UsersTable({
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [tableData, setTableData] = useState<User[]>([]);
-    const [password, setPassword] = useState('');
     const [loader, setLoader] = useState(true);
     const grid = useRef<DataGridRef>(null);
     const formRef = useRef<any>(null);
     const formRefEdit = useRef<any>(null);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const context: any = useContext(AppContext);
-    const appContext = context.state;
+    const appContext = context.state.appContext;
+    const [deletePopup, setDeletePopup] = useState(false)
+    const [deleteUserId, setDeleteUserData] = useState({ user_id: 0, name: '', role_id: 0 });
 
     const hidePasswordPopup = () => {
         setPasswordPopupVisible(false)
@@ -85,15 +87,15 @@ export default function UsersTable({
     }
     const fetchAndFilterData = async () => {
         setLoader(true);
+        const fetchDetails = ['orgUser', 'user_role', 'projects']
         try {
-
             if (myRoles.includes("admin") && !customerOrgId) {
                 const [internal, external] = await Promise.all([
-                    getUsers(['orgUser', 'user_role'], OrganizationType.Internal, user_id),
-                    getUsers(['orgUser', 'user_role'], OrganizationType.External, user_id)
+                    getUsers(fetchDetails, OrganizationType.Internal, user_id),
+                    getUsers(fetchDetails, OrganizationType.External, user_id)
                 ])
-                setInternalUsers(internal)
-                setExternalUsers(external)
+                setInternalUsers(internal);
+                setExternalUsers(external);
                 setInternalCount(internal.length);
                 setExternalCount(external.length);
                 if (type === OrganizationType.Internal) {
@@ -102,15 +104,18 @@ export default function UsersTable({
                     setTableData(external);
                 }
                 context?.addToState({
-                    ...appContext, userCount: {
-                        externalUsers: externalUsers.length,
-                        internalUsers: internalUsers.length
-                    },
-                    refreshUsersTable: false,
-                })
+                    appContext: {
+                        ...appContext,
+                        userCount: {
+                            externalUsers: externalUsers.length,
+                            internalUsers: internalUsers.length
+                        },
+                        refreshUsersTable: false,
+                    }
+                });
             }
             else {
-                const users = await getUsers(['orgUser', 'user_role'], "", user_id, orgUser?.id);
+                const users = await getUsers(fetchDetails, "", user_id, orgUser?.id);
                 setTableData(users);
             }
         } catch (error) {
@@ -144,6 +149,46 @@ export default function UsersTable({
             filterValue
         ];
     };
+
+    const rowGroupName = () => {
+        if (type === OrganizationType.External) {
+            return "Organization";
+        }
+    }
+    const handleCancel = () => {
+        setDeletePopup(false)
+    }
+    const deleteUser = (data: UserData) => {
+        setDeleteUserData(
+            {
+                user_id: data.id,
+                name: data?.first_name,
+                role_id: Number(data.user_role[0].id)
+            }
+        )
+        setDeletePopup(true)
+    }
+
+
+    const handleDelete = () => {
+        setLoader(true);
+        deleteUserData(deleteUserId.user_id, deleteUserId.role_id)
+            .then((res) => {
+                if (res.error) {
+                    toast.error("Failed to delete user");
+                }
+                else {
+                    toast.success(Messages.deleteUserMsg(deleteUserId.name));
+                    setDeleteUserData({ user_id: 0, name: '', role_id: 0 })
+                    setLoader(false);
+                    fetchAndFilterData();
+                }
+            })
+    }
+
+
+    const groupCellRender = (e: any) => <span>{e.value}</span>;
+
     return (
         <>
             {loader ? (
@@ -158,10 +203,25 @@ export default function UsersTable({
                     showBorders={true}
                     ref={grid}
                     className="no-padding-header"
-                >
-                    <Paging defaultPageSize={5} defaultPageIndex={0} />
-                    <Sorting mode="single" />
-                    <HeaderFilter visible={true} />
+                    scrolling={{
+                        mode: 'infinite'
+                    }}
+                    sorting={{ mode: 'single' }}
+                    height={'auto'}
+                    style={{ maxHeight: '400px' }}
+                    groupPanel={{
+                        visible: type == OrganizationType.External
+                    }}
+                    headerFilter={{
+                        visible: true
+                    }}
+                    grouping={{
+                        autoExpandAll: true
+                    }}
+                    searchPanel={{
+                        visible: true,
+                        highlightSearchText: true
+                    }}>
                     <Column
                         dataField="email_id"
                         caption="Email Address"
@@ -195,9 +255,10 @@ export default function UsersTable({
                         allowHeaderFiltering={false}
                     />
                     {type === OrganizationType.External && <Column
-                        allowHeaderFiltering={false}
                         dataField="orgUser.name"
                         caption="Organization"
+                        groupIndex={0}
+                        groupCellRender={groupCellRender}
                         width={130}
                     />}
                     <Column
@@ -231,6 +292,7 @@ export default function UsersTable({
                             <div className="flex gap-2 cursor-pointer">
                                 <Image
                                     src="/icons/edit.svg"
+                                    title="Edit user"
                                     width={24}
                                     height={24}
                                     onClick={() => showEditPopup(data)}
@@ -238,6 +300,7 @@ export default function UsersTable({
                                 <Image
                                     src="/icons/lock-password-icon.svg"
                                     width={16}
+                                    title="Generate password"
                                     height={18}
                                     onClick={() => showPasswordPopup(data)}
                                     alt="Reset" />
@@ -246,7 +309,32 @@ export default function UsersTable({
                         )}
                         caption="Actions"
                     />}
+                    {(actionsEnabled.includes('delete_user')) && <Column
+                        width={60}
+                        alignment="left"
+                        allowHeaderFiltering={false}
+                        cellRender={({ data }: any) => {
+                            const enableDelete = isOnlyLibraryManger(
+                                data?.user_role?.map((item: any) => item.role.type))
+                                && data.owner?.length === 0
+                            return (
+                                enableDelete && <div className="flex gap-2 cursor-pointer">
+                                    <Image
+                                        src="/icons/delete-blue-sm.svg"
+                                        title="Delete user"
+                                        width={24}
+                                        height={24}
+                                        onClick={() => deleteUser(data)}
+                                        alt="del" />
+                                </div>
+                            )
+                        }}
+                        caption="Delete"
+                    />}
                     <GridToolbar>
+                        {rowGroupName() &&
+                            <Item location="before" name="groupPanel" />
+                        }
                         <Item location="after">
                             <Btn
                                 text="Add New User"
@@ -276,22 +364,20 @@ export default function UsersTable({
                                         setCreatePopupVisibility={setCreatePopupVisibility}
                                         setTableData={setTableData}
                                         tableData={tableData}
-                                        password_hash={password}
-                                        setPassword={setPassword}
                                         organizationData={[orgUser]}
                                         roles={filteredRoles}
                                         myRoles={myRoles}
                                         type={type}
-                                        fetchAndFilterData={fetchAndFilterData}
                                         customerOrgId={customerOrgId}
+                                        fetchAndFilterData={fetchAndFilterData}
                                     />
                                 )}
                                 width={470}
+                                dragEnabled={false}
                                 hideOnOutsideClick={true}
                                 height="100%"
                                 position={popupPosition}
                                 onHiding={() => {
-                                    setPassword('')
                                     setCreatePopupVisibility(false);
                                     formRef.current?.instance().reset();
                                 }}
@@ -313,10 +399,12 @@ export default function UsersTable({
                                         fetchData={fetchAndFilterData}
                                         isMyProfile={false}
                                         customerOrgId={customerOrgId}
+                                        allUsers={tableData}
                                     />
                                 )}
-                                width={400}
+                                width={470}
                                 height="100%"
+                                dragEnabled={false}
                                 position={popupPosition}
                                 onHiding={() => {
                                     formRefEdit.current?.instance().reset();
@@ -331,10 +419,21 @@ export default function UsersTable({
                                 hidePopup: hidePasswordPopup,
                                 contentProps
                             }} />
+                            {deletePopup && (
+                                <DeleteConfirmation
+                                    onSave={() => handleDelete()}
+                                    openConfirmation={deletePopup}
+                                    setConfirm={() => handleCancel()}
+                                    msg={"Delete"}
+                                    title={"Delete User"}
+                                    isLoader={false}
+                                />
+                            )}
                         </Item>
-                        <Item name="searchPanel" location="before" />
+                        <Item
+                            name="searchPanel"
+                            location={type === OrganizationType.External ? 'after' : 'before'} />
                     </GridToolbar>
-                    <SearchPanel visible={true} highlightSearchText={true} />
                 </DataGrid>}
         </>
     );

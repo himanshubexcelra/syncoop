@@ -1,0 +1,40 @@
+export enum MoleculeStatusLabel {
+    New = 'New',
+    NewInCart = 'New + In Cart',
+    Ordered = 'Ordered',
+    PreProcessing = 'Pre Processing',
+    InRetroQueue = 'In Retro Queue',
+    Failed = 'Failed',
+    Ready = 'Ready',
+    InReview = 'In Review',
+    Validated = 'Validated',
+    ValidatedInCart = 'Validated + In Cart',
+    InProgress = 'In Progress',
+    Done = 'Done',
+  }
+  
+  export enum MoleculeStatusCode {
+    New = 1,
+    NewInCart = 2,
+    Ordered = 3,
+    InRetroQueue = 4,
+    Failed = 5,
+    Ready = 6,
+    InReview = 7,
+    Validated = 8,
+    ValidatedInCart = 9,
+    InProgress = 10,
+    Done = 11
+  }
+
+export enum MoleculeOrderStatusLabel {
+    InProgress = 'In Progress',
+    Completed = 'Completed',
+    Failed = 'Failed',
+}
+
+export enum MoleculeOrderStatusCode {
+    InProgress = 1,
+    Completed = 2,
+    Failed = 3
+}

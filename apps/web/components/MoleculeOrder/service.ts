@@ -1,20 +1,43 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use server";
 
-import { MoleculeOrderParams } from "@/lib/definition";
+import { MoleculeOrderParams, PathwayType } from "@/lib/definition";
 
 export async function getMoleculesOrder(params: MoleculeOrderParams) {
 
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_order`);
 
     // Add query parameters based on provided params
-    if (params.organization_id) {
+    /* if (params.organization_id) {
         url.searchParams.append("organization_id", params.organization_id.toString());
     }
     if (params.created_by) {
         url.searchParams.append("created_by", params.created_by.toString());
+    } */
+
+    if (params) {
+        Object.entries(params).map(([key, value]: any) => {
+            url.searchParams.append(key, value);
+        });
     }
 
+    const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const data = await response.json();
+    return data;
+}
+
+export async function getReactionPathway(molecule_id: number, pathwayId?: string) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
+    url.searchParams.append("molecule_id", molecule_id.toString());
+    if (pathwayId !== undefined) {
+        url.searchParams.append("id", pathwayId.toString());
+    }
     try {
         const response = await fetch(url, {
             method: "GET",
@@ -22,7 +45,6 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
                 "Content-Type": "application/json",
             },
         });
-        
 
         if (response.status === 200) {
             const data = await response.json();
@@ -34,7 +56,70 @@ export async function getMoleculesOrder(params: MoleculeOrderParams) {
         }
 
     } catch (error) {
-        console.error("Error fetching molecule_order data:", error);
+        console.error("Error fetching pathways", error);
         throw error;
     }
+}
+
+export async function getSolventTemperature(name: string) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/reaction_template_master`);
+    url.searchParams.append("name", name);
+
+    try {
+        const response = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        return data;
+    } catch (error) {
+        console.error("Error fetching pathways", error);
+        throw error;
+    }
+}
+
+export async function updateReaction(payLoad: any) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
+    try {
+        const response = await fetch(url.toString(), {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payLoad)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        return data.data;
+    } catch (error) {
+        console.error("Error fetching pathways", error);
+        throw error;
+    }
+}
+
+export async function saveReactionPathway(formData: PathwayType[]) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
+    const response: any = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+    return data;
 }

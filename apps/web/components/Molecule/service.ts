@@ -47,6 +47,7 @@ export async function updateMoleculeSmiles(formData: FormData) {
         const requestBody = {
             molecules: JSON.parse(formData.get('molecules') as string),
             "updatedBy": formData.get('updatedBy'),
+            "libraryId": formData.get('libraryId')
         }
         const response: any = await fetch(
             `${process.env.PYTHON_API_HOST_URL}/update_molecule`,

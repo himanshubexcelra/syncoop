@@ -1,11 +1,19 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
-  CombinedLibraryType, LibraryFields, LoginFormSchema,
-  MoleculeOrder,
-  MoleculeStatusCode, MoleculeStatusLabels, MoleculeType,
-  StatusCode, StatusType
+  ADMEConfigTypes,
+  ColorSchemeFormat,
+  CombinedLibraryType,
+  FORMULA_CONFIG,
+  LibraryFields,
+  LoginFormSchema,
+  MoleculeStatusCode,
+  MoleculeStatusLabel,
+  MoleculeType,
+  OrganizationConfigType,
+  Status,
+  StatusType
 } from "@/lib/definition"
-import { StatusCodeType } from "./constants";
+import { COLOR_SCHEME } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -67,37 +75,6 @@ export function formatDate(date: Date) {
   return `${month}/${day}/${year}`;
 }
 
-export function getCountCardsDetails(
-  projectCount: number,
-  libraryCount: number,
-  moleculeCount: number,
-  customerOrgId?: number) {
-
-  return [
-    {
-      name: "Libraries",
-      svgPath: "/icons/library-icon.svg",
-      innerGap: "gap-5",
-      count: String(libraryCount),
-    },
-    {
-      name: "Projects",
-      svgPath: "/icons/project-icon.svg",
-      innerGap: "gap-2",
-      count: String(projectCount),
-      ...(customerOrgId ?
-        { href: `/organization/${customerOrgId}/projects` } :
-        { href: "/projects" }),
-    },
-    {
-      name: "Molecules",
-      svgPath: "/icons/molecule-icon.svg",
-      innerGap: "gap-2",
-      count: String(moleculeCount)
-    }
-  ];
-}
-
 export function formatDetailedDate(date: Date) {
   const today = new Date(date);
   const year = today.getFullYear();
@@ -127,7 +104,7 @@ export function formatDatetime(date: Date) {
     hour12: false,
   };
   const dateStr = new Date(date);
-  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)}, 
+  const formattedDate = `${dateStr.toLocaleDateString('en-GB', optionsDate)},
   ${dateStr.toLocaleTimeString('en-GB', optionsTime)}`;
   return formattedDate;
 }
@@ -162,27 +139,44 @@ type UnionLibType = LibraryFields | CombinedLibraryType;
 type UnionMoleculeType = MoleculeType | StatusType;
 
 export function fetchMoleculeStatus(data: UnionLibType) {
-  let projectStatusCount = {
-    [StatusCode.READY]: 0,
-    [StatusCode.NEW]: 0,
-    [StatusCode.FAILED]: 0,
-    [StatusCode.INPROGRESS]: 0,
-    [StatusCode.DONE]: 0,
-  };
 
-  data.molecule.forEach((molecule: UnionMoleculeType) => {
-    const keys = Object.keys(projectStatusCount);
-    const values = Object.values(projectStatusCount);
-    const keyIndex = keys.indexOf(molecule.status as any)
-    if (keyIndex > -1) {
-      const key = keys[keyIndex];
+  let projectStatusName: any = {};
+  let projectStatusCount: any = {};
+  Object.entries(MoleculeStatusCode).forEach(([key, value]) => {
+    if (isNaN(Number(key))) {
+      projectStatusName = {
+        ...projectStatusName,
+        [value]: key
+      }
+
+      let className = 'info';
+      if (Object(MoleculeStatusLabel as any)[key] === 'Failed') {
+        className = 'error';
+      } else if (Object(MoleculeStatusLabel as any)[key] === 'Done') {
+        className = 'success';
+      }
       projectStatusCount = {
         ...projectStatusCount,
-        [key]: values[keyIndex] + 1
+        [key]: { count: 0, className }
       }
     }
   });
 
+  const keys: string[] = Object.keys(projectStatusName);
+  data.libraryMolecules.forEach((molecule: UnionMoleculeType) => {
+    const keyIndex = keys.indexOf(String(molecule.status));
+    if (keyIndex > -1) {
+      const status_code = keys[keyIndex];
+      const status_name = projectStatusName[status_code];
+      if (Object(projectStatusCount).hasOwnProperty(status_name)) {
+
+        projectStatusCount[status_name] = {
+          ...projectStatusCount[status_name],
+          count: projectStatusCount[status_name].count + 1,
+        }
+      }
+    }
+  });
   return projectStatusCount;
 }
 
@@ -190,27 +184,56 @@ export function isAdmin(myRoles: string[]) {
   return ['admin', 'org_admin'].some((role) => myRoles.includes(role));
 }
 
+export function isExternal(myRoles: string[]) {
+  return ['library_manager', 'org_admin'].some((role) => myRoles.includes(role));
+}
+
+export function isInternal(myRoles: string[]) {
+  return ['admin', 'protocol_approver', 'researcher'].some((role) => myRoles.includes(role));
+}
+
+export function isSystemAdmin(myRoles: string[]) {
+  return myRoles.includes('admin');
+}
+
+export function isOrgAdmin(myRoles: string[]) {
+  return myRoles.includes('org_admin');
+}
+
+export function isLibraryManger(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('library_manager');
+}
+
+export function isResearcher(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('researcher');
+}
+
+export function isProtocolAproover(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('protocol_approver');
+}
+
+export function isResearcherAndProtocolAproover(myRoles: string[]) {
+  return !isAdmin(myRoles) && myRoles.includes('researcher') &&
+    myRoles.includes('protocol_approver');
+}
+
+export function isOnlyLibraryManger(myRoles: string[]) {
+  return myRoles?.length === 1 && myRoles?.includes('library_manager');
+}
+
+export function isOnlyResearcher(myRoles: string[]) {
+  return myRoles.length === 1 && myRoles.includes('researcher');
+}
+
+export function isOnlyProtocolApprover(myRoles: string[]) {
+  return myRoles.length === 1 && myRoles.includes('protocol_approver');
+}
+
 export function generateRandomDigitNumber() {
   // Generate a random number between 10000000 and 99999999
   const randomNum = Math.floor(10000000 + Math.random() * 90000000);
   return randomNum;
 }
-
-export function getStatusLabel(statusCode: number) {
-  return MoleculeStatusLabels[statusCode as MoleculeStatusCode];
-}
-
-export const colorSchemeADME = (data: MoleculeType | MoleculeOrder, field: keyof MoleculeType) => {
-  let color: StatusCodeType = 'READY';
-  const value = (data as any)[field]; // Dynamic field access based on the `field` parameter
-
-  if (typeof value === 'number') {
-    if (value <= 0.5) color = 'FAILED';
-    else if (value > 0.5 && value < 1) color = 'INFO';
-    else if (value >= 1) color = 'DONE';
-  }
-  return color;
-};
 
 export const getUTCTime = (dateTimeString: string) => {
   const dt = new Date(dateTimeString);
@@ -220,4 +243,83 @@ export const getUTCTime = (dateTimeString: string) => {
   dtUTC.setTime(dtNumber - dtOffset);
 
   return dtUTC;
+}
+
+export const getStatusObject = (statusList: Status[], status: string) => {
+  return statusList.filter((item: Status) => item?.text === status);
+};
+
+export function number_formatter(number: number) {
+  return new Intl.NumberFormat('en-IN', {}).format(
+    number,
+  )
+}
+
+export const capitalizeFirstLetter = (str: string | undefined) => {
+  if (!str) return 'NA';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const randomValue = (array: number[] | string[]) => {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+export const getAverage = (adme_data: ColorSchemeFormat[], key: string) => {
+  const solubilityData = adme_data.find(
+    (obj: ColorSchemeFormat) => obj.adme_test_name === key);
+  if (solubilityData) {
+    const value1 = Number(solubilityData.results[0].value);
+    const value2 = Number(solubilityData.results[1].value);
+    const average: number = (value1 + value2) / 2;
+    return { average, value1, value2 };
+  }
+  return null;
+}
+
+export const getADMECalculation = (average: number, key: string) => {
+  const formulaeFound = COLOR_SCHEME[key].formulaes.find((formulae: {
+    min: number,
+    max: number,
+    formulae: (value: string) => void
+  }) =>
+    average >= formulae.min && average < formulae.max
+  );
+  const { formulae } = formulaeFound;
+  const actualValue = formulae(average);
+  return actualValue;
+}
+
+export const getADMEColor = (
+  config: OrganizationConfigType,
+  calculatedResult: number, key: string,
+  field: string) => {
+  if (!config || !config.ADMEParams) {
+    return COLOR_SCHEME[key].color.find((color: any) =>
+      calculatedResult >= color.min && calculatedResult < color.max);
+  } else {
+    const value: FORMULA_CONFIG = Object.values(config.ADMEParams.filter((item: ADMEConfigTypes) =>
+      Object.keys(item)[0] === field)[0])[0] as FORMULA_CONFIG;
+    if (calculatedResult < value.min) {
+      return COLOR_SCHEME[key].color[0];
+    } else if (calculatedResult > value.max) {
+      return COLOR_SCHEME[key].color[2];
+    } else {
+      return COLOR_SCHEME[key].color[1];
+    }
+  }
+}
+
+export const setConfig = () => {
+  const keys: string[] = [];
+  const rangeArray: ADMEConfigTypes[] = [];
+  const unwantedFields = ['molecular_weight', 'yield'];
+  Object.entries(COLOR_SCHEME).map(([key, value]: [string, any]) => {
+    const name = key.split('_')[0];
+    if (!unwantedFields.includes(key) && !keys.includes(name)) {
+      rangeArray.push({ [name]: { min: value.formulaes[0].min, max: value.formulaes[2].max } })
+      keys.push(name);
+    }
+    return value;
+  });
+  return rangeArray;
 }

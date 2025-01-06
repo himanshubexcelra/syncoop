@@ -1,34 +1,48 @@
-"use client"
-import { useEffect, useState } from 'react'
-import { ButtonsConfig, Editor } from 'ketcher-react'
-import { Ketcher } from 'ketcher-core'
-// @ts-expect-error Missing declaration types
-import { StandaloneStructServiceProvider } from 'ketcher-standalone'
-import 'ketcher-react/dist/index.css'
-import { initiallyHidden } from './constants/buttons'
-import { KetcherAPI } from '../../utils/ketcherFunctions'
+"use client";
+
+import { useState, useEffect } from "react";
+import { ButtonsConfig, Editor } from "ketcher-react";
+import { Ketcher } from "ketcher-core";
+import { RemoteStructServiceProvider } from "ketcher-core";
+import "ketcher-react/dist/index.css";
+import { initiallyHidden } from "./constants/buttons";
+import { KetcherAPI } from "../../utils/ketcherFunctions";
+import { getDeAromatizeSmile } from "./service";
 
 const getHiddenButtonsConfig = (btnArr: string[]): ButtonsConfig => {
   return btnArr.reduce((acc: any, button: any) => {
-    if (button) acc[button] = { hidden: true }
+    if (button) acc[button] = { hidden: true };
 
-    return acc
-  }, {})
-}
+    return acc;
+  }, {});
+};
 
-const structServiceProvider = new StandaloneStructServiceProvider();
+const structServiceProvider = new RemoteStructServiceProvider(
+  process.env.NEXT_PUBLIC_INDIGO_SERVICE_API!
+);
 
 interface KetcherDrawBoxProps {
   reactionString?: string;
 }
-export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxProps) {
-  const [hiddenButtons] = useState(initiallyHidden)
-  const [editorKey] = useState('first-editor-key')
+export default function KetcherDrawBox({ reactionString = "" }: KetcherDrawBoxProps) {
+  const [hiddenButtons] = useState(initiallyHidden);
+  const [editorKey] = useState("first-editor-key");
 
   useEffect(() => {
-    if ((global as any).KetcherFunctions && reactionString) {
-      (global as any).KetcherFunctions.renderFromCtab(reactionString);
-    }
+    const updateMolecule = async () => {
+      try {
+        const ketcher = (global as any).ketcher as Ketcher;
+
+        if (ketcher && reactionString) {
+          const updatedSmile = await getDeAromatizeSmile(reactionString);
+          ketcher.setMolecule(updatedSmile?.struct);
+        }
+      } catch (error) {
+        console.log("Error loading molecule:", error);
+      }
+    };
+
+    updateMolecule();
   }, [reactionString]);
 
   useEffect(() => {
@@ -38,20 +52,30 @@ export default function KetcherDrawBox({ reactionString = '' }: KetcherDrawBoxPr
     };
   }, []);
 
-  return <>
-    <Editor
-      key={editorKey}
-      staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ''}
-      buttons={getHiddenButtonsConfig(hiddenButtons)}
-      structServiceProvider={structServiceProvider}
-      errorHandler={(err: any) => console.log(err)}
-      onInit={(ketcher: Ketcher) => {
-        ; (global as any).ketcher = ketcher
-          ; (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher)
-        if (reactionString) {
-          (global as any).KetcherFunctions.renderFromCtab(reactionString);
-        }
-      }}
-    />
-  </>
+  return (
+    <>
+      <Editor
+        key={editorKey}
+        staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ""}
+        buttons={getHiddenButtonsConfig(hiddenButtons)}
+        structServiceProvider={structServiceProvider}
+        errorHandler={(err: any) => console.log(err)}
+        onInit={(ketcher: Ketcher) => {
+          (global as any).ketcher = ketcher;
+          (global as any).KetcherFunctions = KetcherAPI((global as any).ketcher);
+          // ketcher.setSettings({ "general.dearomatize-on-load": 'true' })
+          if (reactionString) {
+            (async () => {
+              try {
+                const updatedSmile = await getDeAromatizeSmile(reactionString);
+                ketcher.setMolecule(updatedSmile?.struct);
+              } catch (error) {
+                console.log("Error loading molecule:", error);
+              }
+            })();
+          }
+        }}
+      />
+    </>
+  );
 }

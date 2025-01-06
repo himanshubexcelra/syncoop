@@ -3,7 +3,6 @@
     font-size: 18px;
     font-style: normal;
     font-weight: 400;
-    line-height: 16px;
 }  
 .dx-tab-text-span {
     text-transform: capitalize;
@@ -13,6 +12,5 @@
     background-color: var(--background);  
 }
 .dx-tabs-styling-mode-primary.dx-tab-indicator-position-bottom .dx-tab-selected::after{
-    background-color: var(--themeBlueColor);
     height: 10px;
 } 

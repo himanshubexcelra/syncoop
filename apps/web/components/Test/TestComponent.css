@@ -1,0 +1,3 @@
+.molecule-dg .dx-datagrid-headers tbody tr:first-child td:first-child {
+    visibility: hidden;
+}

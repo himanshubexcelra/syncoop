@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from 'react';
 import styles from './ProfileInfo.module.css'
-import { HeadingObj, OrgUser, UserData, } from '@/lib/definition';
+import { ActionStatus, HeadingObj, OrgUser, UserData, } from '@/lib/definition';
 import { Popup as MainPopup, } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
 import { getUsersById } from './service';
@@ -41,11 +41,14 @@ export default function ProfileInfo({ id,
     const [formVisible, setFormVisible] = useState(false);
     const [passwordPopupVisible, setPasswordPopupVisible] = useState(false);
     const formRef = useRef<any>(null);
-    const { email_id, first_name, last_name, orgUser, user_role, status } = data[0] || {}
+    const { email_id, first_name, last_name, orgUser, user_role, is_active,
+        primary_contact_id
+    } = data[0] || {}
     const userRoleNames = user_role?.map(role => role.role.name).join(', ');
 
     const formEdit = {
-        email_id, first_name, user_role, last_name, orgUser
+        email_id, first_name, user_role, last_name, orgUser, primary_contact_id, id,
+        is_active
     }
 
     const hidePopup = () => {
@@ -123,7 +126,9 @@ export default function ProfileInfo({ id,
                         </div>
                         {!isMyProfile && <div>
                             <span className={`subHeading ${styles.type}`}>Status:</span>
-                            <span className={`subHeading ${styles.output}`}> {status}</span>
+                            <span className={`subHeading ${styles.output}`}> {is_active ?
+                                ActionStatus.Enabled
+                                : ActionStatus.Disabled}</span>
                         </div>}
                     </div>
                 </div>

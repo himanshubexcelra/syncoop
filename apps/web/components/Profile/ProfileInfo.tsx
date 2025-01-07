@@ -57,7 +57,8 @@ export default function ProfileInfo({ id,
 
     const contentProps = {
         email_id,
-        onClose: hidePopup
+        onClose: hidePopup,
+        visible: passwordPopupVisible
     }
 
     const fetchData = async () => {

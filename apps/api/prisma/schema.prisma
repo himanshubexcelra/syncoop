@@ -8,17 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model ProjectPermission {
-  id         Int
-  userId     Int
-  project_id Int
-  role       permission
-  first_name String?
-
-  @@ignore
-}
-
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model container {
@@ -72,6 +61,7 @@ model container {
   @@index([owner_id], map: "idx_container_owner_id")
   @@index([parent_id], map: "idx_container_parent_id")
   @@index([type], map: "idx_container_type")
+  container_access_permission container_access_permission[] @relation(map: "con_fk_container_access_permission_container_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -638,10 +628,76 @@ model users {
   primary_contact users?     @relation("usersTousers", fields: [primary_contact_id], references: [id], onDelete: Cascade, map: "con_fk_users_primary_contact_id")
   other_users     users[]    @relation("usersTousers")
   @@index([is_active], map: "idx_user_is_active")
+  adme_parameter_detail_created_byTousers adme_parameter_detail[] @relation("adme_parameter_detail_created_byTousers")
+  adme_parameter_detail_updated_byTousers adme_parameter_detail[] @relation("adme_parameter_detail_updated_byTousers")
+  adme_parameter_created_byTousers adme_parameter[] @relation("adme_parameter_created_byTousers")
+  adme_parameter_updated_byTousers adme_parameter[] @relation("adme_parameter_updated_byTousers")
+  container_access_permission_created_byTousers container_access_permission[] @relation("container_access_permission_created_byTousers")
+  container_access_permission_updated_byTousers container_access_permission[] @relation("container_access_permission_updated_byTousers")
+  container_access_permission container_access_permission[] @relation("container_access_permission_user_idTousers")
 }
 
-enum permission {
-  View  @map("0")
-  Edit  @map("1")
-  Admin @map("2")
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model adme_parameter {
+  id                                     Int                     @id(map: "con_pk_adme_parameter_id") @default(autoincrement())
+  name                                   String                  @unique(map: "con_uk_adme_parameter_name") @db.VarChar(100)
+  reference                              String                  @db.VarChar(255)
+  created_at                             DateTime                @db.Timestamptz(6)
+  created_by                             Int?
+  updated_at                             DateTime?               @db.Timestamptz(6)
+  updated_by                             Int?
+  // users_adme_parameter_created_byTousers users?                  @relation("adme_parameter_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_created_by")
+  userWhoCreated users?                  @relation("adme_parameter_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_created_by")
+  
+  // users_adme_parameter_updated_byTousers users?                  @relation("adme_parameter_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_updated_by")
+  userWhoUpdated users?                  @relation("adme_parameter_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_updated_by")
+  adme_parameter_detail                  adme_parameter_detail[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model adme_parameter_detail {
+  id                                            Int            @id(map: "con_pk_adme_parameter_detail_id") @default(autoincrement())
+  adme_parameter_id                             Int
+  color_class_name                              String         @db.VarChar(50)
+  color_min_value                               Decimal        @db.Decimal
+  color_max_value                               Decimal        @db.Decimal
+  color_status                                  String         @db.VarChar(50)
+  formula_min_value                             Decimal        @db.Decimal
+  formula_max_value                             Decimal        @db.Decimal
+  formula                                       Json?
+  created_at                                    DateTime       @db.Timestamptz(6)
+  created_by                                    Int?
+  updated_at                                    DateTime?      @db.Timestamptz(6)
+  updated_by                                    Int?
+  adme_parameter                                adme_parameter @relation(fields: [adme_parameter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_adme_parameter_id")
+  // users_adme_parameter_detail_created_byTousers users?         @relation("adme_parameter_detail_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_created_by")
+  userWhoCreated users?         @relation("adme_parameter_detail_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_created_by")
+
+  // users_adme_parameter_detail_updated_byTousers users?         @relation("adme_parameter_detail_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_updated_by")
+  userWhoUpdated users?         @relation("adme_parameter_detail_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_updated_by")
+
+  @@unique([adme_parameter_id, color_class_name], map: "con_uk_adme_parameter_detail_param_id_n_color_class")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model container_access_permission {
+  id                                                  Int       @id(map: "con_pk_container_access_permission_id") @default(autoincrement())
+  container_id                                        BigInt
+  user_id                                             Int
+  access_type                                         Int       @db.SmallInt
+  created_at                                          DateTime  @db.Timestamptz(6)
+  created_by                                          Int?
+  updated_at                                          DateTime? @db.Timestamptz(6)
+  updated_by                                          Int?
+  container                                           container @relation(fields: [container_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "con_fk_container_access_permission_container_id")
+  // users_container_access_permission_created_byTousers users?    @relation("container_access_permission_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_created_by")
+  userWhoCreated users?    @relation("container_access_permission_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_created_by")
+
+  // users_container_access_permission_updated_byTousers users?    @relation("container_access_permission_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_updated_by") */
+  userWhoUpdated users?    @relation("container_access_permission_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_updated_by")
+  
+  // users_container_access_permission_user_idTousers    users     @relation("container_access_permission_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_user_id")
+  user    users     @relation("container_access_permission_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_user_id")
+
+  @@unique([container_id, user_id], map: "con_uk_container_access_permission_container_id_n_user_id")
 }

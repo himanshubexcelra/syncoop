@@ -27,15 +27,18 @@ import {
     deleteMolecule
 } from './service';
 import {
-    COLOR_SCHEME, DELAY,
+    COLOR_SCHEME,
+    DELAY,
     moleculeStatus,
     sample_molecule_ids
 } from "@/utils/constants";
 import {
-    delay, getStatusObject, randomValue,
+    getStatusObject,
+    randomValue,
     getADMECalculation,
     getAverage,
-    getADMEColor
+    getADMEColor,
+    delay
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
@@ -93,7 +96,7 @@ export default function MoleculeList({
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
     const [selectedRowsData, setSelectedRowsData] = useState([])
     const [selectedRows, setSelectedRows] = useState<number[]>([]); // Store selected item IDs
-    const [tableData, setTableData] = useState<[]>([]);
+    const [tableData, setTableData] = useState<MoleculeType[]>([]);
     const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
     const [reloadMolecules, setReloadMolecules] = useState(false);
     const [popupVisible, setPopupVisible] = useState(false);
@@ -108,7 +111,7 @@ export default function MoleculeList({
     const [confirm, setConfirm] = useState(false);
     const [loader, setLoader] = useState(false);
     const [deleteMoleculeId, setDeleteMolecules] = useState({ id: 0, name: '', favourite_id: 0 });
-    const [selectionEnabledRows, setSelectionEnabledRows] = useState<[]>([]);
+    const [selectionEnabledRows, setSelectionEnabledRows] = useState<MoleculeType[]>([]);
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
 
     const closeMagnifyPopup = (event: any) => {
@@ -124,7 +127,7 @@ export default function MoleculeList({
         setCellData(data);
     }
 
-    const fetchMoleculeData = async (library_id: number, isFavoriteSelected = false) => {
+    const fetchMoleculeData = async (library_id: number,) => {
         setMoleculeLoader(true);
         try {
             const params = {
@@ -132,11 +135,11 @@ export default function MoleculeList({
                 sample_molecule_id: randomValue(sample_molecule_ids)
             }
             const moleculeData = await getMoleculeData(params);
-            if (!isFavoriteSelected) {
-                const selectionEnabledRows = moleculeData.filter(
-                    (row: MoleculeType) => !row.disabled);
-                setSelectionEnabledRows(selectionEnabledRows);
-            }
+            const selectionEnabledRows = moleculeData.filter(
+                (row: MoleculeType) => !row.disabled);
+
+            setSelectionEnabledRows(selectionEnabledRows);
+            // }
             setTableData(moleculeData);
             setMoleculeLoader(false);
         } catch (error) {
@@ -167,10 +170,7 @@ export default function MoleculeList({
                                     justify-center
                                     cursor-pointer`}
                         onClick={() =>
-                            addToFavourite(
-                                data,
-                                data.favourite
-                            )
+                            addToFavourite(data)
                         }>
                         <Image
                             src={data.favourite ?
@@ -208,7 +208,7 @@ export default function MoleculeList({
             ),
         },
         {
-            dataField: 'id',
+            dataField: 'molecule_id',
             title: 'Molecule ID',
             allowHeaderFiltering: false,
             alignment: "center",
@@ -845,25 +845,25 @@ export default function MoleculeList({
         });
     }
 
-    const addToFavourite = async (data: MoleculeType, existingFavourite: boolean) => {
-        const dataField: addToFavouritesProps = {
-            molecule_id: data.id,
-            user_id: userData.id,
-            favourite_id: data.favourite_id,
-            favourite: !existingFavourite
-        };
-        // if (existingFavourite) dataField.existingFavourite = existingFavourite;
-        const response = await addToFavourites(dataField);
-        if (!response.error) {
-            /* const libraryData =
-                await getLibraryById(['molecule'], data.library_id.toString()); */
-            fetchMoleculeData(data.library_id, true);
+    const addToFavourite = (selectedRow: MoleculeType) => {
 
-        } else {
-            const toastId = toast.error(`${response.error}`);
-            await delay(DELAY);
-            toast.remove(toastId);
-        }
+        const rows = tableData.map(item =>
+            item.id === selectedRow.id ? { ...item, favourite: !item.favourite } : item
+        );
+        setTableData(rows);
+
+        const dataField: addToFavouritesProps = {
+            molecule_id: selectedRow.id,
+            user_id: userData.id,
+            favourite_id: selectedRow.favourite_id,
+            favourite: !selectedRow.favourite
+        };
+        addToFavourites(dataField).then(() => { },
+            async (error) => {
+                const toastId = toast.error(error);
+                await delay(DELAY);
+                toast.remove(toastId);
+            })
     }
 
     const onSelectionUpdated = (selectedRowsKeys: number[], selectedRowsData: object[]) => {

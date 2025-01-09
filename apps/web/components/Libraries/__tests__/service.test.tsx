@@ -265,7 +265,6 @@ describe('Library API Functions', () => {
     });
 
     test('addToFavourites should update favourite molecule successfully', async () => {
-        const mockResponse = data;
         const formData = { molecule_id: 1, user_id: 1, favourite_id: 1, favourite: true };
 
         const result = await addToFavourites(formData);
@@ -279,7 +278,7 @@ describe('Library API Functions', () => {
             },
             body: JSON.stringify(formData),
         });
-        expect(result).toEqual(mockResponse);
+        expect(result).toEqual(true);
     });
 
     test('editLibrary should handle error responses', async () => {

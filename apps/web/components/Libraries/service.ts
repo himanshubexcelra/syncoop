@@ -8,6 +8,7 @@ import {
     SaveLabJobOrder,
     CreateLabJobOrder
 } from "@/lib/definition";
+import { Messages } from "@/utils/message";
 
 export async function getLibraries(withRelation: string[] = [], project_id: string) {
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
@@ -250,11 +251,9 @@ export async function addToFavourites(formData: addToFavouritesProps) {
         );
 
         if (response.status === 200) {
-            const data = await response.json();
-            return data;
+            return true;
         } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
+            return Messages.SOMETHING_WENT_WRONG;
         }
     } catch (error: any) {
         return error;

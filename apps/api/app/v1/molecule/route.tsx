@@ -96,23 +96,24 @@ export async function POST(request: Request) {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
-        } else {
-            // Check if the favorite exists
-            if (favourite_id) {
-                // If it exists, remove it
-                const favorite = await prisma.user_favourite_molecule.delete({
-                    where: {
-                        id: favourite_id,
-                    },
-                });
-                return new Response(json(favorite), {
-                    headers: { "Content-Type": "application/json" },
-                    status: SUCCESS,
-                });
-            }
+        } else if (favourite_id) {
+            const favorite = await prisma.user_favourite_molecule.delete({
+                where: {
+                    id: favourite_id,
+                },
+            });
+            return new Response(json(favorite), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
         }
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        return new Response(JSON.stringify({
+            success: false,
+            errorMessage: `Webhook error: ${error}`
+        }), {
+            status: BAD_REQUEST,
+        })
     }
 }
 
@@ -162,11 +163,11 @@ export async function DELETE(request: Request) {
         const searchParams = new URLSearchParams(url.searchParams);
         const molecule_id = searchParams.get('molecule_id');
         const favourite_id = searchParams.get('favourite_id');
-        if(favourite_id) {
+        if (favourite_id) {
             await prisma.user_favourite_molecule.delete({
                 where: { id: Number(favourite_id) },
             });
-        }    
+        }
         const result = await prisma.molecule.delete({
             where: { id: Number(molecule_id) },
         });

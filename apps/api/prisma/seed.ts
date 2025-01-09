@@ -1,5 +1,7 @@
 import prisma from "@/lib/prisma";
 import {
+    ContainerAccessPermissionLabel,
+    ContainerAccessPermissionType,
     MoleculeOrderStatusCode,
     MoleculeOrderStatusLabel,
     MoleculeStatusCode,
@@ -993,7 +995,7 @@ async function main() {
     });
 
     //Insert Module Data Management
-    const dataManagementModule = await prisma.product_module.create({
+    await prisma.product_module.create({
         data: {
             name: 'Data Management',
             description: '',
@@ -1029,7 +1031,7 @@ async function main() {
         },
     });
     //Insert Module Inventory Management
-    const inventoryManagementModule = await prisma.product_module.create({
+    await prisma.product_module.create({
         data: {
             name: 'Inventory Management',
             description: '',
@@ -1111,7 +1113,7 @@ async function main() {
         },
     });
     //Insert Module Instrument Management
-    const instrumentManagementModule = await prisma.product_module.create({
+    await prisma.product_module.create({
         data: {
             name: 'Instrument Management',
             description: '',
@@ -1184,7 +1186,7 @@ async function main() {
         },
     });
     //Insert Module Bioassays
-    const bioAssaysModule = await prisma.product_module.create({
+    await prisma.product_module.create({
         data: {
             name: 'Bioassays',
             description: '',
@@ -1258,7 +1260,7 @@ async function main() {
     });
 
     //Insert Module Roles & Modules Management
-    const rolesModulesManagementModule = await prisma.product_module.create({
+    await prisma.product_module.create({
         data: {
             name: 'Roles Modules Management',
             description: '',
@@ -1758,6 +1760,32 @@ async function main() {
             status_code: String(MoleculeOrderStatusCode.Failed),
             status_name: MoleculeOrderStatusLabel.Failed,
             status_description: 'Order failed',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'container_access_permission',
+            column_name: 'access_type',
+            status_code: String(ContainerAccessPermissionType.Admin),
+            status_name: ContainerAccessPermissionLabel.Admin,
+            status_description: 'This permission allows external user to assign new users to their projects or libraries.',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
+    });
+
+    await prisma.status_code.create({
+        data: {
+            table_name: 'container_access_permission',
+            column_name: 'access_type',
+            status_code: String(ContainerAccessPermissionType.Edit),
+            status_name: ContainerAccessPermissionLabel.Edit,
+            status_description: 'This permission allows external users to perform action on molecules.',
             is_active: true,
             created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id

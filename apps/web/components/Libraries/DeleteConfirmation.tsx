@@ -34,8 +34,11 @@ const DeleteConfirmation = ({
     // Handle Confirm (Save the action)
     const handleConfirm = () => {
         if (!isDisable) {
-            onSave();
-            setConfirm(false);
+            setLoading(true);
+            setTimeout(() => {
+                onSave();
+                setConfirm(false);
+            }, 2000);
         }
     };
 
@@ -88,7 +91,7 @@ const DeleteConfirmation = ({
                                     visible={isLoading}
                                     height={20}
                                     width={20} />
-                                {isLoader ? '' : 'Delete'} </button>
+                                {isLoading ? '' : 'Delete'} </button>
                             <button
                                 className={"secondary-button w-[58px] h-[32px] text-sm"}
                                 onClick={handleCancel}

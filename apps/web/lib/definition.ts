@@ -880,3 +880,8 @@ export enum ResetState {
   SUBMIT = 0,
   RESET = 1
 }
+
+export enum FormState {
+  DEFAULT = 0,
+  UPDATE = 1
+}

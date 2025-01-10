@@ -5,21 +5,25 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Accordion, { Item } from 'devextreme-react/accordion';
-import { Popup, Position } from "devextreme-react/popup";
+import { Popup, } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
 import { LibraryFields, ProjectDataFields, MoleculeStatusLabel, UserData } from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
+import { deleteLibrary } from './service';
 import {
     formatDatetime,
     formatDetailedDate,
     popupPositionValue,
     debounce,
-    fetchMoleculeStatus
+    fetchMoleculeStatus,
+    isDeleteLibraryEnable
 } from '@/utils/helpers';
 import TextWithToggle from "@/ui/TextWithToggle";
 import { Messages } from "@/utils/message";
 import CreateLibrary from './CreateLibrary';
 import { FormRef } from "devextreme-react/cjs/form";
+import DeleteConfirmation from "./DeleteConfirmation";
+import { ClickEvent } from "devextreme/ui/button";
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -60,26 +64,21 @@ export default function LibraryAccordion({
     const router = useRouter();
     const createEnabled = actionsEnabled.includes('create_library');
     const { myRoles } = userData;
-
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [editPopupVisible, setEditPopupVisibility] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
     const [selectedLibraryIdIdx, setSelectedLibraryIndex] = useState(-1);
     const [isProjectExpanded, setProjectExpanded] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
-    const [editDisabled, setEditStatus] = useState<boolean>(true);
-
+    const [confirm, setConfirm] = useState(false);
+    const [deleteLibraryData, setDeleteLibraryData] = useState({ id: 0, name: '' });
+    const [isLoading, setIsLoading] = useState(false);
     const formRef = useRef<FormRef>(null);
 
     useEffect(() => {
         setPopupPosition(popupPositionValue());
     }, []);
-
-    const checkDisabled = (item: LibraryFields) => {
-        setEditStatus(checkDisabledField(item));
-    }
 
     const checkDisabledField = (item: LibraryFields) => {
         const owner = item.owner_id === userData.id;
@@ -160,6 +159,7 @@ export default function LibraryAccordion({
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.libraryMolecules.length.toString().includes(value.toLowerCase())
                 );
+
                 const tempProjects = {
                     ...projectData,
                     other_container: filteredLibraries,
@@ -201,8 +201,45 @@ export default function LibraryAccordion({
         }
     }
 
+    const handleDeleteLibrary = (library_id: number, library_name: string) => {
+        setConfirm(true);
+        setDeleteLibraryData({ id: library_id, name: library_name });
+    }
+    const deleteLibraryDetail = async () => {
+        setIsLoading(true);
+        const result = await deleteLibrary(deleteLibraryData.id);
+        if (result.length === 0) {
+            toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE);
+            setIsLoading(false);
+        }
+        else {
+            if (result.error) {
+                toast.error(Messages.DELETE_LIBRARY_ERROR_MESSAGE);
+                setIsLoading(false);
+            }
+            else {
+                toast.success(Messages.DELETE_LIBRARY_MESSAGE);
+                fetchLibraries();
+                setIsLoading(false);
+
+            }
+        }
+    }
+    const handleCancel = () => {
+        setConfirm(false)
+    };
     return (
         <Accordion multiple={true} collapsible={true}>
+            {confirm && (
+                <DeleteConfirmation
+                    onSave={() => deleteLibraryDetail()}
+                    openConfirmation={confirm}
+                    isLoader={isLoading}
+                    setConfirm={() => handleCancel()}
+                    msg={Messages.deleteLibraryMsg(deleteLibraryData.name)}
+                    title={Messages.DELETE_LIBRARY_TITLE}
+                />
+            )}
             {/* Project Details Section */}
             <Item titleRender={
                 () => renderTitle(`Project Details: ${projectData.name}`)}>
@@ -443,13 +480,14 @@ export default function LibraryAccordion({
                             }
                             onClick={async (e) => {
                                 const target = e.target as HTMLElement;
-                                const moreButtonId = `image${item.id}`;
                                 const editButtonId = `edit-${item.id}`;
                                 const urlButtonId = `url-${item.id}`;
-                                if (target.id === moreButtonId
-                                    || target.closest(`#${moreButtonId}`) ||
+                                const deleteButtonId = `delete-${item.id}`
+
+                                if (
                                     target.id === editButtonId ||
-                                    target.id === urlButtonId
+                                    target.id === urlButtonId ||
+                                    target.id === deleteButtonId
                                 ) {
                                     return;
                                 }
@@ -483,64 +521,8 @@ export default function LibraryAccordion({
                                         }
                                         </span>
                                     </div>
-                                    <div
-                                        className='p-2 cursor-pointer'
-                                        id={`image${item.id}`}
-                                        onClick={() => {
-                                            setExpandedMenu(item.id);
-                                            checkDisabled(item);
-                                        }}>
-                                        <Image
-                                            src="/icons/more.svg"
-                                            alt="more button"
-                                            width={5}
-                                            height={3}
-                                        />
-                                    </div>
                                 </div>
                             </div>
-                            <Popup
-                                visible={expandMenu === item.id}
-                                onHiding={() => setExpandedMenu(-1)}
-                                dragEnabled={false}
-                                hideOnOutsideClick={true}
-                                showCloseButton={false}
-                                showTitle={false}
-                                width={70}
-                                height={'auto'}
-                            >
-                                <Position
-                                    at="left bottom"
-                                    my="right top"
-                                    of={`#image${item.id}`}
-                                    collision="fit" />
-                                {!editDisabled && <p
-                                    className={
-                                        `mb-[20px] ${'cursor-pointer'}`
-                                    }
-                                    id={`edit-${item.id}`}
-                                    onClick={() => {
-                                        setExpandedMenu(-1);
-                                        setCreatePopupVisibility(false);
-                                        setSelectedLibraryIndex(idx);
-                                        setEditPopupVisibility(true);
-                                    }}
-                                >
-                                    Edit
-                                </p>}
-                                <p
-                                    className='cursor-pointer'
-                                    id={`url-${item.id}`}
-                                    onClick={() =>
-                                        copyUrl(
-                                            'library',
-                                            item.name,
-                                            item.id)
-                                    }
-                                >
-                                    URL
-                                </p>
-                            </Popup>
                             <div className={
                                 `library-name
                                 text-normal
@@ -605,7 +587,6 @@ export default function LibraryAccordion({
                                         flex
                                         no-border`
                                     }>
-
                                     <div className="my-0.5">Molecules:
                                         <span>{item.libraryMolecules.length}</span>
                                     </div>
@@ -648,14 +629,14 @@ export default function LibraryAccordion({
                                         <>Description: </>
                                 }
                             </div>
-                            <div className='flex justify-end'>
+                            <div className='flex justify-end gap-4'>
                                 <Button
                                     text="Open"
                                     type="normal"
                                     stylingMode="contained"
                                     elementAttr={
                                         {
-                                            class: "btn-primary mr-[20px]"
+                                            class: "btn-primary"
                                         }
                                     }
                                     onClick={() => {
@@ -669,6 +650,58 @@ export default function LibraryAccordion({
                                         /* getLibraryData(item); */
                                     }}
                                 />
+                                {!checkDisabledField(item) && <Button
+                                    text="Edit"
+                                    type="normal"
+                                    id={`edit-${item.id}`}
+                                    stylingMode="contained"
+                                    elementAttr={
+                                        {
+                                            class: "btn-secondary"
+                                        }
+                                    }
+                                    onClick={(e: ClickEvent) => {
+                                        e.event?.stopPropagation();
+                                        setCreatePopupVisibility(false);
+                                        setSelectedLibraryIndex(idx);
+                                        setEditPopupVisibility(true);
+                                    }}
+                                />}
+                                <Button
+                                    text="URL"
+                                    id={`url-${item.id}`}
+                                    type="normal"
+                                    stylingMode="contained"
+                                    elementAttr={
+                                        {
+                                            class: "btn-secondary"
+                                        }
+                                    }
+                                    onClick={(e: ClickEvent) => {
+                                        e.event?.stopPropagation();
+                                        copyUrl(
+                                            'library',
+                                            item.name,
+                                            item.id)
+                                    }}
+                                />
+                                {!checkDisabledField(item) &&
+                                    isDeleteLibraryEnable(item?.libraryMolecules) &&
+                                    <Button
+                                        text="Delete"
+                                        type="normal"
+                                        id={`delete-${item.id}`}
+                                        stylingMode="contained"
+                                        elementAttr={
+                                            {
+                                                class: "btn-secondary"
+                                            }
+                                        }
+                                        onClick={(e: ClickEvent) => {
+                                            e.event?.stopPropagation();
+                                            handleDeleteLibrary(item.id, item.name)
+                                        }}
+                                    />}
                             </div>
                         </div>
                     ))}

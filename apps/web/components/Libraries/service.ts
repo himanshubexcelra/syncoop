@@ -451,3 +451,24 @@ export async function deleteMolecule(molecule_id?: number, favourite_id?: number
         return error;
     }
 }
+export async function deleteLibrary(library_id?: number) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library/`);
+        if (library_id) {
+            url.searchParams.append('library_id', String(library_id));
+        }
+        const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
+        return error;
+    }
+}
+

@@ -1,5 +1,5 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DataGrid, {
     Column,
     Grouping,
@@ -16,7 +16,8 @@ import DataGrid, {
     DataGridTypes,
     RowDragging,
     Export,
-    ColumnChooser
+    ColumnChooser,
+    DataGridRef
 } from 'devextreme-react/data-grid';
 
 import CheckBox from 'devextreme-react/check-box';
@@ -105,7 +106,49 @@ const CustomDataGrid = ({
     const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
     const [gridHeight, setGridHeight] = useState(window.innerHeight - 100); // Default height
+    const grid = useRef<DataGridRef>(null);
+    const [currentSort, setCurrentSort] = useState<{
+        field: string | null;
+        order: 'asc' | 'desc' | null
+    }>({ field: null, order: null });
+    const onContentReady = (e: any) => {
+        const sortedColInfo = e.component
+            .getVisibleColumns()
+            .find((column: any) => column.sortOrder);
 
+        if (sortedColInfo) {
+            const field = sortedColInfo?.dataField;
+            const order = sortedColInfo?.sortOrder;
+            setCurrentSort({ field, order });
+        }
+    };
+    const handleSortChanged = (e: any) => {
+        // Only handle sorting-related changes
+        if (e.name !== 'columns' || !e.fullName?.includes('sortOrder')) return;
+        const dataGrid = grid.current?.instance();
+        if (!dataGrid) return;
+        const sortedColInfo = e.component.getVisibleColumns()?.
+            filter((column: any) => column.sortOrder)?.[0]
+        const newField = sortedColInfo?.dataField;
+        // Get current sorting state
+        const currentField = currentSort.field;
+        const previousOrder = e.previousValue;
+        const newOrder = e.value;
+
+        if (currentField === newField) {
+            if (newOrder === 'desc' && previousOrder === 'asc') {
+                // Second click - already handled by DevExtreme
+                setCurrentSort({ field: newField, order: 'desc' });
+            } else if (previousOrder === 'desc') {
+                // Third click - clear sorting
+                dataGrid.clearSorting();
+                setCurrentSort({ field: null, order: null });
+            }
+        } else {
+            // New column clicked - DevExtreme handles the ascending sort
+            setCurrentSort({ field: newField, order: 'asc' });
+        }
+    };
     // Function to adjust grid height dynamically
     const adjustGridHeight = () => {
         const newHeight = window.innerHeight; // Subtract any offset if needed
@@ -150,7 +193,6 @@ const CustomDataGrid = ({
     const exportFormats = ['csv'];
 
     const onSelectionChanged = (e: any) => {
-        console.log(2, e, e.selectedRowKeys);
         setSelectedRowKeys([...e.selectedRowKeys]);
         if (onSelectionUpdated)
             onSelectionUpdated(e.selectedRowKeys, e.selectedRowsData);
@@ -200,12 +242,14 @@ const CustomDataGrid = ({
     return (
         <div>
             <DataGrid
+                ref={grid}
                 dataSource={data}
                 keyExpr="id"
                 allowColumnReordering={false}
                 showBorders={true}
                 height={height ?? gridHeight}
                 width="100%"
+                onOptionChanged={handleSortChanged}
                 onCellPrepared={onCellPrepared}
                 onRowClick={onRowClick}
                 selectedRowKeys={selectedRowKeys}
@@ -216,6 +260,7 @@ const CustomDataGrid = ({
                 onToolbarPreparing={(e) => { onToolbarPreparing(e) }}
                 style={{ maxHeight }}
                 className={cssClass}
+                onContentReady={onContentReady}
             >
                 {scrollMode && <Scrolling mode={scrollMode} />}
                 {enableColumnChooser &&
@@ -244,7 +289,7 @@ const CustomDataGrid = ({
                 {enableRowSelection && (
                     <Selection mode="multiple" />
                 )}
-                <Export enabled={true} allowExportSelectedData={true} />
+                {enableExport && <Export enabled={true} allowExportSelectedData={true} />}
 
                 {enableRowSelection && <Column
                     dataField="id"

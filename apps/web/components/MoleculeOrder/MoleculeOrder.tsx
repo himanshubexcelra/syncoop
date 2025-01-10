@@ -25,7 +25,8 @@ import {
   Status,
   MoleculeStatusLabel,
   ReactionButtonNames,
-  ResetState
+  ResetState,
+  FormState
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
@@ -229,6 +230,7 @@ export default function MoleculeOrderPage({
   const [pathwayID, setPathwayID] = useState<number>(0);
   const [viewImage, setViewImage] = useState(false);
   const [selectionEnabledRows, setSelectionEnabledRows] = useState<object[]>([]);
+  const [popUpType, setPopUpType] = useState<number>(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1576,6 +1578,7 @@ export default function MoleculeOrderPage({
   // Save Reaction Changes
   const handleSaveReaction = async (type: number) => {
     setResetReaction(ResetState.SUBMIT);
+    setPopUpType(FormState.DEFAULT);
     const { molecule_status } = selectedMoleculeOrder[0];
     const moleculeStatus = isProtocolAproover(myRoles) || isSystemAdmin(myRoles) ?
       MoleculeStatusCode.Validated : MoleculeStatusCode.InReview;
@@ -1715,7 +1718,7 @@ export default function MoleculeOrderPage({
     return newObj
   }
 
-  const handleDataChange = (input: ReactionInputData[]) => {
+  const handleDataChange = (input: ReactionInputData[]) => {    
     onFormChange(true);
     setMoleculeCompound(prevState => {
       const updatedState = [...prevState];
@@ -1862,6 +1865,7 @@ export default function MoleculeOrderPage({
   ];
 
   const onFormChange = (hasChanged: boolean) => {
+    setPopUpType(FormState.UPDATE);
     const updatedFormStates = [...formStates];
     const updatedSubmittedTabs = [...submittedTabs];
     updatedFormStates[activeTab] = hasChanged;
@@ -1898,10 +1902,6 @@ export default function MoleculeOrderPage({
   const isAllTabsValidated = () => {
     return submittedTabs.every((validated) => validated);
   };
-
-  useEffect(() => {
-    onFormChange(true);
-  }, [resetReaction]);
 
   const handleNextReaction = (Checked: boolean) => {
     setNextReaction(Checked);
@@ -2006,6 +2006,7 @@ export default function MoleculeOrderPage({
   }
 
   const resetNodes = (showOuter?: boolean) => {
+    setPopUpType(FormState.DEFAULT);
     setNodes(prevState => {
       const updatedState = [...prevState];
       updatedState[selectedPathwayIndex] =
@@ -2029,6 +2030,13 @@ export default function MoleculeOrderPage({
     }
   }
 
+  const handlePathwayList = () => {
+    if (popUpType === FormState.UPDATE) {
+      setConfirm(true);
+    } else {
+      resetNodes(true);
+    }
+  };
 
   return (
     <div className="flex flex-col">
@@ -2113,9 +2121,7 @@ export default function MoleculeOrderPage({
                         className="btn-secondary"
                         text="Pathway List"
                         icon="/icons/back-icon.svg"
-                        onClick={() => {
-                          resetNodes(true);
-                        }}
+                        onClick={handlePathwayList}
                       />
                     </div>
                   }
@@ -2230,10 +2236,7 @@ export default function MoleculeOrderPage({
                                                 : false)
                                             }
                                               text="Reset"
-                                              onClick={async () => {
-                                                resetNodes();
-                                              }
-                                              }
+                                              onClick={async () => resetNodes()}
                                               className={
                                                 (submittedTabs[activeTab] &&
                                                   !formStates[activeTab]) ||
@@ -2259,6 +2262,7 @@ export default function MoleculeOrderPage({
                                               text={isLoading ? '' : 'Save'}
                                               onClick={() => {
                                                 setConfirm(true);
+                                                setPopUpType(FormState.DEFAULT);
                                               }}
                                               className={isLoading || (submittedTabs[activeTab] &&
                                                 !formStates[activeTab]) ||
@@ -2295,10 +2299,7 @@ export default function MoleculeOrderPage({
                                                 : false)
                                             }
                                               text="Reset"
-                                              onClick={async () => {
-                                                resetNodes();
-                                              }
-                                              }
+                                              onClick={async () => resetNodes()}
                                               className={
                                                 (submittedTabs[activeTab] &&
                                                   !formStates[activeTab]) ||
@@ -2399,8 +2400,17 @@ export default function MoleculeOrderPage({
                                     </div>
                                     {/* ConfirmationDialog with onSave handler */}
                                     <ConfirmationDialog
-                                      onSave={() =>
-                                        handleSaveReaction(ReactionButtonNames.SAVE)}
+                                      description={popUpType === 1 ?
+                                        Messages.DISCARD_CHANGES :
+                                        Messages.SAVE_CHANGES
+                                      }
+                                      onSave={() => {
+                                        if (popUpType === 1) {
+                                          resetNodes(true);
+                                        } else {
+                                          handleSaveReaction(ReactionButtonNames.SAVE);
+                                        }
+                                      }}
                                       openConfirmation={confirm}
                                       setConfirm={setConfirm}
                                     />

@@ -8,6 +8,7 @@ import MoleculeOrderPage from '../MoleculeOrder';
 import { ColumnConfig, TabDetail, UserData } from '@/lib/definition';
 import CustomDataGrid from '@/ui/dataGrid';
 import Tabs from '@/ui/Tab/Tabs';
+import ConfirmationDialog from '../ConfirmationDialog';
 
 // Mock console.error at the top of your test file
 global.console = {
@@ -601,3 +602,100 @@ describe('MoleculeOrderPage Component', () => {
         expect(sendForLabJobButton).not.toBeInTheDocument();
     });
 });
+
+
+// Mock ConfirmationDialog
+jest.mock('../ConfirmationDialog', () => {
+    const MockConfirmationDialog = (props: any) => {
+        if (!props.openConfirmation) return null;
+        return (
+            <div role="dialog">
+                <p>{props.description}</p>
+                <button onClick={props.onSave}>Yes</button>
+                <button onClick={() => props.setConfirm(false)}>No</button>
+            </div>
+        );
+    };
+    MockConfirmationDialog.displayName = 'MockConfirmationDialog';
+    return MockConfirmationDialog;
+});
+
+describe('ConfirmationDialog Component', () => {
+    const mockSetConfirm = jest.fn();
+    const resetNodesMock = jest.fn();
+    const handleSaveReactionMock = jest.fn();
+
+    const renderComponent = (popUpType: number, openConfirmation: boolean) => {
+        return render(
+            <ConfirmationDialog
+                description={popUpType === 1 ? Messages.DISCARD_CHANGES : Messages.SAVE_CHANGES}
+                onSave={() => {
+                    if (popUpType === 1) {
+                        resetNodesMock(true);
+                    } else {
+                        handleSaveReactionMock('SAVE');
+                    }
+                }}
+                openConfirmation={openConfirmation}
+                setConfirm={mockSetConfirm}
+            />
+        );
+    };
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('renders with DISCARD_CHANGES description when popUpType is 1', async () => {
+        renderComponent(1, true);
+
+        const description = await screen.findByText(Messages.DISCARD_CHANGES);
+        expect(description).toBeInTheDocument();
+    });
+
+    test('renders with SAVE_CHANGES description when popUpType is not 1', async () => {
+        renderComponent(2, true);
+
+        const description = await screen.findByText(Messages.SAVE_CHANGES);
+        expect(description).toBeInTheDocument();
+    });
+
+    test('does not render when openConfirmation is false', async () => {
+        renderComponent(1, false);
+
+        const dialog = screen.queryByRole('dialog');
+        expect(dialog).not.toBeInTheDocument();
+    });
+
+    test('calls setConfirm(false) when No button is clicked', async () => {
+        renderComponent(1, true);
+
+        const noButton = screen.getByText('No');
+        fireEvent.click(noButton);
+
+        await waitFor(() => {
+            expect(mockSetConfirm).toHaveBeenCalledWith(false);
+        });
+    });
+
+    test('renders buttons correctly when openConfirmation is true', async () => {
+        renderComponent(1, true);
+
+        const yesButton = screen.getByText('Yes');
+        const noButton = screen.getByText('No');
+
+        expect(yesButton).toBeInTheDocument();
+        expect(noButton).toBeInTheDocument();
+    });
+
+    test('handles invalid popUpType gracefully', async () => {
+        renderComponent(undefined as any, true);
+
+        const description = await screen.findByText(Messages.SAVE_CHANGES);
+        expect(description).toBeInTheDocument();
+    });
+});
+
+
+
+

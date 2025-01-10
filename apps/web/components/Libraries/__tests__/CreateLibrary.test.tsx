@@ -3,6 +3,7 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import { editLibrary, createLibrary } from '@/components/Libraries/service';
 import { useParams, useSearchParams } from 'next/navigation';
 import CreateLibrary from '../CreateLibrary';
+import { useRouter } from 'next/navigation';
 
 jest.mock("@/components/Breadcrumbs/BreadCrumbs", () => ({
     __esModule: true,
@@ -13,8 +14,29 @@ jest.mock("@/components/Breadcrumbs/BreadCrumbs", () => ({
 jest.mock('next/navigation', () => ({
     useSearchParams: jest.fn(),
     useParams: jest.fn(),
-}));
+    useRouter: jest.fn(),
 
+}));
+const mockRouter = {
+    push: jest.fn(),
+    back: jest.fn(),
+    prefetch: jest.fn(),
+    replace: jest.fn(),
+    reload: jest.fn(),
+    pathname: '/',
+    route: '/',
+    query: {},
+    asPath: '/',
+    events: {
+        on: jest.fn(),
+        off: jest.fn(),
+        emit: jest.fn(),
+    },
+    beforePopState: jest.fn(() => null),
+    isFallback: false,
+};
+
+(useRouter as jest.Mock).mockReturnValue(mockRouter);
 jest.mock('@/components/Libraries/service', () => ({
     getLibraries: jest.fn(),
     editLibrary: jest.fn(),

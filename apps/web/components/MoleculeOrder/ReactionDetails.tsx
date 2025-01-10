@@ -36,16 +36,27 @@ const ReactionDetails = ({
     status
 }: ReactionDetailsProps,) => {
 
+
     const [reactionData, setReactionData] =
         useState<ReactionDetailType | []>(data);
     const [resetReactionData, setResetReactionData] =
         useState<ReactionDetailType | []>(data);
-    const [tableData, setTableData] =
-        useState<ReactionCompoundType[]>([]);
+    const [tableData, setTableData] = useState<ReactionCompoundType[]>(() => {
+        if (data.hasOwnProperty('reaction_compound')) {
+            return (data as ReactionDetailType).reaction_compound.map((compound, i) => ({
+                ...compound,
+                compound_label:
+                    compound.compound_label !== undefined && compound.compound_label !== null
+                        ? compound.compound_label
+                        : String(i + 1),
+            }));
+        }
+        return [];
+    });
     const [selectedSolvent, setSelectedSolvent] =
-        useState<string>('');
-    const [selectedTemperature, setSelectedTemperature] =
-        useState<number>();
+        useState<string>((data as ReactionDetailType)?.solvent || '');
+    const [selectedTemperature, setSelectedTemperature] = useState<number>
+        ((data as ReactionDetailType)?.temperature ?? DEFAULT_TEMPERATURE);
     const agentList: ReactionCompoundType[] =
         data?.reaction_compound?.filter(
             (item: ReactionCompoundType) => item.compound_type === COMPOUND_TYPE_A
@@ -64,10 +75,12 @@ const ReactionDetails = ({
             id: data.id,
             reactionTemplate: data?.reaction_template_master?.name,
         });
-    }, []);
+    }, [data, setReactionDetail]);
+
 
     // Reusable function to update initialData
     const updateInitialData = (reactionData: ReactionDetailType | []) => {
+        if (!reactionData || !Object.keys(reactionData).length) return;
         let initialData: ReactionCompoundType[] = [];
 
         if (!isReactantList && Object(reactionData).hasOwnProperty('reaction_compound')) {
@@ -100,13 +113,17 @@ const ReactionDetails = ({
         // Set table data and other state variables
         setTableData(initialData);
         setSelectedSolvent((reactionData as ReactionDetailType).solvent || '');
-        setSelectedTemperature((reactionData as ReactionDetailType).temperature === null ?
-            DEFAULT_TEMPERATURE : (reactionData as ReactionDetailType).temperature);
+        setSelectedTemperature(
+            (reactionData as ReactionDetailType).temperature ?? DEFAULT_TEMPERATURE);
     };
+
 
     // Update on initial render or when `data` changes
     useEffect(() => {
-        updateInitialData(reactionData);
+        if (!Array.isArray(reactionData) &&
+            reactionData?.reaction_compound) {
+            updateInitialData(reactionData);
+        }
     }, [reactionData]);
 
     useEffect(() => {
@@ -144,6 +161,7 @@ const ReactionDetails = ({
         const updatedData = tableData.map((item: ReactionCompoundType) =>
             item.id === id ? { ...item, [field]: value } : item
         );
+        setTableData(updatedData);
         // Track changes separately
         const changes: RowChange[] = updatedData
             .filter((item: ReactionCompoundType) => item.id === id)
@@ -151,7 +169,6 @@ const ReactionDetails = ({
                 id: item.id,
                 [field]: value,
             }));
-        setTableData(updatedData);
         onDataChange(changes);
         return changes;
     };
@@ -547,7 +564,7 @@ const ReactionDetails = ({
 
             <CustomDataGrid
                 columns={!isReactantList ? reactionCompoundColumns : reactantListColumns}
-                data={tableData}
+                data={tableData.length > 0 ? tableData : []}
                 loader={false}
                 enableRowSelection={false}
                 enableHeaderFiltering={false}

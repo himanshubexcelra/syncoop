@@ -160,7 +160,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
 
     const fetchLibraries = async () => {
         const projectData = await getLibraries(['libraries'/* , 'organization' */], project_id);
-
         // let selectedLib = null;
         /* let selectedLib = { name: '' }; */
         /* if (library_id && !projectData.error) {
@@ -245,7 +244,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     }, [library_id, projectData]);
 
     const selectLibrary = (libId: number) => {
-        setLibLoader(true);
         setLibraryId(libId);
     }
 
@@ -336,7 +334,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     projectId={project_id}
                                     fetchLibraries={fetchLibraries}
                                     organizationId={organization_id || ''}
-                                    config={selectedLibraryData.config}
+                                    config={selectedLibraryData?.config}
                                 />
                             </div>
                         </div>

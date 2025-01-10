@@ -40,7 +40,8 @@ export default function RenderEditUser({
     const [deleteUserId, setDeleteUserData] = useState({ user_id: 0, name: '', role_id: 0 });
 
     const isOnlyLibManager = isOnlyLibraryManger(
-        tableData?.user_role?.map((item: any) => item.role.type))
+        tableData?.user_role?.map((item: any) => item.role.type));
+
     const enableDelete = isOnlyLibManager && tableData.owner?.length === 0;
 
     const filterContact = useCallback((users: any) => {
@@ -216,7 +217,7 @@ export default function RenderEditUser({
                 >
                     <Label text="User Email Address" />
                 </SimpleItem>
-                {!isMyProfile && isOnlyLibManager
+                {!isMyProfile
                     && <GroupItem colCount={2} cssClass="delete-button-group">
                         <SimpleItem dataField="status">
                             <RadioGroup
@@ -226,14 +227,13 @@ export default function RenderEditUser({
                                     : ActionStatus.Disabled}
                                 onValueChange={handleValueChange} />
                         </SimpleItem>
-                        <ButtonItem cssClass="delete-button">
+                        {enableDelete && <ButtonItem cssClass="delete-button">
                             <ButtonOptions
                                 stylingMode="text"
-                                disabled={!enableDelete}
                                 text={`Delete User`}
                                 onClick={() => deleteUser(tableData)}
                                 elementAttr={{ class: 'lowercase' }} />
-                        </ButtonItem>
+                        </ButtonItem>}
                     </GroupItem>}
                 {!isMyProfile && !formData.is_active && isOnlyLibManager && <SimpleItem
                     dataField="primary_contact_id"

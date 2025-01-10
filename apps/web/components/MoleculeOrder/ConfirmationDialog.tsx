@@ -3,12 +3,13 @@ import { Popup } from 'devextreme-react';
 import { Button as Btn } from "devextreme-react/button";
 
 interface ConfirmationDialogProps {
+  description: string;
   onSave: () => void;
   openConfirmation: boolean;
   setConfirm: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const ConfirmationDialog = ({ onSave, openConfirmation, setConfirm }: ConfirmationDialogProps) => {
+const ConfirmationDialog = ({ description, onSave, openConfirmation, setConfirm }: ConfirmationDialogProps) => {
   const [visible, setVisible] = useState(openConfirmation);
 
   // Update the visibility whenever openConfirmation state changes
@@ -43,7 +44,7 @@ const ConfirmationDialog = ({ onSave, openConfirmation, setConfirm }: Confirmati
 
       >
         <div className='confirm-popup'>
-          <p>Save the changes?</p>
+          <p>{description}</p>
           <div className='confirmButton'>
             <Btn className="btn-primary" text="Yes" onClick={handleConfirm} />
             <Btn className="btn-primary" text="No" onClick={handleCancel} />

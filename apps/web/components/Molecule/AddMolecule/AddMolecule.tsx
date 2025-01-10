@@ -17,9 +17,14 @@ import RejectedDialog from './RejectedDialog';
 import { LoadIndicator } from 'devextreme-react';
 import { downloadCSV } from '../file';
 
-const dialogProperties = {
+const DiscardDialogProperties = {
     width: 455,
     height: 158,
+}
+
+const RejectDialogProperties = {
+    width: 465,
+    height: 180,
 }
 
 type AddMoleculeProps = {
@@ -50,6 +55,7 @@ export default function AddMolecule({
     const [buttonText, setButtonText] = useState('Upload');
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
+    const [rejectedMessage, setRejectedMessage] = useState<string[]>([]);
     const [, startTransition] = useTransition()
     const isLoading = loadIndicatorVisible || loadIndicatorVisibleSave
     const hidePopup = () => {
@@ -64,6 +70,7 @@ export default function AddMolecule({
     }
     const rejectContentProps = {
         rejected,
+        rejectedMessage,
         onClose: hideRejectPopUp,
     }
     const onDiscardSubmit = () => {
@@ -195,11 +202,15 @@ export default function AddMolecule({
                         toast.remove(toastId);
                     } else {
                         if (result?.rejected_smiles?.length) {
+                            setRejectedMessage(Messages.displayMoleculeSucessMsg
+                                (result?.uploaded_smiles?.length, result?.rejected_smiles?.length))
                             setRejected(result?.rejected_smiles)
                             setShowRejectedDialog(true);
 
                         } else {
-                            const toastId = toast.success(result?.message);
+                            const toastId = toast.success(
+                                `${result?.uploaded_smiles?.length} ${result?.message}`
+                            );
                             await delay(DELAY);
                             toast.remove(toastId);
                             setViewAddMolecule(false);
@@ -341,7 +352,7 @@ export default function AddMolecule({
             <DialogPopUp {
                 ...{
                     visible: discardvisible,
-                    dialogProperties,
+                    dialogProperties: DiscardDialogProperties,
                     onSubmit: onDiscardSubmit,
                     Content: DiscardMolecule,
                     hidePopup
@@ -350,7 +361,7 @@ export default function AddMolecule({
             <DialogPopUp {
                 ...{
                     visible: showRejectedDialog,
-                    dialogProperties,
+                    dialogProperties: RejectDialogProperties,
                     Content: RejectedDialog,
                     hidePopup: hideRejectPopUp,
                     contentProps: rejectContentProps,

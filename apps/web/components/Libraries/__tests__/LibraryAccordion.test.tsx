@@ -1,5 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+
 import LibraryAccordion from '../LibraryAccordion';
 import { AppContext } from '../../../app/AppState';
 import { AppContextModel, ProjectDataFields, UserData } from '@/lib/definition';
@@ -95,6 +96,32 @@ const projectData: ProjectDataFields = {
         owner_id: 1,
         type: 'internal',
     },
+    other_container: [
+        {
+            id: 1,
+            name: 'Test Library 1',
+            created_at: '2025-01-01T00:00:00Z',
+            owner_id: 1,
+            owner: {
+                "id": 100,
+                "first_name": "John",
+                "last_name": "Frink",
+                "email_id": "A1Demo@A1B.com"
+            },
+            metadata: {
+                target: 'Molecue Alpha 2Specific small molecule targets (e.g., EGFR inhibitors)',
+            },
+            libraryMolecules: [
+                {
+                    status: 3,
+                },
+                {
+                    status: 0,
+                }
+            ]
+        },
+
+    ],
     user: {
         id: 1,
         first_name: 'Test',
@@ -121,7 +148,7 @@ const projectData: ProjectDataFields = {
     updated_at: new Date(),
     owner_id: 1,
     metadata: {
-        target: '',
+        target: 'Molecue Alpha 2Specific small molecule targets (e.g., EGFR inhibitors)',
         type: ''
     },
     created_at: new Date(),
@@ -321,4 +348,87 @@ describe('LibraryAccordion Component', () => {
         });
     });
 
+    test('Edit Libraries', async () => {
+        const mockSetExpandedMenu = jest.fn();
+        const mockSetCreatePopupVisibility = jest.fn();
+        const mockSetSelectedLibraryIndex = jest.fn();
+        const mockSetEditPopupVisibility = jest.fn();
+        const item = {
+            id: 42,
+        };
+        const idx = 3;
+        render(
+            <p
+                className={`mb-[20px] ${'cursor-pointer'}`}
+                id={`edit-${item.id}`}
+                onClick={() => {
+                    mockSetExpandedMenu(-1);
+                    mockSetCreatePopupVisibility(false);
+                    mockSetSelectedLibraryIndex(idx);
+                    mockSetEditPopupVisibility(true);
+                }}
+            >
+                Edit
+            </p>
+        );
+        const editButton = screen.getByText('Edit');
+        fireEvent.click(editButton);
+        expect(mockSetExpandedMenu).toHaveBeenCalledTimes(1);
+        expect(mockSetCreatePopupVisibility).toHaveBeenCalledTimes(1);
+        expect(mockSetSelectedLibraryIndex).toHaveBeenCalledTimes(1);
+        expect(mockSetEditPopupVisibility).toHaveBeenCalledTimes(1);
+
+        expect(mockSetExpandedMenu).toHaveBeenCalledWith(-1);
+        expect(mockSetCreatePopupVisibility).toHaveBeenCalledWith(false);
+        expect(mockSetSelectedLibraryIndex).toHaveBeenCalledWith(idx);
+        expect(mockSetEditPopupVisibility).toHaveBeenCalledWith(true);
+    });
+
+    test('delete libraries', async () => {
+        const mockSetExpandedMenu = jest.fn();
+        const mockHandleDeleteLibrary = jest.fn();
+        const item = {
+            id: 42,
+            name: 'Test Library',
+        };
+        render(
+            <p
+                onClick={() => {
+                    mockSetExpandedMenu(-1);
+                    mockHandleDeleteLibrary(item.id, item.name);
+                }}
+                className={`mb-[20px] ${'cursor-pointer'}`}
+            >
+                Delete
+            </p>
+        );
+        const deleteButton = screen.getByText('Delete');
+        fireEvent.click(deleteButton);
+        expect(mockSetExpandedMenu).toHaveBeenCalledTimes(1);
+        expect(mockSetExpandedMenu).toHaveBeenCalledWith(-1);
+        expect(mockHandleDeleteLibrary).toHaveBeenCalledTimes(1);
+        expect(mockHandleDeleteLibrary).toHaveBeenCalledWith(item.id, item.name);
+
+    });
+
+    test('Copy url', async () => {
+        const mockCopyUrl = jest.fn();
+         const item = {
+            id: 101,
+            name: 'Sample Library',
+        };
+       render(
+            <p
+                className="cursor-pointer"
+                id={`url-${item.id}`}
+                onClick={() => mockCopyUrl('library', item.name, item.id)}
+            >
+                URL
+            </p>
+        );
+        const urlButton = screen.getByText('URL');
+        fireEvent.click(urlButton);
+        expect(mockCopyUrl).toHaveBeenCalledTimes(1);
+        expect(mockCopyUrl).toHaveBeenCalledWith('library', item.name, item.id);
+    });
 });

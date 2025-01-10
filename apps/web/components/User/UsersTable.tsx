@@ -5,7 +5,8 @@ import DataGrid, {
     Item,
     Column,
     Toolbar as GridToolbar,
-    DataGridRef
+    DataGridRef,
+    Paging
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
@@ -119,7 +120,7 @@ export default function UsersTable({
                 setTableData(users);
             }
         } catch (error) {
-            console.error("Error fetching users:", error);
+            console.log("Error fetching users:", error);
         } finally {
             setLoader(false);
         }
@@ -186,7 +187,38 @@ export default function UsersTable({
             })
     }
 
+    const [currentSort, setCurrentSort] = useState<{
+        field: string | null;
+        order: 'asc' | 'desc' | null
+    }>({ field: 'first_name', order: 'asc' });
 
+    const handleSortChanged = (e: any) => {
+        // Only handle sorting-related changes
+        if (e.name !== 'columns' || !e.fullName?.includes('sortOrder')) return;
+        const dataGrid = grid.current?.instance();
+        if (!dataGrid) return;
+        const sortedColInfo = e.component.getVisibleColumns().
+            filter((column: any) => column.sortOrder)?.[0]
+        const newField = sortedColInfo?.dataField;
+        // Get current sorting state
+        const currentField = currentSort.field;
+        const previousOrder = e.previousValue;
+        const newOrder = e.value;
+
+        if (currentField === newField) {
+            if (newOrder === 'desc' && previousOrder === 'asc') {
+                // Second click - already handled by DevExtreme
+                setCurrentSort({ field: newField, order: 'desc' });
+            } else if (previousOrder === 'desc') {
+                // Third click - clear sorting
+                dataGrid.clearSorting();
+                setCurrentSort({ field: null, order: null });
+            }
+        } else {
+            // New column clicked - DevExtreme handles the ascending sort
+            setCurrentSort({ field: newField, order: 'asc' });
+        }
+    };
     const groupCellRender = (e: any) => <span>{e.value}</span>;
 
     return (
@@ -203,9 +235,6 @@ export default function UsersTable({
                     showBorders={true}
                     ref={grid}
                     className="no-padding-header"
-                    scrolling={{
-                        mode: 'infinite'
-                    }}
                     sorting={{ mode: 'single' }}
                     height={'auto'}
                     style={{ maxHeight: '400px' }}
@@ -221,7 +250,9 @@ export default function UsersTable({
                     searchPanel={{
                         visible: true,
                         highlightSearchText: true
-                    }}>
+                    }}
+                    onOptionChanged={handleSortChanged}>
+                    <Paging defaultPageSize={5} defaultPageIndex={0} />
                     <Column
                         dataField="email_id"
                         caption="Email Address"

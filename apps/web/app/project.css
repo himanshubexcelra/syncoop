@@ -436,3 +436,8 @@
 .dx-icon.dx-icon-column-chooser {
     transform: scale(1.7); 
 }  
+.lowercase-button .dx-button-text {
+    text-transform: none !important; /* reset text transform */
+    font-variant: normal;
+  }
+  

@@ -36,7 +36,7 @@ export async function GET(request: Request) {
                     ...query.include,
                     user_role: {
                         select: {
-                            id:true,
+                            id: true,
                             role_id: true,
                             role: {
                                 select: {
@@ -212,29 +212,31 @@ export async function PUT(request: Request) {
             if (is_active === true) {
                 updatedData.primary_contact_id = null;
             } else if (is_active === false) {
-                const primaryContact = await prisma.users.findUnique({
-                    where: { id: primary_contact_id }
-                });
+                if (!!primary_contact_id) {
+                    const primaryContact = await prisma.users.findUnique({
+                        where: { id: primary_contact_id }
+                    });
 
-                if (!primaryContact) {
-                    return new Response(
-                        JSON.stringify({ error: NOTFOUND('Primary Contact') }),
-                        {
-                            headers: { "Content-Type": "application/json" },
-                            status: STATUS_TYPE.NOT_FOUND,
-                        }
-                    );
+                    if (!primaryContact) {
+                        return new Response(
+                            JSON.stringify({ error: NOTFOUND('Primary Contact') }),
+                            {
+                                headers: { "Content-Type": "application/json" },
+                                status: STATUS_TYPE.NOT_FOUND,
+                            }
+                        );
+                    } else {
+                        updatedData.primary_contact_id = primary_contact_id;
+
+                        await prisma.container.updateMany({
+                            where: {
+                                owner_id: existingUser.id,
+                                type: { in: ['L', 'P'] }
+                            },
+                            data: { owner_id: primaryContact.id }
+                        });
+                    }
                 }
-
-                updatedData.primary_contact_id = primary_contact_id;
-
-                await prisma.container.updateMany({
-                    where: {
-                        owner_id: existingUser.id,
-                        type: { in: ['L', 'P'] }
-                    },
-                    data: { owner_id: primaryContact.id }
-                });
             }
         }
         if (roles && Array.isArray(roles)) {

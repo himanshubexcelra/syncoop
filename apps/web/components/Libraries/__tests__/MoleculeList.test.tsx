@@ -2,7 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MoleculeList from '../MoleculeList';
 import { AppContext } from '../../../app/AppState';
-import { AppContextModel, UserData, ProjectDataFields } from '@/lib/definition';
+import { AppContextModel, UserData, ProjectDataFields, MoleculeType } from '@/lib/definition';
 import { useRouter } from 'next/navigation';
 import { getMoleculeCart, getMoleculeOrder } from '../service';
 import CustomDataGrid from '@/ui/dataGrid';
@@ -75,10 +75,9 @@ const mockAppContext = {
     },
 };
 
-const moleculeData = [
+const moleculeData: MoleculeType[] = [
     {
         id: 1,
-        name: 'Benzene',
         favourite: true,
         smiles_string: 'C1=CC=CC=C1',
         created_at: new Date(),
@@ -100,10 +99,11 @@ const moleculeData = [
         adme_data: [],
         reaction_data: {},
         functional_assays: [],
+        molecule_id: 0,
+        disabled: false
     },
     {
         id: 2,
-        name: 'Ethanol',
         favourite: false,
         smiles_string: 'CCO',
         created_at: new Date(),
@@ -125,6 +125,8 @@ const moleculeData = [
         adme_data: [],
         reaction_data: {},
         functional_assays: [],
+        molecule_id: 0,
+        disabled: false
     },
 ];
 
@@ -159,11 +161,13 @@ const userData: UserData = {
             role_id: 1,
         }],
         type: 'internal',
+        name: ''
     },
     myRoles: ['admin'],
     roles: [{
         type: 'admin',
     }],
+    is_active: false
 };
 
 const projectData: ProjectDataFields = {
@@ -183,6 +187,7 @@ const projectData: ProjectDataFields = {
         },
         owner_id: 1,
         type: 'internal',
+        inherits_configuration: false
     },
     user: {
         id: 1,
@@ -215,7 +220,6 @@ const projectData: ProjectDataFields = {
     },
     created_at: new Date(),
     owner: {
-
         id: 1,
         first_name: 'Test',
         name: 'Test',
@@ -240,8 +244,8 @@ const projectData: ProjectDataFields = {
         role: "admin",
         permission: "admin",
         type: "admin"
-
-    }
+    },
+    inherits_configuration: false
 };
 
 describe('MoleculeList Component', () => {
@@ -249,7 +253,7 @@ describe('MoleculeList Component', () => {
     const mockFetchMoleculeData = jest.fn();
     const mockSetTableData = jest.fn();
     const mockOnSelectionChanged = jest.fn();
-    const mockOnCellPrepared = jest.fn();
+    const mockOnRowPrepared = jest.fn();
     const mockAddToFavourites = jest.fn();
 
     let isMoleculeInCart: string | any[] = [];
@@ -290,6 +294,8 @@ describe('MoleculeList Component', () => {
                     projectData={projectData}
                     projectId={''}
                     organizationId={''}
+                    selectedLibraryName={''}
+                    config={{ ADMEParams: [] }}
                 />
             </AppContext.Provider>
         );
@@ -340,6 +346,8 @@ describe('MoleculeList Component', () => {
                     projectData={projectData}
                     projectId={''}
                     organizationId={''}
+                    selectedLibraryName={''}
+                    config={{ ADMEParams: [] }}
                 />
             </AppContext.Provider>
         );
@@ -363,7 +371,7 @@ describe('MoleculeList Component', () => {
                     enableGrouping
                     enableSorting
                     loader={false}
-                    onCellPrepared={(e: any) => {
+                    onRowPrepared={(e: any) => {
                         if (e.key && isMoleculeInCart?.includes(e.key)) {
                             e.cellElement.style.pointerEvents = 'none';
                             e.cellElement.style.opacity = 0.5;
@@ -414,9 +422,8 @@ describe('MoleculeList Component', () => {
                 loader={false}
                 enableHeaderFiltering
                 enableSearchOption={true}
-                selectedRowKeys={[]}
-                onSelectionChanged={mockOnSelectionChanged}
-                onCellPrepared={mockOnCellPrepared}
+                onRowPrepared={mockOnRowPrepared}
+                handleSelectionChange={mockOnSelectionChanged}
             />
         );
 
@@ -472,6 +479,7 @@ describe('MoleculeList Component', () => {
 
         render(
             <MoleculeStructure
+                id={"1"}
                 structure={mockCellData?.smiles_string}
                 width={200}
                 height={200}
@@ -495,7 +503,7 @@ describe('MoleculeList Component', () => {
                     enableGrouping
                     enableSorting
                     loader={false}
-                    onCellPrepared={(e: any) => {
+                    onRowPrepared={(e: any) => {
                         if (isMoleculeInCart.includes(e.key)) {
                             e.cellElement.style.pointerEvents = 'none';
                             e.cellElement.style.opacity = 0.5;

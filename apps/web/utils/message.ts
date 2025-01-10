@@ -76,8 +76,36 @@ export const Messages = {
     deleteMoleculeMsg(molecule_name: string) {
         return `Molecule ${molecule_name} deleted successfully`;
     },
-
     deleteUserMsg(user_name: string) {
         return `User ${user_name} deleted successfully`;
-    }
+    },
+    deleteLibraryMsg(library_name: string) {
+        return `You are about to delete all the molecules in Library ${library_name}. Are you sure you want to delete?`;
+    },
+    DELETE_LIBRARY_TITLE: `Delete Libraries`,
+    LIBRARY_NOT_DELETE_MESSAGE: 'Library can not be deleted because some of the molecules of this library are in stage other than NEW.',
+    DELETE_LIBRARY_MESSAGE: 'Library Deleted Successfully.',
+    DELETE_LIBRARY_ERROR_MESSAGE: 'Can not delete library. Some error occured while deleting the library',
+
+    displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number) {
+        let messages: string[] = ['Valid molecules (38) uploaded successfully.'];
+        if (upload_molecule_count > 0) {
+            const uploadedMoleculeTxt = upload_molecule_count > 1 ? 'molecules' : 'molecule';
+            messages = [
+                ...messages,
+                `Valid ${uploadedMoleculeTxt} (${upload_molecule_count}) uploaded successfully.`
+            ];
+        }
+        if (rejected_molecule_count > 0) {
+            const rejectedMoleculeText = rejected_molecule_count > 1 ? 'molecules' : 'molecule';
+            messages = [
+                ...messages,
+                `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) 
+            ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected and can be downloaded.`
+            ]
+        }
+        return messages;
+    },
+    SAVE_CHANGES: 'Save the changes?',
+    DISCARD_CHANGES: 'Discard the changes?'
 }

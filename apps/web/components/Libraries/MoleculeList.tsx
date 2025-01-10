@@ -38,6 +38,7 @@ import {
     getADMECalculation,
     getAverage,
     getADMEColor,
+    isAdmin,
     delay
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
@@ -150,6 +151,8 @@ export default function MoleculeList({
         fetchMoleculeData(library_id);
     }, [library_id]);
 
+    const admin = isAdmin(userData.myRoles);
+
     const columns: ColumnConfig[] = [
         {
             dataField: "favourite",
@@ -199,9 +202,12 @@ export default function MoleculeList({
                     structureName={data.source_molecule_name}
                     molecule_id={data.id}
                     onZoomClick={(e: any) => handleStructureZoom(e, data)}
-                    enableEdit={actionsEnabled.includes('edit_molecule')}
-                    enableDelete={data.status === MoleculeStatusCode.New &&
-                        actionsEnabled.includes('delete_molecule')}
+                    enableEdit={(admin || data.created_by === userData.id) &&
+                        data.status === MoleculeStatusCode.New &&
+                        actionsEnabled.includes('edit_molecule')}
+                    enableDelete={(admin || data.created_by === userData.id) &&
+                        data.status === MoleculeStatusCode.New &&
+                        actionsEnabled.includes('edit_molecule')}
                     onEditClick={() => showEditMolecule(data)}
                     onDeleteClick={() => deleteMoleculeCart(data)}
                 />

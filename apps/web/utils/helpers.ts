@@ -323,3 +323,11 @@ export const setConfig = () => {
   });
   return rangeArray;
 }
+
+export const isDeleteLibraryEnable = (data: any): boolean => {
+  if (data?.length === 0) {
+    return true;
+  }
+  const result = data?.every((item: any) => item.status === MoleculeStatusCode.New);
+  return result;
+}

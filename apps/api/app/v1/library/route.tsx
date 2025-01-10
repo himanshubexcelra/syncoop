@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
+import { MoleculeStatusCode } from "@/utils/definition";
 
 const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;
 const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
@@ -210,5 +211,49 @@ export async function PUT(request: Request) {
         });
     } finally {
         await prisma.$disconnect();
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const library_id = searchParams.get('library_id');
+        const result = [];
+        // check if the library has any molecule with status except New.
+        const countMolecule = await prisma.molecule.count({
+            where: {
+                library_id: Number(library_id),
+                status: {
+                    not: MoleculeStatusCode.New,
+                },
+            },
+        });
+        // delete library if libraries has only molecule with new status.
+        if (countMolecule === 0) {
+            const deleteRecord = await prisma.molecule.deleteMany({
+                where: {
+                    library_id: Number(library_id),
+                    status: MoleculeStatusCode.New,
+                },
+            });
+            if (deleteRecord) {
+                await prisma.container.delete({
+                    where: {
+                        id: Number(library_id),
+                    },
+                })
+            }
+            countMolecule === 0 ? result.push(deleteRecord) : result.push(countMolecule);
+        }
+        return new Response(json(result), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // BAD_REQUEST
+        });
     }
 }

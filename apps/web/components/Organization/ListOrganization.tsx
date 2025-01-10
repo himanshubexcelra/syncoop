@@ -6,7 +6,8 @@ import DataGrid, {
   Column,
   Toolbar as GridToolbar,
   DataGridRef,
-  HeaderFilter
+  HeaderFilter,
+  Paging
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup } from "devextreme-react/popup";
@@ -89,219 +90,249 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
       formRef.current.instance().resetValues();
     }
   };
+  const [currentSort, setCurrentSort] = useState<{
+    field: string | null;
+    order: 'asc' | 'desc' | null
+  }>({ field: 'created_at', order: 'desc' });
 
+  const handleSortChanged = (e: any) => {
+    // Only handle sorting-related changes
+    if (e.name !== 'columns' || !e.fullName?.includes('sortOrder')) return;
+    const dataGrid = grid.current?.instance();
+    if (!dataGrid) return;
+    const sortedColInfo = e.component.getVisibleColumns()?.
+      filter((column: any) => column.sortOrder)?.[0]
+    const newField = sortedColInfo?.dataField;
+    // Get current sorting state
+    const currentField = currentSort.field;
+    const previousOrder = e.previousValue;
+    const newOrder = e.value;
+
+    if (currentField === newField) {
+      if (newOrder === 'desc' && previousOrder === 'asc') {
+        // Second click - already handled by DevExtreme
+        setCurrentSort({ field: newField, order: 'desc' });
+      } else if (previousOrder === 'desc') {
+        // Third click - clear sorting
+        dataGrid.clearSorting();
+        setCurrentSort({ field: null, order: null });
+      }
+    } else {
+      // New column clicked - DevExtreme handles the ascending sort
+      setCurrentSort({ field: newField, order: 'asc' });
+    }
+  };
   return (
     <>
-      {loader && <div className="center">
+      {loader ? <div className="center">
         <LoadIndicator
           visible={loader}
         />
-      </div>}
-      {!loader && <DataGrid
-        dataSource={tableData}
-        showBorders={true}
-        ref={grid}
-        className="no-padding-header"
-        scrolling={{
-          mode: 'infinite'
-        }}
-        sorting={{
-          mode: 'single'
-        }}
-        height={'auto'}
-        style={{ maxHeight: '400px' }}
-        headerFilter={{
-          visible: true
-        }}
-        searchPanel={{
-          visible: true,
-          highlightSearchText: true
-        }}
-      >
-        <Column
-          dataField="name"
-          caption="Organization Name"
-          allowHeaderFiltering={false}
-          cellRender={(data: any) => {
-            const orgId = data?.data?.id;
-            return (
-              <a
-                href={`/organization/${orgId}`}
-                className="text-themeBlueColor underline"
-              >
-                {data?.value}
-              </a>
-            );
-          }} />
-        <Column
-          dataField="_count.other_container"
-          width={90}
-          alignment="center"
-          caption="Projects"
-          cellRender={({ data }: any) => (
-            <span>{data._count?.other_container}</span>
-          )}
-          allowHeaderFiltering={false}
-        />
-        <Column
-          dataField="_count.organizationMolecules"
-          width={90}
-          alignment="center"
-          caption="Molecules"
-          cellRender={({ data }: any) => (
-            <span>{data._count?.organizationMolecules}</span>
-          )}
-          allowHeaderFiltering={false}
-        />
-        <Column
-          dataField="orgUser"
-          caption="Users"
-          width={70}
-          alignment="center"
-          cellRender={({ data }: any) => (
-            <span>{data?.orgUser?.length}</span>
-          )}
-          allowHeaderFiltering={false}
-        />
-        <Column
-          dataField="is_active"
-          alignment="center"
-          caption="Organization Status"
-          calculateCellValue={({ is_active }) =>
-            (is_active ? ActionStatus.Enabled : ActionStatus.Disabled)
-          }
-          cellRender={({ data }: any) => (
-            <span>{
-              data.is_active ? ActionStatus.Enabled : ActionStatus.Disabled
-            }</span>
-          )}
+      </div>
+        : <DataGrid
+          dataSource={tableData}
+          showBorders={true}
+          ref={grid}
+          className="no-padding-header"
+          sorting={{
+            mode: 'single'
+          }}
+          height={'auto'}
+          style={{ maxHeight: '400px' }}
+          headerFilter={{
+            visible: true
+          }}
+          searchPanel={{
+            visible: true,
+            highlightSearchText: true
+          }}
+          onOptionChanged={handleSortChanged}
         >
-          <HeaderFilter dataSource={statusHeaderFilter} />
-        </Column>
-        <Column
-          dataField="owner.email_id"
-          minWidth={350}
-          caption="Organization Admin"
-          cellRender={({ data }: any) => <span>{data.owner.email_id}</span>}
-          allowHeaderFiltering={false}
-        />
-        <Column
-          dataField="created_at"
-          caption="Creation Date"
-          defaultSortIndex={0}
-          defaultSortOrder="desc"
-          cellRender={({ data }) => (
-            <span>{formatDate(data.created_at)}</span>
-          )}
-          allowHeaderFiltering={false}
-        />
-        <Column
-          dataField="updated_at"
-          caption="Last Modified Date"
-          cellRender={({ data }) =>
-          (
-            <span>{data.updated_at
-              &&
-              formatDate(data.updated_at)}</span>
-          )
-          }
-          allowHeaderFiltering={false}
-        />
-        {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
+          <Paging defaultPageSize={5} defaultPageIndex={0} />
           <Column
-            width={80}
+            dataField="name"
+            caption="Organization Name"
+            allowHeaderFiltering={false}
+            cellRender={(data: any) => {
+              const orgId = data?.data?.id;
+              return (
+                <a
+                  href={`/organization/${orgId}`}
+                  className="text-themeBlueColor underline"
+                >
+                  {data?.value}
+                </a>
+              );
+            }} />
+          <Column
+            dataField="_count.other_container"
+            width={90}
+            alignment="center"
+            caption="Projects"
             cellRender={({ data }: any) => (
-              <Btn
-                visible={actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')}
-                render={() => (
-                  <>
-                    <Image
-                      src="/icons/edit.svg"
-                      width={24}
-                      height={24}
-                      alt="Edit Organization"
-                      title="Edit organization"
-                    />
-                  </>
-                )}
-                onClick={() => showEditPopupForm(data)}
-              />
+              <span>{data._count?.other_container}</span>
             )}
-            caption="Actions"
+            allowHeaderFiltering={false}
           />
-        )}
-        <GridToolbar>
-          <Item location="after">
-            {myRoles?.includes('admin') && (
-              <Btn
-                text="Create Organization"
-                icon="plus"
-                className={`button_primary_toolbar mr-[20px]`}
-                render={(buttonData: any) => (
-                  <>
-                    <Image
-                      src="/icons/plus.svg"
-                      width={24}
-                      height={24}
-                      alt="Create Organization"
-                    />
-                    <span>{buttonData.text}</span>
-                  </>
-                )}
-                onClick={() => setCreatePopupVisibility(true)}
-              />
+          <Column
+            dataField="_count.organizationMolecules"
+            width={90}
+            alignment="center"
+            caption="Molecules"
+            cellRender={({ data }: any) => (
+              <span>{data._count?.organizationMolecules}</span>
             )}
-            <Popup
-              title="Create Organization"
-              visible={createPopupVisible}
-              dragEnabled={false}
-              onShown={handlePopupShown}
-              contentRender={() => (
-                <RenderCreateOrganization
-                  formRef={formRef}
-                  setCreatePopupVisibility={setCreatePopupVisibility}
-                  fetchOrganizations={fetchOrganizations}
-                  created_by={userData.id}
+            allowHeaderFiltering={false}
+          />
+          <Column
+            dataField="orgUser"
+            caption="Users"
+            width={70}
+            alignment="center"
+            cellRender={({ data }: any) => (
+              <span>{data?.orgUser?.length}</span>
+            )}
+            allowHeaderFiltering={false}
+          />
+          <Column
+            dataField="is_active"
+            alignment="center"
+            caption="Organization Status"
+            calculateCellValue={({ is_active }) =>
+              (is_active ? ActionStatus.Enabled : ActionStatus.Disabled)
+            }
+            cellRender={({ data }: any) => (
+              <span>{
+                data.is_active ? ActionStatus.Enabled : ActionStatus.Disabled
+              }</span>
+            )}
+          >
+            <HeaderFilter dataSource={statusHeaderFilter} />
+          </Column>
+          <Column
+            dataField="owner.email_id"
+            minWidth={350}
+            caption="Organization Admin"
+            cellRender={({ data }: any) => <span>{data.owner.email_id}</span>}
+            allowHeaderFiltering={false}
+          />
+          <Column
+            dataField="created_at"
+            caption="Creation Date"
+            defaultSortIndex={0}
+            defaultSortOrder="desc"
+            cellRender={({ data }) => (
+              <span>{formatDate(data.created_at)}</span>
+            )}
+            allowHeaderFiltering={false}
+          />
+          <Column
+            dataField="updated_at"
+            caption="Last Modified Date"
+            cellRender={({ data }) =>
+            (
+              <span>{data.updated_at
+                &&
+                formatDate(data.updated_at)}</span>
+            )
+            }
+            allowHeaderFiltering={false}
+          />
+          {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
+            <Column
+              width={80}
+              cellRender={({ data }: any) => (
+                <Btn
+                  visible={actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')}
+                  render={() => (
+                    <>
+                      <Image
+                        src="/icons/edit.svg"
+                        width={24}
+                        height={24}
+                        alt="Edit Organization"
+                        title="Edit organization"
+                      />
+                    </>
+                  )}
+                  onClick={() => showEditPopupForm(data)}
                 />
               )}
-              width={550}
-              hideOnOutsideClick={true}
-              height="100%"
-              position={popupPosition}
-              onHiding={() => {
-                formRef.current?.instance().reset();
-                setCreatePopupVisibility(false);
-              }}
-              showCloseButton={true}
-              wrapperAttr={{ class: "create-popup mr-[15px]" }}
+              caption="Actions"
             />
-            <Popup
-              title={`Edit ${editField?.name}`}
-              visible={editPopup}
-              dragEnabled={false}
-              showCloseButton={true}
-              hideOnOutsideClick={true}
-              contentRender={() => (
-                <EditOrganization
-                  formRef={formRef}
-                  organizationData={editField}
-                  showEditPopup={showEditPopup}
-                  fetchOrganizations={fetchOrganizations}
-                  myRoles={myRoles}
-                  loggedInUser={userData.id}
-                  editPopup={editPopup}
+          )}
+          <GridToolbar>
+            <Item location="after">
+              {myRoles?.includes('admin') && (
+                <Btn
+                  text="Create Organization"
+                  icon="plus"
+                  className={`button_primary_toolbar mr-[20px]`}
+                  render={(buttonData: any) => (
+                    <>
+                      <Image
+                        src="/icons/plus.svg"
+                        width={24}
+                        height={24}
+                        alt="Create Organization"
+                      />
+                      <span>{buttonData.text}</span>
+                    </>
+                  )}
+                  onClick={() => setCreatePopupVisibility(true)}
                 />
               )}
-              width={550}
-              height="100%"
-              position={popupPosition}
-              onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}
-              wrapperAttr={{ class: "create-popup" }}
-            />
-          </Item>
-          <Item name="searchPanel" location="before" />
-        </GridToolbar>
-      </DataGrid>}
+              <Popup
+                title="Create Organization"
+                visible={createPopupVisible}
+                dragEnabled={false}
+                onShown={handlePopupShown}
+                contentRender={() => (
+                  <RenderCreateOrganization
+                    formRef={formRef}
+                    setCreatePopupVisibility={setCreatePopupVisibility}
+                    fetchOrganizations={fetchOrganizations}
+                    created_by={userData.id}
+                  />
+                )}
+                width={550}
+                hideOnOutsideClick={true}
+                height="100%"
+                position={popupPosition}
+                onHiding={() => {
+                  formRef.current?.instance().reset();
+                  setCreatePopupVisibility(false);
+                }}
+                showCloseButton={true}
+                wrapperAttr={{ class: "create-popup mr-[15px]" }}
+              />
+              <Popup
+                title={`Edit ${editField?.name}`}
+                visible={editPopup}
+                dragEnabled={false}
+                showCloseButton={true}
+                hideOnOutsideClick={true}
+                contentRender={() => (
+                  <EditOrganization
+                    formRef={formRef}
+                    organizationData={editField}
+                    showEditPopup={showEditPopup}
+                    fetchOrganizations={fetchOrganizations}
+                    myRoles={myRoles}
+                    loggedInUser={userData.id}
+                    editPopup={editPopup}
+                  />
+                )}
+                width={550}
+                height="100%"
+                position={popupPosition}
+                onHiding={() => { formRef.current?.instance().reset(); showEditPopup(false) }}
+                wrapperAttr={{ class: "create-popup" }}
+              />
+            </Item>
+            <Item name="searchPanel" location="before" />
+          </GridToolbar>
+        </DataGrid>}
     </>
   );
 }

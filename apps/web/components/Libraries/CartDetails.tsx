@@ -59,6 +59,10 @@ export default function CartDetails({
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       setPopupVisible(false);
     }
+    setCellData({
+      smiles_string: "",
+      source_molecule_name: ''
+    })
   };
   const MoleculeStructure = dynamic(() => import("@/utils/MoleculeStructure"), {
     ssr: false,
@@ -79,11 +83,14 @@ export default function CartDetails({
   }));
 
   const handleStructureZoom = (event: any, data: any) => {
-    const { x, y } = event.event.target.getBoundingClientRect();
-    const screenHeight = window.innerHeight;
-    setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
-    setPopupVisible(true);
-    setCellData({ ...data, source_molecule_name: data.moleculeName });
+    const x = event.clientX;
+    const y = event.clientY;
+    const screenHeight = event.view.innerHeight;
+    if (!popupVisible) {
+      setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
+      setPopupVisible(true);
+      setCellData({ ...data, source_molecule_name: data.moleculeName });
+    }
   }
 
   const columns: ColumnConfig[] = [
@@ -103,15 +110,17 @@ export default function CartDetails({
       allowHeaderFiltering: false,
       allowSorting: false,
       customRender: (data) => (
-        <MoleculeStructureActions
-          smilesString={data.smiles_string}
-          molecule_id={data.molecule_id}
-          structureName={data.moleculeName}
-          onZoomClick={(e: any) => {
-            e.event.stopPropagation();
-            handleStructureZoom(e, data);
-          }}
-        />
+        <div onMouseEnter={(e) => handleStructureZoom(e, data)}>
+          <MoleculeStructureActions
+            smilesString={data.smiles_string}
+            molecule_id={data.molecule_id}
+            structureName={data.moleculeName}
+            onZoomClick={(e: any) => {
+              e.event.stopPropagation();
+              handleStructureZoom(e, data);
+            }}
+          />
+        </div>
       ),
     },
     {
@@ -329,7 +338,7 @@ export default function CartDetails({
           ref={popupRef}
           style={{
             top: `${popupCords.y}px`,
-            right: `-120px`,
+            right: `120px`,
             zIndex: 2000,
           }}
           className="fixed

@@ -119,13 +119,20 @@ export default function MoleculeList({
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
         }
+        setCellData({
+            smiles_string: "",
+            source_molecule_name: ''
+        })
     };
     const handleStructureZoom = (event: any, data: any) => {
-        const { x, y } = event.event.target.getBoundingClientRect();
-        const screenHeight = window.innerHeight;
-        setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
-        setPopupVisible(true);
-        setCellData(data);
+        const x = event.clientX;
+        const y = event.clientY;
+        const screenHeight = event.view.innerHeight;
+        if (!popupVisible) {
+            setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
+            setPopupVisible(true);
+            setCellData({ ...data, source_molecule_name: data.moleculeName });
+        }
     }
 
     const fetchMoleculeData = async (library_id: number,) => {
@@ -197,20 +204,22 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             alignment: 'center',
             customRender: (data) => (
-                <MoleculeStructureActions
-                    smilesString={data.smiles_string}
-                    structureName={data.source_molecule_name}
-                    molecule_id={data.id}
-                    onZoomClick={(e: any) => handleStructureZoom(e, data)}
-                    enableEdit={(admin || data.created_by === userData.id) &&
-                        data.status === MoleculeStatusCode.New &&
-                        actionsEnabled.includes('edit_molecule')}
-                    enableDelete={(admin || data.created_by === userData.id) &&
-                        data.status === MoleculeStatusCode.New &&
-                        actionsEnabled.includes('edit_molecule')}
-                    onEditClick={() => showEditMolecule(data)}
-                    onDeleteClick={() => deleteMoleculeCart(data)}
-                />
+                <div onMouseEnter={(e) =>handleStructureZoom(e, data)}>
+                    <MoleculeStructureActions
+                        smilesString={data.smiles_string}
+                        structureName={data.source_molecule_name}
+                        molecule_id={data.id}
+                        onZoomClick={(e: any) => handleStructureZoom(e, data)}
+                        enableEdit={(admin || data.created_by === userData.id) &&
+                            data.status === MoleculeStatusCode.New &&
+                            actionsEnabled.includes('edit_molecule')}
+                        enableDelete={(admin || data.created_by === userData.id) &&
+                            data.status === MoleculeStatusCode.New &&
+                            actionsEnabled.includes('edit_molecule')}
+                        onEditClick={() => showEditMolecule(data)}
+                        onDeleteClick={() => deleteMoleculeCart(data)}
+                    />
+                </div>
             ),
         },
         {

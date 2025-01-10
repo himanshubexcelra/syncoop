@@ -279,3 +279,24 @@
 .dx-button.dx-state-disabled .dx-button-text {
     color: var(--black);
 }
+
+.reset-password-group {
+    .dx-collection {
+        align-items: center !important;
+    }
+    .custom-password {
+        .dx-texteditor {
+            width: 250px;
+            height: 40px;
+        }
+    }
+    .dx-item {
+        flex: auto !important;
+    }
+
+    .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+        padding-inline-start: 0 !important;
+        padding-inline-end: 10px;
+
+    }
+}

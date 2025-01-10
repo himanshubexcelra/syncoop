@@ -2,63 +2,44 @@
 "use client";
 import toast from "react-hot-toast";
 import Image from 'next/image';
-import { Button, TextBox, Tooltip, Validator } from 'devextreme-react';
-import { Button as TextBoxButton } from 'devextreme-react/text-box';
-import { CustomRule, RequiredRule } from 'devextreme-react/cjs/data-grid';
+import { Button, Tooltip } from 'devextreme-react';
 import { LoginFormSchema } from '@/lib/definition';
 import { Messages } from '@/utils/message';
 import PasswordCriteria from '../Tooltips/PasswordCriteria';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { delay, generatePassword } from "@/utils/helpers";
-import { TextBoxTypes } from "devextreme-react/cjs/text-box";
-import { ButtonTypes } from "devextreme-react/cjs/button";
-import { Form, SimpleItem } from "devextreme-react/form";
+import {
+    ButtonItem,
+    ButtonOptions,
+    Form,
+    GroupItem,
+    Item,
+    Label,
+    SimpleItem
+} from "devextreme-react/form";
 import { editUser } from "../User/service";
 import { DELAY } from "@/utils/constants";
 
 interface ChangePasswordProps {
     onClose: () => void;
     email_id?: string;
+    visible?: boolean;
 }
 const customPasswordCheck = (password: any) =>
     LoginFormSchema.shape.password_hash.safeParse(password).success;
 
-const passwordLabel = { 'aria-label': 'Password' };
-
-export default function ChangePassword({ onClose, email_id }: ChangePasswordProps) {
+export default function ChangePassword({ onClose, email_id, visible }: ChangePasswordProps) {
     const formRef = useRef<any>(null);
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
-    const [newPasswordMode, setNewPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
-    const [oldPasswordMode, setOldPasswordMode] = useState<TextBoxTypes.TextBoxType>('password');
-    const [valid, setValid] = useState<any>('valid');
-
-    const passwordButtonNew = useMemo<ButtonTypes.Properties>(
-        () => ({
-            icon: newPasswordMode === "text" ? "eyeclose" : "eyeopen",
-            stylingMode: "text",
-            onClick: () => {
-                setNewPasswordMode((prevPasswordMode) =>
-                    prevPasswordMode === "text" ? "password" : "text"
-                );
-            },
-        }),
-        [newPasswordMode]
-    );
-
-    const passwordButtonOld = useMemo<ButtonTypes.Properties>(
-        () => ({
-            icon: oldPasswordMode === "text" ? "eyeclose" : "eyeopen",
-            stylingMode: "text",
-            onClick: () => {
-                setOldPasswordMode((prevPasswordMode) =>
-                    prevPasswordMode === "text" ? "password" : "text"
-                );
-            },
-        }),
-        [oldPasswordMode]
-    );
-
+    
+    useEffect(() => {
+        if (visible) {
+            if (formRef.current) {
+                formRef.current.instance().resetValues();
+            }
+        }
+    }, [visible]);
     const handleSubmit = async () => {
         const values = formRef.current!.instance().option("formData");
         const validationCheck = customPasswordCheck(values.newPassword)
@@ -72,7 +53,6 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
                 const toastId = toast.success(Messages.PASSWORD_CHANGE)
                 await delay(DELAY)
                 toast.remove(toastId)
-                setValid('valid')
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);
@@ -80,19 +60,18 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
             }
         }
         else {
-            setValid('invalid')
             formRef.current!.instance().validate()
         }
     };
-
+    let copyPassword = newPassword
     const handleCopyPassword = async () => {
-        if (newPassword === "") {
+        if (copyPassword === "") {
             const toastId = toast.error(Messages.PASSWORD_EMPTY);
             await delay(DELAY);
             toast.remove(toastId);
             return;
         }
-        navigator.clipboard.writeText(newPassword)
+        navigator.clipboard.writeText(copyPassword)
             .then(() => toast.success(Messages.PASSWORD_COPY))
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
     };
@@ -103,108 +82,27 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
         navigator.clipboard.writeText(generatedPassword)
             .then(() => toast.success(Messages.PASSWORD_COPY))
             .catch(() => toast.error(Messages.PASSWORD_COPY_FAIL));
+        formRef.current!.instance().updateData("newPassword", generatedPassword);
     };
 
-    const checkValidationStatus = (password: any) =>
-        password !== '' && !customPasswordCheck(password) ? 'invalid' : valid
 
-    const oldPasswordRender = (data: any) => {
-        return (
-            <TextBox
-                value={oldPassword}
-                onValueChanged={(e) => {
-                    setOldPassword(e.value);
-                    data.component.updateData("oldPassword", e.value);
-                }}
-                placeholder="Enter Old Password"
-                inputAttr={passwordLabel}
-                mode={oldPasswordMode}
-                validationStatus={checkValidationStatus(oldPassword)}
-            >
-                <TextBoxButton
-                    name="oldPassword"
-                    location="after"
-                    options={passwordButtonOld}
-                />
-                <Validator>
-                    <RequiredRule message={Messages.requiredMessage('Password')} />
-                </Validator>
-            </TextBox>
-        );
-    };
-
-    const newPasswordRender = (data: any) => {
-        return (
-            <div className="flex items-center gap-2">
-                <TextBox
-                    value={newPassword}
-                    onValueChanged={(e) => {
-                        setNewPassword(e.value);
-                        data.component.updateData("newPassword", e.value);
-                    }}
-                    placeholder="Enter New Password"
-                    inputAttr={passwordLabel}
-                    mode={newPasswordMode}
-                    validationStatus={checkValidationStatus(newPassword)}
-                >
-                    <TextBoxButton
-                        name="newPassword"
-                        location="after"
-                        options={passwordButtonNew}
-                    />
-                    <Validator>
-                        <RequiredRule message={Messages.requiredMessage('Password')} />
-                        <CustomRule
-                            validationCallback={(options) => customPasswordCheck(options.value)}
-                            message={Messages.PASSWORD_CRITERIA}
-                        />
-                    </Validator>
-                </TextBox>
-
-                <Image
-                    src="/icons/copy-icon.svg"
-                    alt="copy"
-                    width={16}
-                    height={16}
-                    priority
-                    className="cursor-pointer"
-                    onClick={handleCopyPassword}
-                />
-                <div id="info-container">
-                    <Image
-                        src="/icons/info-icon.svg"
-                        alt="info"
-                        width={14}
-                        height={15}
-                        priority
-                        className="cursor-pointer"
-                        id="info-icon"
-                    />
-                    <Tooltip
-                        target="#info-icon"
-                        showEvent="mouseenter"
-                        hideEvent="mouseleave"
-                        position="bottom"
-                        hideOnOutsideClick={false}
-                    >
-                        <PasswordCriteria />
-                    </Tooltip>
-                </div>
-                <Button
-                    text="Generate"
-                    onClick={handleGeneratePassword}
-                    className="btn-secondary"
-                />
-            </div>
-        );
-    };
     const handleCancel = () => {
         setNewPassword('');
-        setOldPassword('')
+        setOldPassword('');
         formRef.current!.instance().reset();
         onClose();
-        setValid('valid')
     }
+    const changePasswordMode = useCallback((name: any) => {
+        const editor = formRef.current.instance().getEditor(name);
+        const currentMode = editor.option('mode');
+        editor.option('mode', currentMode === 'text' ? 'password' : 'text');
+        const passwordButton = editor.option('buttons').find((button: any) =>
+            button.name === name);
+        if (passwordButton) {
+            passwordButton.options.icon = currentMode === 'text' ? "eyeopen" : "eyeclose";
+        }
+        editor.repaint();
+    }, []);
     return (
         <>
             <div className="flex justify-between mb-4">
@@ -219,14 +117,120 @@ export default function ChangePassword({ onClose, email_id }: ChangePasswordProp
                 />
             </div>
             <Form ref={formRef}>
-                <SimpleItem
-                    dataField="oldPassword"
-                    render={oldPasswordRender}
-                />
-                <SimpleItem
-                    dataField="newPassword"
-                    render={newPasswordRender}
-                />
+                <GroupItem>
+                    <SimpleItem
+                        dataField="oldPassword"
+                        editorType="dxTextBox"
+                        cssClass="custom-password"
+                        editorOptions={{
+                            mode: 'password',
+                            placeholder: "Enter Old Password",
+                            valueChangeEvent: 'keyup',
+                            // onValueChanged: (e: any) => setOldPassword(e.value),
+                            buttons: [{
+                                name: "oldPassword",
+                                location: "after",
+                                value: oldPassword,
+                                options: {
+                                    stylingMode: 'text',
+                                    icon: 'eyeopen',
+                                    onClick: () => changePasswordMode('oldPassword'),
+                                },
+                            }],
+                        }}
+                        validationRules={[
+                            {
+                                type: 'required',
+                                message: Messages.requiredMessage('Password')
+                            },
+                            {
+                                type: 'custom',
+                                validationCallback: (e) => {
+                                    return customPasswordCheck(e.value);
+                                },
+                                message: Messages.PASSWORD_CRITERIA
+                            }
+                        ]}
+                    >
+                        <Label text={'Old Password'} />
+                    </SimpleItem>
+                </GroupItem>
+                <GroupItem colCount={4} cssClass="reset-password-group">
+                    <SimpleItem
+                        dataField="newPassword"
+                        editorType="dxTextBox"
+                        cssClass="custom-password"
+                        editorOptions={{
+                            mode: 'password',
+                            placeholder: "Enter New Password",
+                            valueChangeEvent: 'keyup',
+                            onValueChanged: (e: any) => copyPassword = e.value,
+                            buttons: [{
+                                name: "newPassword",
+                                location: "after",
+                                options: {
+                                    stylingMode: 'text',
+                                    icon: 'eyeopen',
+                                    onClick: () => changePasswordMode('newPassword'),
+                                },
+                            }],
+                        }}
+                        validationRules={[
+                            {
+                                type: 'required',
+                                message: Messages.requiredMessage('Password')
+                            },
+                            {
+                                type: 'custom',
+                                validationCallback: (e) => {
+                                    return customPasswordCheck(e.value);
+                                },
+                                message: Messages.PASSWORD_CRITERIA
+                            }
+                        ]}
+                    >
+                        <Label text={'Password'} />
+                    </SimpleItem>
+                    <Item>
+                        <div className="mt-[12px]">
+                            <Image
+                                src="/icons/copy-icon.svg"
+                                alt="copy"
+                                width={16}
+                                height={16}
+                                priority
+                                onClick={handleCopyPassword}
+                            />
+                        </div>
+                    </Item>
+                    <Item>
+                        <div className="mt-[12px]" id="info-box">
+                            <Image
+                                src="/icons/info-icon.svg"
+                                alt="info"
+                                width={16}
+                                height={16}
+                                priority
+                                id="info-icon-password_hash"
+                            />
+                            <Tooltip
+                                target="#info-icon-password_hash"
+                                showEvent="mouseenter"
+                                hideEvent="mouseleave"
+                                position="bottom"
+                                hideOnOutsideClick={false}
+                            >
+                                <PasswordCriteria />
+                            </Tooltip>
+                        </div>
+                    </Item>
+                    <ButtonItem cssClass="pt-[20px]">
+                        <ButtonOptions
+                            text={`Generate`}
+                            onClick={handleGeneratePassword}
+                            elementAttr={{ class: 'btn-secondary' }} />
+                    </ButtonItem>
+                </GroupItem>
                 <SimpleItem>
                     <div className="flex justify-start gap-2 mt-5 ">
                         <Button

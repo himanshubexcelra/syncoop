@@ -14,6 +14,7 @@ import {
 } from '@/lib/definition';
 import { getLibraries } from '../Libraries/service';
 import { LoadIndicator } from 'devextreme-react';
+import usePopupAndReset from '../usePopupandReset/usePopupAndReset';
 
 type ProjectListProps = {
     data: ProjectDataFields[],
@@ -25,7 +26,7 @@ type ProjectListProps = {
     clickedOrg?: number,
 }
 
-export default function ListProjects({ 
+export default function ListProjects({
     data,
     users,
     fetchOrganizations,
@@ -39,10 +40,20 @@ export default function ListProjects({
     const [loader, setLoader] = useState(false);
     const { myRoles } = userData;
 
+    const {
+        reset,
+        showPopup,
+        setIsDirty,
+        childRef,
+        popup,
+        setShowPopup,
+        isDirty,
+    } = usePopupAndReset();
+
     const fetchLibraryData = async (id: number) => {
         if (id) {
             const projectData = await getLibraries(['libraries'/* , 'projects' */], id.toString());
-            
+
             setSelectedItems([projectData]);
             setLoader(false);
         }
@@ -55,33 +66,40 @@ export default function ListProjects({
     }, [data?.length]);
 
     const selectionChanged = useCallback((e: AccordionTypes.SelectionChangedEvent) => {
-        setLoader(true);
-        let newItems = [...selectedItems];
-        e.removedItems.forEach((item) => {
-            const index = newItems.indexOf(item);
-            if (index >= 0) {
-                newItems.splice(index, 1);
+        if (isDirty) {
+            if (selectedItems[0].name === e.removedItems[0].name) {
+                e.component.option("selectedItems", e.removedItems);
             }
-        });
-        if (e.addedItems.length) {
-            newItems = [...newItems, ...e.addedItems];
-            fetchLibraryData(e.addedItems[0]?.id)
-        }
-        if (myRoles?.includes("admin")) {
-            if (Array.isArray(organizationData)) {
-                const filteredUsers = organizationData.filter(
-                    (org: OrganizationDataFields) =>
-                        org.id === newItems[0].parent_id)[0]?.orgUser;
+            setShowPopup(true);
+        } else {
+            setLoader(true);
+            let newItems = [...selectedItems];
+            e.removedItems.forEach((item) => {
+                const index = newItems.indexOf(item);
+                if (index >= 0) {
+                    newItems.splice(index, 1);
+                }
+            });
+            if (e.addedItems.length) {
+                newItems = [...newItems, ...e.addedItems];
+                fetchLibraryData(e.addedItems[0]?.id)
+            }
+            if (myRoles?.includes("admin")) {
+                if (Array.isArray(organizationData)) {
+                    const filteredUsers = organizationData.filter(
+                        (org: OrganizationDataFields) =>
+                            org.id === newItems[0].parent_id)[0]?.orgUser;
 
-                if (filteredUsers) {
-                    setUsers(filteredUsers?.filter(
-                        (user: User) =>
-                            user.user_role[0]?.role?.type === 'library_manager' &&
-                            user.id !== userData.id));
+                    if (filteredUsers) {
+                        setUsers(filteredUsers?.filter(
+                            (user: User) =>
+                                user.user_role[0]?.role?.type === 'library_manager' &&
+                                user.id !== userData.id));
+                    }
                 }
             }
         }
-    }, [selectedItems, setSelectedItems]);
+    }, [selectedItems, setSelectedItems, isDirty]);
 
     return (
         <div className='content'>
@@ -111,7 +129,15 @@ export default function ListProjects({
                                     userData={userData}
                                     actionsEnabled={actionsEnabled}
                                     myRoles={myRoles}
-                                    clickedOrg={clickedOrg} />
+                                    clickedOrg={clickedOrg}
+                                    childRef={childRef}
+                                    setIsDirty={setIsDirty}
+                                    reset={reset}
+                                    showPopup={showPopup}
+                                    popup={popup}
+                                    isDirty={isDirty}
+                                    setShowPopup={setShowPopup}
+                                />
                             ))}
                 </div>
             ) : <div className="nodata-project">No Data found</div>}

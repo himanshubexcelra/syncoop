@@ -53,8 +53,10 @@ import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import {
   getADMECalculation,
+  getADMEColor,
   getAverage,
   getStatusObject,
+  isAdmin,
   isLibraryManger,
   isOnlyProtocolApprover,
   isProtocolAproover,
@@ -258,6 +260,15 @@ export default function MoleculeOrderPage({
     checkBoxUpdating: false,
     selectAllCheckBox: null
   }); */
+
+  const getConfig = (data: MoleculeOrder) => {
+    if (!data.inherits_configuration) {
+      return data.config;
+    } else if (data.inherits_configuration && !data.project_inherits_configuration) {
+      return data.projectConfig;
+    }
+    return data.organizationConfig;
+  }
 
   const breadcrumbs: BreadCrumbsObj[] = [
     { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
@@ -570,9 +581,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'Caco2');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -607,9 +618,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -644,9 +655,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -681,9 +692,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -718,9 +729,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -755,9 +766,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -792,9 +803,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -829,9 +840,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'HepG2');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -866,9 +877,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'hERG');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -903,9 +914,9 @@ export default function MoleculeOrderPage({
           if (result) {
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
-            const reference = COLOR_SCHEME[key].reference
-            const colorFound = COLOR_SCHEME[key].color.find((color: any) =>
-              calculatedResult >= color.min && calculatedResult < color.max)
+            const reference = COLOR_SCHEME[key].reference;
+            const config = getConfig(data);
+            const colorFound = getADMEColor(config, calculatedResult, key, 'Solubility');
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -987,7 +998,7 @@ export default function MoleculeOrderPage({
 
   const rowGroupName = () => {
     if (type === OrganizationType.External) {
-      if (isResearcher(myRoles) || isProtocolAproover(myRoles)) {
+      if (isAdmin(myRoles) || isResearcher(myRoles) || isProtocolAproover(myRoles)) {
         return "organization / Order";
       }
       return "project / library";
@@ -1205,7 +1216,7 @@ export default function MoleculeOrderPage({
             organizationMetadata,
             ...(() => {
               if (type === OrganizationType.External) {
-                if (isResearcher(myRoles) || isProtocolAproover(myRoles)) {
+                if (isAdmin(myRoles) || isResearcher(myRoles) || isProtocolAproover(myRoles)) {
                   return {
                     "organization / Order":
                       `${organizationName} / ${order_name}`

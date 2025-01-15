@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { ContainerType } from "@/utils/definition";
 import { json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
         const projectQuery: any = {
             where: {
-                type: 'P',
+                type: ContainerType.PROJECT,
                 ...(() => {
                     if (org_id) {
                         return {
@@ -44,14 +45,14 @@ export async function GET(request: Request) {
 
         const libraryQuery: any = {
             where: {
-                type: 'L'
+                type: ContainerType.LIBRARY
             },
         };
         if (org_id) {
             libraryQuery.where = {
                 ...libraryQuery.where,
                 container: {
-                    type: 'P',
+                    type: ContainerType.PROJECT,
                     parent_id: org_id
                 }
             }

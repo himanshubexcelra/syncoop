@@ -29,6 +29,7 @@ import { delay, getUTCTime, isAdmin } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import LibraryAccordion from './LibraryAccordion';
 import MoleculeList from './MoleculeList';
+import usePopupAndReset from '../usePopupandReset/usePopupAndReset';
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -140,6 +141,15 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [loader, setLoader] = useState(true);
     const [expanded, setExpanded] = useState(library_id ? false : true);
     const context: any = useContext(AppContext);
+    const {
+        reset,
+        showPopup,
+        setIsDirty,
+        childRef,
+        popup,
+        setShowPopup,
+        isDirty,
+    } = usePopupAndReset();
     const appContext = context.state;
 
     const [sortBy, setSortBy] = useState('Recent');
@@ -246,6 +256,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const selectLibrary = (libId: number) => {
         setLibraryId(libId);
     }
+    const config = projectData.inherits_configuration ?
+        projectData.container.config : projectData.config;
 
     return (
         <>
@@ -256,6 +268,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                         visible={loader}
                     /> :
                     <div>
+                        {showPopup && popup}
                         <div className="flex justify-between">
                             <main className="main padding-sub-heading">
                                 <Image
@@ -293,6 +306,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     setLibraryId={(library_id: number) => selectLibrary(library_id)}
                                     /* setSelectedLibraryName={setSelectedLibraryName} */
                                     setExpanded={setExpanded}
+                                    isDirty={isDirty}
+                                    setShowPopup={setShowPopup}
                                 />
                             </div >
                             )}
@@ -302,20 +317,28 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                         <LoadIndicator
                                             visible={libLoader}
                                         /> : (
-                                            <Accordion multiple={true} collapsible={true}>
-                                                <Item titleRender={() => 'Assays'}>
-                                                    <ADMESelector type="L"
+                                            <Accordion collapsible={true} multiple={false}>
+                                                <Item visible={false} />
+                                                <Item titleRender={() => 'ADME Properties'}>
+                                                    <ADMESelector
+                                                        type="L"
                                                         organizationId={
                                                             userData.organization_id
                                                         }
+                                                        childRef={childRef}
+                                                        isDirty={isDirty}
+                                                        setIsDirty={setIsDirty}
+                                                        reset={reset}
                                                         data={{
                                                             ...selectedLibraryData,
                                                             container: {
-                                                                config:
-                                                                    projectData.
-                                                                        config
+                                                                config
                                                             }
                                                         }}
+                                                        editAllowed={
+                                                            actionsEnabled.includes('edit_library')
+                                                        }
+                                                        fetchContainer={fetchLibraries}
                                                     />
                                                 </Item>
                                             </Accordion>
@@ -334,7 +357,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     projectId={project_id}
                                     fetchLibraries={fetchLibraries}
                                     organizationId={organization_id || ''}
-                                    config={selectedLibraryData?.config}
+                                    config={selectedLibraryData?.inherits_configuration ?
+                                        config : selectedLibraryData?.config?.ADMEParams}
                                 />
                             </div>
                         </div>

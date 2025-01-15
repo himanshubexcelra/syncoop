@@ -42,10 +42,17 @@ export enum MoleculeOrderStatusCode {
 
 export enum ContainerAccessPermissionLabel {
   Admin = 'Admin',
-  Edit = 'Edit'  
+  Edit = 'Edit'
 }
 
 export enum ContainerAccessPermissionType {
   Admin = 1,
-  Edit = 2    
+  Edit = 2
+}
+
+export enum ContainerType {
+  ORGANIZATION = 'O',
+  CLIENT_ORGANIZATION = 'CO',
+  PROJECT = 'P',
+  LIBRARY = 'L',
 }

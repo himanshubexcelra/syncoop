@@ -166,7 +166,26 @@
 
     }
 }
+.reset-password-group {
+    .dx-collection {
+        align-items: center !important;
+    }
+    .custom-password {
+        .dx-texteditor {
+            width: 242px;
+            height: 40px;
+        }
+    }
+    .dx-item {
+        flex: auto !important;
+    }
 
+    .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+        padding-inline-start: 0 !important;
+        padding-inline-end: 10px;
+
+    }
+}
 /* multiple buttons in form */
 .buttons-group {
     .dx-item {
@@ -204,7 +223,8 @@
 .primary-button,
 .secondary-button,
 .button-no-border,
-.reject-button {
+.reject-button,
+.inherited {
     font-family: Lato;
     font-size: 14px;
     font-style: normal;

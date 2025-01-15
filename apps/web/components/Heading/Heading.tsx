@@ -2,10 +2,11 @@
 import React from 'react';
 import { HeadingObj } from '@/lib/definition';
 import Image from 'next/image';
+import { isOrgAdmin } from '@/utils/helpers';
 
 type HeadingProps = {
     heading: HeadingObj[];
-    myRoles?: string[];
+    myRoles: string[];
     showEditPopup?: (show: boolean) => void;
 }
 
@@ -29,7 +30,7 @@ const Heading: React.FC<HeadingProps> = ({ heading, myRoles, showEditPopup }) =>
                     </React.Fragment>
                 ))}
             </div>
-            {['admin', 'org_admin'].some((role) => myRoles?.includes(role)) && showEditPopup && (
+            {isOrgAdmin(myRoles) && showEditPopup && (
                 <button
                     className='secondary-button'
                     onClick={() => showEditPopup(true)}

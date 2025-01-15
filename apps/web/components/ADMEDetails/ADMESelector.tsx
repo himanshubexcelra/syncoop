@@ -4,18 +4,28 @@ import RangeSlider, { Tooltip } from 'devextreme-react/range-slider';
 import Switch from 'devextreme-react/switch';
 import {
     ADMEConfigTypes, ADMEProps,
+    ContainerType,
     FORMULA_CONFIG, OrganizationDataFields
 } from '@/lib/definition';
 import toast from "react-hot-toast";
 import { editOrganization, getOrganizationById } from '../Organization/service';
 import { Messages } from "@/utils/message";
-import { delay, setConfig } from "@/utils/helpers";
+import { deepEqual, delay, roundValue, setConfig } from "@/utils/helpers";
 import { COLOR_SCHEME, DELAY, MAX_RANGE } from "@/utils/constants";
 import { LoadIndicator } from 'devextreme-react';
 import { editProject } from '../Projects/projectService';
 import { editLibrary } from '../Libraries/service';
 
-const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
+const ADMESelector = ({ data,
+    type,
+    organizationId,
+    setIsDirty,
+    childRef,
+    reset,
+    fetchContainer,
+    isDirty,
+    editAllowed,
+}: ADMEProps) => {
     const [sliderValues, setSliderValues] = useState<ADMEConfigTypes[]>([]);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
     const [organizationData, setOrganizationData] = useState<OrganizationDataFields>(
@@ -23,18 +33,24 @@ const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
     const [loader, setLoader] = useState(true);
     const [inherited, setInherited] = useState(type ? true : false);
     const [unit, setUnit] = useState<string[]>([]);
-    const orgId = organizationId;
+    const [currentId, setCurrentId] = useState<number>();
+    const [editEnabled, setEditEnabled] = useState(true);
 
     const fetchData = async () => {
         setLoader(true);
         let config;
         if (!type) {
-            const orgData = await getOrganizationById({ withRelation: [], id: orgId });
+            const orgData = await getOrganizationById({
+                withRelation: [],
+                id: organizationId
+            });
             setOrganizationData(orgData);
             config = orgData?.config;
         } else {
-            config = data?.config;
-            setInherited(data?.inherits_configuration ?? true);
+            setEditEnabled(!!editAllowed);
+            const inherits = data?.inherits_configuration ?? true;
+            config = inherits ? data?.container?.config : data?.config;
+            setInherited(inherits);
         }
         const rangeArray = config && config?.ADMEParams
             && typeof config.ADMEParams === 'object'
@@ -55,29 +71,48 @@ const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
 
     useEffect(() => {
         fetchData();
-    }, [orgId]);
+    }, [organizationId, data?.id, editAllowed]);
 
-    const roundValue = (value: number, precision: number = 2) => {
-        const factor = Math.pow(10, precision);
-        return Math.round(value * factor) / factor;
-    };
+    useEffect(() => {
+        if (reset === 'reset') {
+            fetchData();
+        } else if (reset === 'save') {
+            saveADMEConfig();
+        }
+    }, [reset]);
 
     // Update the value when the slider changes
     const handleRangeChange = (e: any, index: number) => {
-        const updatedSlider: ADMEConfigTypes[] = [...sliderValues];
-        Object.keys(updatedSlider[index]).forEach(key => {
-            updatedSlider[index][key].min = roundValue(e.start, 2);
-            updatedSlider[index][key].max = roundValue(e.end, 2);
-        });
-        setSliderValues(updatedSlider);
+        const selectedId = type ? data?.id : organizationData.id;
+        if (selectedId && currentId == selectedId) {
+            const updatedSlider: ADMEConfigTypes[] =
+                JSON.parse(JSON.stringify(sliderValues));
+            const key = Object.keys(updatedSlider[index])[0];
+            updatedSlider[index] = {
+                ...updatedSlider[index], // Copy the current object at that index
+                [key]: {
+                    ...updatedSlider[index][key], // Copy the current key object
+                    min: roundValue(e.start, 2),
+                    max: roundValue(e.end, 2),
+                }
+            };
+            if (!deepEqual(updatedSlider, sliderValues)) {
+                setSliderValues(updatedSlider);
+                setIsDirty(true);
+            } else {
+                setCurrentId(selectedId);
+            }
+        } else {
+            setCurrentId(selectedId);
+        }
     };
 
     const getSliderBackground = (rangeValue: FORMULA_CONFIG) => {
         const minPercent = (rangeValue.min / MAX_RANGE) * 100; // Convert min to percentage
         const maxPercent = (rangeValue.max / MAX_RANGE) * 100; // Convert max to percentage
-        return `linear-gradient(to right, red 0%, red ${minPercent}%, 
-            yellow ${minPercent}%, yellow ${maxPercent}%, 
-            green ${maxPercent}%, green 100%)`;
+        return `linear-gradient(to right, var(--admeRed) 0%, var(--admeRed) ${minPercent}%, 
+            var(--admeYellow) ${minPercent}%, var(--admeYellow) ${maxPercent}%, 
+            var(--admeGreen) ${maxPercent}%, var(--admeGreen) 100%)`;
     };
 
     function format(value: number) {
@@ -97,24 +132,30 @@ const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
                 inherits_configuration: inherited
             };
             response = await editOrganization(formValue);
-        } else if (type === 'P') {
+        } else if (type === ContainerType.PROJECT) {
             formValue = {
-                ...data, config: { ...organizationData.config, ADMEParams: sliderValues },
+                ...data, config: { ...data?.config, ADMEParams: inherited ? null : sliderValues },
                 organization_id: Number(data?.parent_id), user_id: data?.owner_id,
                 inherits_configuration: inherited
             };
             response = await editProject(formValue);
             success = Messages.admeConfigUpdated('project');
-        } else if (type === 'L') {
+        } else if (type === ContainerType.LIBRARY) {
             formValue = {
-                ...data, config: { ...organizationData.config, ADMEParams: sliderValues },
+                ...data,
+                config: { ...data?.config, ADMEParams: sliderValues },
                 project_id: Number(data?.parent_id), user_id: data?.owner_id,
+                organization_id: organizationId,
                 inherits_configuration: inherited
             };
             response = await editLibrary(formValue);
             success = Messages.admeConfigUpdated('library');
         }
         if (!response.error) {
+            setIsDirty(false);
+            if (type) {
+                fetchContainer?.();
+            }
             const toastId = toast.success(success);
             await delay(DELAY);
             toast.remove(toastId);
@@ -128,41 +169,48 @@ const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
     }
 
     const inheritedModification = () => {
+        setIsDirty(true);
+        if (!inherited) {
+            const rangeArray = data?.container?.config && data?.container?.config?.ADMEParams
+                && typeof data?.container?.config.ADMEParams === 'object'
+                ? data?.container?.config.ADMEParams : setConfig();
+            setSliderValues(rangeArray);
+        }
         setInherited(!inherited);
-        setLoader(true);
-        const rangeArray = data?.container?.config && data?.container?.config?.ADMEParams
-            && typeof data?.container?.config.ADMEParams === 'object'
-            ? data?.container?.config.ADMEParams : setConfig();
-        setSliderValues(rangeArray);
-        setLoader(false);
     };
 
     return (
-        <div>
+        <div ref={childRef} key={type ? data?.id : organizationData.id}>
             {loader ? (
                 <div className="center">
                     <LoadIndicator visible={loader} />
                 </div>
             ) : (
-                <div className={type != 'L' ? 'm-[20px]' : ''}>
-                    <div className='flex justify-end'>
+                <div className={type != ContainerType.LIBRARY ? 'm-[20px]' : ''}>
+                    <div className={`flex ${type ? 'justify-between' : 'justify-end'}`}>
                         {type && (
-                            <div className="dx-field block pr-[10px]">
-                                <div>Inherited</div>
-                                <div className="mt-[5px]">
+                            <div className="dx-field block flex">
+                                <div className='pr-[10px] inherited text-greyText'>
+                                    {`Inherited from 
+                                    ${type === ContainerType.PROJECT ? 'organization' :
+                                            'project'
+                                        }`}
+                                </div>
+                                <div>
                                     <Switch
                                         value={inherited}
                                         onValueChanged={inheritedModification}
+                                        disabled={!editEnabled}
                                     />
                                 </div>
                             </div>
                         )}
                         <button className={
-                            loadIndicatorVisible
-                                ? 'disableButton w-[70px] h-[50px]'
+                            loadIndicatorVisible || !isDirty
+                                ? 'disableButton w-[47px] h-[37px]'
                                 : 'primary-button'}
                             onClick={() => saveADMEConfig()}
-                            disabled={loadIndicatorVisible}>
+                            disabled={loadIndicatorVisible || !isDirty}>
                             <LoadIndicator className={
                                 `button-indicator`
                             }
@@ -178,7 +226,7 @@ const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
                             return (
                                 <div key={index}>
                                     <div className='flex pl-[20px] pr-[20px]'>
-                                        <div>
+                                        <div className='text-normal'>
                                             <h3 className='w-[135px]'>{Object.keys(range)[0]}</h3>
                                             <div>{unit[index]}</div>
                                         </div>
@@ -195,7 +243,7 @@ const ADMESelector = ({ data, type, organizationId }: ADMEProps) => {
                                                 style={{
                                                     width: '100%',
                                                 }}
-                                                disabled={inherited}
+                                                disabled={inherited || !editEnabled}
                                             >
                                                 <Tooltip enabled={true} format={format}
                                                     showMode="always" position="bottom" />

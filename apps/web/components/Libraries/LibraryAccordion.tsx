@@ -43,6 +43,8 @@ type LibraryAccordionType = {
     /* setSelectedLibraryName: (value: string) => void, */
     setExpanded: (value: boolean) => void,
     setLibraryId: (value: number) => void,
+    isDirty: boolean,
+    setShowPopup: (value: boolean) => void,
 }
 
 export default function LibraryAccordion({
@@ -60,6 +62,8 @@ export default function LibraryAccordion({
     /* getLibraryData, */
     setLibraryId,
     setExpanded,
+    isDirty,
+    setShowPopup,
 }: LibraryAccordionType) {
     const router = useRouter();
     const createEnabled = actionsEnabled.includes('create_library');
@@ -491,12 +495,16 @@ export default function LibraryAccordion({
                                 ) {
                                     return;
                                 }
-                                const url =
-                                    `/projects/${projectId}` +
-                                    `?library_id=${item.id}`;
-                                router.replace(url);
-                                setLibraryId(item.id)
-                                /* getLibraryData(item); */
+                                if (isDirty) {
+                                    setShowPopup(true);
+                                } else {
+                                    const url =
+                                        `/projects/${projectId}` +
+                                        `?library_id=${item.id}`;
+                                    router.replace(url);
+                                    setLibraryId(item.id)
+                                    /* getLibraryData(item); */
+                                }
 
                             }}>
                             <div className={

@@ -3,6 +3,7 @@ import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
 import { getUTCTime, json } from "@/utils/helper";
+import { ContainerType } from "@/utils/definition";
 
 const { EMAIL_ALREADY_EXIST, NOTFOUND } = MESSAGES;
 const { SUCCESS, CONFLICT, BAD_REQUEST } = STATUS_TYPE;
@@ -57,7 +58,12 @@ export async function GET(request: Request) {
                             name: true,
                         },
                         where: {
-                            type: { in: ['L', 'P'] }
+                            type: {
+                                in: [
+                                    ContainerType.LIBRARY,
+                                    ContainerType.PROJECT
+                                ]
+                            }
                         }
                     },
                 }
@@ -231,7 +237,12 @@ export async function PUT(request: Request) {
                         await prisma.container.updateMany({
                             where: {
                                 owner_id: existingUser.id,
-                                type: { in: ['L', 'P'] }
+                                type: {
+                                    in: [
+                                        ContainerType.LIBRARY,
+                                        ContainerType.PROJECT
+                                    ]
+                                }
                             },
                             data: { owner_id: primaryContact.id }
                         });

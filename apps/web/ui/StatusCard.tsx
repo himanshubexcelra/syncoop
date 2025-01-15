@@ -2,6 +2,7 @@
 import { Status } from "@/lib/definition";
 import StatusMark from "./StatusMark";
 import Image from "next/image";
+import { number_formatter } from "@/utils/helpers";
 
 type StatusCardProps = {
     id: number;
@@ -24,7 +25,9 @@ export default function StatusCard({
                 ${customStyles ? 'border border-neutral-200 w-[140px] h-[83px]' : ''}`}
         >
             {hideCount &&
-                <div className="font-lato text-2xl font-normal">{stat?.number}</div>}
+                <div className="font-lato text-2xl font-normal">
+                    {number_formatter(stat?.number)}
+                </div>}
             <div className="flex items-center gap-[3px]">
                 {stat?.image &&
                     <Image src={stat?.image} width={14} height={14} alt={stat?.text} />}

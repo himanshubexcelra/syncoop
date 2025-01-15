@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Popup, Position } from "devextreme-react/popup";
@@ -36,6 +36,13 @@ type ProjectAccordionDetailProps = {
     actionsEnabled: string[],
     myRoles?: string[],
     clickedOrg?: number,
+    childRef: React.RefObject<HTMLDivElement>,
+    setIsDirty: (val: boolean) => void,
+    reset: string;
+    showPopup: boolean;
+    popup: ReactNode;
+    isDirty: boolean;
+    setShowPopup: (val: boolean) => void;
 }
 
 export default function ProjectAccordionDetail({
@@ -47,6 +54,13 @@ export default function ProjectAccordionDetail({
     userData,
     actionsEnabled,
     clickedOrg,
+    childRef,
+    setIsDirty,
+    reset,
+    showPopup,
+    popup,
+    isDirty,
+    setShowPopup,
 }: ProjectAccordionDetailProps) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -56,8 +70,9 @@ export default function ProjectAccordionDetail({
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
     const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
-    const [loader, setLoader] = useState(false)
-    const [openButton, setOpenButton] = useState('Open')
+    const [loader, setLoader] = useState(false);
+    const [openButton, setOpenButton] = useState('Open');
+
     // Project's molecule count count OPT: 1
     const moleculeCount = data.other_container?.reduce((count, library) => {
         // Add the count of molecules in each library
@@ -104,12 +119,16 @@ export default function ProjectAccordionDetail({
         else setProjectExpanded(expandedDescription);
     }
     const openProject = () => {
-        setLoader(true)
-        setOpenButton('')
-        if (clickedOrg) {
-            router.push(`/organization/${clickedOrg}/projects/${data.id}`);
+        if (isDirty) {
+            setShowPopup(true);
         } else {
-            router.push(`/projects/${data.id}`);
+            setLoader(true)
+            setOpenButton('')
+            if (clickedOrg) {
+                router.push(`/organization/${clickedOrg}/projects/${data.id}`);
+            } else {
+                router.push(`/projects/${data.id}`);
+            }
         }
     }
     return (
@@ -140,7 +159,7 @@ export default function ProjectAccordionDetail({
                             width={20} />
                         {openButton}
                     </button>
-
+                    {showPopup && popup}
                     {editEnabled &&
                         <button
                             className='secondary-button accordion-button'
@@ -302,13 +321,21 @@ export default function ProjectAccordionDetail({
                 </div>
             </div>
             <div className='mb-[10px]'>
-                <Accordion collapsible={true}>
+                <Accordion collapsible={true} multiple={false}>
+                    <Item visible={false} />
                     <Item titleRender={
-                        () => renderTitle('Assays')}>
+                        () => renderTitle('ADME Properties')}>
                         <ADMESelector
                             type="P"
                             organizationId={userData.organization_id}
                             data={data}
+                            childRef={childRef}
+                            setIsDirty={setIsDirty}
+                            isDirty={isDirty}
+                            reset={reset}
+                            fetchContainer={fetchOrganizations}
+                            editAllowed={editEnabled}
+
                         />
                     </Item>
                 </Accordion>

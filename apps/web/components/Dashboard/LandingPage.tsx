@@ -26,6 +26,7 @@ import StatusComponent from "../StatusDetails/StatusComponent";
 import AssayTable from "../AssayTable/AssayTable";
 import Module from "../Module/Module";
 import ADMESelector from "../ADMEDetails/ADMESelector";
+import usePopupAndReset from "../usePopupandReset/usePopupAndReset";
 
 
 type DashboardPageTypeProps = {
@@ -49,6 +50,16 @@ export default function LandingPage({
         useState<OrganizationDataFields>({} as OrganizationDataFields);
     const [editPopup, showEditPopup] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
+    const {
+        reset,
+        showPopup,
+        setIsDirty,
+        childRef,
+        popup,
+        isDirty,
+        onSelectedIndexChange,
+    } = usePopupAndReset();
+
     const formRef = useRef<any>(null);
     const { id, } = userData;
     const orgDetail = useMemo(() =>
@@ -71,7 +82,6 @@ export default function LandingPage({
         }
     ];
 
-
     const tabsStatus: TabDetail[] = [
         {
             title: "Overview",
@@ -79,9 +89,15 @@ export default function LandingPage({
             props: { myRoles, orgUser: orgDetail, customerOrgId }
         },
         {
-            title: "ADME",
+            title: "ADME Properties",
             Component: ADMESelector,
-            props: { organizationId: orgDetail.id }
+            props: {
+                organizationId: orgDetail.id,
+                childRef: childRef,
+                setIsDirty: setIsDirty,
+                reset: reset,
+                isDirty: isDirty,
+            }
         },
         {
             title: "Assays",
@@ -121,7 +137,9 @@ export default function LandingPage({
             </div>
             <main className="main main-heading main-padding">
                 <div className="w-full shadow-lg shadow-[var(--tabBoxShadow)]">
-                    <Tabs tabsDetails={tabsStatus} />
+                    <Tabs tabsDetails={tabsStatus}
+                        onSelectedIndexChange={onSelectedIndexChange}
+                        confirmBeforeSave={isDirty} />
                 </div>
                 {myRoles.includes('admin') && !customerOrgId &&
                     <>
@@ -149,6 +167,7 @@ export default function LandingPage({
                         </div>
                     </>
                 }
+                {showPopup && popup}
                 {(!myRoles.includes('admin') || customerOrgId) && <div className="w-full">
                     <div className={`imageContainer pt-5 pb-2.5`}>
                         <Image

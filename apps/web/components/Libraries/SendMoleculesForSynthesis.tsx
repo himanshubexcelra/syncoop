@@ -5,11 +5,12 @@ import DataGrid, {
     Scrolling,
     Sorting,
     HeaderFilter,
+    DataGridRef,
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Button } from "devextreme-react/button";
 import { MoleculeOrder } from "@/lib/definition";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { LoadIndicator } from "devextreme-react";
 import MoleculeStructureActions from "@/ui/MoleculeStructureActions";
 
@@ -32,7 +33,7 @@ export default function SendMoleculesForSynthesis({
 }: SendMoleculesForSynthesisProps) {
 
     const [isLoading, setLoading] = useState(false);
-
+    const grid = useRef<DataGridRef>(null);
     const confirmSynthesis = async () => {
         setLoading(true);
         setTimeout(() => {
@@ -40,7 +41,38 @@ export default function SendMoleculesForSynthesis({
             generateReactionPathway();
         }, 3000);
     }
+    const [currentSort, setCurrentSort] = useState<{
+        field: string | null;
+        order: 'asc' | 'desc' | null
+    }>({ field: null, order: null });
 
+    const handleSortChanged = (e: any) => {
+        // Only handle sorting-related changes
+        if (e.name !== 'columns' || !e.fullName?.includes('sortOrder')) return;
+        const dataGrid = grid.current?.instance();
+        if (!dataGrid) return;
+        const sortedColInfo = e.component.getVisibleColumns().
+            filter((column: any) => column.sortOrder)?.[0]
+        const newField = sortedColInfo?.dataField;
+        // Get current sorting state
+        const currentField = currentSort.field;
+        const previousOrder = e.previousValue;
+        const newOrder = e.value;
+
+        if (currentField === newField) {
+            if (newOrder === 'desc' && previousOrder === 'asc') {
+                // Second click - already handled by DevExtreme
+                setCurrentSort({ field: newField, order: 'desc' });
+            } else if (previousOrder === 'desc') {
+                // Third click - clear sorting
+                dataGrid.clearSorting();
+                setCurrentSort({ field: null, order: null });
+            }
+        } else {
+            // New column clicked - DevExtreme handles the ascending sort
+            setCurrentSort({ field: newField, order: 'asc' });
+        }
+    };
     return (
         <>
             {inRetroData.length > 0 &&
@@ -57,11 +89,13 @@ export default function SendMoleculesForSynthesis({
             </div>
             <div onClick={closeMagnifyPopup}>
                 <DataGrid
+                    ref={grid}
                     dataSource={moleculeData}
                     showBorders={true}
                     columnAutoWidth={false}
                     width="100%"
                     style={{ maxHeight: '480px' }}
+                    onOptionChanged={handleSortChanged}
                 >
                     <Sorting mode="single" />
                     <Scrolling mode="infinite" />

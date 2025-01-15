@@ -2,9 +2,12 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { editOrganization, getOrganizationById } from '@/components/Organization/service';
 import ADMESelector from '../ADMESelector';
+import { ContainerType } from '@/lib/definition';
 
 const orgDetails = {
-    id: 24, name: 'org2', type: 'CO'
+    id: 24,
+    name: 'org2',
+    type: ContainerType.CLIENT_ORGANIZATION
 };
 
 const userData = {
@@ -224,7 +227,6 @@ const mockData = {
     "updated_by": null
 }
 
-
 jest.mock('@/components/Organization/service', () => ({
     getOrganizationById: jest.fn(),
     editOrganization: jest.fn(),
@@ -238,51 +240,53 @@ describe('ADME details sliders should work as expected', () => {
         (getOrganizationById as jest.Mock).mockResolvedValue(mockData);
     });
 
-    test.skip('Changing slider should work as expected for organization', async () => {
+    test('Changing slider should work as expected for organization', async () => {
         await act(async () => {
             render(
                 <ADMESelector
                     organizationId={orgDetails.id}
+                    setIsDirty={jest.fn()}
+                    childRef={null}
+                    reset={''}
                 />
             );
         });
 
         const sliders = screen.getAllByRole('slider');
         expect(sliders.length).not.toBe(0);
-        // Here we simulate the slider handle being moved
-        fireEvent.mouseDown(sliders[0], { clientX: 10.4 });
         // Simulate mouse move (moving the slider)
-        fireEvent.mouseMove(sliders[0], { clientX: 60 });
-        fireEvent.mouseUp(sliders[0]);  // Simulate releasing the slider handle
+        fireEvent.mouseMove(sliders[0], { clientX: 2.1 });
     }, 60000);
 
-    test.skip('Changing slider should work as expected for project and library', async () => {
+    test('Changing slider should work as expected for project and library', async () => {
         await act(async () => {
             render(
                 <ADMESelector
                     data={projectMockData}
                     type="P"
                     organizationId={24}
+                    setIsDirty={jest.fn()}
+                    childRef={null}
+                    reset={''}
                 />
             );
         });
 
         const sliders = screen.getAllByRole('slider');
         expect(sliders.length).not.toBe(0);
-        // Here we simulate the slider handle being moved
-        fireEvent.mouseDown(sliders[0], { clientX: 10.4 });
-        // Simulate mouse move (moving the slider)
-        fireEvent.mouseMove(sliders[0], { clientX: 60 });
-        fireEvent.mouseUp(sliders[0]);  // Simulate releasing the slider handle
+        fireEvent.mouseMove(sliders[0], { clientX: 2.1 });
     }, 60000);
 
-    test.skip('save button should work as expected', async () => {
+    test('save button should work as expected', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
             render(
                 <ADMESelector
                     organizationId={orgDetails.id}
+                    setIsDirty={jest.fn()}
+                    childRef={null}
+                    reset={''}
                 />
             );
         });
@@ -291,7 +295,7 @@ describe('ADME details sliders should work as expected', () => {
         fireEvent.click(saveButton);
     }, 60000);
 
-    test.skip('save button should work as expected for project', async () => {
+    test('save button should work as expected for project', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -300,6 +304,9 @@ describe('ADME details sliders should work as expected', () => {
                     data={projectMockData}
                     type="P"
                     organizationId={24}
+                    setIsDirty={jest.fn()}
+                    childRef={null}
+                    reset={''}
                 />
             );
         });
@@ -308,7 +315,7 @@ describe('ADME details sliders should work as expected', () => {
         fireEvent.click(saveButton);
     }, 60000);
 
-    test.skip('save button should work as expected for library', async () => {
+    test('save button should work as expected for library', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -317,6 +324,9 @@ describe('ADME details sliders should work as expected', () => {
                     data={libMockData}
                     type="L"
                     organizationId={24}
+                    setIsDirty={jest.fn()}
+                    childRef={null}
+                    reset={''}
                 />
             );
         });
@@ -332,6 +342,9 @@ describe('ADME details sliders should work as expected', () => {
             render(
                 <ADMESelector
                     organizationId={orgDetails.id}
+                    setIsDirty={jest.fn()}
+                    childRef={null}
+                    reset={''}
                 />
             );
         });

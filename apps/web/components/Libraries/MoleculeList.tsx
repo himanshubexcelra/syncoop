@@ -950,7 +950,7 @@ export default function MoleculeList({
         setConfirm(false)
     }
 
-    const addProductToCart = () => {
+    const addProductToCart = async () => {
         setLoadingCartEnabled(true);
         const moleculeData = selectedRowsData.map((row: MoleculeType) => ({
             molecule_id: row.molecule_id,
@@ -960,21 +960,22 @@ export default function MoleculeList({
             user_id: userData.id
         }));
 
-        addMoleculeToCart(moleculeData, MoleculeStatusCode.NewInCart)
-            .then((res) => {
-                context?.addToState({
-                    ...appContext,
-                    cartDetail: [...moleculeData]
-                });
-                setLoadingCartEnabled(false);
-                toast.success(Messages.addMoleculeCartMessage(res.count));
-                setReloadMolecules(true);
-                setIsAddToCartEnabled(true)
-            })
-            .catch((error) => {
-                toast.success(error);
-                setLoadingCartEnabled(false);
-            })
+        const response = await addMoleculeToCart(moleculeData, MoleculeStatusCode.NewInCart);
+        if (!response.error) {
+            context?.addToState({
+                ...appContext,
+                cartDetail: [...moleculeData]
+            });
+            setLoadingCartEnabled(false);
+            toast.success(Messages.addMoleculeCartMessage(response.count));
+            setReloadMolecules(true);
+            setIsAddToCartEnabled(true)
+        } else {
+            const toastId = toast.error(response.error);
+            await delay(DELAY);
+            toast.remove(toastId);
+            setLoadingCartEnabled(false);
+        }
     }
 
     useEffect(() => {

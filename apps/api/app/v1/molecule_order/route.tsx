@@ -30,6 +30,11 @@ export async function GET(request: Request) {
         mo.id AS molecule_order_id,
         org.name AS "organizationName",
         org.metadata AS "organizationMetadata",
+        org.config AS "organizationConfig",
+        lib.config AS "config",
+        lib.inherits_configuration AS "inherits_configuration",
+        proj.config AS "projectConfig",
+        proj.inherits_configuration AS "project_inherits_configuration",
         sc.status_name as molecule_status,
         CASE WHEN m.status = ${MoleculeStatusCode.Ordered} THEN false ELSE true END AS disabled
         /* sco.status_name as order_status */
@@ -71,7 +76,9 @@ export async function GET(request: Request) {
 
         /* JOIN status_code sco ON sco.table_name = 'molecule_order'  */
         /* AND mo.status = sco.status_code::int */
-        JOIN container org ON mo.organization_id = org.id`;
+        JOIN container org ON mo.organization_id = org.id 
+        JOIN container lib ON m.library_id = lib.id
+        JOIN container proj ON m.project_id = proj.id`;
 
         if (result) {
             return new Response(json(result), {

@@ -68,9 +68,9 @@ export async function createProject(formData: FormData) {
         if (response.status === 200) {
             const data = await response.json();
             return data;
-        } else if (response.status === 500) {
+        } else {
             const error = await response.json();
-            return { status: response.status, error };
+            return error;
         }
     } catch (error: any) {
         return error;
@@ -95,7 +95,7 @@ export async function editProject(formData: any) {
             return data;
         } else {
             const error = await response.json();
-            return { status: response.status, error };
+            return error;
         }
     } catch (error: any) {
         console.error('error', error)

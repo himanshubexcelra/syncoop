@@ -1,7 +1,8 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
 import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
-import { MoleculeStatusCode } from "@/utils/definition";
+import { ContainerType, MoleculeStatusCode } from "@/utils/definition";
 
 const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;
 const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
@@ -20,11 +21,11 @@ export async function GET(request: Request) {
             const count = organization_id
                 ? await prisma.container.count({
                     where: {
-                        type: 'L',
+                        type: ContainerType.LIBRARY,
                         container: {
-                            type: 'P',
+                            type: ContainerType.PROJECT,
                             container: {
-                                type: 'CO',
+                                type: ContainerType.CLIENT_ORGANIZATION,
                                 parent_id: Number(organization_id)
                             }
                         }
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
                 })
                 : await prisma.container.count({
                     where: {
-                        type: 'L'
+                        type: ContainerType.LIBRARY
                     }
                 });
             return new Response(JSON.stringify(count), {
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
         if (library_id) {
             query.where = {
                 id: Number(library_id),
-                type: 'L'
+                type: ContainerType.LIBRARY
             }; // Add the where condition to the query
             const library = await prisma.container.findUnique(query);
 
@@ -90,94 +91,132 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { name, target, description, project_id, user_id, config } = req;
+    const { name,
+        target,
+        description,
+        project_id,
+        organization_id,
+        user_id,
+        config
+    } = req;
 
     try {
         const existingLibrary = await prisma.container.findMany({
             where: {
-                parent_id: Number(project_id),
+                container: {
+                    id: Number(project_id),
+                    type: ContainerType.PROJECT,
+                    container: {
+                        id: Number(organization_id),
+                        type: {
+                            in: [
+                                ContainerType.CLIENT_ORGANIZATION,
+                                ContainerType.ORGANIZATION
+                            ]
+                        }
+                    }
+                },
                 name,
-                type: 'L'
+                type: ContainerType.LIBRARY
             },
         });
 
         // Check if an library with the same name already exists (case insensitive)
-        // const existingLibrary = project?.libraries.filter(library => library.name?.toLowerCase() === name.toLowerCase())[0];
-
         if (existingLibrary.length) {
-            return new Response(JSON.stringify(LIBRARY_EXISTS), {
+            return new Response(JSON.stringify({ error: LIBRARY_EXISTS }), {
                 headers: { "Content-Type": "application/json" },
-                status: INTERNAL_SERVER_ERROR,
+                status: INTERNAL_SERVER_ERROR, // Adjust status code as needed
             });
         }
-
-        try {
-            // Create a new library
-            const newLibrary = await prisma.container.create({
-                data: {
-                    name,
-                    description,
-                    type: 'L',
-                    created_at: getUTCTime(new Date().toISOString()),
-                    is_active: true,
-                    metadata: {
-                        target
-                    },
-                    owner: {
-                        connect: {
-                            id: user_id, // Associate the project with the organization
-                        },
-                    },
-                    userWhoCreated: {
-                        connect: {
-                            id: user_id, // Associate the project with the organization
-                        }
-                    },
-                    container: {
-                        connect: {
-                            id: project_id, // Associate the project with the organization
-                        },
-                    },
-                    config,
+        // Create a new library
+        const newLibrary = await prisma.container.create({
+            data: {
+                name,
+                description,
+                type: ContainerType.LIBRARY,
+                created_at: getUTCTime(new Date().toISOString()),
+                is_active: true,
+                metadata: {
+                    target
                 },
-            });
+                owner: {
+                    connect: {
+                        id: user_id, // Associate the project with the organization
+                    },
+                },
+                userWhoCreated: {
+                    connect: {
+                        id: user_id, // Associate the project with the organization
+                    }
+                },
+                container: {
+                    connect: {
+                        id: project_id, // Associate the project with the organization
+                    },
+                },
+                config,
+            },
+        });
 
-            return new Response(json(newLibrary), {
-                headers: { "Content-Type": "application/json" },
-                status: SUCCESS,
-            });
-        } catch (error) {
-            console.error(error);
-        } finally {
-            await prisma.$disconnect();
-        }
-    } catch (error) {
-        console.error(error);
+        return new Response(json(newLibrary), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+
+
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // Adjust status code as needed
+        });
+    } finally {
+        await prisma.$disconnect();
     }
 }
 
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, target, description, user_id, project_id, id, config, inherits_configuration } = req;
+        const {
+            name,
+            target,
+            description, user_id,
+            project_id,
+            organization_id,
+            id,
+            config,
+            inherits_configuration
+        } = req;
 
         const existingLibrary = await prisma.container.findMany({
             where: {
                 AND: [
                     { id: { not: Number(id) } },
                     {
-                        name: name,
-                        type: 'L',
-                        parent_id: project_id
+                        container: {
+                            id: Number(project_id),
+                            type: ContainerType.PROJECT,
+                            container: {
+                                id: Number(organization_id),
+                                type: {
+                                    in: [
+                                        ContainerType.CLIENT_ORGANIZATION,
+                                        ContainerType.ORGANIZATION
+                                    ]
+                                }
+                            }
+                        },
+                        name,
+                        type: ContainerType.LIBRARY
                     }
                 ]
             }
         });
 
         if (existingLibrary.length) {
-            return new Response(JSON.stringify(LIBRARY_EXISTS), {
+            return new Response(JSON.stringify({ error: LIBRARY_EXISTS }), {
                 headers: { "Content-Type": "application/json" },
-                status: INTERNAL_SERVER_ERROR,
+                status: INTERNAL_SERVER_ERROR, // Adjust status code as needed
             });
         }
 

@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import {
     ContainerAccessPermissionLabel,
     ContainerAccessPermissionType,
+    ContainerType,
     MoleculeOrderStatusCode,
     MoleculeOrderStatusLabel,
     MoleculeStatusCode,
@@ -1429,7 +1430,7 @@ async function main() {
         {
             name: 'EMD DD',
             is_active: true,
-            type: 'O',
+            type: ContainerType.ORGANIZATION,
             created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
             owner_id: sysAdminCreate.id,
@@ -1478,7 +1479,7 @@ async function main() {
         {
             name: 'Fauxbio',
             is_active: true,
-            type: 'CO',
+            type: ContainerType.CLIENT_ORGANIZATION,
             parent_id: emddOrgCreate.id,
             created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,

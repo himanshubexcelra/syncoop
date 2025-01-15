@@ -105,7 +105,8 @@ const CustomDataGrid = ({
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
     const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
-    const [gridHeight, setGridHeight] = useState(window.innerHeight - 100); // Default height
+    const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
+        window.innerHeight - 100 : height); // Default height
     const grid = useRef<DataGridRef>(null);
     const [currentSort, setCurrentSort] = useState<{
         field: string | null;
@@ -233,7 +234,8 @@ const CustomDataGrid = ({
     // Determine if the header checkbox should be checked or not
 
     let isHeaderCheckboxChecked: any = false;
-    if (selectedRowKeys.length === selectionEnabledRows.length) {
+    if (selectedRowKeys.length === selectionEnabledRows.length
+        && selectionEnabledRows.length !== 0) {
         isHeaderCheckboxChecked = true;
     } else if (selectedRowKeys.length && selectedRowKeys.length < selectionEnabledRows.length) {
         isHeaderCheckboxChecked = null;
@@ -247,7 +249,7 @@ const CustomDataGrid = ({
                 keyExpr="id"
                 allowColumnReordering={false}
                 showBorders={true}
-                height={height ?? gridHeight}
+                height={gridHeight}
                 width="100%"
                 onOptionChanged={handleSortChanged}
                 onCellPrepared={onCellPrepared}

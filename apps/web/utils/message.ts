@@ -88,7 +88,7 @@ export const Messages = {
     DELETE_LIBRARY_ERROR_MESSAGE: 'Can not delete library. Some error occured while deleting the library',
 
     displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number) {
-        let messages: string[] = ['Valid molecules (38) uploaded successfully.'];
+        let messages: string[] = [];
         if (upload_molecule_count > 0) {
             const uploadedMoleculeTxt = upload_molecule_count > 1 ? 'molecules' : 'molecule';
             messages = [

@@ -7,18 +7,22 @@ interface TabDetailsProps {
   tabsDetails: TabDetail[];
   activeTab?: number;
   onSelectedIndexChange?: (index: number) => void;
+  confirmBeforeSave?: boolean;
 }
 
 export default function Tabs({
   tabsDetails,
   activeTab,
   onSelectedIndexChange,
+  confirmBeforeSave,
 }: TabDetailsProps) {
   const [tabIndex, setTabIndex] = useState<number>(0);
 
   const handleIndexChange = (index: number) => {
-    setTabIndex(index);
     onSelectedIndexChange?.(index);
+    if (!confirmBeforeSave) {
+      setTabIndex(index);
+    }
   };
   useEffect(() => {
     const updateTabStyles = () => {

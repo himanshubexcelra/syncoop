@@ -42,7 +42,8 @@ export default function CreateLibrary({
           {
             ...values,
             user_id: userData.id,
-            project_id: projectData.id
+            project_id: projectData.id,
+            organization_id: projectData.container.id
           });
       } else {
         response = await createLibrary(
@@ -50,6 +51,7 @@ export default function CreateLibrary({
             ...values,
             user_id: userData.id,
             project_id: projectData.id,
+            organization_id: projectData.container.id,
             config: { ...projectData.config },
           });
       }

@@ -133,18 +133,28 @@ export default function CreateProject({
           {
             ...values,
             sharedUsers,
-            organization_id,
+            organization_id: projectData?.container?.id,
             user_id: userData.id,
           })
       }
-      else response = await createProject(
-        {
-          ...values,
-          sharedUsers,
-          organization_id,
-          user_id: userData.id,
-          config: { ...organizationData[0].config },
-        });
+      else {
+        const selectedOrg = organizationData.find(
+          (orgData) => orgData.id === organization_id);
+        response = await createProject(
+          {
+            ...values,
+            sharedUsers,
+            organization_id,
+            user_id: userData.id,
+            ...(() => {
+              if (selectedOrg && selectedOrg.config) {
+                return {
+                  config: selectedOrg.config
+                }
+              }
+            })()
+          });
+      }
       if (!response.error) {
         formRef.current!.instance().reset();
         fetchOrganizations();

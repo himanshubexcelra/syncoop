@@ -4,6 +4,7 @@ import { MESSAGES, STATUS_TYPE } from "@/utils/message";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "@/utils/constants";
 import { getUTCTime, json } from "@/utils/helper";
+import { ContainerType } from "@/utils/definition";
 
 const { ORGANIZATION_ALREADY_EXISTS, EMAIL_ALREADY_EXIST } = MESSAGES;
 const { SUCCESS, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = STATUS_TYPE;
@@ -21,10 +22,10 @@ export async function GET(request: Request) {
       where: {
         OR: [
           {
-            type: 'O'
+            type: ContainerType.ORGANIZATION
           },
           {
-            type: 'CO'
+            type: ContainerType.CLIENT_ORGANIZATION
           }
         ]
       }
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
           ...query.include,
           other_container: {
             where: {
-              type: 'P'
+              type: ContainerType.PROJECT
             },
             orderBy:
             {
@@ -108,7 +109,7 @@ export async function GET(request: Request) {
               // sharedUsers: true, // Include shared users for each project
               other_container: {
                 where: {
-                  type: 'L'
+                  type: ContainerType.LIBRARY
                 },
                 select: {
                   _count: {
@@ -149,7 +150,7 @@ export async function GET(request: Request) {
           select: {
             other_container: { // Count of projects in each organization
               where: {
-                type: 'P'
+                type: ContainerType.PROJECT
               }
             }
           }
@@ -220,10 +221,10 @@ export async function POST(request: Request) {
       where: {
         OR: [
           {
-            type: 'O'
+            type: ContainerType.ORGANIZATION
           },
           {
-            type: 'CO'
+            type: ContainerType.CLIENT_ORGANIZATION
           }
         ],
         name: {
@@ -251,7 +252,7 @@ export async function POST(request: Request) {
     try {
       const emddORG = await prisma.container.findMany({
         where: {
-          type: 'O',
+          type: ContainerType.ORGANIZATION,
           name: 'EMD DD'
         },
       });
@@ -367,6 +368,7 @@ export async function POST(request: Request) {
             parent_id: emddORG[0].id,
             owner_id: adminUser.id, // Link the user as the org admin
             created_by,
+            inherits_configuration: false,
             created_at: getUTCTime(new Date().toISOString()),
             config: config,
             org_product_module: {
@@ -408,7 +410,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const req = await request.json();
-    const { id, primaryContactId, is_active, metadata, config, inherits_configuration } = req;
+    const { id, primaryContactId, is_active, metadata, config } = req;
 
     // Update the organization and user details
     const updatedOrganization = await prisma.container.update({
@@ -419,7 +421,7 @@ export async function PUT(request: Request) {
         is_active,
         updated_at: getUTCTime(new Date().toISOString()),
         config,
-        inherits_configuration,
+        inherits_configuration: false,
       },
       include: {
         owner: {

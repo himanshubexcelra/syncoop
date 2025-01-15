@@ -140,18 +140,11 @@ export async function POST(request: Request) {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });
-        // return new Response(JSON.stringify(response), {
-        //     headers: { "Content-Type": "application/json" },
-        //     status: BAD_REQUEST,
-        // });
-    }
-    catch (error) {
-        return new Response(JSON.stringify({
-            success: false,
-            errorMessage: `Error: ${error}`
-        }), {
-            status: STATUS_TYPE.BAD_REQUEST,
-        })
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // Adjust status code as needed
+        });
     }
 }
 

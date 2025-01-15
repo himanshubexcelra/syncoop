@@ -1,4 +1,6 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
+import { ContainerType } from "@/utils/definition";
 import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
@@ -15,7 +17,7 @@ export async function GET(request: Request) {
         const joins = searchParams.get('with');
         const query: any = {
             where: {
-                type: 'P'
+                type: ContainerType.PROJECT
             }
         };
 
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
                             },
                         },
                         where: {
-                            type: 'L'
+                            type: ContainerType.LIBRARY
                         },
                         orderBy: [
                             {
@@ -174,13 +176,13 @@ export async function POST(request: Request) {
             const existingProject = await prisma.container.findMany({
                 where: {
                     name,
-                    type: 'P',
+                    type: ContainerType.PROJECT,
                     parent_id: organization_id
                 }
             });
 
             if (existingProject.length) {
-                return new Response(JSON.stringify(PROJECT_EXISTS), {
+                return new Response(JSON.stringify({ error: PROJECT_EXISTS }), {
                     headers: { "Content-Type": "application/json" },
                     status: INTERNAL_SERVER_ERROR,
                 });
@@ -204,7 +206,7 @@ export async function POST(request: Request) {
         const newProject = await prisma.container.create({
             data: {
                 name,
-                type: 'P',
+                type: ContainerType.PROJECT,
                 description,
                 metadata: {
                     target,
@@ -229,7 +231,9 @@ export async function POST(request: Request) {
                 },
                 config,
                 /* sharedUsers: {
-                    create: sharedUsers?.map(({ id: user_id, permission, first_name }: { id: number, permission: string, first_name: string }) => ({
+                    create: sharedUsers?.map(
+                    ({ id: user_id, permission, first_name }: 
+                     { id: number, permission: string, first_name: string }) => ({
                         user: {
                             connect: { id: user_id }, // Connect the user by ID
                         },
@@ -302,14 +306,14 @@ export async function PUT(request: Request) {
                         { id: { not: Number(id) } },
                         {
                             name: name,
-                            type: 'P',
+                            type: ContainerType.PROJECT,
                             parent_id: organization_id
                         }
                     ]
                 }
             });
             if (existingProject.length) {
-                return new Response(json(PROJECT_EXISTS), {
+                return new Response(JSON.stringify({ error: PROJECT_EXISTS }), {
                     headers: { "Content-Type": "application/json" },
                     status: INTERNAL_SERVER_ERROR,
                 });
@@ -345,8 +349,11 @@ export async function PUT(request: Request) {
                     deleteMany: {
                         id: { in: usersToRemove }, // Remove users not in the request
                     },
-                    upsert: sharedUsers?.map(({ id: user_id, permission, first_name }: { id: number, permission: string, first_name: string }) => ({
-                        where: { user_id_project_id: { user_id, project_id: id } }, // Ensure you have a unique constraint on user_id and project_id
+                    upsert: sharedUsers?.map(
+                    ({ id: user_id, permission, first_name }: 
+                     { id: number, permission: string, first_name: string }) => ({
+                        where: { user_id_project_id: 
+                        { user_id, project_id: id } },
                         update: {
                             role: permission,
                             first_name,

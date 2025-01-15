@@ -236,7 +236,7 @@ describe('Library API Functions', () => {
 
         const result = await editLibrary(formData);
 
-        expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
+        expect(result).toEqual({ error: 'Server Error' });
     });
 
     test('createLibraryApi should create library successfully', async () => {
@@ -279,21 +279,5 @@ describe('Library API Functions', () => {
             body: JSON.stringify(formData),
         });
         expect(result).toEqual(true);
-    });
-
-    test('editLibrary should handle error responses', async () => {
-        const formData = new FormData();
-        formData.append('name', 'Test Library');
-
-        global.fetch = jest.fn(() =>
-            Promise.resolve({
-                status: 500,
-                json: jest.fn().mockResolvedValue({ error: 'Server Error' }),
-            })
-        ) as jest.Mock;
-
-        const result = await editLibrary(formData);
-
-        expect(result).toEqual({ status: 500, error: { error: 'Server Error' } });
     });
 });

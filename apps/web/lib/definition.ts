@@ -255,8 +255,15 @@ export interface User {
   type: string
 }
 
+export enum ContainerType {
+  Organization = 'O',
+  CLIENT_ORGANIZATION = 'CO',
+  PROJECT = 'P',
+  LIBRARY = 'L',
+}
+
 export interface UserRoleType {
-  id?:number
+  id?: number
   role: UserRole
   role_id: number
 }
@@ -305,6 +312,12 @@ export interface ADMEProps {
   type?: string;
   organizationId: number;
   data?: ProjectDataFields | LibraryFields;
+  setIsDirty: (val: boolean) => void;
+  childRef: React.RefObject<HTMLDivElement>;
+  reset: string;
+  fetchContainer?: () => void;
+  isDirty: boolean;
+  editAllowed?: boolean;
 }
 
 export interface ModuleFeature {
@@ -537,10 +550,15 @@ export interface MoleculeOrder {
   status: number;
   molecule_status: MoleculeStatusLabel;
   order_status: string;
-  adme_data: ColorSchemeFormat[],
-  functional_assays: object[],
-  reaction_data: any,
+  adme_data: ColorSchemeFormat[];
+  functional_assays: object[];
+  reaction_data: any;
   disabled: boolean;
+  inherits_configuration: boolean;
+  project_inherits_configuration: boolean;
+  config: OrganizationConfigType;
+  projectConfig: OrganizationConfigType;
+  organizationConfig: OrganizationConfigType;
   organizationMetadata: {
     functionalAssay1: string;
     functionalAssay2: string;
@@ -810,7 +828,7 @@ export type CreateLabJobOrder = {
   organization_id: number,
   project_id: number,
   user_id: number,
-  order_id? : number,
+  order_id?: number,
 }
 export type SaveLabJobOrder = {
   molecule_id: number,

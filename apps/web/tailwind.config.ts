@@ -13,6 +13,7 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         themeGreyColor: "var(--themeGreyColor)",
+        greyText: "var(--greyText)",
         themeBlueColor: "var(--themeBlueColor)",
         themeSecondayBlue: "var(--themeSecondayBlue)",
         themeYellowColor: "var(--themeYellowColor)",
@@ -52,7 +53,10 @@ const config: Config = {
         failedCategoryRed: "var(--failedCategoryRed)",
         infoCategoryYellow: "var(--infoCategoryYellow)",
         doneCategoryGreen: "var(--doneCategoryGreen)",
-        themeLightBlueColor: "var(--themeLightBlueColor)"
+        themeLightBlueColor: "var(--themeLightBlueColor)",
+        admeYellow: "var(--admeYellow)",
+        admeRed: "var(--admeRed)",
+        admeGreen: "var(--admeGreen)"
       },
     },
   },

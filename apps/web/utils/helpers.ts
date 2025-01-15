@@ -13,7 +13,7 @@ import {
   Status,
   StatusType
 } from "@/lib/definition"
-import { COLOR_SCHEME } from "./constants";
+import { COLOR_SCHEME, MAX_RANGE } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -289,6 +289,11 @@ export const getADMECalculation = (average: number, key: string) => {
   return actualValue;
 }
 
+export const roundValue = (value: number, precision: number = 2) => {
+  const factor = Math.pow(10, precision);
+  return Math.round(value * factor) / factor;
+};
+
 export const getADMEColor = (
   config: OrganizationConfigType,
   calculatedResult: number, key: string,
@@ -299,9 +304,9 @@ export const getADMEColor = (
   } else {
     const value: FORMULA_CONFIG = Object.values(config.ADMEParams.filter((item: ADMEConfigTypes) =>
       Object.keys(item)[0] === field)[0])[0] as FORMULA_CONFIG;
-    if (calculatedResult < value.min) {
+    if (calculatedResult <= value.min) {
       return COLOR_SCHEME[key].color[0];
-    } else if (calculatedResult > value.max) {
+    } else if (calculatedResult >= value.max) {
       return COLOR_SCHEME[key].color[2];
     } else {
       return COLOR_SCHEME[key].color[1];
@@ -316,13 +321,35 @@ export const setConfig = () => {
   Object.entries(COLOR_SCHEME).map(([key, value]: [string, any]) => {
     const name = key.split('_')[0];
     if (!unwantedFields.includes(key) && !keys.includes(name)) {
-      rangeArray.push({ [name]: { min: value.formulaes[0].min, max: value.formulaes[2].max } })
+      rangeArray.push({
+        [name]: {
+          min: value.formulaes[0].min, max:
+            value.formulaes[2].max > MAX_RANGE ? MAX_RANGE : value.formulaes[2].max
+        }
+      })
       keys.push(name);
     }
     return value;
   });
   return rangeArray;
 }
+
+export const deepEqual = (a: any, b: any) => {
+  if (a === b) return true; // Same reference or primitive value
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (let key of keysA) {
+    if (!keysB.includes(key)) return false;
+    if (!deepEqual(a[key], b[key])) return false;
+  }
+
+  return true;
+};
 
 export const isDeleteLibraryEnable = (data: any): boolean => {
   if (data?.length === 0) {

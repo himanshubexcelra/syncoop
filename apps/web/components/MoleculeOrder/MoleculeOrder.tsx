@@ -250,6 +250,10 @@ export default function MoleculeOrderPage({
       setPopupVisible(false);
       setButtonClicked(false);
     }
+    setCellData({
+      smiles_string: "",
+      source_molecule_name: ''
+    })
   };
   const permitValidatePathway = actionsEnabled.includes('validate_pathway');
 
@@ -323,16 +327,18 @@ export default function MoleculeOrderPage({
       allowHeaderFiltering: false,
       allowSorting: false,
       customRender: (data) => (
-        <MoleculeStructureActions
-          smilesString={data.smiles_string}
-          molecule_id={data.molecule_id}
-          structureName={data.source_molecule_name}
-          onZoomClick={(e: any) => {
-            e.event.stopPropagation();
-            setButtonClicked(true);
-            handleStructureZoom(e, data);
-          }}
-        />
+        <div onMouseEnter={(e) =>handleStructureZoom(e, data)}>
+          <MoleculeStructureActions
+            smilesString={data.smiles_string}
+            molecule_id={data.molecule_id}
+            structureName={data.source_molecule_name}
+            onZoomClick={(e: any) => {
+              e.event.stopPropagation();
+              setButtonClicked(true);
+              handleStructureZoom(e, data);
+            }}
+          />
+        </div>
       ),
     },
     /* 
@@ -1251,11 +1257,14 @@ export default function MoleculeOrderPage({
   }
 
   const handleStructureZoom = (event: any, data: any) => {
-    const { x, y } = event.event.target.getBoundingClientRect();
-    const screenHeight = window.innerHeight;
-    setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
-    setPopupVisible(true);
-    setCellData(data);
+    const x = event.clientX;
+    const y = event.clientY;
+    const screenHeight = event.view.innerHeight;
+    if (!popupVisible) {
+      setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
+      setPopupVisible(true);
+      setCellData({ ...data, source_molecule_name: data.moleculeName });
+    }
   }
 
   useEffect(() => {
@@ -1265,6 +1274,7 @@ export default function MoleculeOrderPage({
 
   const handleSendForSynthesis = () => {
     setSynthesisView(true);
+    setPopupVisible(false);
   };
 
   const setMoleculeStatus = (moleculeArray: MoleculeOrder[], value: MoleculeStatusLabel) => {
@@ -1729,7 +1739,7 @@ export default function MoleculeOrderPage({
     return newObj
   }
 
-  const handleDataChange = (input: ReactionInputData[]) => {    
+  const handleDataChange = (input: ReactionInputData[]) => {
     onFormChange(true);
     setMoleculeCompound(prevState => {
       const updatedState = [...prevState];
@@ -1959,7 +1969,7 @@ export default function MoleculeOrderPage({
   };
 
   const onRowClick = (e: RowClickEvent) => {
-    if (e.rowType === 'data') {
+    if (e.rowType === 'data' && !popupVisible) {
       const rowData = e.data;
       if (!buttonClicked) {
         const isClickableRow = clickableRow(rowData.molecule_status);

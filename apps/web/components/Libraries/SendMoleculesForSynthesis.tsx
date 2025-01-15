@@ -112,6 +112,7 @@ export default function SendMoleculesForSynthesis({
                         alignment="center"
                         cellRender={({ data }) => (
                             <span className='flex justify-center gap-[7.5px]'
+                                onMouseEnter={(e) => handleStructureZoom(e, data)}
                             >
                                 <MoleculeStructureActions
                                     smilesString={data.smiles_string}

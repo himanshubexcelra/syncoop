@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import prisma from "@/lib/prisma";
-import { ContainerType } from "@/utils/definition";
+import { ContainerAccessPermissionType, ContainerType } from "@/utils/definition";
 import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
 
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
                         config: true,
                     }
                 },
-                // sharedUsers: true, // Include shared users for each project
+                container_access_permission: true, // Include shared users for each project
                 userWhoCreated: { // Include the user who created the project
                     select: {
                         first_name: true,
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
         organization_id,
         user_id,
         config,
-        /* sharedUsers */
+        sharedUsers,
     } = req;
 
     try {
@@ -230,17 +230,18 @@ export async function POST(request: Request) {
                     }, // Associate the user who created the project
                 },
                 config,
-                /* sharedUsers: {
-                    create: sharedUsers?.map(
-                    ({ id: user_id, permission, first_name }: 
-                     { id: number, permission: string, first_name: string }) => ({
+                container_access_permission: {
+                    create: sharedUsers?.map(({ id: user_id, permission }: {
+                        id: number, permission: string
+                    }) => ({
                         user: {
                             connect: { id: user_id }, // Connect the user by ID
                         },
-                        role: permission,
-                        first_name,
-                    })) || [] // If sharedUsers is undefined, default to an empty array
-                } */
+                        access_type: ContainerAccessPermissionType[
+                            permission as keyof typeof ContainerAccessPermissionType],
+                        created_at: getUTCTime(new Date().toISOString()),
+                    }))
+                }
             },
         });
 
@@ -259,7 +260,7 @@ export async function PUT(request: Request) {
     try {
         const req = await request.json();
         const { name, metadata, target, description,
-            organization_id, user_id, /* sharedUsers, */ id, config, inherits_configuration } = req;
+            organization_id, user_id, sharedUsers, id, config, inherits_configuration } = req;
 
         // Check if user is associated with another organization
         /* const organization = await prisma.container.findUnique({
@@ -320,14 +321,22 @@ export async function PUT(request: Request) {
             }
         }
 
+        const existingProject = await prisma.container.findMany({
+            where: {
+                id: Number(id)
+            },
+            include: {
+                container_access_permission: true,
+            }
+        });
 
-        /* // Step 3: Create a set of user IDs from the incoming shared users
+        // Step 3: Create a set of user IDs from the incoming shared users
         const incomingUserIds = new Set(sharedUsers?.map(({ id }: { id: number }) => id));
 
         // Step 4: Determine which users need to be removed
-        const usersToRemove = existingProject?.sharedUsers
-            .filter(user => !incomingUserIds.has(user.user_id))
-            .map(user => user.id); // Collect the IDs of shared users to remove */
+        const usersToRemove = existingProject[0]?.container_access_permission
+            .filter(user => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
+            .map(user => user.id); // Collect the IDs of shared users to remove
 
 
         const updatedProject = await prisma.container.update({
@@ -345,28 +354,28 @@ export async function PUT(request: Request) {
                     connect: { id: user_id }, // Associate the user who created/updated the project
                 },
                 updated_at: getUTCTime(new Date().toISOString()),
-                /* sharedUsers: {
+                container_access_permission: {
                     deleteMany: {
                         id: { in: usersToRemove }, // Remove users not in the request
                     },
-                    upsert: sharedUsers?.map(
-                    ({ id: user_id, permission, first_name }: 
-                     { id: number, permission: string, first_name: string }) => ({
-                        where: { user_id_project_id: 
-                        { user_id, project_id: id } },
+                    upsert: sharedUsers?.map(({ id: user_id, permission }: {
+                        id: number, permission: string
+                    }) => ({
+                        where: { container_id_user_id: { user_id, container_id: id } },
                         update: {
-                            role: permission,
-                            first_name,
+                            access_type: ContainerAccessPermissionType[
+                                permission as keyof typeof ContainerAccessPermissionType],
                         },
                         create: {
                             user: {
                                 connect: { id: user_id }, // Connect the user by ID
                             },
-                            role: permission,
-                            first_name,
+                            access_type: ContainerAccessPermissionType[
+                                permission as keyof typeof ContainerAccessPermissionType],
+                            created_at: getUTCTime(new Date().toISOString()),
                         },
                     })) || []
-                } */
+                }
             },
         });
 

@@ -14,6 +14,7 @@ import {
     LibraryFields,
     UserData,
     MoleculeType,
+    ContainerPermission,
 } from '@/lib/definition';
 import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
@@ -97,7 +98,7 @@ const initialProjectData: ProjectDataFields = {
     parent_id: undefined,
     container: {} as OrganizationDataFields, // Provide a default organization object
     user: {} as userType, // Provide a default user object
-    sharedUsers: [],
+    container_access_permission: [],
     target: '',
     metadata: {
         target: '',
@@ -140,6 +141,9 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [selectedLibraryData, setSelectedLibraryData] = useState<any>({});
     const [loader, setLoader] = useState(true);
     const [expanded, setExpanded] = useState(library_id ? false : true);
+    const [adminAccess, setAdminAccess] = useState<boolean>(false);
+    const [editEnabled, setEditAccess] = useState<boolean>(false);
+
     const context: any = useContext(AppContext);
     const {
         reset,
@@ -205,8 +209,23 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                 router.back();
             }
         }
-
     }
+
+    useEffect(() => {
+        const sharedUser = projectData.container_access_permission?.find(u =>
+            u.user_id === userData.id &&
+            u.access_type === ContainerPermission.Admin);
+        const owner = projectData.owner_id === userData.id;
+        const admin = isAdmin(userData.myRoles);
+
+        setAdminAccess(actionsEnabled.includes('create_library') &&
+            (!!sharedUser || owner || admin));
+        const editUser = projectData.container_access_permission?.find(u =>
+            u.user_id === userData.id &&
+            u.access_type === ContainerPermission.Edit);
+        setEditAccess(actionsEnabled.includes('create_molecule') &&
+            (!!editUser || owner || admin))
+    }, [projectData?.id]);
 
     useEffect(() => {
         setProjectId(params.id || params.projectId!)
@@ -308,6 +327,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     setExpanded={setExpanded}
                                     isDirty={isDirty}
                                     setShowPopup={setShowPopup}
+                                    adminAccess={adminAccess}
                                 />
                             </div >
                             )}
@@ -335,9 +355,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                                 config
                                                             }
                                                         }}
-                                                        editAllowed={
-                                                            actionsEnabled.includes('edit_library')
-                                                        }
+                                                        editAllowed={adminAccess}
                                                         fetchContainer={fetchLibraries}
                                                     />
                                                 </Item>
@@ -350,7 +368,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     tableData={tableData}
                                     userData={userData}
                                     setTableData={setTableData}
-                                    actionsEnabled={actionsEnabled}
                                     selectedLibrary={library_id}
                                     library_id={library_id}
                                     projectData={projectData}
@@ -359,6 +376,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     organizationId={organization_id || ''}
                                     config={selectedLibraryData?.inherits_configuration ?
                                         config : selectedLibraryData?.config?.ADMEParams}
+                                    editEnabled={adminAccess || editEnabled}
                                 />
                             </div>
                         </div>

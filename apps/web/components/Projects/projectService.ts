@@ -51,7 +51,7 @@ export async function getOverviewCounts(orgId?: number) {
         return error;
     }
 }
-export async function createProject(formData: FormData) {
+export async function createProject(formData: any) {
     try {
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/project`,

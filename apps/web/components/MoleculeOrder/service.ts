@@ -123,3 +123,21 @@ export async function saveReactionPathway(formData: PathwayType[]) {
     const data = await response.json();
     return data;
 }
+
+export async function searchInventory(payLoad: any) {
+    try {    
+        const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/search_inventory `, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payLoad),
+        })
+    if (response) {
+        const data = await response.json();
+        return data;
+    }
+    } catch (error: any) {
+        return error;
+    }
+}

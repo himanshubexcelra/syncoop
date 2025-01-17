@@ -1,4 +1,4 @@
-
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { ColumnHeaderFilter } from "devextreme/common/grids";
 import { z } from "zod";
 
@@ -61,12 +61,7 @@ export interface userType {
 export interface sharedUserType {
   user_id: number,
   id: number,
-  name: string,
-  last_name: string,
-  first_name?: string,
-  email_id: string,
-  status: string,
-  role?: string
+  access_type: number
 }
 
 export interface metaDataType {
@@ -210,7 +205,7 @@ export interface ProjectDataFields {
   parent_id?: number;
   container: OrganizationDataFields,
   user: userType;
-  sharedUsers: sharedUserType[];
+  container_access_permission: sharedUserType[];
   target: string;
   userWhoUpdated: userType;
   userWhoCreated: userType;
@@ -288,7 +283,6 @@ export interface UserData {
   myRoles: string[];
   roles: [{
     type: string;
-
   }];
   primary_contact_id?: number
 }
@@ -441,6 +435,17 @@ export enum MoleculeOrderStatusCode {
   InProgress = 1,
   Completed = 2,
   Failed = 3
+}
+
+export enum ContainerPermissionLabel {
+  Admin = 'Admin',
+  Edit = 'Edit',
+  View = 'View',
+}
+
+export enum ContainerPermission {
+  Admin = 1,
+  Edit = 2
 }
 
 export interface UserCountModel {
@@ -760,6 +765,7 @@ export type ReactionCompoundType = {
   compound_id?: string;
   related_to?: number;
   inventory_url?: string;
+  link?: string;
 }
 
 export type ReactionDetailType = {
@@ -903,3 +909,25 @@ export enum FormState {
   DEFAULT = 0,
   UPDATE = 1
 }
+
+interface AmsInventoryDetails {
+  source?: string;
+  link: string | null;
+  smiles_string?: string;
+  cas_number?: string;
+  inventory_id?: number;
+  version?: number;
+  price_per_unit?: string;
+  unit_size?: string;
+  unit_of_measurement?: string;
+  stock_keeping_unit?: string;
+  vendor?: string | null;
+  in_stock?: boolean;
+}
+
+export interface AmsInventoryItem {
+  smiles: string;
+  status: boolean;
+  details: AmsInventoryDetails;
+}
+

@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 /* projects */
 /* user access */
 .filter {
@@ -120,7 +121,7 @@
     color: var(--themeHeadingBlue);
 
     .dx-texteditor-container,
-    .dx-row {
+    .name-div {
         height: 48px;
     }
 
@@ -155,10 +156,7 @@
     }
 
     .permission,
-    .dx-header-row .dx-datagrid-text-content,
-    .dx-datagrid-headers .dx-datagrid-table .dx-row>td,
-    .dx-datagrid .dx-row>td,
-    .dx-datagrid-headers .dx-datagrid-table .dx-row>td:hover:not(.dx-command-select):not(.dx-command-expand):not(.dx-editor-cell):not(.dx-command-edit):not(.dx-datagrid-group-space) {
+    .name-div {
         background-color: var(--white) !important;
         color: var(--themeGreyHeaderColor);
         font-family: Lato;
@@ -168,11 +166,16 @@
         display: flex;
         align-items: center;
         text-align: left !important;
+        padding-left: 10px;
     }
 
-    .dx-datagrid .dx-sort-down::before,
-    .dx-datagrid .dx-sort-up::before,
-    .dx-datagrid .dx-sort-none::before,
+    .name-div {
+        font-size: 14px;
+        padding: 24px 10px;
+        align-items: center;
+        font-weight: 500;
+    }
+
     .dx-dropdowneditor-icon::before {
         content: '';
         background-image: url(/icons/arrow-down.svg);
@@ -188,20 +191,14 @@
         margin-top: 0 !important;
     }
 
-    .dx-datagrid .dx-sort-up::before,
     .dx-dropdowneditor.dx-dropdowneditor-active .dx-dropdowneditor-icon::before {
         background-image: url(/icons/arrow-up.svg);
         content: '' !important;
     }
 
-    .dx-datagrid .dx-sort-none::before {
-        background-image: url(/icons/arrow-both.svg);
-        width: 24px;
-        height: 24px;
-    }
-
-    .dx-datagrid .dx-sort-none {
-        display: block !important;
+    .dx-dropdowneditor.dx-dropdowneditor-active .dx-dropdowneditor-icon::before {
+        background-image: url(/icons/arrow-up.svg);
+        content: '' !important;
     }
 
     .dx-form-group-with-caption>.dx-form-group-content {
@@ -428,16 +425,18 @@
 
     }
 
-      
+
 }
+
 .dx-icon.dx-icon-export {
-    transform: scale(1.5); 
+    transform: scale(1.5);
 }
+
 .dx-icon.dx-icon-column-chooser {
-    transform: scale(1.7); 
-}  
+    transform: scale(1.7);
+}
+
 .lowercase-button .dx-button-text {
-    text-transform: none !important; /* reset text transform */
+    text-transform: none !important;
     font-variant: normal;
-  }
-  
+}

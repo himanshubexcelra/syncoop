@@ -1,3 +1,24 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
+
+export function sortStringJoined(data: any, field: string, sortBy: string, joined: string): any {
+    if (sortBy === 'asc')
+        data.sort((a: any, b: any) => {
+            const fieldA = a[field] + a[joined];
+            const fieldB = b[field] + b[joined];
+            if (fieldA < fieldB) return -1;
+            if (fieldA > fieldB) return 1;
+            return 0;
+        });
+    else
+        data.sort((a: any, b: any) => {
+            const fieldA = a[field] + a[joined];
+            const fieldB = b[field] + b[joined];
+            if (fieldA > fieldB) return -1;
+            if (fieldA < fieldB) return 1;
+            return 0;
+        });
+    return data;
+}
 export function sortString(data: any, field: string, sortBy: string, object?: boolean): any {
     if (!object) {
         if (sortBy === 'asc')

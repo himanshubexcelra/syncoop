@@ -2043,8 +2043,12 @@ export default function MoleculeOrderPage({
 
   const handlePathwayList = () => {
     if (popUpType === FormState.UPDATE) {
+      console.log('test');
+      
       setConfirm(true);
     } else {
+      console.log('test123');
+      
       resetNodes(true);
     }
   };

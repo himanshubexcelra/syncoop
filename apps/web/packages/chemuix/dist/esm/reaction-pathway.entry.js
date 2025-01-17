@@ -46377,25 +46377,70 @@ const ReactionPathway = class {
 	updateReactionSelected() {
 		this.scene.children.forEach(child => {
 			if (child.isObject3D && child.userData.type === 'molecule') {
-				this.updateSmilesObject3D(child)
+				this.updateSmilesObject3D(child);
 			}
 		})
 		this.controls.dispatchEvent({ type: "change" });
-
 	}
+
 	updateSmilesObject3D(smilesObject3D) {
+
+		const currentReactionIndex = Number(this.currentReaction) + 1; // Starting reaction index
+		const tabsLength = Number(localStorage.getItem("tabsLength"));
+		// Check if this is the first render by verifying if `this.currentReaction` is undefined or 0
+		const isInitialRender = this.currentReaction === undefined || this.currentReaction === 0;
+
 		smilesObject3D.children.forEach(parent => {
 			parent.children.forEach(child => {
 				if (child.isMesh && child.material) {
-					if (!smilesObject3D.userData.reactionIndex.includes(Number(this.currentReaction) + 1)) {
+					const isReactionIncluded = smilesObject3D.userData.reactionIndex.includes(currentReactionIndex);
+
+					if (isInitialRender && smilesObject3D.userData.reactionIndex.includes(1)) {
+						// Apply default styles for the first step on initial render
+						child.material.color.set(0x000000); // Active color for the first step
+						// Process and render the first step reaction path
+						this.tree.descendants()
+							.filter(node => node.data?.type === "reaction" && node.data?.reactionIndex?.[0] === 1)
+							.forEach(node => {
+								this.renderReactionPath(node, 0x000000, 1);
+							});
+					} else if (isReactionIncluded) {
+						child.material.color.set(0x000000);
+						// Process descendants for the active reaction index
+						this.tree.descendants()
+							.filter(node => node.data?.type === "reaction")
+							.forEach(node => {
+								const reactionIndex = node.data?.reactionIndex?.[0] || 0; // Default to 0 if undefined
+								if (reactionIndex === currentReactionIndex) {
+									this.renderReactionPath(node, 0x000000, reactionIndex);
+								}
+							});
+					} else {
+						// Reset styles for non-active reactions
 						let color = new Color(child.material.color);
 						let hsl = new Color().getHSL(color);
 						hsl.l = Math.min(0.2, hsl.l + 0.1);
 						color.setHSL(hsl.h, hsl.s, hsl.l);
 						child.material.color.set(color);
-					} else {
-						child.material.color.set(0x000000);
+
+						// Process descendants for non-active reactions
+						this.tree.descendants()
+							.filter(node => node.data?.type === "reaction")
+							.forEach(node => {
+								const reactionIndex = node.data?.reactionIndex?.[0] || 0; // Default to 0 if undefined
+								if (reactionIndex !== currentReactionIndex) {
+									this.renderReactionPath(node, 0xffffff, reactionIndex); // Reset path color
+								}
+							});
 					}
+					this.tree.descendants()
+						.filter(node => node.data?.type === "reaction")
+						.forEach(node => {
+							if (tabsLength === currentReactionIndex) {
+								this.renderReactionPath(node, 0x000000, reactionIndex); // for reactant list tab color black
+								child.material.color.set(0x000000);
+							}
+						});
 				}
 			});
 		});
@@ -46793,14 +46838,16 @@ const ReactionPathway = class {
 	 * Renders the reaction path of a reaction
 	 * @param {HierarchyPointNode<Reaction>} reaction - The reaction
 	 */
-	renderReactionPath(reaction) {
+
+	renderReactionPath(reaction, dynamicColor = 0xffffff) {
 		if (!this.displayPathway)
 			return;
 		const parent = reaction.parent;
 		const children = reaction.children;
 		const positions = [];
 		const colors = [];
-		const color = new Color();
+		// Dynamic color for this reaction
+		const color = new Color(dynamicColor);
 		color.setHSL(0.0, 0.0, 0.73, SRGBColorSpace);
 		const parentX = parent.x - parent.data.boundingBox.x;
 		positions.push(parentX, parent.y, 0);
@@ -46811,7 +46858,7 @@ const ReactionPathway = class {
 		geometry.setPositions(positions);
 		geometry.setColors(colors);
 		const lineMaterial = new LineMaterial({
-			color: 0xffffff,
+			color: dynamicColor,
 			linewidth: 1,
 			vertexColors: true,
 			dashed: false,
@@ -46871,13 +46918,13 @@ const ReactionPathway = class {
 		this.scene.add(textMesh);
 		circle.userData = Object.assign(Object.assign({}, reaction.data.reactionIndex), { eventSource: reaction.data.reactionIndex });
 		const arrowTip = new ConeGeometry(2, 5, 3);
-		const arrowTipMaterial = new MeshBasicMaterial({ color });
+		const arrowTipMaterial = new MeshBasicMaterial({ color: dynamicColor ? color : 0x000000 });
 		const arrowTipMesh = new Mesh(arrowTip, arrowTipMaterial);
 		arrowTipMesh.position.set(parentX, parent.y, 0);
 		arrowTipMesh.rotation.z = -Math.PI / 2;
 		this.scene.add(arrowTipMesh);
 		for (const child of children) {
-			this.createReactionJoinLine(reaction, child);
+			this.createReactionJoinLine(reaction, child, dynamicColor);
 		}
 	}
 	/**
@@ -46885,7 +46932,7 @@ const ReactionPathway = class {
 	 * @param {HierarchyPointNode<Reaction>} reaction - The reaction
 	 * @param {HierarchyPointNode<Molecule>} molecule - The molecule
 	 */
-	createReactionJoinLine(reaction, molecule) {
+	createReactionJoinLine(reaction, molecule, dynamicColor = 0xffffff) {
 		const sourceX = reaction.x;
 		const sourceY = reaction.y;
 		const targetX = molecule.x + molecule.data.boundingBox.x + HEXAGON_RADIUS * 2;
@@ -46895,7 +46942,7 @@ const ReactionPathway = class {
 		const radius = Math.abs(sourceX - targetX) / 2 < LINE_CURVE_RADIUS ? Math.abs(sourceX - targetX) / 2 : LINE_CURVE_RADIUS;
 		const positions = [];
 		const colors = [];
-		const color = new Color();
+		const color = new Color(dynamicColor);
 		color.setHSL(0.0, 0.0, 0.73, SRGBColorSpace);
 		positions.push(sourceX, sourceY, 0);
 		colors.push(color.r, color.g, color.b);
@@ -46914,7 +46961,7 @@ const ReactionPathway = class {
 		geometry.setPositions(positions);
 		geometry.setColors(colors);
 		const lineMaterial = new LineMaterial({
-			color: 0xffffff,
+			color: dynamicColor,
 			linewidth: 1,
 			vertexColors: true,
 			dashed: false,

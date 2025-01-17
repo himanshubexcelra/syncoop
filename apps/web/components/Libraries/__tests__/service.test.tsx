@@ -6,6 +6,14 @@ import {
     editLibrary,
     getLibraryById,
     addToFavourites,
+    addMoleculeToCart,
+    submitOrder,
+    updateMoleculeStatus,
+    generatePathway,
+    getLabJobOrderDetail,
+    postLabJobOrder,
+    deleteMolecule,
+    deleteMoleculeCart,
 } from '../service';
 
 const libraryData = {
@@ -145,7 +153,7 @@ describe('Library API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test.skip('getLibraryCountById should fetch library count successfully', async () => {
+    test('getLibraryCountById should fetch library count successfully', async () => {
         const mockResponse = data;
 
         global.fetch = jest.fn(() =>
@@ -158,7 +166,7 @@ describe('Library API Functions', () => {
         const result = await getOverviewCounts(organization_id);
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library`);
         if (organization_id) {
-            url.searchParams.append('organization_id', String(organization_id));
+            url.searchParams.append('orgId', String(organization_id));
         }
         url.searchParams.append('condition', 'count');
         expect(fetch).toHaveBeenCalledTimes(1);
@@ -172,7 +180,7 @@ describe('Library API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test.skip('geMoleculeCountById should fetch molecule count successfully', async () => {
+    test('geMoleculeCountById should fetch molecule count successfully', async () => {
         const mockResponse = data;
 
         global.fetch = jest.fn(() =>
@@ -185,7 +193,7 @@ describe('Library API Functions', () => {
         const result = await getOverviewCounts(organization_id);
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library`);
         if (organization_id) {
-            url.searchParams.append('organization_id', String(organization_id));
+            url.searchParams.append('orgId', String(organization_id));
         }
         url.searchParams.append('condition', 'count');
         expect(fetch).toHaveBeenCalledTimes(1);
@@ -279,5 +287,318 @@ describe('Library API Functions', () => {
             body: JSON.stringify(formData),
         });
         expect(result).toEqual(true);
+    });
+
+    test('editLibrary payload and return success response', async () => {
+        const mockFormData = {
+            id: '123',
+            name: 'Updated Library',
+        };
+
+        const mockResponse = { success: true, message: 'Library updated successfully' };
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+
+        const result = await editLibrary(mockFormData);
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/library`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mockFormData),
+        });
+        expect(result).toEqual(mockResponse);
+    });
+
+    test('addMoleculeToCart API with success reposnse', async () => {
+        const mockMoleculeData: any = [
+            { id: 'molecule1', quantity: 2 },
+            { id: 'molecule2', quantity: 3 },
+        ];
+        const mockStatus = 1;
+
+        const mockResponse = { success: true, message: 'Molecule added to cart successfully' };
+
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+
+        const result = await addMoleculeToCart(mockMoleculeData, mockStatus);
+
+        // Assert fetch was called with the correct arguments
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart`, {
+            mode: 'no-cors',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ molecules: mockMoleculeData, status: mockStatus }),
+        });
+
+        // Assert the response matches the mock data
+        expect(result).toEqual(mockResponse);
+    });
+
+    test.skip('test case for deleteMoleculeCart API', async () => {
+        const mockParams = {
+            created_by: 1,
+            moleculeStatus: 2,
+            molecule_id: 123,
+            library_id: 456,
+            project_id: 789,
+        };
+        const mockResponse = { success: true, message: 'Cart item deleted successfully' };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true,
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+
+        const result = await deleteMoleculeCart(
+            mockParams.created_by,
+            mockParams.moleculeStatus,
+            mockParams.molecule_id,
+            mockParams.library_id,
+            mockParams.project_id
+        );
+
+        const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart`);
+        expectedUrl.searchParams.append('user_id', String(mockParams.created_by));
+        expectedUrl.searchParams.append('molecule_id', String(mockParams.molecule_id));
+        expectedUrl.searchParams.append('library_id', String(mockParams.library_id));
+        if (mockParams.project_id) {
+            expectedUrl.searchParams.append('project_id', String(mockParams.project_id));
+        }
+        if (mockParams.moleculeStatus) {
+            expectedUrl.searchParams.append('moleculeStatus', String(mockParams.moleculeStatus));
+        }
+        expect(fetch).toHaveBeenCalledWith(expectedUrl.toString(), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        // Assert the response matches the mock data
+        expect(result).toEqual(mockResponse);
+    });
+
+    test('test case for addToFavourites API ', async () => {
+        const mockFormData: any = {
+            id: 'molecule123',
+            favourite: true,
+        };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(null),
+            })
+        ) as jest.Mock;
+
+
+        const result = await addToFavourites(mockFormData);
+
+        // Assert fetch was called with the correct arguments
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule`, {
+            mode: 'no-cors',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(mockFormData),
+        });
+
+        // Assert the response is true for status 200
+        expect(result).toBe(true);
+    });
+
+    test('test case for submit order API', async () => {
+        const mockOrderData: any = {
+            id: 'order123',
+            items: [
+                { moleculeId: 'molecule1', quantity: 2 },
+                { moleculeId: 'molecule2', quantity: 3 },
+            ],
+        };
+
+        const mockResponse = { success: true, orderId: 'order123' };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+
+        const result = await submitOrder(mockOrderData);
+
+        // Assert fetch was called with the correct arguments
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule_order`, {
+            mode: 'no-cors',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(mockOrderData),
+        });
+
+        expect(result).toEqual(mockResponse);
+    });
+
+    test('test case for updateMoleculeStatus API', async () => {
+        const mockFormData: any = [
+            { id: 'molecule1', status: 'active' },
+            { id: 'molecule2', status: 'inactive' },
+        ];
+        const mockStatus = 1;
+        const mockUserId = 123;
+
+        const mockResponse = { success: true, updated: true };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+        const result = await updateMoleculeStatus(mockFormData, mockStatus, mockUserId);
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+                { formData: mockFormData, status: mockStatus, userId: mockUserId }),
+        });
+
+        expect(result).toEqual(mockResponse);
+    });
+
+    test('test case for generatePathway API', async () => {
+        const mockFormData: any = {
+            input: 'pathway_data',
+            options: { key: 'value' },
+        };
+
+        const mockResponse = { success: true, pathwayId: '12345' };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+        await generatePathway(mockFormData);
+        expect(fetch).toHaveBeenCalledWith(
+            `${process.env.PYTHON_API_HOST_URL}/generate_pathway_schemes`, {
+            method: 'POST',
+            headers: {
+                Accept: '*',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(mockFormData),
+        });
+    });
+
+    test('test case for getLabJobOrder API', async () => {
+        const mockMoleculeId = 123;
+        const mockResponse = {
+            success: true, details: { id: mockMoleculeId, name: 'Test Molecule' }
+        };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+        const result = await getLabJobOrderDetail(mockMoleculeId);
+        const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/lab_job_order/`);
+        if (mockMoleculeId) {
+            expectedUrl.searchParams.append('molecule_id', String(mockMoleculeId));
+        }
+        expect(fetch).toHaveBeenCalledTimes(1); // Assert fetch was called once
+        expect(fetch).toHaveBeenCalledWith(expectedUrl, {
+            mode: 'no-cors',
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        expect(result).toEqual(mockResponse);
+
+    });
+
+    test('test case for postLabJobOrder API', async () => {
+        const mockData: any = {
+            moleculeId: 'molecule123',
+            quantity: 2,
+            description: 'Test job order',
+        };
+
+        const mockResponse = { success: true, orderId: 'order123' };
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true, // Add the `ok` property to indicate a successful response
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+        const result = await postLabJobOrder(mockData);
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/lab_job_order`, {
+            mode: 'no-cors',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ order: mockData }),
+        });
+        expect(result).toEqual(mockResponse);
+    });
+
+    test('test case for deleteMolecule API', async () => {
+        const mockMoleculeId = 123;
+        const mockResponse = { success: true, message: 'Molecule deleted successfully' };
+
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                ok: true,
+                json: jest.fn().mockResolvedValueOnce(mockResponse),
+            })
+        ) as jest.Mock;
+
+        const result = await deleteMolecule(mockMoleculeId);
+
+        const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule/`);
+        if (mockMoleculeId) {
+            expectedUrl.searchParams.append('molecule_id', String(mockMoleculeId));
+        }
+        expect(fetch).toHaveBeenCalledTimes(1); // Assert fetch was called once
+        expect(fetch).toHaveBeenCalledWith(expectedUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        // Assert the response matches the mock data
+        expect(result).toEqual(mockResponse);
     });
 });

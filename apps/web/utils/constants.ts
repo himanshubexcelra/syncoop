@@ -29,6 +29,11 @@ export const PROJECT_TYPES = [
 
 export const PERMISSIONS = ['Admin', 'Edit', 'View'];
 
+export enum ContainerAccessPermissionType {
+  Admin = 1,
+  Edit = 2
+}
+
 export const DashboardStatuses = ['New', 'Pre Processing', 'In Progress', 'Done', 'Failed'];
 
 export const ADME_fieldNames: string[] = ["yield", "anlayse", "herg", "caco2"];

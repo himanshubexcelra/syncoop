@@ -1,31 +1,34 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
 import toast from "react-hot-toast";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Form,
   SimpleItem,
-  ButtonItem,
-  ButtonOptions,
   RequiredRule,
   Label,
   GroupItem,
 } from "devextreme-react/form";
 import Image from 'next/image';
+import { LoadIndicator } from 'devextreme-react';
 import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
-import { delay } from "@/utils/helpers";
+import { debounce, delay, isLibraryManger } from "@/utils/helpers";
 import { createProject, editProject } from "./projectService";
 import {
   ProjectCreateFields,
   OrganizationDataFields,
   User,
-  OrganizationType
+  OrganizationType,
+  ContainerPermissionLabel
 } from "@/lib/definition";
-import { DELAY, PERMISSIONS, PROJECT_TYPES } from "@/utils/constants";
-import DataGrid, { Column, Sorting, DataGridRef } from "devextreme-react/data-grid";
-import Textbox, { TextBoxTypes } from 'devextreme-react/text-box';
+import {
+  ContainerAccessPermissionType,
+  DELAY,
+  PERMISSIONS,
+  PROJECT_TYPES
+} from "@/utils/constants";
 import { SelectBox } from "devextreme-react";
-import { sortString } from "@/utils/sortString";
+import { sortString, sortStringJoined } from "@/utils/sortString";
 import { Messages } from "@/utils/message";
 
 export default function CreateProject({
@@ -41,24 +44,28 @@ export default function CreateProject({
   clickedOrg
 }: ProjectCreateFields) {
   const [filteredData, setFilteredData] = useState<User[]>(users);
+  const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
   const [userList, setUsers] = useState<User[]>([]);
-  const [filters, setFilters] = useState({ search: '', filter: false, permission: '' });
+  const [filters, setFilters] = useState({ search: '', filter: false, permission: '', name: '' });
   const [organization_id, setOrganizationId] = useState(
     clickedOrg
       ? clickedOrg
       : userData?.orgUser?.id);
-  const [showIcon, setShowIcon] = useState('arrow-both');
-  const dataGridRef = useRef<DataGridRef>(null);
+  const [showIcon, setShowIcon] = useState({ name: 'arrow-both', permission: 'arrow-both' });
 
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
-      const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id)
+      const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id);
       const updatedAllUsers = filteredUser.map(user => {
-        const updatedUser = projectData?.sharedUsers?.find(u => u.user_id === user.id);
-        return { ...user, permission: updatedUser ? updatedUser.role : 'View' };
+        const updatedUser = projectData?.container_access_permission?.find(u =>
+          u.user_id === user.id);
+        return {
+          ...user, permission: updatedUser ?
+            ContainerAccessPermissionType[updatedUser.access_type] : ContainerPermissionLabel.View
+        };
       });
       setFilteredData(updatedAllUsers);
-      const newFilter = { permission: '', search: '', filter: false };
+      const newFilter = { permission: '', search: '', filter: false, name: '' };
       setFilters(newFilter);
       setUsers(updatedAllUsers);
     } else {
@@ -67,7 +74,7 @@ export default function CreateProject({
         permission: 'View',
       }));
       setFilteredData(updatedData);
-      const newFilter = { permission: '', search: '', filter: false };
+      const newFilter = { permission: '', search: '', filter: false, name: '' };
       setFilters(newFilter);
       setUsers(updatedData);
     }
@@ -102,8 +109,7 @@ export default function CreateProject({
     }
   };
 
-  const searchData = (e: TextBoxTypes.ValueChangedEvent) => {
-    const { value } = e;
+  const handleSearch = debounce((value: string) => {
     setFilters((prevState) => ({ ...prevState, search: value }));
     if (value) {
       searchUser({ value, data: filteredData });
@@ -112,7 +118,10 @@ export default function CreateProject({
       if (filters.filter) filterValue({ data: userList });
       else setFilteredData(userList);
     }
+  }, 500);
 
+  const searchData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleSearch(e.target.value);
   }
 
   const handlePermissionChange = (user_id: number, permission: string) => {
@@ -120,10 +129,11 @@ export default function CreateProject({
     data[user_id].permission = permission;
 
     setFilteredData(data);
-    setShowIcon('arrow-both');
+    setShowIcon({ name: 'arrow-both', permission: 'arrow-both' });
   }
 
   const handleSubmit = async () => {
+    setLoadIndicatorVisible(true);
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
       const sharedUsers = filteredData.filter(val => val.permission !== 'View');
@@ -164,10 +174,12 @@ export default function CreateProject({
         const toastId = toast.success(message);
         await delay(DELAY);
         toast.remove(toastId);
+        setLoadIndicatorVisible(false);
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
         toast.remove(toastId);
+        setLoadIndicatorVisible(false);
       }
     }
   };
@@ -177,34 +189,41 @@ export default function CreateProject({
     let filteredUsers = organizationData.filter(
       (org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
     filteredUsers = filteredUsers.filter(
-      (user: User) => user.user_role[0]?.role?.type === 'library_manager' &&
-        user.id !== userData.id);
+      (user: User) => {
+        const roles = user.user_role
+          .map(role => role.role.type)
+          .filter(role => role !== undefined) as string[] || [];
+        return isLibraryManger(roles) && user.id !== userData.id
+      });
     setUsers(filteredUsers);
     setOrganizationId(value);
     filterUsers(filteredUsers);
   }
 
-  const sortByPermission = () => {
-    let value = filters.permission;
+  const sortUsers = (field: string) => {
+    let value = filters[field as keyof typeof filters];
     if (!value) value = 'asc';
-    else if (value === 'desc') value = 'asc';
+    else if (value === 'desc') value = ''; // remove sort
     else value = 'desc';
-    setFilters((prevState) => ({ ...prevState, permission: value }));
     let tempUsers = [...filteredData];
-    if (value === 'asc') {
-      tempUsers = sortString(tempUsers, 'permission', 'asc');
-      setShowIcon('arrow-down');
-      setFilteredData(tempUsers);
-      if (dataGridRef.current) {
-        dataGridRef.current.instance().clearSorting();
-      }
+    const sortIcon = { name: 'arrow-both', permission: 'arrow-both' };
+    const tempFilter = { ...filters, permission: '', name: '' };
+    setFilters({ ...tempFilter, [field]: value });
+    if (field === 'permission') {
+      tempUsers = sortString(tempUsers, field, value);
     } else {
-      tempUsers = sortString(tempUsers, 'permission', 'desc');
-      setShowIcon('arrow-up');
-      setFilteredData(tempUsers);
-      if (dataGridRef.current) {
-        dataGridRef.current.instance().clearSorting();
-      }
+      tempUsers = sortStringJoined(tempUsers, 'first_name', value, 'second_name');
+    }
+    setFilteredData(tempUsers);
+    if (value === 'asc') {
+      sortIcon[field as keyof typeof sortIcon] = 'arrow-down';
+      setShowIcon(sortIcon);
+    } else if (value === 'desc') {
+      sortIcon[field as keyof typeof sortIcon] = 'arrow-up';
+      setShowIcon(sortIcon);
+    } else {
+      setShowIcon(sortIcon);
+      setFilteredData(userList);
     }
   }
 
@@ -305,17 +324,13 @@ export default function CreateProject({
         <Label text="Description" />
       </SimpleItem>
 
-      <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}
-        visible={false}>
-        <div className="">
-          <Textbox
+      <GroupItem caption="Admin/Editors Access" cssClass="groupItem group-search" colCount={2}>
+        <div>
+          <input
             placeholder="Search"
             className="search-input"
-            inputAttr={{
-              style: { paddingRight: '30px' }
-            }}
-            onValueChanged={searchData}
-          />
+            width={120}
+            onChange={searchData} />
         </div>
         <div className="flex gap-[8px] filter">
           <CheckBox
@@ -326,41 +341,43 @@ export default function CreateProject({
         </div>
       </GroupItem>
       {filteredData.length === 0 ? (
-        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}
-          visible={false}>
+        <GroupItem caption=" " cssClass="groupItem group-data group-empty" colCount={2}>
           <div className="nodata-project">No data</div>
         </GroupItem>
       ) : (
-        <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}
-          visible={false}>
+        <GroupItem caption=" " cssClass="groupItem group-data" colCount={2}>
           <div style={{ width: '50%' }}>
-            <DataGrid
-              dataSource={filteredData}
-              ref={dataGridRef}
-            >
-              <Column
-                dataField="first_name"
-                alignment="center"
-                cellRender={({ data }: any) => <span>{data.first_name} {data.last_name}</span>}
-                caption="Name"
-              />
-              <Sorting mode="single" />
-            </DataGrid>
-          </div>
-          <div>
-            <div className="permission" onClick={sortByPermission}>
-              Permissions
+            <div className="permission" onClick={() => sortUsers('name')}>
+              Name
               <Image
-                src={`/icons/${showIcon}.svg`}
+                src={`/icons/${showIcon.name}.svg`}
                 width={24}
                 height={24}
-                alt="organization"
+                alt="sort"
+              />
+            </div>
+            {filteredData?.map((user, idx) => (
+              <div key={user.id} className={`
+              select-div name-div ${idx === 0 ? 'select-div-first' : ''}`}>
+                <div>{user.first_name} {user.last_name}</div>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div className="permission" onClick={() => sortUsers('permission')}>
+              Permissions
+              <Image
+                src={`/icons/${showIcon.permission}.svg`}
+                width={24}
+                height={24}
+                alt="sort"
               />
             </div>
             {filteredData?.map((user, idx) => (
               <div key={user.id} className={`select-div ${idx === 0 ? 'select-div-first' : ''}`}>
                 <SelectBox
                   items={PERMISSIONS}
+                  placeholder="permission"
                   value={user.permission}
                   onValueChange={(e) => handlePermissionChange(idx, e)}
                 />
@@ -370,16 +387,24 @@ export default function CreateProject({
         </GroupItem>
       )}
       <GroupItem cssClass="buttons-group" colCount={2}>
-        <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
-          <ButtonOptions
-            text={edit ? 'Update' : "Create Project"}
-            useSubmitBehavior={true}
-            onClick={handleSubmit}
+        <button className={
+          loadIndicatorVisible
+            ? 'disableButton w-[65px] h-[37px]'
+            : 'primary-button'}
+          onClick={handleSubmit}
+          disabled={loadIndicatorVisible}>
+          <LoadIndicator className={
+            `button-indicator`
+          }
+            visible={loadIndicatorVisible}
+            height={20}
+            width={20}
           />
-        </ButtonItem>
-        <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
-          <ButtonOptions text="Discard" onClick={cancelSave} />
-        </ButtonItem>
+          {loadIndicatorVisible ? '' : edit ? 'Update' : 'Create Project'}
+        </button>
+        <button className='secondary-button ml-[15px]' onClick={cancelSave}>
+          Discard
+        </button>
       </GroupItem>
     </Form>
   );

@@ -8,9 +8,11 @@ import { FormRef } from "devextreme-react/cjs/form";
 import { useRouter } from 'next/navigation';
 import {
     fetchMoleculeStatus, formatDetailedDate, popupPositionValue,
-    formatDatetime
+    formatDatetime,
+    isAdmin
 } from "@/utils/helpers";
 import {
+    ContainerPermission,
     FetchUserType,
     MoleculeStatusLabel,
     OrganizationDataFields,
@@ -34,7 +36,7 @@ type ProjectAccordionDetailProps = {
     organizationData: OrganizationDataFields[],
     userData: UserData,
     actionsEnabled: string[],
-    myRoles?: string[],
+    myRoles: string[],
     clickedOrg?: number,
     childRef: React.RefObject<HTMLDivElement>,
     setIsDirty: (val: boolean) => void,
@@ -86,13 +88,13 @@ export default function ProjectAccordionDetail({
     }, { libraryMolecules: [] }) || { libraryMolecules: [] };
 
     useEffect(() => {
-        const sharedUser = data.sharedUsers?.find(u => u.user_id === userData.id);
+        const sharedUser = data.container_access_permission?.find(u => u.user_id === userData.id
+            && u.access_type === ContainerPermission.Admin);
         const owner = data.owner_id === userData.id;
-        const admin = ['admin', 'org_admin'].some(
-            (role) => myRoles?.includes(role));
+        const admin = isAdmin(myRoles);
 
         setEditStatus(actionsEnabled.includes('edit_project') && (!!sharedUser || owner || admin))
-    }, [data])
+    }, [data]);
 
     useEffect(() => {
         setPopupPosition(popupPositionValue());
@@ -131,6 +133,7 @@ export default function ProjectAccordionDetail({
             }
         }
     }
+
     return (
         <div className="accordion-content" >
             <div className='flex justify-between'>
@@ -275,16 +278,18 @@ export default function ProjectAccordionDetail({
                             width={15}
                             height={15}
                         />
-                        Shared: {data.sharedUsers?.map((val, idx) => {
-                            const length = data.sharedUsers.length;
+                        Shared: {data.container_access_permission?.map((val, idx) => {
+                            const length = data.container_access_permission.length;
+                            const name = users.find(user => user.id === val.user_id)?.first_name ||
+                                userData.first_name; // sice logged in user not in the list
                             if (idx >= 4) return;
                             if (length - 1 !== idx && idx < 3)
                                 return <span key={val.id}>
-                                    {val.first_name},
+                                    {name},
                                 </span>
                             if (length - 1 === idx || idx < 3)
                                 return <span key={val.id}>
-                                    {val.first_name}
+                                    {name}
                                 </span>
                             return <span key={val.id}>
                                 and {length - idx} +

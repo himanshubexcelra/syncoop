@@ -17,7 +17,7 @@ import {
 } from '@/lib/definition';
 import CreateProject from "./CreateProject";
 import { getOrganizationById, getOrganization } from "@/components/Organization/service";
-import { debounce } from '@/utils/helpers';
+import { debounce, isLibraryManger } from '@/utils/helpers';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import { getProjectBreadCrumbs } from './breadCrumbs';
 
@@ -82,20 +82,22 @@ export default function ProjectDetails({
             setFilteredData(projectList);
             setOrgProjects(projectList);
             setUsers([]);
-
         } else {
             const tempOrganization = [];
             organization = await getOrganizationById({
                 withRelation: ['orgUser', 'user_role', 'projects'],
                 id: userData?.organization_id
             });
-            const projects = organization?.other_container;            
+            const projects = organization?.other_container;
             setFilteredData(projects);
             setOrgProjects(projects);
             setUsers(organization?.orgUser?.filter(
-                (user: UserData) =>
-                    user.user_role[0]?.role?.type === 'library_manager' &&
-                    user.id !== userData.id));
+                (user: UserData) => {
+                    const roles = user.user_role
+                        .map(role => role.role.type)
+                        .filter(role => role !== undefined) as string[] || []
+                    return isLibraryManger(roles) && user.id !== userData.id
+                }));
             tempOrganization.push(organization);
             setOrganization(tempOrganization);
         }

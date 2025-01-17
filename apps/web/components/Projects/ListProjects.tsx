@@ -15,6 +15,7 @@ import {
 import { getLibraries } from '../Libraries/service';
 import { LoadIndicator } from 'devextreme-react';
 import usePopupAndReset from '../usePopupandReset/usePopupAndReset';
+import { isLibraryManger } from '@/utils/helpers';
 
 type ProjectListProps = {
     data: ProjectDataFields[],
@@ -88,13 +89,16 @@ export default function ListProjects({
                 if (Array.isArray(organizationData)) {
                     const filteredUsers = organizationData.filter(
                         (org: OrganizationDataFields) =>
-                            org.id === newItems[0].parent_id)[0]?.orgUser;
+                            org.id === e.addedItems[0].parent_id)[0]?.orgUser;
 
                     if (filteredUsers) {
                         setUsers(filteredUsers?.filter(
-                            (user: User) =>
-                                user.user_role[0]?.role?.type === 'library_manager' &&
-                                user.id !== userData.id));
+                            (user: User) => {
+                                const roles = user.user_role
+                                    .map(role => role.role.type)
+                                    .filter(role => role !== undefined) as string[] || []
+                                return isLibraryManger(roles) && user.id !== userData.id
+                            }));
                     }
                 }
             }

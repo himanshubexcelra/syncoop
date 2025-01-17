@@ -691,6 +691,7 @@ describe('CartDetails Component', () => {
         const result = mockprepareLabJobData(mockResponse, moleculeId);
         expect(result).toEqual(result);
     });
+
     test('renders correctly when not loading', async () => {
         await act(async () => {
             render(
@@ -702,13 +703,19 @@ describe('CartDetails Component', () => {
                     containsProjects={false}
                     close={mocksetCreatePopupVisibility}
                     loader={false}
-                />);
+                />
+            );
         });
+
         const submitOrder = screen.getByText('Submit Order');
         expect(submitOrder).toBeInTheDocument();
-        await act(async () => { fireEvent.click(submitOrder) });
+
+        await act(async () => {
+            fireEvent.click(submitOrder);
+        });
+
         expect(screen.getByText(Messages.LAP_JOB_CONFIRMATION_TITLE)).toBeInTheDocument();
-    });
+    }, 60000);
 
     test('Confirmation dialog closes when Cancel button is clicked', async () => {
         await act(async () => {

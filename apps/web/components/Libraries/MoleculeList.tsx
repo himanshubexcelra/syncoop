@@ -38,7 +38,6 @@ import {
     getADMECalculation,
     getAverage,
     getADMEColor,
-    isAdmin,
     delay
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
@@ -62,7 +61,6 @@ type MoleculeListType = {
     userData: UserData,
     /* setMoleculeLoader: (value: boolean) => void, */
     setTableData: (value: MoleculeType[]) => void,
-    actionsEnabled: string[],
     selectedLibrary: number,
     selectedLibraryName: string,
     library_id: number,
@@ -70,7 +68,8 @@ type MoleculeListType = {
     projectId: string,
     organizationId: string,
     fetchLibraries: () => void,
-    config: OrganizationConfigType
+    config: OrganizationConfigType,
+    editEnabled: boolean,
 }
 const MoleculeStructure = dynamic(
     () => import("@/utils/MoleculeStructure"),
@@ -80,7 +79,6 @@ const MoleculeStructure = dynamic(
 export default function MoleculeList({
     expanded,
     userData,
-    actionsEnabled,
     selectedLibrary,
     library_id,
     projectId,
@@ -88,10 +86,11 @@ export default function MoleculeList({
     organizationId,
     fetchLibraries,
     config,
+    editEnabled,
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
-    const cartEnabled = actionsEnabled.includes('create_molecule_order');
+    const cartEnabled = editEnabled;
     const [editMolecules, setEditMolecules] = useState<any[]>([]);
     const [viewAddMolecule, setViewAddMolecule] = useState(false);
     const [viewEditMolecule, setViewEditMolecule] = useState(false);
@@ -151,8 +150,6 @@ export default function MoleculeList({
         fetchMoleculeData(library_id);
     }, [library_id]);
 
-    const admin = isAdmin(userData.myRoles);
-
     const columns: ColumnConfig[] = [
         {
             dataField: "favourite",
@@ -202,12 +199,9 @@ export default function MoleculeList({
                     structureName={data.source_molecule_name}
                     molecule_id={data.id}
                     onZoomClick={(e: any) => handleStructureZoom(e, data)}
-                    enableEdit={(admin || data.created_by === userData.id) &&
-                        data.status === MoleculeStatusCode.New &&
-                        actionsEnabled.includes('edit_molecule')}
-                    enableDelete={(admin || data.created_by === userData.id) &&
-                        data.status === MoleculeStatusCode.New &&
-                        actionsEnabled.includes('edit_molecule')}
+                    enableEdit={data.status === MoleculeStatusCode.New && editEnabled}
+                    enableDelete={data.status === MoleculeStatusCode.New &&
+                        editEnabled}
                     onEditClick={() => showEditMolecule(data)}
                     onDeleteClick={() => deleteMoleculeCart(data)}
                 />
@@ -1004,12 +998,13 @@ export default function MoleculeList({
     const addMolecule = () => {
         setViewAddMolecule(true)
     }
+
     const toolbarButtons = [
         {
             text: "Add Molecule",
             onClick: addMolecule,
             icon: '/icons/plus-white.svg',
-            visible: actionsEnabled.includes('create_molecule') && !!library_id,
+            visible: editEnabled && !!library_id,
             class: 'btn-primary toolbar-item-spacing',
         },
         {
@@ -1018,7 +1013,7 @@ export default function MoleculeList({
             class: !selectedRows.length
                 ? 'btn-disable toolbar-item-spacing' : 'btn-secondary toolbar-item-spacing',
             disabled: !selectedRows.length,
-            visible: actionsEnabled.includes('edit_molecule') && !!library_id
+            visible: editEnabled && !!library_id
         },
         {
             text: `Add to Cart (${selectedRows.length})`,

@@ -45,6 +45,7 @@ type LibraryAccordionType = {
     setLibraryId: (value: number) => void,
     isDirty: boolean,
     setShowPopup: (value: boolean) => void,
+    adminAccess: boolean,
 }
 
 export default function LibraryAccordion({
@@ -64,10 +65,9 @@ export default function LibraryAccordion({
     setExpanded,
     isDirty,
     setShowPopup,
+    adminAccess,
 }: LibraryAccordionType) {
     const router = useRouter();
-    const createEnabled = actionsEnabled.includes('create_library');
-    const { myRoles } = userData;
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [editPopupVisible, setEditPopupVisibility] = useState(false);
     const [searchValue, setSearchValue] = useState('');
@@ -83,12 +83,6 @@ export default function LibraryAccordion({
     useEffect(() => {
         setPopupPosition(popupPositionValue());
     }, []);
-
-    const checkDisabledField = (item: LibraryFields) => {
-        const owner = item.owner_id === userData.id;
-        const admin = ['admin', 'org_admin'].some((role) => myRoles?.includes(role));
-        return !(owner || admin);
-    }
 
     const renderTitle = (title: string) => (
         <div className="header-text text-black">{title}</div>
@@ -338,7 +332,7 @@ export default function LibraryAccordion({
                             </select>
                         </div>
                         <div className='flex'>
-                            {createEnabled &&
+                            {adminAccess &&
                                 <Button
                                     text="Add Library"
                                     icon="plus"
@@ -658,7 +652,7 @@ export default function LibraryAccordion({
                                         /* getLibraryData(item); */
                                     }}
                                 />
-                                {!checkDisabledField(item) && <Button
+                                {adminAccess && <Button
                                     text="Edit"
                                     type="normal"
                                     id={`edit-${item.id}`}
@@ -693,7 +687,7 @@ export default function LibraryAccordion({
                                             item.id)
                                     }}
                                 />
-                                {!checkDisabledField(item) &&
+                                {adminAccess &&
                                     isDeleteLibraryEnable(item?.libraryMolecules) &&
                                     <Button
                                         text="Delete"

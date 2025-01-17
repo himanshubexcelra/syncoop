@@ -310,25 +310,23 @@ const ReactionDetails = ({
                 </span>,
         },
         {
-            dataField: 'inventory_id',
+            dataField: 'link',
             title: 'In Stock',
             alignment: 'center',
-            customRender: () =>
+            customRender: (data: ReactionCompoundType) =>
                 <>
-                    {/* {data.inventory_id ? ( */}
-                    <a
-                        // href={data?.inventory_url}
-                        href="/aidd-syncoop/test"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-themeBlueColor underline"
-                    >
-                        Yes
-                    </a>
-                    {/* // ) : (
-                    //     <span>No</span>
-                    // )
-                // } */}
+                    {data.link && data.link !== "NA" ? (
+                        <a
+                            href={data.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-themeBlueColor underline"
+                        >
+                            Yes
+                        </a>
+                    ) : (
+                        <span>No</span>
+                    )}
                 </>
         },
     ];

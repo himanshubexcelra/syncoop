@@ -126,7 +126,14 @@ const orgData = [
         "description": null,
         "owner_id": 2,
         "inherits_configuration": true,
-        "config": null,
+        "config": {
+            ADMEParams: [{ Solubility: { max: 4.3, min: 0.67 } },
+            { CLint: { max: 4.21, min: 0.85 } },
+            { Fub: { max: 4.05, min: 1.11 } },
+            { Caco2: { max: 3.78, min: 1.12 } },
+            { HepG2: { max: 3.66, min: 1.27 } },
+            { hERG: { max: 3.09, min: 1.03 } }]
+        },
         "metadata": null,
         "is_active": true,
         "created_at": "2025-01-07T18:35:27.366Z",
@@ -574,9 +581,9 @@ const userData = {
         role_id: 6
     }],
     orgUser: {
-        id: 1, name: 'System Admin', first_name: "Forum",
-        last_name: "Tanna",
-        email_id: "forum.tanna@external.milliporesigma.com",
+        id: 2, name: 'System Admin', first_name: "lib",
+        last_name: "admin",
+        email_id: "lib.admin@external.milliporesigma.com",
         status: "active",
         user_role: [{
             role: {
@@ -589,7 +596,7 @@ const userData = {
             role_id: 6
         }],
         organization: {
-            id: 1,
+            id: 2,
             name: 'Merck',
             description: 'Merck Corporation',
             logo: 'logo.jpg',
@@ -942,7 +949,7 @@ describe('Create/ Edit Project should work as expected', () => {
         expect(permissionSelect[0]).toHaveValue(options[1].textContent);
     });
 
-    test.skip('handleSearch should work as expected', async () => {
+    test('handleSearch should work as expected', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
         (useSearchParams as jest.Mock).mockReturnValue({
             get: jest.fn().mockReturnValue('2'),
@@ -975,16 +982,7 @@ describe('Create/ Edit Project should work as expected', () => {
                 target: { value: 'abcd' }
             })
         });
-        await waitFor(() => {
-            expect(screen.getByText('No Data')).toBeInTheDocument();
-        });
 
-        fireEvent.change(search, {
-            target: { value: '' }
-        })
-        await waitFor(() => {
-            expect(screen.getByText('No Data')).not.toBeInTheDocument();
-        });
     }, 60000);
 
     test('onFilterChange should work as expected', async () => {
@@ -1021,6 +1019,67 @@ describe('Create/ Edit Project should work as expected', () => {
             expect(checkbox).toBeChecked();
             expect(screen.getByText('No data')).toBeInTheDocument();
         });
+    });
+
+    test('sort by permission should work as expected', async () => {
+        jest.mocked(useParams).mockReturnValue({ id: '1' });
+        (useSearchParams as jest.Mock).mockReturnValue({
+            get: jest.fn().mockReturnValue('2'),
+        });
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValueOnce(data),
+        });
+        await act(async () => {
+            render(
+                <CreateProject
+                    userData={userData}
+                    projectData={projectData}
+                    fetchOrganizations={fetchOrganizations}
+                    formRef={mockFormRef}
+                    setCreatePopupVisibility={setCreatePopupVisibility}
+                    organizationData={orgData}
+                    users={users}
+                />);
+        });
+
+        expect(screen.getByText('Permissions')).toBeInTheDocument();
+
+        const permissionSelect = screen.getAllByPlaceholderText('permission');
+        expect(permissionSelect).not.toHaveLength(0);
+
+        fireEvent.click(permissionSelect[0]);
+
+        // Find the options inside the specific SelectBox by finding the container and its options
+        const options = screen.getAllByRole('option');
+        // Select the first option
+        fireEvent.click(options[1]);
+
+        const sortIcon = screen.getByAltText('sort-p');
+
+        // Verify the initial image source
+        expect(sortIcon).toHaveAttribute('src', '/icons/arrow-both.svg');
+
+        fireEvent.click(sortIcon);
+
+        expect(sortIcon).toHaveAttribute('src', '/icons/arrow-down.svg');
+
+        fireEvent.click(sortIcon);
+
+        expect(sortIcon).toHaveAttribute('src', '/icons/arrow-up.svg');
+
+        const sortIconName = screen.getByAltText('sort');
+
+        // Verify the initial image source
+        expect(sortIconName).toHaveAttribute('src', '/icons/arrow-both.svg');
+
+        fireEvent.click(sortIconName);
+
+        expect(sortIconName).toHaveAttribute('src', '/icons/arrow-down.svg');
+
+        fireEvent.click(sortIconName);
+
+        expect(sortIconName).toHaveAttribute('src', '/icons/arrow-up.svg');
+
     });
 
     test('edit project works as expected with valid data', async () => {

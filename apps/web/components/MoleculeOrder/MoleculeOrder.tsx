@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import CustomDataGrid from '@/ui/dataGrid';
 import {
   BreadCrumbsObj,
@@ -26,7 +26,8 @@ import {
   MoleculeStatusLabel,
   ReactionButtonNames,
   ResetState,
-  FormState
+  FormState,
+  AmsInventoryItem
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
@@ -46,7 +47,8 @@ import {
 } from 'devextreme/ui/data_grid';
 import {
   getMoleculesOrder, saveReactionPathway,
-  getReactionPathway, getSolventTemperature, updateReaction
+  getReactionPathway, getSolventTemperature, updateReaction,
+  searchInventory
 } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
@@ -233,6 +235,7 @@ export default function MoleculeOrderPage({
   const [viewImage, setViewImage] = useState(false);
   const [selectionEnabledRows, setSelectionEnabledRows] = useState<object[]>([]);
   const [popUpType, setPopUpType] = useState<number>(0);
+  const [reactantList, setReactantList] = useState<ReactionCompoundType[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1729,7 +1732,7 @@ export default function MoleculeOrderPage({
     return newObj
   }
 
-  const handleDataChange = (input: ReactionInputData[]) => {    
+  const handleDataChange = (input: ReactionInputData[]) => {
     onFormChange(true);
     setMoleculeCompound(prevState => {
       const updatedState = [...prevState];
@@ -1833,14 +1836,45 @@ export default function MoleculeOrderPage({
     });
   };
 
-  const consolidatedReagents: Compound[] = reactionsData?.flatMap((reaction, index) =>
-    reaction.reaction_compound
-      .filter((compound: Compound) => compound.compound_type === COMPOUND_TYPE_R)
-      .map((compound: Compound) => ({
-        ...compound,
-        related_to: index + 1,
-      }))
-  );
+  // Use useMemo to calculate consolidatedReagents to avoid recalculating on every render
+  const consolidatedReagents: ReactionCompoundType[] = useMemo(() => {
+    return reactionsData?.flatMap((reaction, index) =>
+      reaction.reaction_compound
+        .filter((compound: ReactionCompoundType) => compound.compound_type === COMPOUND_TYPE_R)
+        .map((compound: ReactionCompoundType) => ({
+          ...compound,
+          related_to: index + 1,
+          link: "NA",
+        }))
+    );
+  }, [reactionsData]);
+
+  useEffect(() => {
+    const updateSmilesLinks = async () => {
+      const payload = {
+        smiles: consolidatedReagents.map((item: ReactionCompoundType) => item?.smiles_string),
+      };
+      try {
+        const apiData: AmsInventoryItem[] = await searchInventory(payload);
+        const updatedData = consolidatedReagents.map((item) => {
+          const apiItem = apiData.find(
+            (responseItem: any) => responseItem.smiles === item.smiles_string
+          );
+          return {
+            ...item,
+            link: apiItem?.details?.link || "NA", // Default to "NA" if no link found
+          };
+        });        
+        setReactantList(updatedData);
+      } catch (error) {
+        console.error("Error fetching API data:", error);
+      }
+    };
+
+    if (consolidatedReagents.length) {
+      updateSmilesLinks();
+    }
+  }, [consolidatedReagents]);
 
   const tabsDetails: TabDetail[] = [
     ...reactionsData.map((reaction, index) => {
@@ -1870,10 +1904,12 @@ export default function MoleculeOrderPage({
       Component: ReactionDetails,
       props: {
         isReactantList: true,
-        data: consolidatedReagents,
+        data: reactantList,
       },
     },
   ];
+
+  localStorage.setItem("tabsLength", tabsDetails?.length);
 
   const onFormChange = (hasChanged: boolean) => {
     setPopUpType(FormState.UPDATE);
@@ -2043,12 +2079,8 @@ export default function MoleculeOrderPage({
 
   const handlePathwayList = () => {
     if (popUpType === FormState.UPDATE) {
-      console.log('test');
-      
       setConfirm(true);
     } else {
-      console.log('test123');
-      
       resetNodes(true);
     }
   };

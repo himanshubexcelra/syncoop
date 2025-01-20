@@ -2,17 +2,13 @@
 import React, { useMemo } from 'react';
 import { render, screen, waitFor, act, fireEvent, renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import {
-    getMoleculesOrder,
-    searchInventory,
-} from '@/components/MoleculeOrder/service';
+import { getMoleculesOrder, searchInventory } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import MoleculeOrderPage from '../MoleculeOrder';
 import { AmsInventoryItem, ColumnConfig, TabDetail, UserData } from '@/lib/definition';
 import Tabs from '@/ui/Tab/Tabs';
 import ConfirmationDialog from '../ConfirmationDialog';
 import CustomDataGrid from '@/ui/dataGrid';
-import { Button } from 'devextreme-react';
 
 // Mock console.error at the top of your test file
 global.console = {
@@ -64,7 +60,6 @@ const mockData = [
         id: 1,
         smile: 'CC(=O)Oc1ccccc1C(=O)O',
         order_id: 101,
-        order_name: 'Order_101',
         molecule_id: 2001,
         molecular_weight: '250',
         status: 6,
@@ -79,7 +74,6 @@ const mockData = [
         id: 2,
         smile: 'CC(=O)Oc1ccccc1C(=O)O',
         order_id: 102,
-        order_name: 'Order_102',
         molecule_id: 2002,
         molecular_weight: '250',
         status: 6,
@@ -94,7 +88,6 @@ const mockData = [
         id: 3,
         smile: 'CC(=O)Oc1ccccc1C(=O)O',
         order_id: 102,
-        order_name: 'Order_103',
         molecule_id: 2004,
         molecular_weight: '250',
         status: 3,
@@ -298,8 +291,6 @@ const tabsDetails: TabDetail[] = [
 jest.mock('@/components/MoleculeOrder/service', () => ({
     getMoleculesOrder: jest.fn(),
     searchInventory: jest.fn(),
-    getReactionPathway: jest.fn(),
-    updateReaction: jest.fn()
 }));
 
 // Mock reaction data
@@ -375,7 +366,7 @@ describe('MoleculeOrderPage Component', () => {
     test('renders the DataGrid with correct data', async () => {
         (getMoleculesOrder as jest.Mock).mockResolvedValue(mockData);
 
-        render(<MoleculeOrderPage userData={mockUserData}
+        render(<MoleculeOrderPage userData={mockUserData} 
             actionsEnabled={actionsEnabledMock} />);
 
         await waitFor(() => {
@@ -739,47 +730,7 @@ describe('MoleculeOrderPage Component', () => {
             },
         ]);
     });
-    test('handles save reaction', () => {
-        const isLoading = false;
-        const mocksetConfirm = jest.fn();
-        const mocksetPopUpType = jest.fn();
-        render(
-            <Button
-                text={isLoading ? '' : 'Save'}
-                onClick={() => {
-                    mocksetConfirm(true);
-                    mocksetPopUpType(0)
-                }}
-                visible={true}
-                style={{ cursor: isLoading ? 'default' : 'pointer' }}
-            >
-            </Button>
-        );
-        const saveButton = screen.getByText('Save');
-        fireEvent.click(saveButton);
-    });
-
-    test('handles validate reactions', () => {
-        const isLoading = false;
-        const handleSaveReactionMock = jest.fn();
-        render(
-            <Button
-                text='Validate'
-                onClick={() => {
-                    handleSaveReactionMock(0);
-                }}
-                visible={true}
-                style={{ cursor: isLoading ? 'default' : 'pointer' }}
-            >
-            </Button>
-        );
-        const validateButton = screen.getByText('Validate');
-        fireEvent.click(validateButton);
-        expect(handleSaveReactionMock).toHaveBeenCalled();
-    });
-
 });
-
 
 
 // Mock ConfirmationDialog

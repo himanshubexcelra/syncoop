@@ -370,7 +370,7 @@ export default function CreateProject({
                 src={`/icons/${showIcon.permission}.svg`}
                 width={24}
                 height={24}
-                alt="sort"
+                alt="sort-p"
               />
             </div>
             {filteredData?.map((user, idx) => (

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
 import LibraryDetails from '../LibraryDetails';
 import { AppContext } from '../../../app/AppState';
 import { AppContextModel, UserData } from '@/lib/definition';
@@ -87,43 +87,59 @@ const userData: UserData = {
     }],
 };
 
+const libData = [
+    {
+        id: 1,
+        name: 'Library 1',
+        owner: { first_name: 'user' },
+        metadata: { target: '', type: '' },
+        libraryMolecules: [],
+    },
+    {
+        id: 2,
+        name: 'Library 2',
+        owner: { first_name: 'user1' },
+        metadata: { target: '', type: '' },
+        libraryMolecules: [],
+    },
+];
+
+const projectData = {
+    id: 1,
+    name: 'Project 1',
+    description: 'Project description',
+    container: { id: 1, name: 'Organization 1' },
+    user: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
+    sharedUsers: [],
+    target: '',
+    metadata: { target: '', type: '' },
+    userWhoUpdated: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
+    userWhoCreated: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
+    updated_at: new Date(),
+    user_id: 1,
+    owner: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
+    owner_id: 1,
+    orgUser: undefined,
+    created_at: new Date(),
+    other_container: [...libData],
+}
+
 jest.mock('../service', () => {
     const originalModule = jest.requireActual('../service');
     return {
         ...originalModule,
         getLibraries: jest.fn().mockImplementation(() => {
-            return Promise.resolve([
-                { id: 1, name: 'Library 1' },
-                { id: 2, name: 'Library 2' },
-            ]);
+            return Promise.resolve(projectData);
         }),
         fetchProjectData: jest.fn().mockImplementation(() => {
-            return Promise.resolve({
-                id: 1,
-                name: 'Project 1',
-                description: 'Project description',
-                container: { id: 1, name: 'Organization 1' },
-                user: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
-                sharedUsers: [],
-                target: '',
-                metadata: { target: '', type: '' },
-                userWhoUpdated: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
-                userWhoCreated: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
-                updated_at: new Date(),
-                user_id: 1,
-                owner: { id: 1, first_name: 'Test', last_name: 'User', email_id: 'test.user@example.com' },
-                owner_id: 1,
-                orgUser: undefined,
-                created_at: new Date(),
-                other_container: [],
-            });
+            return Promise.resolve(projectData);
         }),
     };
 });
 
-describe('LibraryDetails Component', () => {
-    const actionsEnabled = ['create_molecule_order'];
+const actionsEnabled = ['create_molecule_order'];
 
+describe('LibraryDetails Component', () => {
     test('renders without crashing', () => {
         render(
             <AppContext.Provider value={mockAppContext}>
@@ -203,5 +219,29 @@ describe('LibraryDetails Component', () => {
 
         const loader = screen.getByRole('alert');
         expect(loader).toBeInTheDocument();
+    });
+
+    test('handles expanding correctly', async () => {
+        const getLibraries = jest.fn();
+        (getLibraries as jest.Mock).mockResolvedValue(projectData);
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValueOnce(projectData),
+        });
+        render(
+            <LibraryDetails
+                userData={userData}
+                actionsEnabled={actionsEnabled}
+                organizationId="1"
+                projectId="1"
+            />
+        );
+
+        const loader = screen.getByRole('alert');
+        await waitFor(() => expect(loader).not.toBeInTheDocument())
+        const expandButton = screen.getByAltText('showDetailedView');
+        expect(expandButton).toHaveAttribute('src', '/icons/expand.svg');
+
+        await act(() => fireEvent.click(expandButton));
+        expect(expandButton).toHaveAttribute('src', '/icons/collapse.svg');
     });
 });

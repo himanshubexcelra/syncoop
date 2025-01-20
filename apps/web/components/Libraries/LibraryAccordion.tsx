@@ -320,6 +320,7 @@ export default function LibraryAccordion({
                             </span>
                             <select
                                 value={sortBy}
+                                title="sort"
                                 className=
                                 {`w-[122px] bg-transparent cursor-pointer font-normal
                                     text-normal text-themeBlueColor`}

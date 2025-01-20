@@ -129,7 +129,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const searchParams = useSearchParams();
     const params = useParams<{ id?: string, projectId?: string }>();
     const [library_id, setLibraryId] = useState<number>(Number(searchParams.get('library_id')));
-    const [libLoader, setLibLoader] = useState(false);
     const [project_id, setProjectId] = useState(params.projectId || params.projectId!);
     const [organization_id, setOrganizationId] = useState(organizationId);
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
@@ -240,7 +239,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                     return Number(library.id) === Number(library_id)
                 }) : libraries[0];
                 setSelectedLibraryData(libraryData);
-                setLibLoader(false);
                 if (libraryData) {
                     // if (library_id != libraryData.id) {
                     setLibraryId(libraryData.id);
@@ -333,34 +331,29 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                             )}
                             <div className={`${expanded ? 'w-3/5' : 'w-full'}`}>
                                 {expanded && library_id != 0 && (
-                                    libLoader ?
-                                        <LoadIndicator
-                                            visible={libLoader}
-                                        /> : (
-                                            <Accordion collapsible={true} multiple={false}>
-                                                <Item visible={false} />
-                                                <Item titleRender={() => 'ADME Properties'}>
-                                                    <ADMESelector
-                                                        type="L"
-                                                        organizationId={
-                                                            userData.organization_id
-                                                        }
-                                                        childRef={childRef}
-                                                        isDirty={isDirty}
-                                                        setIsDirty={setIsDirty}
-                                                        reset={reset}
-                                                        data={{
-                                                            ...selectedLibraryData,
-                                                            container: {
-                                                                config
-                                                            }
-                                                        }}
-                                                        editAllowed={adminAccess}
-                                                        fetchContainer={fetchLibraries}
-                                                    />
-                                                </Item>
-                                            </Accordion>
-                                        )
+                                    <Accordion collapsible={true} multiple={false}>
+                                        <Item visible={false} />
+                                        <Item titleRender={() => 'ADME Properties'}>
+                                            <ADMESelector
+                                                type="L"
+                                                organizationId={
+                                                    userData.organization_id
+                                                }
+                                                childRef={childRef}
+                                                isDirty={isDirty}
+                                                setIsDirty={setIsDirty}
+                                                reset={reset}
+                                                data={{
+                                                    ...selectedLibraryData,
+                                                    container: {
+                                                        config
+                                                    }
+                                                }}
+                                                editAllowed={adminAccess}
+                                                fetchContainer={fetchLibraries}
+                                            />
+                                        </Item>
+                                    </Accordion>
                                 )}
                                 <MoleculeList
                                     selectedLibraryName={selectedLibraryName}

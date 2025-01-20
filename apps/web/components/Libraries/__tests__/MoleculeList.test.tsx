@@ -295,7 +295,6 @@ describe('MoleculeList Component', () => {
                     projectId={''}
                     organizationId={''}
                     selectedLibraryName={''}
-                    config={{ ADMEParams: [] }}
                 />
             </AppContext.Provider>
         );
@@ -347,7 +346,6 @@ describe('MoleculeList Component', () => {
                     projectId={''}
                     organizationId={''}
                     selectedLibraryName={''}
-                    config={{ ADMEParams: [] }}
                 />
             </AppContext.Provider>
         );

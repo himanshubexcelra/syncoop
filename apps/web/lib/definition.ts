@@ -113,7 +113,7 @@ export interface ProjectCreateFields {
   projectData?: ProjectDataFields,
   users: User[],
   organizationData: OrganizationDataFields[],
-  myRoles?: string[],
+  myRoles: string[],
   edit?: boolean,
   /* role: number, */
   userData: UserData,

@@ -20,6 +20,12 @@
     padding-bottom: 0;
 }
 
+.adme-accordion {
+    .dx-accordion-item-opened {
+        margin: 0;
+    }
+}
+
 .accordion {
     width: 40%;
 

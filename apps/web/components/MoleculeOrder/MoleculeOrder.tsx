@@ -264,15 +264,6 @@ export default function MoleculeOrderPage({
     selectAllCheckBox: null
   }); */
 
-  const getConfig = (data: MoleculeOrder) => {
-    if (!data.inherits_configuration) {
-      return data.config;
-    } else if (data.inherits_configuration && !data.project_inherits_configuration) {
-      return data.projectConfig;
-    }
-    return data.organizationConfig;
-  }
-
   const breadcrumbs: BreadCrumbsObj[] = [
     { label: 'Home', svgPath: '/icons/home-icon.svg', svgWidth: 16, svgHeight: 16, href: '/' },
     {
@@ -585,8 +576,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'Caco2');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -622,8 +612,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -659,8 +648,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -696,8 +684,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -733,8 +720,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -770,8 +756,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -807,8 +792,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -844,8 +828,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'HepG2');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -881,8 +864,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'hERG');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -918,8 +900,7 @@ export default function MoleculeOrderPage({
             const { average, value1, value2 } = result;
             const calculatedResult = getADMECalculation(average, key);
             const reference = COLOR_SCHEME[key].reference;
-            const config = getConfig(data);
-            const colorFound = getADMEColor(config, calculatedResult, key, 'Solubility');
+            const colorFound = getADMEColor(calculatedResult, key);
             const id = `${key}-${data.molecule_id}`
             return (
               <div className={`${colorFound?.className} status-mark`}>
@@ -1864,7 +1845,7 @@ export default function MoleculeOrderPage({
             ...item,
             link: apiItem?.details?.link || "NA", // Default to "NA" if no link found
           };
-        });        
+        });
         setReactantList(updatedData);
       } catch (error) {
         console.error("Error fetching API data:", error);
@@ -1909,7 +1890,7 @@ export default function MoleculeOrderPage({
     },
   ];
 
-  localStorage.setItem("tabsLength", tabsDetails?.length);
+  localStorage.setItem("tabsLength", tabsDetails?.length.toString());
 
   const onFormChange = (hasChanged: boolean) => {
     setPopUpType(FormState.UPDATE);

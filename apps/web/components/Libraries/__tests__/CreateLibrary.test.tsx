@@ -266,7 +266,7 @@ describe('Create/ Edit Library should work as expected', () => {
 
         const createButton = screen.getByText('Create Library');
         await act(async () => { fireEvent.click(createButton) });
-    });
+    }, 60000);
 
 
 

@@ -61,6 +61,7 @@ const usePopupAndReset = () => {
     return {
         reset,
         showPopup,
+        setReset,
         setIsDirty,
         childRef,
         popup,

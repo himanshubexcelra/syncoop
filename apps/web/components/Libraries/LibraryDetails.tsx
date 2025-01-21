@@ -152,6 +152,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
         popup,
         setShowPopup,
         isDirty,
+        setReset
     } = usePopupAndReset();
     const appContext = context.state;
 
@@ -352,6 +353,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                 }}
                                                 editAllowed={adminAccess}
                                                 fetchContainer={fetchLibraries}
+                                                setReset={setReset}
                                             />
                                         </Item>
                                     </Accordion>

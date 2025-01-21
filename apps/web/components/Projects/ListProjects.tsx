@@ -49,6 +49,7 @@ export default function ListProjects({
         popup,
         setShowPopup,
         isDirty,
+        setReset
     } = usePopupAndReset();
 
     const fetchLibraryData = async (id: number) => {
@@ -141,6 +142,7 @@ export default function ListProjects({
                                     popup={popup}
                                     isDirty={isDirty}
                                     setShowPopup={setShowPopup}
+                                    setReset={setReset}
                                 />
                             ))}
                 </div>

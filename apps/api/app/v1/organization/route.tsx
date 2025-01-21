@@ -189,10 +189,6 @@ export async function GET(request: Request) {
     } else {
       if (type) {
         query.where = { type: type }; // Add the where condition to the query
-      } if (joins?.includes('projects')) {
-        query.orderBy = {
-          name: 'asc',
-        }
       }
       const organization = await prisma.container.findMany(query);
       if (!organization) {

@@ -361,8 +361,13 @@ model product_module {
   updated_at                             DateTime?               @db.Timestamptz(6)
   updated_by                             Int?
   org_product_module                     org_product_module[]
-  users_product_module_created_byTousers users                   @relation("product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_created_by")
-  users_product_module_updated_byTousers users?                  @relation("product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_updated_by")
+
+  // users_product_module_created_byTousers users                   @relation("product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_created_by")
+  userWhoCreated                         users                   @relation("product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_created_by")
+
+  // users_product_module_updated_byTousers users?                  @relation("product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_updated_by")
+  userWhoUpdated                         users?                  @relation("product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_updated_by")
+  
   product_module_action                  product_module_action[]
 
   @@index([is_active], map: "idx_product_module_is_active")
@@ -635,6 +640,8 @@ model users {
   container_access_permission_created_byTousers container_access_permission[] @relation("container_access_permission_created_byTousers")
   container_access_permission_updated_byTousers container_access_permission[] @relation("container_access_permission_updated_byTousers")
   container_access_permission container_access_permission[] @relation("container_access_permission_user_idTousers")
+  bioassay_bioassay_created_byTousers                            bioassay[]                    @relation("bioassay_created_byTousers")
+  bioassay_bioassay_updated_byTousers                            bioassay[]                    @relation("bioassay_updated_byTousers")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -700,4 +707,25 @@ model container_access_permission {
   user    users     @relation("container_access_permission_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_user_id")
 
   @@unique([container_id, user_id], map: "con_uk_container_access_permission_container_id_n_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model bioassay {
+  id                               Int       @id(map: "con_pk_bioassay_id") @default(autoincrement())
+  name                             String    @unique(map: "con_uk_bioassay_name") @db.VarChar(150)
+  description                      String
+  target                           String?   @db.VarChar(150)
+  clinical_indication              String?   @db.VarChar(150)
+  supplier_name                    String    @db.VarChar(100)
+  stock_keeping_unit               String?   @db.VarChar(255)
+  user_fields                      Json
+  created_at                       DateTime  @db.Timestamptz(6)
+  created_by                       Int?
+  updated_at                       DateTime? @db.Timestamptz(6)
+  updated_by                       Int?
+  // users_bioassay_created_byTousers users?    @relation("bioassay_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_created_by")
+  userWhoCreated users?    @relation("bioassay_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_created_by")
+  
+  // users_bioassay_updated_byTousers users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
+  userWhoUpdated users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
 }

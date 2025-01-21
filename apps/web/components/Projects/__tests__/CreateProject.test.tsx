@@ -897,7 +897,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     organizationData={orgData}
                     users={[]}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -930,7 +929,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     organizationData={orgData}
                     users={users}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -969,7 +967,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     organizationData={orgData}
                     users={users}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -1006,7 +1003,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     organizationData={orgData}
                     users={users}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -1043,7 +1039,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     organizationData={orgData}
                     users={users}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -1107,7 +1102,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     organizationData={orgData}
                     users={[]}
                     edit={true}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -1149,7 +1143,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     organizationData={orgData}
                     users={[]}
                     edit={true}
-                    myRoles={['admin']}
                 />);
         });
 
@@ -1190,7 +1183,6 @@ describe('Create/ Edit Project should work as expected', () => {
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     organizationData={orgData}
                     users={[]}
-                    myRoles={['admin']}
                 />);
         });
 

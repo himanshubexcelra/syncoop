@@ -12,7 +12,7 @@ import {
 import Image from 'next/image';
 import { LoadIndicator } from 'devextreme-react';
 import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
-import { debounce, delay, isLibraryManger, isSystemAdmin } from "@/utils/helpers";
+import { debounce, delay, isLibraryManger } from "@/utils/helpers";
 import { createProject, editProject } from "./projectService";
 import {
   ProjectCreateFields,
@@ -50,8 +50,7 @@ export default function CreateProject({
   const [organization_id, setOrganizationId] = useState(
     clickedOrg
       ? clickedOrg
-      : !isSystemAdmin(myRoles) ?
-        userData?.orgUser?.id : '');
+      : userData?.orgUser?.id);
   const [showIcon, setShowIcon] = useState({ name: 'arrow-both', permission: 'arrow-both' });
 
   const filterUsers = (filteredUsers: User[] = []) => {
@@ -187,7 +186,6 @@ export default function CreateProject({
 
   const fetchUserList = (e: any) => {
     const { value } = e;
-    setOrganizationId(value);
     let filteredUsers = organizationData.filter(
       (org: OrganizationDataFields) => org.id === value)[0]?.orgUser || [];
     filteredUsers = filteredUsers.filter(
@@ -198,6 +196,7 @@ export default function CreateProject({
         return isLibraryManger(roles) && user.id !== userData.id
       });
     setUsers(filteredUsers);
+    setOrganizationId(value);
     filterUsers(filteredUsers);
   }
 
@@ -239,15 +238,14 @@ export default function CreateProject({
         displayExpr: "name",
         placeholder: "Organization name",
         valueExpr: "id",
-        value: organization_id,
-        searchEnabled: true,
+        value: "",
         onValueChanged: fetchUserList
       }}
     >
       <Label text="Select an Organization" />
       <RequiredRule message="Organization name is required" />
     </SimpleItem>
-  ), [organizationData, myRoles, organization_id]);
+  ), [organizationData, myRoles]);
 
   const cancelSave = () => {
     formRef?.current!.instance().reset();

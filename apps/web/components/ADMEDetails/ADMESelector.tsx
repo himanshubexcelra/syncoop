@@ -31,15 +31,12 @@ const ADMESelector = ({ data,
     const [organizationData, setOrganizationData] = useState<OrganizationDataFields>(
         {} as OrganizationDataFields);
     const [loader, setLoader] = useState(true);
-    const [inherited, setInherited] = useState(type ? data?.inherits_configuration ?? true : false);
-    const [changeInheritence, setChangeInheritence] = useState(false);
+    const [inherited, setInherited] = useState(type ? true : false);
     const [unit, setUnit] = useState<string[]>([]);
     const [currentId, setCurrentId] = useState<number>();
     const [editEnabled, setEditEnabled] = useState(true);
-    const [mounted, setMounted] = useState(false);
 
     const fetchData = async () => {
-        setMounted(false);
         setLoader(true);
         let config;
         if (!type) {
@@ -73,14 +70,8 @@ const ADMESelector = ({ data,
     }
 
     useEffect(() => {
-        setMounted(true);
+        fetchData();
     }, [organizationId, data?.id, editAllowed]);
-
-    useEffect(() => {
-        if (mounted) {
-            fetchData();
-        }
-    }, [mounted]);
 
     useEffect(() => {
         if (reset === 'reset') {
@@ -90,49 +81,29 @@ const ADMESelector = ({ data,
         }
     }, [reset]);
 
-    useEffect(() => {
-        // when we change inheritence to true
-        // need to do this so that individual change of rangeslider arent triggered
-        if (changeInheritence) {
-            const timer = setTimeout(() => {
-                const rangeArray = data?.container?.config && data.container.config.ADMEParams
-                    && typeof data.container.config.ADMEParams === 'object'
-                    ? data.container.config.ADMEParams : setConfig();
-                setSliderValues(rangeArray);
-                setChangeInheritence(false);
-            }, 1);
-            return () => clearTimeout(timer);
-        }
-    }, [changeInheritence]);
-
     // Update the value when the slider changes
     const handleRangeChange = (e: any, index: number) => {
-        if (!inherited && !reset && !mounted) {
-            // when switch to inherited or when user clicks dont save
-            // bulk update happens so this shouldnt be called when 
-            // individual sldiers are moved
-            const selectedId = type ? data?.id : organizationData.id;
-            if (selectedId && currentId === selectedId) {
-                const updatedSlider: ADMEConfigTypes[] =
-                    JSON.parse(JSON.stringify(sliderValues));
-                const key = Object.keys(updatedSlider[index])[0];
-                updatedSlider[index] = {
-                    ...updatedSlider[index],
-                    [key]: {
-                        ...updatedSlider[index][key],
-                        min: roundValue(e.start, 2),
-                        max: roundValue(e.end, 2),
-                    }
-                };
-                if (!deepEqual(updatedSlider, sliderValues)) {
-                    setSliderValues(updatedSlider);
-                    setIsDirty(true);
-                } else {
-                    setCurrentId(selectedId);
+        const selectedId = type ? data?.id : organizationData.id;
+        if (selectedId && currentId == selectedId) {
+            const updatedSlider: ADMEConfigTypes[] =
+                JSON.parse(JSON.stringify(sliderValues));
+            const key = Object.keys(updatedSlider[index])[0];
+            updatedSlider[index] = {
+                ...updatedSlider[index], // Copy the current object at that index
+                [key]: {
+                    ...updatedSlider[index][key], // Copy the current key object
+                    min: roundValue(e.start, 2),
+                    max: roundValue(e.end, 2),
                 }
+            };
+            if (!deepEqual(updatedSlider, sliderValues)) {
+                setSliderValues(updatedSlider);
+                setIsDirty(true);
             } else {
                 setCurrentId(selectedId);
             }
+        } else {
+            setCurrentId(selectedId);
         }
     };
 
@@ -198,12 +169,14 @@ const ADMESelector = ({ data,
     }
 
     const inheritedModification = () => {
-        if (!mounted) {
-            setIsDirty(true);
-            if (!inherited) setChangeInheritence(true);
-            setInherited(!inherited);
+        setIsDirty(true);
+        if (!inherited) {
+            const rangeArray = data?.container?.config && data?.container?.config?.ADMEParams
+                && typeof data?.container?.config.ADMEParams === 'object'
+                ? data?.container?.config.ADMEParams : setConfig();
+            setSliderValues(rangeArray);
         }
-        setMounted(false);
+        setInherited(!inherited);
     };
 
     return (
@@ -247,8 +220,7 @@ const ADMESelector = ({ data,
                             />
                             {loadIndicatorVisible ? '' : 'Save'}</button>
                     </div>
-                    <div className={`mt-[20px] ${!type ?
-                        `grid grid-cols-1 md:grid-cols-2 gap-4` : ''}`}>
+                    <div className={`${!type ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : ''}`}>
                         {sliderValues.map((range, index) => {
                             const rangeValue = Object.values(range)[0];
                             return (

@@ -14,6 +14,7 @@ import {
     ColumnConfig,
     MoleculeStatusCode,
     MoleculeType,
+    OrganizationConfigType,
     ProjectDataFields,
     Status,
     UserData,
@@ -67,6 +68,7 @@ type MoleculeListType = {
     projectId: string,
     organizationId: string,
     fetchLibraries: () => void,
+    config: OrganizationConfigType,
     editEnabled: boolean,
 }
 const MoleculeStructure = dynamic(
@@ -83,6 +85,7 @@ export default function MoleculeList({
     selectedLibraryName,
     organizationId,
     fetchLibraries,
+    config,
     editEnabled,
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
@@ -391,7 +394,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'Caco2');
                         const id = `${key}-${data.molecule_id}`
                         data["Caco2_Papp"] = average.toExponential(2);
                         return (
@@ -429,7 +432,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference;
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
                         const id = `${key}-${data.molecule_id}`
                         data["CLint_Human"] = average.toExponential(2);
                         return (
@@ -466,7 +469,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
                         const id = `${key}-${data.molecule_id}`
                         data["CLint_Rat"] = average.toExponential(2);
                         return (
@@ -504,7 +507,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'CLint');
                         const id = `${key}-${data.molecule_id}`
                         data["CLint_Mouse"] = average.toExponential(2);
                         return (
@@ -542,7 +545,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
                         const id = `${key}-${data.molecule_id}`
                         data["Fub_Human"] = average.toExponential(2);
                         return (
@@ -580,7 +583,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
                         const id = `${key}-${data.molecule_id}`
                         data["Fub_Rat"] = average.toExponential(2);
                         return (
@@ -618,7 +621,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'Fub');
                         const id = `${key}-${data.molecule_id}`
                         data["Fub_Mouse"] = average.toExponential(2);
                         return (
@@ -656,7 +659,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'HepG2');
                         const id = `${key}-${data.molecule_id}`
                         data["HepG2_IC50"] = average.toExponential(2);
                         return (
@@ -694,7 +697,7 @@ export default function MoleculeList({
                         const { average, value1, value2 } = result;
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
-                        const colorFound = getADMEColor(calculatedResult, key);
+                        const colorFound = getADMEColor(config, calculatedResult, key, 'hERG');
                         const id = `${key}-${data.molecule_id}`
                         data["hERG_Ki"] = average.toExponential(2);
                         return (
@@ -733,7 +736,7 @@ export default function MoleculeList({
                         const calculatedResult = getADMECalculation(average, key);
                         const reference = COLOR_SCHEME[key].reference
                         const colorFound =
-                            getADMEColor(calculatedResult, key);
+                            getADMEColor(config, calculatedResult, key, 'Solubility');
                         const id = `${key}-${data.molecule_id}`
                         data["solubility"] = average.toExponential(2);
                         return (

@@ -105,13 +105,13 @@ describe('ListOrganization', () => {
             expect(screen.getByText('10')).toBeInTheDocument();
             expect(screen.getByText('2')).toBeInTheDocument();
         })
-    }, 60000);
 
-    it.skip('shows edit button only for users with proper permissions', async () => {
+    });
+    it('shows edit button only for users with proper permissions', async () => {
         render(
             <ListOrganization
                 userData={mockUserData}
-                actionsEnabled={['edit_own_org']}
+                actionsEnabled={[]}
             />
         );
 

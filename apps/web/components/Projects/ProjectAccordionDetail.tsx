@@ -326,7 +326,7 @@ export default function ProjectAccordionDetail({
                 </div>
             </div>
             <div className='mb-[10px]'>
-                <Accordion collapsible={true} multiple={false} className="adme-accordion">
+                <Accordion collapsible={true} multiple={false}>
                     <Item visible={false} />
                     <Item titleRender={
                         () => renderTitle('ADME Properties')}>

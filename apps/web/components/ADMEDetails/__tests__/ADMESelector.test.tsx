@@ -277,7 +277,7 @@ describe('ADME details sliders should work as expected', () => {
         fireEvent.mouseMove(sliders[0], { clientX: 2.1 });
     }, 60000);
 
-    test('save button should work as expected', async () => {
+    test('Update button should work as expected', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -290,12 +290,12 @@ describe('ADME details sliders should work as expected', () => {
                 />
             );
         });
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        fireEvent.click(saveButton);
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        fireEvent.click(updateButton);
     }, 60000);
 
-    test('save button should work as expected for project', async () => {
+    test('Update button should work as expected for project', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -310,12 +310,12 @@ describe('ADME details sliders should work as expected', () => {
                 />
             );
         });
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        fireEvent.click(saveButton);
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        fireEvent.click(updateButton);
     }, 60000);
 
-    test('save button should work as expected for library', async () => {
+    test('Update button should work as expected for library', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -330,12 +330,12 @@ describe('ADME details sliders should work as expected', () => {
                 />
             );
         });
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        fireEvent.click(saveButton);
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        fireEvent.click(updateButton);
     }, 60000);
 
-    test('save button should work as expected when api returns an error', async () => {
+    test('Update button should work as expected when api returns an error', async () => {
         const mockResponse = { error: 'Unexpected error occured' };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -349,8 +349,8 @@ describe('ADME details sliders should work as expected', () => {
             );
         });
 
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        await act(() => fireEvent.click(saveButton));
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        await act(() => fireEvent.click(updateButton));
     }, 60000);
 });

@@ -312,6 +312,7 @@ export interface ADMEProps {
   fetchContainer?: () => void;
   isDirty: boolean;
   editAllowed?: boolean;
+  setReset?: any
 }
 
 export interface ModuleFeature {

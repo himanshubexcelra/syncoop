@@ -25,6 +25,7 @@ const ADMESelector = ({ data,
     fetchContainer,
     isDirty,
     editAllowed,
+    setReset
 }: ADMEProps) => {
     const [sliderValues, setSliderValues] = useState<ADMEConfigTypes[]>([]);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
@@ -205,7 +206,18 @@ const ADMESelector = ({ data,
         }
         setMounted(false);
     };
-
+    const buttonConfig = [
+        {
+            label: 'Update',
+            class: 'primary-button',
+            action: () => saveADMEConfig(),
+        },
+        {
+            label: 'Cancel',
+            class: 'secondary-button ml-[10px]',
+            action: () => setReset('reset')
+        }
+    ]
     return (
         <div ref={childRef} key={type ? data?.id : organizationData.id}>
             {loader ? (
@@ -216,12 +228,9 @@ const ADMESelector = ({ data,
                 <div className={type != ContainerType.LIBRARY ? 'm-[20px]' : ''}>
                     <div className={`flex ${type ? 'justify-between' : 'justify-end'}`}>
                         {type && (
-                            <div className="dx-field block flex">
+                            <div className="dx-field block flex  mt-2 mr-2">
                                 <div className='pr-[10px] inherited text-greyText'>
-                                    {`Inherited from 
-                                    ${type === ContainerType.PROJECT ? 'organization' :
-                                            'project'
-                                        }`}
+                                    Inherit Values
                                 </div>
                                 <div>
                                     <Switch
@@ -232,20 +241,25 @@ const ADMESelector = ({ data,
                                 </div>
                             </div>
                         )}
-                        <button className={
-                            loadIndicatorVisible || !isDirty
-                                ? 'disableButton w-[47px] h-[37px]'
-                                : 'primary-button'}
-                            onClick={() => saveADMEConfig()}
-                            disabled={loadIndicatorVisible || !isDirty}>
-                            <LoadIndicator className={
-                                `button-indicator`
-                            }
-                                visible={loadIndicatorVisible}
-                                height={20}
-                                width={20}
-                            />
-                            {loadIndicatorVisible ? '' : 'Save'}</button>
+                        <div>
+                            {buttonConfig.map((button, index) =>
+                                <button key={index}
+                                    className={loadIndicatorVisible || !isDirty
+                                        ? 'disableButton w-[64px] h-[37px] ml-[10px]'
+                                        : button.class}
+                                    onClick={() => button.action()}
+                                    disabled={loadIndicatorVisible || !isDirty}>
+                                    <LoadIndicator className={
+                                        `button-indicator`
+                                    }
+                                        visible={loadIndicatorVisible}
+                                        height={20}
+                                        width={20}
+                                    />
+                                    {loadIndicatorVisible ? '' : button.label}
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <div className={`mt-[20px] ${!type ?
                         `grid grid-cols-1 md:grid-cols-2 gap-4` : ''}`}>

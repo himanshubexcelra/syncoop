@@ -45,6 +45,7 @@ type ProjectAccordionDetailProps = {
     popup: ReactNode;
     isDirty: boolean;
     setShowPopup: (val: boolean) => void;
+    setReset?: any;
 }
 
 export default function ProjectAccordionDetail({
@@ -63,6 +64,7 @@ export default function ProjectAccordionDetail({
     popup,
     isDirty,
     setShowPopup,
+    setReset
 }: ProjectAccordionDetailProps) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -340,7 +342,7 @@ export default function ProjectAccordionDetail({
                             reset={reset}
                             fetchContainer={fetchOrganizations}
                             editAllowed={editEnabled}
-
+                            setReset={setReset}
                         />
                     </Item>
                 </Accordion>

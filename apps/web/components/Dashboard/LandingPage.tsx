@@ -58,6 +58,7 @@ export default function LandingPage({
         popup,
         isDirty,
         onSelectedIndexChange,
+        setReset
     } = usePopupAndReset();
 
     const formRef = useRef<any>(null);
@@ -97,6 +98,7 @@ export default function LandingPage({
                 setIsDirty: setIsDirty,
                 reset: reset,
                 isDirty: isDirty,
+                setReset: setReset,
             }
         },
         {

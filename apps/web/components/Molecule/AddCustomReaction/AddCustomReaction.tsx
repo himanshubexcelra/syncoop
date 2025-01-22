@@ -2,7 +2,7 @@
 "use client";
 import React, { useRef, useState } from 'react';
 import styles from '../AddMolecule/AddMolecule.module.css'
-import DiscardMolecule from './DiscardMolecule';
+import DiscardCustomReaction from './DiscardCustomReaction';
 import DialogPopUp from '@/ui/DialogPopUp';
 import { LoadIndicator } from 'devextreme-react';
 import { downloadCSV } from '../file';
@@ -256,7 +256,7 @@ export default function AddCustomReaction() {
                     visible: discardvisible,
                     dialogProperties: DiscardDialogProperties,
                     onSubmit: onDiscardSubmit,
-                    Content: DiscardMolecule,
+                    Content: DiscardCustomReaction,
                     hidePopup
                 }
             } />

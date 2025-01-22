@@ -1,10 +1,10 @@
 import Image from 'next/image';
 
-interface DiscardMoleculeProps {
+interface DiscardCustomReactionProps {
     onClose: () => void;
     onSubmit?: () => void;
 }
-export default function DiscardMolecule({ onClose, onSubmit }: DiscardMoleculeProps) {
+export default function DiscardCustomReaction({ onClose, onSubmit }: DiscardCustomReactionProps) {
     const reset = () => {
         if (onSubmit) {
             onSubmit();

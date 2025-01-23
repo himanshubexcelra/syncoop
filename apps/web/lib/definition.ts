@@ -113,7 +113,7 @@ export interface ProjectCreateFields {
   projectData?: ProjectDataFields,
   users: User[],
   organizationData: OrganizationDataFields[],
-  myRoles?: string[],
+  myRoles: string[],
   edit?: boolean,
   /* role: number, */
   userData: UserData,
@@ -766,6 +766,8 @@ export type ReactionCompoundType = {
   related_to?: number;
   inventory_url?: string;
   link?: string;
+  status?: boolean;
+  source?: string;
 }
 
 export type ReactionDetailType = {

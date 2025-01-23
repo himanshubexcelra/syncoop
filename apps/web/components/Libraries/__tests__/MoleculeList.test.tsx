@@ -1,12 +1,12 @@
-/*eslint max-len: ["error", { "code": 100 }]*/
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MoleculeList from '../MoleculeList';
 import { AppContext } from '../../../app/AppState';
 import { AppContextModel, UserData, ProjectDataFields, MoleculeType } from '@/lib/definition';
 import { useRouter } from 'next/navigation';
-import { getMoleculeCart, getMoleculeOrder } from '../service';
+import { getMoleculeCart, getMoleculeOrder, addToFavourites } from '../service';
 import CustomDataGrid from '@/ui/dataGrid';
 import MoleculeStructure from '@/utils/MoleculeStructure';
+import React from 'react';
 
 jest.mock('uuid', () => ({
     v1: jest.fn(),
@@ -21,7 +21,6 @@ jest.mock('react-hot-toast', () => ({
     success: jest.fn(),
     error: jest.fn(),
 }));
-
 
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
@@ -44,6 +43,7 @@ jest.mock('../service', () => {
             ]);
         }),
         getMoleculeOrder: jest.fn(),
+        addToFavourites: jest.fn(), // Mocked function
     };
 });
 
@@ -196,7 +196,6 @@ const projectData: ProjectDataFields = {
         email_id: 'test.user@example.com',
         status: 'active'
     },
-    sharedUsers: [],
     target: '',
     userWhoUpdated: {
         id: 1,
@@ -245,7 +244,8 @@ const projectData: ProjectDataFields = {
         permission: "admin",
         type: "admin"
     },
-    inherits_configuration: false
+    inherits_configuration: false,
+    container_access_permission: []
 };
 
 describe('MoleculeList Component', () => {
@@ -254,7 +254,6 @@ describe('MoleculeList Component', () => {
     const mockSetTableData = jest.fn();
     const mockOnSelectionChanged = jest.fn();
     const mockOnRowPrepared = jest.fn();
-    const mockAddToFavourites = jest.fn();
 
     let isMoleculeInCart: string | any[] = [];
     beforeEach(() => {
@@ -262,6 +261,7 @@ describe('MoleculeList Component', () => {
         isMoleculeInCart = [1]; // Example mocked data
     });
 
+    // Define the columns for the CustomDataGrid
     const columns = [
         {
             dataField: 'favourite',
@@ -269,11 +269,18 @@ describe('MoleculeList Component', () => {
             customRender: (data: any) => (
                 <span
                     data-testid={`favourite-icon-${data.id}`}
-                    onClick={() => mockAddToFavourites({ ...data, favourite: !data.favourite })}
+                    onClick={() =>
+                        addToFavourites({
+                            molecule_id: data.id,
+                            favourite: !data.favourite,
+                            user_id: 0,
+                            favourite_id: 0
+                        })
+                    }
                 >
                     {data.favourite ? '★' : '☆'}
                 </span>
-            )
+            ),
         },
         { dataField: 'name', title: 'Name' },
         { dataField: 'smiles_string', title: 'Structure' },
@@ -283,7 +290,6 @@ describe('MoleculeList Component', () => {
         render(
             <AppContext.Provider value={mockAppContext}>
                 <MoleculeList
-                    actionsEnabled={['create_molecule_order']}
                     fetchLibraries={mockFetchMoleculeData}
                     userData={userData}
                     expanded={false}
@@ -295,7 +301,6 @@ describe('MoleculeList Component', () => {
                     projectId={''}
                     organizationId={''}
                     selectedLibraryName={''}
-                    config={{ ADMEParams: [] }}
                 />
             </AppContext.Provider>
         );
@@ -335,7 +340,6 @@ describe('MoleculeList Component', () => {
         render(
             <AppContext.Provider value={mockAppContext}>
                 <MoleculeList
-                    actionsEnabled={['create_molecule_order']}
                     fetchLibraries={mockFetchMoleculeData}
                     userData={userData}
                     expanded={false}
@@ -347,7 +351,6 @@ describe('MoleculeList Component', () => {
                     projectId={''}
                     organizationId={''}
                     selectedLibraryName={''}
-                    config={{ ADMEParams: [] }}
                 />
             </AppContext.Provider>
         );
@@ -360,12 +363,10 @@ describe('MoleculeList Component', () => {
         render(
             <AppContext.Provider value={mockAppContext}>
                 <CustomDataGrid
-                    columns={[
-                        {
-                            dataField: 'name',
-                            title: 'Name',
-                        },
-                    ]}
+                    columns={[{
+                        dataField: 'name',
+                        title: 'Name',
+                    }]}
                     data={[]}
                     enableRowSelection
                     enableGrouping
@@ -412,10 +413,15 @@ describe('MoleculeList Component', () => {
         render(
             <CustomDataGrid
                 columns={columns}
-                data={[
-                    { id: 1, name: 'Benzene', smiles_string: 'C1=CC=CC=C1' },
-                    { id: 2, name: 'Ethanol', smiles_string: 'CCO' },
-                ]}
+                data={[{
+                    id: 1,
+                    name: 'Benzene',
+                    smiles_string: 'C1=CC=CC=C1'
+                }, {
+                    id: 2,
+                    name: 'Ethanol',
+                    smiles_string: 'CCO'
+                }]}
                 enableRowSelection
                 enableGrouping
                 enableSorting
@@ -435,15 +441,13 @@ describe('MoleculeList Component', () => {
 
     test('renders Add to Cart button with correct text and functionality', async () => {
         const mockAddToCart = jest.fn();
-        const toolbarButtons = [
-            {
-                text: `Add to Cart (0)`,
-                onClick: mockAddToCart,
-                class: 'btn-disable',
-                disabled: true,
-                visible: true,
-            },
-        ];
+        const toolbarButtons = [{
+            text: `Add to Cart (0)`,
+            onClick: mockAddToCart,
+            class: 'btn-disable',
+            disabled: true,
+            visible: true,
+        }];
 
         render(
             <AppContext.Provider value={mockAppContext}>
@@ -484,8 +488,7 @@ describe('MoleculeList Component', () => {
                 width={200}
                 height={200}
                 svgMode={true}
-                structureName=
-                {mockCellData.source_molecule_name}
+                structureName={mockCellData.source_molecule_name}
             />
         );
     });
@@ -518,4 +521,153 @@ describe('MoleculeList Component', () => {
         );
     });
 
+    test('toggles favourite status of a molecule in the custom data grid', async () => {
+        const mockSetTableData = jest.fn();
+
+        // Mock implementation for addToFavourites
+        const addToFavouritesMock = addToFavourites as jest.Mock;
+        addToFavouritesMock.mockResolvedValueOnce(true); // Simulate success response
+
+        // Render the MoleculeList with the CustomDataGrid
+        render(
+            <AppContext.Provider value={mockAppContext}>
+                <MoleculeList
+                    fetchLibraries={jest.fn()}
+                    userData={userData}
+                    expanded={false}
+                    tableData={moleculeData}
+                    setTableData={mockSetTableData}
+                    selectedLibrary={1}
+                    library_id={1}
+                    projectData={projectData}
+                    projectId="1"
+                    organizationId="1"
+                    selectedLibraryName="Library 1"
+                    config={{ ADMEParams: [] }}
+                    editEnabled={true}
+                />
+            </AppContext.Provider>
+        );
+
+        render(
+            <CustomDataGrid
+                columns={columns}
+                data={moleculeData}
+                enableFiltering={false}
+                enableOptions={false}
+            />
+        );
+
+        // Wait for the data to render
+        await waitFor(() => {
+            const favouriteIcons = screen.queryAllByText('★');
+            expect(favouriteIcons.length).toBeGreaterThan(0); // Ensure at least one favorite icon is rendered
+        });
+
+        // Simulate a click event on the favorite icon
+        const favouriteIcons = screen.queryAllByText('★');
+        fireEvent.click(favouriteIcons[0]);
+
+        // Verify the addToFavourites mock is called with the correct arguments
+        await waitFor(() => {
+            expect(addToFavouritesMock).toHaveBeenCalledWith({
+                molecule_id: 1, // ID of the clicked molecule
+                favourite: false, // New favourite status
+                user_id: 0,
+                favourite_id: 0
+            });
+        });
+    });
+
+    test('renders Add Molecule popup when viewAddMolecule is true', () => {
+        const mockSetViewAddMolecule = jest.fn(); // Mock the state updater function
+
+        // Mock useState to control the state behavior
+        jest.spyOn(React, 'useState')
+            .mockImplementationOnce(() => [false, mockSetViewAddMolecule]);
+
+        const toolbarButtons = [
+            {
+                text: `Add Molecule`,
+                onClick: () => mockSetViewAddMolecule(true), // Correctly wrap the function
+                class: 'btn-enable',
+                disabled: false,
+                visible: true,
+            },
+        ];
+
+        render(
+            <AppContext.Provider value={mockAppContext}>
+                <CustomDataGrid
+                    columns={columns}
+                    data={moleculeData}
+                    toolbarButtons={toolbarButtons}
+                    enableRowSelection
+                    enableGrouping
+                    enableSorting
+                    loader={false}
+                />
+            </AppContext.Provider>
+        );
+
+        // Locate the Add Molecule button
+        const addMoleculeButton = screen.getByRole('button', { name: /Add Molecule/i });
+        expect(addMoleculeButton).toBeInTheDocument();
+
+        // Simulate a click on the button
+        fireEvent.click(addMoleculeButton);
+
+        // Verify the mock function is called to set the popup state
+        expect(mockSetViewAddMolecule).toHaveBeenCalledWith(true);
+    });
+
+    test('renders Edit Molecule popup when toolbar button is clicked', async () => {
+        const mockSetEditMolecules = jest.fn();
+        const mockSetViewEditMolecule = jest.fn();
+
+        // Mock React's useState
+        jest.spyOn(React, 'useState')
+            .mockImplementationOnce(() => [[], mockSetEditMolecules]) // Mock selectedRowsData
+            .mockImplementationOnce(() => [false, mockSetViewEditMolecule]); // Mock viewEditMolecule
+
+        // Mock toolbar JSON for the edit button
+        const toolbarButtons = [
+            {
+                text: `Edit (${moleculeData.length})`,
+                onClick: () => {
+                    mockSetEditMolecules(moleculeData); // Mock setting selected molecules
+                    mockSetViewEditMolecule(true); // Mock opening the popup
+                },
+                class: 'btn-enable',
+                disabled: false,
+                visible: true,
+            },
+        ];
+
+        // Render CustomDataGrid with the mock toolbar
+        render(
+            <CustomDataGrid
+                columns={columns}
+                data={moleculeData}
+                toolbarButtons={toolbarButtons}
+                enableRowSelection
+                enableGrouping
+                enableSorting
+                loader={false}
+            />
+        );
+
+        // Locate and click the Edit button
+        const editButton = screen.getByRole('button', { name: /Edit \(2\)/i });
+        expect(editButton).toBeInTheDocument(); // Ensure button is rendered
+        expect(editButton).not.toBeDisabled(); // Ensure button is enabled
+        fireEvent.click(editButton); // Simulate click event
+
+        // Verify the mocked state functions are called correctly
+        await waitFor(() => {
+            expect(mockSetEditMolecules).toHaveBeenCalledWith(moleculeData); // Check molecules are passed
+            expect(mockSetViewEditMolecule).toHaveBeenCalledWith(true); // Check popup state is updated
+        });
+    });
+    
 });

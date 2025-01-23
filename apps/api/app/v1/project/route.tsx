@@ -108,7 +108,6 @@ export async function GET(request: Request) {
                         config: true,
                     }
                 },
-                container_access_permission: true, // Include shared users for each project
                 userWhoCreated: { // Include the user who created the project
                     select: {
                         first_name: true,

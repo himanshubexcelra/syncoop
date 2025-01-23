@@ -67,13 +67,15 @@ export default function ProjectDetails({
             if (organizationId) {
                 organization = await getOrganizationById({
                     withRelation: ['orgUser', 'user_role', 'projects'],
+                    withCount: ['molecules'],
                     id: organizationId
                 });
                 projectList = organization?.other_container;
                 setOrganization([organization]);
             } else {
                 organization = await getOrganization({
-                    withRelation: ['orgUser', 'user_role', 'projects']
+                    withRelation: ['orgUser', 'user_role', 'projects'],
+                    withCount: ['molecules'],
                 });
                 projectList = organization.map(
                     (org: OrganizationDataFields) => org.other_container).flat();

@@ -218,7 +218,8 @@ const EditMolecule = ({
                 <div className={editMolecules?.length > 1 ? 'w-[calc(100%-190px)]' : 'w-[100%]'}>
                     <div className={styles.ketcherContainer}>
                         <KetcherDrawBox
-                            reactionString={editedMolecules[moleculeIndex]?.smiles_string} />
+                            reactionString={editedMolecules[moleculeIndex]?.smiles_string}
+                            keyIndex={moleculeIndex} />
                     </div>
                     <div className="flex flex-col gap-2 mt-5">
                         <label className='text-normal text-grayMessage'>

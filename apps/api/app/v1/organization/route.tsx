@@ -106,19 +106,36 @@ export async function GET(request: Request) {
               id: 'desc',
             },
             include: {
+              ...(() => {
+                if (joins.includes('libraries')) {
+                  return {
+                    other_container: {
+                      where: {
+                        type: ContainerType.LIBRARY
+                      }
+                    }
+                  }
+                }
+                
+                if (count && count.includes('molecules')) {
+                  query.include = {
+                    ...query.include,
+                    _count: {
+                      where: {
+                        type: ContainerType.LIBRARY
+                      },
+                      select: {
+                        _count: {
+                          select: {
+                            libraryMolecules: true, // Count molecules in each library
+                          },
+                        },
+                      },
+                    }
+                  }
+                }
+              })(),
               // sharedUsers: true, // Include shared users for each project
-              other_container: {
-                where: {
-                  type: ContainerType.LIBRARY
-                },
-                select: {
-                  _count: {
-                    select: {
-                      libraryMolecules: true, // Count molecules in each library
-                    },
-                  },
-                },
-              },
               owner: {
                 select: {
                   first_name: true,
@@ -189,6 +206,10 @@ export async function GET(request: Request) {
     } else {
       if (type) {
         query.where = { type: type }; // Add the where condition to the query
+      } if (joins?.includes('projects')) {
+        query.orderBy = {
+          name: 'asc',
+        }
       }
       const organization = await prisma.container.findMany(query);
       if (!organization) {

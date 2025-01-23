@@ -312,7 +312,7 @@ export default function AddMolecule({
             <div className={`mt-5 ${styles.uploadPart} p-4`}>
                 <h2 className="subHeading mb-2">Draw a Molecule</h2>
                 <div className={styles.ketcherContainer}>
-                    <KetcherDrawBox reactionString={''} />
+                    <KetcherDrawBox reactionString={''} keyIndex={0} />
                 </div>
             </div>
             <div>

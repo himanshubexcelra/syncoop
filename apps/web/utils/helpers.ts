@@ -3,17 +3,15 @@ import {
   ADMEConfigTypes,
   ColorSchemeFormat,
   CombinedLibraryType,
-  FORMULA_CONFIG,
   LibraryFields,
   LoginFormSchema,
   MoleculeStatusCode,
   MoleculeStatusLabel,
   MoleculeType,
-  OrganizationConfigType,
   Status,
   StatusType
 } from "@/lib/definition"
-import { COLOR_SCHEME, MAX_RANGE } from "./constants";
+import { COLOR_SCHEME } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -265,11 +263,11 @@ export const randomValue = (array: number[] | string[]) => {
 }
 
 export const getAverage = (adme_data: ColorSchemeFormat[], key: string) => {
-  const solubilityData = adme_data.find(
+  const configField = adme_data.find(
     (obj: ColorSchemeFormat) => obj.adme_test_name === key);
-  if (solubilityData) {
-    const value1 = Number(solubilityData.results[0].value);
-    const value2 = Number(solubilityData.results[1].value);
+  if (configField) {
+    const value1 = Number(configField.results[0].value);
+    const value2 = Number(configField.results[1].value);
     const average: number = (value1 + value2) / 2;
     return { average, value1, value2 };
   }
@@ -289,49 +287,58 @@ export const getADMECalculation = (average: number, key: string) => {
   return actualValue;
 }
 
+export const getADMEColor = (
+  calculatedResult: number, key: string,
+) => {
+  return COLOR_SCHEME[key].color.find((color: any) =>
+    calculatedResult >= color.min && calculatedResult < color.max);
+}
+
 export const roundValue = (value: number, precision: number = 2) => {
   const factor = Math.pow(10, precision);
   return Math.round(value * factor) / factor;
 };
 
-export const getADMEColor = (
-  config: OrganizationConfigType,
-  calculatedResult: number, key: string,
-  field: string) => {
-  if (!config || !config.ADMEParams) {
-    return COLOR_SCHEME[key].color.find((color: any) =>
-      calculatedResult >= color.min && calculatedResult < color.max);
-  } else {
-    const value: FORMULA_CONFIG = Object.values(config.ADMEParams.filter((item: ADMEConfigTypes) =>
-      Object.keys(item)[0] === field)[0])[0] as FORMULA_CONFIG;
-    if (calculatedResult <= value.min) {
-      return COLOR_SCHEME[key].color[0];
-    } else if (calculatedResult >= value.max) {
-      return COLOR_SCHEME[key].color[2];
-    } else {
-      return COLOR_SCHEME[key].color[1];
-    }
-  }
-}
-
 export const setConfig = () => {
-  const keys: string[] = [];
-  const rangeArray: ADMEConfigTypes[] = [];
-  const unwantedFields = ['molecular_weight', 'yield'];
-  Object.entries(COLOR_SCHEME).map(([key, value]: [string, any]) => {
-    const name = key.split('_')[0];
-    if (!unwantedFields.includes(key) && !keys.includes(name)) {
-      rangeArray.push({
-        [name]: {
-          min: value.formulaes[0].min, max:
-            value.formulaes[2].max > MAX_RANGE ? MAX_RANGE : value.formulaes[2].max
-        }
-      })
-      keys.push(name);
+  const defaultConfig: ADMEConfigTypes[] = [
+    {
+      Solubility: {
+        max: 4.3,
+        min: 0.67
+      }
+    },
+    {
+      CLint: {
+        max: 4.21,
+        min: 0.85
+      }
+    },
+    {
+      Fub: {
+        max: 4.05,
+        min: 1.11
+      }
+    },
+    {
+      Caco2: {
+        max: 3.78,
+        min: 1.12
+      }
+    },
+    {
+      HepG2: {
+        max: 3.66,
+        min: 1.27
+      }
+    },
+    {
+      hERG: {
+        max: 3.09,
+        min: 1.03
+      }
     }
-    return value;
-  });
-  return rangeArray;
+  ];
+  return defaultConfig;
 }
 
 export const deepEqual = (a: any, b: any) => {

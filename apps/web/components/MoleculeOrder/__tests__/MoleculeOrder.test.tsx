@@ -366,7 +366,7 @@ describe('MoleculeOrderPage Component', () => {
     test('renders the DataGrid with correct data', async () => {
         (getMoleculesOrder as jest.Mock).mockResolvedValue(mockData);
 
-        render(<MoleculeOrderPage userData={mockUserData} 
+        render(<MoleculeOrderPage userData={mockUserData}
             actionsEnabled={actionsEnabledMock} />);
 
         await waitFor(() => {

@@ -13,7 +13,14 @@ import {
     RowChange,
     ResetState,
 } from '@/lib/definition';
-import { COMPOUND_TYPE_A, COMPOUND_TYPE_R, DEFAULT_TEMPERATURE } from '@/utils/constants';
+import {
+    AMS_HYPER_LINK,
+    AMS_TYPE,
+    AUTOMATION_LAB,
+    COMPOUND_TYPE_A,
+    COMPOUND_TYPE_R,
+    DEFAULT_TEMPERATURE
+} from '@/utils/constants';
 import { capitalizeFirstLetter } from '@/utils/helpers';
 import { NumberBox } from 'devextreme-react';
 
@@ -315,19 +322,22 @@ const ReactionDetails = ({
             alignment: 'center',
             customRender: (data: ReactionCompoundType) =>
                 <>
-                    {data.link && data.link !== "NA" ? (
+                    {data.status && data.source === AMS_TYPE && data.link && data.link !== "NA" ? (
                         <a
                             href={data.link}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-themeBlueColor underline"
                         >
-                            Yes
+                            {AMS_HYPER_LINK}
                         </a>
+                    ) : (data.status && data.source === AUTOMATION_LAB) ? (
+                        <span>Yes</span>
                     ) : (
                         <span>No</span>
                     )}
                 </>
+
         },
     ];
 

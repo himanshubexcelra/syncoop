@@ -37,14 +37,19 @@ export async function getOrganization(
 export async function getOrganizationById(
   {
     withRelation = [],
+    withCount = [],
     id
   }: {
     withRelation?: string[],
+    withCount?: string[],
     id?: number
   }) {
   const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization?id=${id}`);
   if (withRelation.length) {
     url.searchParams.append('with', JSON.stringify(withRelation));
+  }
+  if (withCount.length) {
+    url.searchParams.append('withCount', JSON.stringify(withCount));
   }
   const response = await fetch(url, {
     mode: "no-cors",

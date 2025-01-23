@@ -331,7 +331,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                             )}
                             <div className={`${expanded ? 'w-3/5' : 'w-full'}`}>
                                 {expanded && library_id != 0 && (
-                                    <Accordion collapsible={true} multiple={false}>
+                                    <Accordion collapsible={true} multiple={false}
+                                        className="adme-accordion">
                                         <Item visible={false} />
                                         <Item titleRender={() => 'ADME Properties'}>
                                             <ADMESelector
@@ -367,8 +368,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     projectId={project_id}
                                     fetchLibraries={fetchLibraries}
                                     organizationId={organization_id || ''}
-                                    config={selectedLibraryData?.inherits_configuration ?
-                                        config : selectedLibraryData?.config?.ADMEParams}
                                     editEnabled={adminAccess || editEnabled}
                                 />
                             </div>

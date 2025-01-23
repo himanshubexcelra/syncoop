@@ -46,7 +46,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const fetchOrganizations = async () => {
     const organization = await getOrganization(
       {
-        withRelation: ['orgUser', 'user_role'],
+        withRelation: ['orgUser', 'user_role', 'projects', 'libraries'],
         withCount: ['projects', 'molecules'],
         type: OrganizationType.External
       });

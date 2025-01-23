@@ -217,6 +217,9 @@ export const features = [
 
 export const COMPOUND_TYPE_R = 'R';
 export const COMPOUND_TYPE_A = 'A';
+export const AMS_TYPE = "AMS";
+export const AMS_HYPER_LINK = "AMS Link";
+export const AUTOMATION_LAB = 'AL';
 
 export const DEFAULT_TEMPERATURE = 25;
 

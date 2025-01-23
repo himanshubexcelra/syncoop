@@ -23,10 +23,10 @@ const structServiceProvider = new RemoteStructServiceProvider(
 
 interface KetcherDrawBoxProps {
   reactionString?: string;
+  keyIndex: number;
 }
-export default function KetcherDrawBox({ reactionString = "" }: KetcherDrawBoxProps) {
+export default function KetcherDrawBox({ reactionString = "", keyIndex = 0 }: KetcherDrawBoxProps) {
   const [hiddenButtons] = useState(initiallyHidden);
-  const [editorKey] = useState("first-editor-key");
 
   useEffect(() => {
     const updateMolecule = async () => {
@@ -55,7 +55,7 @@ export default function KetcherDrawBox({ reactionString = "" }: KetcherDrawBoxPr
   return (
     <>
       <Editor
-        key={editorKey}
+        key={keyIndex}
         staticResourcesUrl={process.env.NEXT_PUBLIC_ROOT_DIR || ""}
         buttons={getHiddenButtonsConfig(hiddenButtons)}
         structServiceProvider={structServiceProvider}

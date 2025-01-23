@@ -9,6 +9,7 @@ import {
     ReactionDetailsProps
 } from '@/lib/definition';
 import CustomDataGrid from '@/ui/dataGrid';
+import MoleculeStructure from '@/utils/MoleculeStructure';
 
 const mockReactionCompound: ReactionCompoundType = {
     id: 1,
@@ -36,17 +37,23 @@ const mockReactionDetail: ReactionDetailType = {
 };
 
 const mockColumns = [
-    { dataField: "id", title: "ID" },
+    { dataField: "_id", title: "ID" },
     { dataField: "compound_name", title: "Compound Name" },
     { dataField: "molar_ratio", title: "Molar Ratio" },
 ];
 
+
 const mockData = [
-    { id: 1, compound_name: "Compound A", molar_ratio: 2 },
-    { id: 2, compound_name: "Compound B", molar_ratio: 1 },
+    { _id: 1, compound_name: "Compound A", molar_ratio: 2 },
+    { _id: 2, compound_name: "Compound B", molar_ratio: 1 },
 ];
 
 describe('ReactionDetails Component', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    
     const defaultProps: ReactionDetailsProps = {
         isReactantList: false,
         data: mockReactionDetail,
@@ -73,9 +80,9 @@ describe('ReactionDetails Component', () => {
 
         await act(async () => {
             fireEvent.change(solventDropdown, { target: { value: 'Ethanol' } });
+            expect(defaultProps.onSolventChange).toHaveBeenCalledWith('Ethanol');
         });
 
-        expect(defaultProps.onSolventChange).toHaveBeenCalledWith('Ethanol');
     });
 
     test('renders the temperature dropdown and handles changes', async () => {
@@ -83,12 +90,11 @@ describe('ReactionDetails Component', () => {
         const temperatureDropdown = document.querySelectorAll('.selectBox')[1];
         expect(temperatureDropdown).toBeInTheDocument();
 
-        await act(async () => {
+        await waitFor(() => {
             fireEvent.change(temperatureDropdown, { target: { value: '50' } });
+            expect(defaultProps.onTemperatureChange).toHaveBeenCalledWith(50);
         });
-
-        expect(defaultProps.onTemperatureChange).toHaveBeenCalledWith(50);
-    });
+            });
 
     test('disables input fields when status is read-only', () => {
         render(<ReactionDetails {...defaultProps} status="Done" />);
@@ -164,14 +170,13 @@ describe('ReactionDetails Component', () => {
         expect(table).toBeInTheDocument();
     });
 
-    test.skip("renders the DataGrid with correct data", async () => {
+    test("renders the DataGrid with correct data", async () => {
         render(
             <CustomDataGrid
                 columns={mockColumns}
                 data={mockData}
                 enableFiltering={false}
                 enableOptions={false}
-                scrollMode={'infinite'}
             />
         );
 
@@ -182,4 +187,23 @@ describe('ReactionDetails Component', () => {
             expect(screen.getByText("Molar Ratio")).toBeInTheDocument();
         });
     });
+
+    test('renders molecule structure smile string', async () => {
+        const mockCellData = {
+            smiles_string: 'COc1ccc(C2(CN)CCOCC2)cc1',
+            source_molecule_name: 'Benzene',
+        };
+
+        render(
+            <MoleculeStructure
+                id={"1"}
+                structure={mockCellData.smiles_string}
+                width={200}
+                height={200}
+                svgMode={true}
+                structureName={mockCellData.source_molecule_name}
+            />
+        );
+    });
+
 });

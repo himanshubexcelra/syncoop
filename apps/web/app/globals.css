@@ -455,3 +455,11 @@ body {
 .dx-tabs-styling-mode-primary.dx-tab-indicator-position-bottom .dx-tab-selected::after {
   background-color: var(--tab-color, var(--themeBlueColor));
 }
+
+.dx-slider-handle .dx-tooltip-wrapper .dx-overlay-content{
+  transform: translate(-6px, 29px) !important;
+}
+
+.dx-state-disabled .dx-slider-handle .dx-overlay-content {
+  transform: translate(-17px, 29px) !important;
+}

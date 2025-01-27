@@ -41,7 +41,7 @@ jest.mock('@/components/Libraries/service', () => ({
     editLibrary: jest.fn(),
     createLibrary: jest.fn(),
 }));
-
+const setLibraryId = jest.fn();
 const mockOption = jest.fn().mockReturnValue({ /* your mock formData */ });
 const mockReset = jest.fn();
 const fetchLibraries = jest.fn();
@@ -247,6 +247,7 @@ describe('Create/ Edit Library should work as expected', () => {
                     formRef={mockFormRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     library_idx={-1}
+                    setLibraryId={setLibraryId}
                 />);
         });
 
@@ -288,6 +289,7 @@ describe('Create/ Edit Library should work as expected', () => {
                     formRef={mockFormRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     library_idx={-1}
+                    setLibraryId={setLibraryId}
                 />);
         });
 
@@ -320,6 +322,7 @@ describe('Create/ Edit Library should work as expected', () => {
                     formRef={mockFormRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     library_idx={2}
+                    setLibraryId={setLibraryId}
                 />);
         });
 
@@ -359,6 +362,7 @@ describe('Create/ Edit Library should work as expected', () => {
                     formRef={mockFormRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     library_idx={2}
+                    setLibraryId={setLibraryId}
                 />);
         });
 
@@ -398,6 +402,7 @@ describe('Create/ Edit Library should work as expected', () => {
                     formRef={mockFormRef}
                     setCreatePopupVisibility={setCreatePopupVisibility}
                     library_idx={2}
+                    setLibraryId={setLibraryId}
                 />);
         });
 

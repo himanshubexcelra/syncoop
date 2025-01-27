@@ -23,11 +23,11 @@ import { getOrganizationById } from "@/components/Organization/service";
 import EditOrganization from "../Organization/editOrganization";
 import { getDashBoardBreadCrumbs } from "./breadCrumbs";
 import StatusComponent from "../StatusDetails/StatusComponent";
-import AssayTable from "../AssayTable/AssayTable";
 import Module from "../Module/Module";
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import usePopupAndReset from "../usePopupandReset/usePopupAndReset";
-
+import { AssayData } from "@/utils/constants";
+import FunctionalAssay from "../FunctionalAssays/FunctionalAssay";
 
 type DashboardPageTypeProps = {
     userData: UserData,
@@ -58,6 +58,7 @@ export default function LandingPage({
         popup,
         isDirty,
         onSelectedIndexChange,
+        setReset,
     } = usePopupAndReset();
 
     const formRef = useRef<any>(null);
@@ -89,7 +90,7 @@ export default function LandingPage({
             props: { myRoles, orgUser: orgDetail, customerOrgId }
         },
         {
-            title: "ADME Properties",
+            title: "Properties",
             Component: ADMESelector,
             props: {
                 organizationId: orgDetail.id,
@@ -97,17 +98,18 @@ export default function LandingPage({
                 setIsDirty: setIsDirty,
                 reset: reset,
                 isDirty: isDirty,
+                setReset: setReset,
             }
         },
         {
-            title: "Assays",
-            Component: AssayTable,
-            props: { orgUser: orgDetail, },
+            title: `Functional Assay (${AssayData.length})`,
+            Component: FunctionalAssay,
+            props: { data: AssayData, orgUser: orgDetail },
         },
         {
             title: "Modules",
             Component: Module,
-            props: { orgUser: orgDetail, myRoles, },
+            props: { orgUser: orgDetail, myRoles },
         }
     ];
     const fetchOrganizationData = async () => {

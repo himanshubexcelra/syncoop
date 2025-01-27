@@ -103,3 +103,25 @@ export async function editProject(formData: any) {
     }
 }
 
+export async function deleteProject(params: object) {
+    try {
+        const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project/`);
+        if (params) {
+            Object.entries(params).map(([key, value]: any) => {
+                url.searchParams.append(key, value);
+            });
+        }
+        const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const data = await response.json();
+        return data;
+    }
+    catch (error: any) {
+        console.log(error, 'Error')
+        return error;
+    }
+}

@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { MoleculeStatusCode } from "@/utils/definition";
 import { getUTCTime, json } from "@/utils/helper";
 import { MESSAGES, STATUS_TYPE } from "@/utils/message";
+import { Prisma } from '@prisma/client';
 
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 
@@ -9,7 +10,15 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const searchParams = new URLSearchParams(url.searchParams);
     const library_id = searchParams.get("library_id");
+    const project_id = searchParams.get("project_id");
     const sample_molecule_id = searchParams.get("sample_molecule_id");
+    let whereCondition;
+    if (library_id) {
+        whereCondition = Prisma.sql`mo.library_id = ${Number(library_id)}`;
+    } else {
+        whereCondition = Prisma.sql`mo.project_id = ${Number(project_id)}`;
+    }
+
     try {
         const result = await prisma.$queryRaw`SELECT  
             mo.*,
@@ -24,35 +33,35 @@ export async function GET(request: Request) {
             FROM molecule mo
             JOIN status_code sc ON sc.table_name = 'molecule' AND mo.status = sc.status_code::int
             LEFT JOIN user_favourite_molecule ufm ON ufm.molecule_id = mo.id
-            /* 
-
+            /*
+ 
             Enable below 3 lines when live automation lab job is integrated
-            
-            LEFT JOIN molecule_chem_data mcd ON mcd.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done} 
-            LEFT JOIN molecule_bio_data mcd ON mbd.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done} 
-            LEFT JOIN molecule_adme_data mcd ON mad.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done} 
-
+           
+            LEFT JOIN molecule_chem_data mcd ON mcd.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done}
+            LEFT JOIN molecule_bio_data mcd ON mbd.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done}
+            LEFT JOIN molecule_adme_data mcd ON mad.molecule_id = mo.id and mo.status = ${MoleculeStatusCode.Done}
+ 
             */
-
-            LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data 
-            WHERE molecule_id = ${Number(sample_molecule_id)} 
-            ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done} 
+ 
+            LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data
+            WHERE molecule_id = ${Number(sample_molecule_id)}
+            ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done}
             LEFT JOIN molecule_bio_data mbd ON mbd.molecule_id = mo.id and
-            mo.status = ${MoleculeStatusCode.Done} 
-            LEFT JOIN molecule_adme_data mad ON mad.molecule_id = mo.id and 
-            mo.status = ${MoleculeStatusCode.Done} 
-
-            /* LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data 
-            WHERE molecule_id = ${Number(sample_molecule_id)} 
-            ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done} 
-            LEFT JOIN molecule_bio_data mbd ON mo.status = ${MoleculeStatusCode.Done} 
+            mo.status = ${MoleculeStatusCode.Done}
+            LEFT JOIN molecule_adme_data mad ON mad.molecule_id = mo.id and
+            mo.status = ${MoleculeStatusCode.Done}
+ 
+            /* LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data
+            WHERE molecule_id = ${Number(sample_molecule_id)}
+            ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done}
+            LEFT JOIN molecule_bio_data mbd ON mo.status = ${MoleculeStatusCode.Done}
             and mbd.molecule_id = ${Number(sample_molecule_id)}
-            LEFT JOIN molecule_adme_data mad ON mo.status = ${MoleculeStatusCode.Done} 
-            and mad.molecule_id = ${Number(sample_molecule_id)}     
+            LEFT JOIN molecule_adme_data mad ON mo.status = ${MoleculeStatusCode.Done}
+            and mad.molecule_id = ${Number(sample_molecule_id)}    
             */
-
-
-            WHERE mo.library_id = ${Number(library_id)}
+ 
+ 
+            WHERE ${whereCondition}
             ORDER BY mo.status DESC`;
 
         if (result) {
@@ -77,7 +86,6 @@ export async function GET(request: Request) {
         })
     }
 }
-
 export async function POST(request: Request) {
     const req = await request.json();
     const { user_id, molecule_id, favourite_id, favourite } = req;

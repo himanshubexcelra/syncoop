@@ -67,7 +67,8 @@ const usePopupAndReset = () => {
         handlePopupClose,
         setShowPopup,
         isDirty,
-        onSelectedIndexChange
+        onSelectedIndexChange,
+        setReset,
     };
 };
 

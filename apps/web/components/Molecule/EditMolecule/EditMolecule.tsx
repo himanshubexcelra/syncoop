@@ -53,6 +53,8 @@ const EditMolecule = ({
     const [rejected, setRejected] = useState<RejectedSmiles[]>([])
     const [showRejectedDialog, setShowRejectedDialog] = useState(false);
     const [moleculeIndex, setMoleculeIndex] = useState(0);
+    const libId = libraryId || editMolecules[0].library_id
+
     const hideResetPopup = () => {
         setResetVisible(false);
     };
@@ -123,7 +125,7 @@ const EditMolecule = ({
                 const formData = new FormData();
                 formData.append('smiles', str);
                 formData.append('created_by_user_id', userData?.id.toString());
-                formData.append('library_id', libraryId?.toString());
+                formData.append('library_id', libId?.toString());
                 formData.append('project_id', projectId?.toString());
                 formData.append('organization_id', organizationId?.toString());
                 formData.append('source_molecule_name', moleculeName);
@@ -294,7 +296,7 @@ const EditMolecule = ({
                 contentRender={() => <UpdateMoleculePopup
                     {...{
                         userData,
-                        libraryId,
+                        libraryId: libraryId || libId,
                         projectId,
                         setViewEditMolecule,
                         callLibraryId,

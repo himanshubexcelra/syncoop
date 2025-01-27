@@ -25,6 +25,7 @@ const ADMESelector = ({ data,
     fetchContainer,
     isDirty,
     editAllowed,
+    setReset,
 }: ADMEProps) => {
     const [sliderValues, setSliderValues] = useState<ADMEConfigTypes[]>([]);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
@@ -37,7 +38,20 @@ const ADMESelector = ({ data,
     const [currentId, setCurrentId] = useState<number>();
     const [editEnabled, setEditEnabled] = useState(true);
     const [mounted, setMounted] = useState(false);
-
+    const buttonConfig = [
+        {
+            label: 'Update',
+            class: 'primary-button',
+            action: () => saveADMEConfig(),
+            loader: true,
+        },
+        {
+            label: 'Cancel',
+            class: 'secondary-button ml-[10px]',
+            action: () => setReset('reset'),
+            loader: false,
+        }
+    ]
     const fetchData = async () => {
         setMounted(false);
         setLoader(true);
@@ -216,12 +230,13 @@ const ADMESelector = ({ data,
                 <div className={type != ContainerType.LIBRARY ? 'm-[20px]' : ''}>
                     <div className={`flex ${type ? 'justify-between' : 'justify-end'}`}>
                         {type && (
-                            <div className="dx-field block flex">
+                            <div className="dx-field block flex mt-2 mr-2]">
                                 <div className='pr-[10px] inherited text-greyText'>
-                                    {`Inherited from 
+                                    {/* {`Inherited from 
                                     ${type === ContainerType.PROJECT ? 'organization' :
                                             'project'
-                                        }`}
+                                        }`} */}
+                                    Inherit Values
                                 </div>
                                 <div>
                                     <Switch
@@ -232,20 +247,27 @@ const ADMESelector = ({ data,
                                 </div>
                             </div>
                         )}
-                        <button className={
-                            loadIndicatorVisible || !isDirty
-                                ? 'disableButton w-[47px] h-[37px]'
-                                : 'primary-button'}
-                            onClick={() => saveADMEConfig()}
-                            disabled={loadIndicatorVisible || !isDirty}>
-                            <LoadIndicator className={
-                                `button-indicator`
-                            }
-                                visible={loadIndicatorVisible}
-                                height={20}
-                                width={20}
-                            />
-                            {loadIndicatorVisible ? '' : 'Save'}</button>
+                        <div className='flex items-center'>
+                            {buttonConfig.map((button, index) =>
+                                <button key={index}
+                                    className={loadIndicatorVisible || !isDirty
+                                        ? 'disableButton w-[64px] h-[37px] ml-[10px]'
+                                        : button.class}
+                                    onClick={() => button.action()}
+                                    disabled={loadIndicatorVisible || !isDirty}>
+                                    <LoadIndicator className={
+                                        `button-indicator`
+                                    }
+                                        visible={button.loader && loadIndicatorVisible}
+                                        height={20}
+                                        width={20}
+                                    />
+                                    {(button.loader && loadIndicatorVisible)
+                                        ? ''
+                                        : button.label}
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <div className={`mt-[20px] ${!type ?
                         `grid grid-cols-1 md:grid-cols-2 gap-4` : ''}`}>

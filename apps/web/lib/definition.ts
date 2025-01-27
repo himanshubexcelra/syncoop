@@ -162,6 +162,39 @@ export interface MoleculeType {
   functional_assays: ColorSchemeFormat[],
 }
 
+export interface CustomReactionType {
+  created_at: Date;
+  created_by: number;
+  finger_print: string;
+  id: number;
+  molecule_id: number;
+  inchi_key: string;
+  library_id: number;
+  project_id: number;
+  organization_id: number;
+  molecular_weight: number;
+  smiles_string: string;
+  source_molecule_name: string;
+  "project / library": string;
+  "organization / order": string;
+  disabled: boolean;
+  status: number;
+  status_name: string;
+  favourite_id: number;
+  favourite: boolean;
+  updated_at: Date;
+  updated_by: number;
+  yield?: number;
+  anlayse?: number;
+  herg?: number;
+  caco2?: number;
+  clint?: number;
+  hepG2cytox?: number;
+  adme_data: ColorSchemeFormat[],
+  reaction_data: any;
+  functional_assays: ColorSchemeFormat[],
+}
+
 export type addToFavouritesProps = {
   molecule_id: number,
   user_id: number,
@@ -178,6 +211,7 @@ export interface LibraryFields {
   metadata: {
     target?: string;
   };
+  container_access_permission: sharedUserType[];
   userWhoUpdated?: userType;
   updated_at?: Date;
   owner: User;
@@ -185,6 +219,7 @@ export interface LibraryFields {
   created_at: Date;
   status?: MoleculeStatus[];
   libraryMolecules: StatusType[];
+  libraryReactions: StatusType[];
   container?: OrganizationDataFields;
   config?: OrganizationConfigType;
   inherits_configuration: boolean;
@@ -196,8 +231,10 @@ export interface StatusType {
 }
 
 export interface CombinedLibraryType {
-  libraryMolecules: StatusType[];
+  libraryMolecules?: StatusType[];
+  libraryReactions?: StatusType[];
 }
+
 export interface ProjectDataFields {
   name: string;
   id: number;
@@ -312,6 +349,32 @@ export interface ADMEProps {
   fetchContainer?: () => void;
   isDirty: boolean;
   editAllowed?: boolean;
+  setReset?: any
+}
+
+export interface AssayFields {
+  sampleType: string,
+  concentration: string,
+  incubationTime: string,
+  specificInhibitors: string
+}
+
+export interface AssayFieldList {
+  assay: string,
+  clinical_indication: string,
+  target: string,
+  description: string,
+  user_fields: AssayFields,
+  name: string,
+  supplier: string,
+  SKU: number,
+  testMoleculeName: string,
+  comment: string,
+}
+
+export interface FunctionalAssayProps {
+  data: AssayFieldList[],
+  type?: string,
 }
 
 export interface ModuleFeature {
@@ -386,8 +449,8 @@ interface TabProps {
 export interface TabDetail {
   title?: string;
   Component?: React.ComponentType<any>;
-  props?: AssayTableProps | ModuleTableProps | StatusComponentProps | ADMEProps
-  | UserTableProps | TabProps;
+  props: AssayTableProps | ModuleTableProps |
+  StatusComponentProps | ADMEProps | UserTableProps | TabProps | FunctionalAssayProps[];
 }
 
 export interface OrgUser {
@@ -480,6 +543,7 @@ export interface LibraryCreateFields {
   projectData: ProjectDataFields,
   userData: UserData,
   library_idx: number,
+  setLibraryId: (value: number) => void,
 }
 
 export interface ValidateSmileRequest {
@@ -830,6 +894,12 @@ export enum ActionStatus {
   Enabled = 'Enabled',
   Disabled = 'Disabled'
 }
+
+export enum AssayOptions {
+  AddCommercial = 'Add commercially available assay kits',
+  AddCustom = 'Add custom assay protocol'
+}
+
 export type CreateLabJobOrder = {
   molecule_id: number,
   library_id: number,
@@ -845,8 +915,7 @@ export type SaveLabJobOrder = {
   product_molecular_weight: number,
   no_of_steps: number,
   functional_bioassays: string,
-  // reactions: ReactionLabJobOrder[] | [],
-  reactions: string,
+  reactions: ReactionLabJobOrder[],
   created_by: number,
   status: number,
   reactionStatus: number,

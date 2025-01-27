@@ -3,13 +3,17 @@ import {
   ADMEConfigTypes,
   ColorSchemeFormat,
   CombinedLibraryType,
+  ContainerPermission,
+  CustomReactionType,
   LibraryFields,
   LoginFormSchema,
   MoleculeStatusCode,
   MoleculeStatusLabel,
   MoleculeType,
+  ProjectDataFields,
   Status,
-  StatusType
+  StatusType,
+  UserData
 } from "@/lib/definition"
 import { COLOR_SCHEME } from "./constants";
 
@@ -20,6 +24,14 @@ export async function delay(ms: number): Promise<void> {
     }, ms);
   });
 }
+
+export const toTitleCase = (key: string) => {
+  // Convert camelCase or snake_case to title case
+  return key
+    .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
+    .replace(/^./, (str) => str.toUpperCase()) // Capitalize the first letter
+    .replace(/_/g, ' '); // Replace underscores with spaces
+};
 
 export function validateAuth(formData: FormData) {
   return LoginFormSchema.safeParse({
@@ -117,6 +129,16 @@ export function popupPositionValue() {
   }
 }
 
+export function popupPositionCentered() {
+  if (typeof window !== 'undefined') {
+    return ({
+      my: 'center',
+      at: 'center',
+      of: window,
+    });
+  }
+}
+
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
@@ -136,7 +158,9 @@ export function debounce<T extends (...args: any[]) => any>(
 type UnionLibType = LibraryFields | CombinedLibraryType;
 type UnionMoleculeType = MoleculeType | StatusType;
 
-export function fetchMoleculeStatus(data: UnionLibType) {
+export function fetchMoleculeStatus(
+  data: UnionLibType,
+  entity: "libraryReactions" | "libraryMolecules") {
 
   let projectStatusName: any = {};
   let projectStatusCount: any = {};
@@ -161,20 +185,22 @@ export function fetchMoleculeStatus(data: UnionLibType) {
   });
 
   const keys: string[] = Object.keys(projectStatusName);
-  data.libraryMolecules.forEach((molecule: UnionMoleculeType) => {
-    const keyIndex = keys.indexOf(String(molecule.status));
-    if (keyIndex > -1) {
-      const status_code = keys[keyIndex];
-      const status_name = projectStatusName[status_code];
-      if (Object(projectStatusCount).hasOwnProperty(status_name)) {
+  if (data[entity]) {
+    data[entity].forEach((molecule: UnionMoleculeType) => {
+      const keyIndex = keys.indexOf(String(molecule.status));
+      if (keyIndex > -1) {
+        const status_code = keys[keyIndex];
+        const status_name = projectStatusName[status_code];
+        if (Object(projectStatusCount).hasOwnProperty(status_name)) {
 
-        projectStatusCount[status_name] = {
-          ...projectStatusCount[status_name],
-          count: projectStatusCount[status_name].count + 1,
+          projectStatusCount[status_name] = {
+            ...projectStatusCount[status_name],
+            count: projectStatusCount[status_name].count + 1,
+          }
         }
       }
-    }
-  });
+    });
+  }
   return projectStatusCount;
 }
 
@@ -358,10 +384,26 @@ export const deepEqual = (a: any, b: any) => {
   return true;
 };
 
-export const isDeleteLibraryEnable = (data: any): boolean => {
-  if (data?.length === 0) {
+export const isDeleteLibraryEnable = (molecules: any): boolean => {
+  if (!molecules.length) {
     return true;
   }
-  const result = data?.every((item: any) => item.status === MoleculeStatusCode.New);
+  const result = molecules.every(
+    (item: any) => item.status === MoleculeStatusCode.New);
   return result;
 }
+
+export const isSharedActionEnable = (
+  containerData: LibraryFields | ProjectDataFields,
+  userData: UserData
+) => {
+  const sharedUser = containerData.container_access_permission?.find(u => u.user_id === userData.id
+    && u.access_type === ContainerPermission.Admin);
+  const owner = containerData.owner_id === userData.id;
+  const admin = isAdmin(userData.myRoles);
+  return (!!sharedUser || owner || admin);
+}
+
+export const getEntity =
+  (projectType: string): "libraryReactions" | "libraryMolecules" =>
+    projectType === 'Custom Reaction' ? 'libraryReactions' : 'libraryMolecules';

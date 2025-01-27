@@ -18,7 +18,7 @@ import { getOrganization } from "../Organization/service";
 import { getFilteredRoles } from "../Role/service";
 import { Button, RadioGroup } from "devextreme-react";
 import { ActionStatus, OrganizationType, UserData } from "@/lib/definition";
-import DeleteConfirmation from "../Libraries/DeleteConfirmation";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
 
 export default function RenderEditUser({
     setCreatePopupVisibility,
@@ -222,6 +222,7 @@ export default function RenderEditUser({
                         <SimpleItem dataField="status">
                             <RadioGroup
                                 items={status}
+                                className="radio-flex"
                                 defaultValue={formData.is_active ?
                                     ActionStatus.Enabled
                                     : ActionStatus.Disabled}

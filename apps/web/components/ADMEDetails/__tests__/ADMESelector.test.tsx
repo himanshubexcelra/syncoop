@@ -2,7 +2,7 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { editOrganization, getOrganizationById } from '@/components/Organization/service';
 import ADMESelector from '../ADMESelector';
-import { ContainerType } from '@/lib/definition';
+import { ContainerType, ProjectDataFields } from '@/lib/definition';
 
 const orgDetails = {
     id: 24,
@@ -81,6 +81,7 @@ const projectMockData = {
     owner_id: 1,
     updated_by: 1,
     owner: userData.orgUser,
+    container_access_permission: [],
     container: {
         id: 1,
         name: 'Merck',
@@ -117,7 +118,7 @@ const projectMockData = {
     userWhoUpdated: userData,
     userWhoCreated: userData,
     metadata: { type: 'Retrosynthesis', target: '' }, inherits_configuration: true,
-}
+} as ProjectDataFields
 
 const libMockData = {
     id: 40,
@@ -135,9 +136,11 @@ const libMockData = {
     updated_at: new Date(),
     updated_by: 11,
     libraryMolecules: [],
+    libraryReactions: [],
     owner: userData.orgUser,
     userWhoUpdated: userData,
     userWhoCreated: userData,
+    container_access_permission: [],
     container: {
         id: 1,
         name: 'Merck',
@@ -246,7 +249,8 @@ describe('ADME details sliders should work as expected', () => {
                 <ADMESelector
                     organizationId={orgDetails.id}
                     setIsDirty={jest.fn()}
-                    childRef={null}
+                    isDirty={true}
+                    childRef={null as any}
                     reset={''}
                 />
             );
@@ -263,10 +267,11 @@ describe('ADME details sliders should work as expected', () => {
             render(
                 <ADMESelector
                     data={projectMockData}
-                    type="P"
+                    type={ContainerType.PROJECT}
                     organizationId={24}
                     setIsDirty={jest.fn()}
-                    childRef={null}
+                    isDirty={true}
+                    childRef={null as any}
                     reset={''}
                 />
             );
@@ -277,7 +282,7 @@ describe('ADME details sliders should work as expected', () => {
         fireEvent.mouseMove(sliders[0], { clientX: 2.1 });
     }, 60000);
 
-    test('save button should work as expected', async () => {
+    test('Update button should work as expected', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -285,37 +290,39 @@ describe('ADME details sliders should work as expected', () => {
                 <ADMESelector
                     organizationId={orgDetails.id}
                     setIsDirty={jest.fn()}
-                    childRef={null}
+                    isDirty={true}
+                    childRef={null as any}
                     reset={''}
                 />
             );
         });
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        fireEvent.click(saveButton);
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        fireEvent.click(updateButton);
     }, 60000);
 
-    test('save button should work as expected for project', async () => {
+    test('Update button should work as expected for project', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
             render(
                 <ADMESelector
                     data={projectMockData}
-                    type="P"
+                    type={ContainerType.PROJECT}
                     organizationId={24}
                     setIsDirty={jest.fn()}
-                    childRef={null}
+                    isDirty={true}
+                    childRef={null as any}
                     reset={''}
                 />
             );
         });
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        fireEvent.click(saveButton);
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        fireEvent.click(updateButton);
     }, 60000);
 
-    test('save button should work as expected for library', async () => {
+    test('Update button should work as expected for library', async () => {
         const mockResponse = { error: null };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -325,17 +332,18 @@ describe('ADME details sliders should work as expected', () => {
                     type="L"
                     organizationId={24}
                     setIsDirty={jest.fn()}
-                    childRef={null}
+                    isDirty={true}
+                    childRef={null as any}
                     reset={''}
                 />
             );
         });
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        fireEvent.click(saveButton);
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        fireEvent.click(updateButton);
     }, 60000);
 
-    test('save button should work as expected when api returns an error', async () => {
+    test('Update button should work as expected when api returns an error', async () => {
         const mockResponse = { error: 'Unexpected error occured' };
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
@@ -343,14 +351,15 @@ describe('ADME details sliders should work as expected', () => {
                 <ADMESelector
                     organizationId={orgDetails.id}
                     setIsDirty={jest.fn()}
-                    childRef={null}
+                    isDirty={true}
+                    childRef={null as any}
                     reset={''}
                 />
             );
         });
 
-        const saveButton = screen.getByText('Save');
-        expect(saveButton).toBeInTheDocument();
-        await act(() => fireEvent.click(saveButton));
+        const updateButton = screen.getByText('Update');
+        expect(updateButton).toBeInTheDocument();
+        await act(() => fireEvent.click(updateButton));
     }, 60000);
 });

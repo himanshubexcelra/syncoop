@@ -44,6 +44,7 @@ export default function Header({ userData }: HeaderProps) {
     const containsProjects = currentUrl.includes("/projects");
     const containsMoleculeOrder = currentUrl.includes("/molecule_order");
     const { myRoles } = userData;
+
     useEffect(() => {
 
         const getTotalMolecules = async () => {
@@ -162,11 +163,7 @@ export default function Header({ userData }: HeaderProps) {
                         height={20}
                     />
                     <Link href="#"
-                        onClick={() =>
-                            setCreatePopupVisibility(
-                                cartCount > 0 ? !createPopupVisible : createPopupVisible
-                            )
-                        }
+                        onClick={() => setCreatePopupVisibility(cartCount > 0)}
                     >
                         <div className="relative flex items-center justify-center">
                             <Image priority

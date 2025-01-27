@@ -3,7 +3,7 @@
 import { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import Image from "next/image";
 import toast from "react-hot-toast";
-import DeleteConfirmation from './DeleteConfirmation';
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -12,6 +12,7 @@ import { AppContext } from "../../app/AppState";
 import {
     CellData,
     ColumnConfig,
+    FetchUserType,
     MoleculeStatusCode,
     MoleculeType,
     ProjectDataFields,
@@ -66,7 +67,7 @@ type MoleculeListType = {
     projectData: ProjectDataFields,
     projectId: string,
     organizationId: string,
-    fetchLibraries: () => void,
+    fetchLibraries: FetchUserType,
     editEnabled: boolean,
 }
 const MoleculeStructure = dynamic(
@@ -124,13 +125,18 @@ export default function MoleculeList({
         setCellData(data);
     }
 
-    const fetchMoleculeData = async (library_id: number,) => {
+    const fetchMoleculeData = async (library_id?: number, project_id?: string) => {
         setMoleculeLoader(true);
         try {
-            const params = {
-                library_id,
-                sample_molecule_id: randomValue(sample_molecule_ids)
-            }
+            const params = library_id
+                ? {
+                    library_id,
+                    sample_molecule_id: randomValue(sample_molecule_ids)
+                }
+                : {
+                    project_id,
+                    sample_molecule_id: randomValue(sample_molecule_ids)
+                };
             const moleculeData = await getMoleculeData(params);
             const selectionEnabledRows = moleculeData.filter(
                 (row: MoleculeType) => !row.disabled);
@@ -144,7 +150,7 @@ export default function MoleculeList({
         }
     };
     useEffect(() => {
-        fetchMoleculeData(library_id);
+        fetchMoleculeData(library_id, projectId);
     }, [library_id]);
 
     const columns: ColumnConfig[] = [
@@ -975,9 +981,9 @@ export default function MoleculeList({
                 setEditMolecules([]);
                 setSelectedRowsData([]);
                 setSelectedRows([]);
-                if (selectedLibrary) {
-                    await fetchMoleculeData(selectedLibrary);
-                }
+
+                await fetchMoleculeData(selectedLibrary, projectId);
+
                 setReloadMolecules(false);
             })();
         }
@@ -1077,9 +1083,11 @@ export default function MoleculeList({
                 />
             )}
             {moleculeLoader ?
-                <LoadIndicator
-                    visible={moleculeLoader}
-                /> :
+                <div className="center">
+                    <LoadIndicator
+                        visible={moleculeLoader}
+                    />
+                </div> :
                 <div className={
                     `pb-[10px] w-[100%]`}
                     onClick={closeMagnifyPopup}>

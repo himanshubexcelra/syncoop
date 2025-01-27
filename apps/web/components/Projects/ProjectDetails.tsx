@@ -88,6 +88,7 @@ export default function ProjectDetails({
             const tempOrganization = [];
             organization = await getOrganizationById({
                 withRelation: ['orgUser', 'user_role', 'projects'],
+                withCount: ['molecules'],
                 id: userData?.organization_id
             });
             const projects = organization?.other_container;
@@ -176,7 +177,12 @@ export default function ProjectDetails({
                                 {userData.orgUser.type === OrganizationType.Internal
                                     || myRoles.includes('org_admin') ?
                                     <span>Projects</span>
-                                    : <span>{`Home: ${userData?.orgUser?.name}`}</span>}
+                                    : <div>
+                                        <span>Home: </span>
+                                        <span className='lib-heading'>
+                                            {userData?.orgUser?.name}
+                                        </span>
+                                    </div>}
                             </main>
                             <div className='flex'>
                                 {createEnabled && <Button

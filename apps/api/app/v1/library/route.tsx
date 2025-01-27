@@ -258,9 +258,13 @@ export async function DELETE(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const library_id = searchParams.get('library_id');
+        const type = searchParams.get('type')
+        const table = type === 'Custom Reaction'
+            ? 'custom_reactions'
+            : 'molecule'
         const result = [];
         // check if the library has any molecule with status except New.
-        const countMolecule = await prisma.molecule.count({
+        const countMolecule = await (prisma[table] as any).count({
             where: {
                 library_id: Number(library_id),
                 status: {
@@ -270,7 +274,7 @@ export async function DELETE(request: Request) {
         });
         // delete library if libraries has only molecule with new status.
         if (countMolecule === 0) {
-            const deleteRecord = await prisma.molecule.deleteMany({
+            const deleteRecord = await (prisma[table] as any).deleteMany({
                 where: {
                     library_id: Number(library_id),
                     status: MoleculeStatusCode.New,

@@ -26,6 +26,12 @@
     }
 }
 
+.accordion-item-gap {
+    .dx-accordion-item-closed {
+        margin-bottom: 10px;
+    }
+}
+
 .accordion {
     width: 40%;
 

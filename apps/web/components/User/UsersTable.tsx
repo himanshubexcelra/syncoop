@@ -22,7 +22,7 @@ import RenderEditUser from "./editUserDetails";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { isOnlyLibraryManger } from "@/utils/helpers";
-import DeleteConfirmation from "../Libraries/DeleteConfirmation";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { Messages } from "@/utils/message";
 import toast from "react-hot-toast";
 

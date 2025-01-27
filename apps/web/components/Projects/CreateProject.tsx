@@ -8,12 +8,20 @@ import {
   RequiredRule,
   Label,
   GroupItem,
+  ButtonItem,
+  ButtonOptions,
 } from "devextreme-react/form";
 import Image from 'next/image';
 import { LoadIndicator } from 'devextreme-react';
 import { CheckBox, CheckBoxTypes } from 'devextreme-react/check-box';
-import { debounce, delay, isLibraryManger, isSystemAdmin } from "@/utils/helpers";
-import { createProject, editProject } from "./projectService";
+import {
+  debounce,
+  delay,
+  isLibraryManger,
+  isSystemAdmin,
+  isDeleteLibraryEnable
+} from "@/utils/helpers";
+import { createProject, editProject, deleteProject } from "./projectService";
 import {
   ProjectCreateFields,
   OrganizationDataFields,
@@ -30,6 +38,7 @@ import {
 import { SelectBox } from "devextreme-react";
 import { sortString, sortStringJoined } from "@/utils/sortString";
 import { Messages } from "@/utils/message";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
 
 export default function CreateProject({
   setCreatePopupVisibility,
@@ -53,7 +62,8 @@ export default function CreateProject({
       : !isSystemAdmin(myRoles) ?
         userData?.orgUser?.id : '');
   const [showIcon, setShowIcon] = useState({ name: 'arrow-both', permission: 'arrow-both' });
-
+  const [confirm, setConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id);
@@ -134,11 +144,11 @@ export default function CreateProject({
   }
 
   const handleSubmit = async () => {
-    setLoadIndicatorVisible(true);
     const values = formRef.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
       const sharedUsers = filteredData.filter(val => val.permission !== 'View');
       let response;
+      setLoadIndicatorVisible(true);
       if (edit) {
         response = await editProject(
           {
@@ -253,9 +263,55 @@ export default function CreateProject({
     formRef?.current!.instance().reset();
     setCreatePopupVisibility(false);
   }
+  const isDeleteProjectEnable = () => {
+    const projectLibraries = projectData?.other_container;
+    if (!projectLibraries) return true;
+    for (const item of projectLibraries) {
+      if (!isDeleteLibraryEnable(item?.libraryMolecules)) {
+        return false;
+      }
+    }
+    return true;
+  };
+  const handleDelete = () => {
+    setConfirm(true)
+  }
 
+  const handleCancel = () => {
+    setConfirm(false)
+  }
+  const deleteProjectDetail = async () => {
+    let params: object = {
+      project_id: projectData?.id,
+    }
+    if (projectData?.other_container?.length) {
+      params = {
+        ...params,
+        isDeleteRelationEnable: true
+      }
+    }
+    const result = await deleteProject(params);
+    if (result.error) {
+      toast.error(Messages.DELETE_PROJECT_ERROR_MESSAGE);
+      setIsLoading(false);
+    }
+    else {
+      toast.success(Messages.DELETE_PROJECT_MESSAGE);
+      fetchOrganizations();
+      setIsLoading(false);
+    }
+  }
   return (
     <Form ref={formRef} showValidationSummary={true} formData={projectData}>
+      {edit && isDeleteProjectEnable() && <ButtonItem cssClass="delete-button">
+        <ButtonOptions
+          stylingMode="text"
+          text={`Delete Project`}
+          onClick={
+            () => handleDelete()
+          }
+          elementAttr={{ class: 'lowercase-button' }} />
+      </ButtonItem>}
       {myRoles?.includes('admin') && !edit && !clickedOrg ? OrganizationSelectBox :
         <SimpleItem
           dataField="organization"
@@ -271,7 +327,8 @@ export default function CreateProject({
           }
         >
           <Label text="Organization Name*" />
-        </SimpleItem>}
+        </SimpleItem>
+      }
       <SimpleItem
         dataField="owner"
         editorOptions={
@@ -408,6 +465,16 @@ export default function CreateProject({
           Discard
         </button>
       </GroupItem>
+      {confirm && (
+        <DeleteConfirmation
+          onSave={() => deleteProjectDetail()}
+          openConfirmation={confirm}
+          isLoader={isLoading}
+          setConfirm={() => handleCancel()}
+          msg={Messages.getProjectTitle(projectData?.name || '')}
+          title="Delete Project"
+        />
+      )}
     </Form>
   );
 }

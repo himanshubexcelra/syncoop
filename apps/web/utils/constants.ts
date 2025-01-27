@@ -1,15 +1,22 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
   ActionStatus,
+  AssayOptions,
   MoleculeOrderStatusCode,
   MoleculeOrderStatusLabel,
   MoleculeStatusCode,
   MoleculeStatusLabel, Status
 } from "@/lib/definition";
 import { number_formatter } from "./helpers";
+
 export const status = [
   ActionStatus.Enabled,
   ActionStatus.Disabled
+];
+
+export const assayCreateOptions = [
+  AssayOptions.AddCommercial,
+  AssayOptions.AddCustom
 ];
 
 export const defaultRoutesEnabled = [
@@ -873,3 +880,68 @@ export const COLOR_SCHEME: any = {
 
 export const PATHWAY_BOX_WIDTH = 800;
 
+export const AssayData = [{
+  "assay": "EGFR Kinase Assay Kit",
+  "clinical_indication": "Non-small cell lung cancer",
+  "target": "EGFR",
+  "description": "Measures the activity of EGFR kinase in vitro.",
+  "user_fields": {
+    "sampleType": "Cell lysate",
+    "concentration": "10 µg/mL",
+    "incubationTime": "30 minutes",
+    "specificInhibitors": "Erlotinib"
+  },
+  name: 'EGFR Kinase Assay Kit',
+  supplier: 'BPS Bioscience',
+  SKU: 40321,
+  testMoleculeName: 'TBD',
+  comment: '',
+}, {
+  "assay": "EGFR Kinase Assay Kit",
+  "clinical_indication": "Non-small cell lung cancer",
+  "target": "EGFR",
+  "description": "Measures the activity of EGFR kinase in vitro.",
+  "user_fields": {
+    "sampleType": "Cell lysate",
+    "concentration": "10 µg/mL",
+    "incubationTime": "30 minutes",
+    "specificInhibitors": "Erlotinib"
+  },
+  name: 'EGFR Kinase Assay Kit',
+  supplier: 'BPS Bioscience',
+  SKU: 40324,
+  testMoleculeName: 'TBD',
+  comment: 'dsgfkjsdfg'
+}, {
+  "assay": "EGFR Kinase Assay Kit",
+  "clinical_indication": "Non-small cell lung cancer",
+  "target": "EGFR",
+  "description": "Measures the activity of EGFR kinase in vitro.",
+  "user_fields": {
+    "sampleType": "Cell lysate",
+    "concentration": "10 µg/mL",
+    "incubationTime": "30 minutes",
+    "specificInhibitors": "Erlotinib"
+  },
+  name: 'EGFR Kinase Assay Kit',
+  supplier: 'BPS Bioscience',
+  SKU: 40323,
+  testMoleculeName: 'TBD',
+  comment: 'dsgfkjsdfg'
+}, {
+  "assay": "EGFR Kinase Assay Kit",
+  "clinical_indication": "Non-small cell lung cancer",
+  "target": "EGFR",
+  "description": "Measures the activity of EGFR kinase in vitro.",
+  "user_fields": {
+    "sampleType": "Cell lysate",
+    "concentration": "10 µg/mL",
+    "incubationTime": "30 minutes",
+    "specificInhibitors": "Erlotinib"
+  },
+  name: 'EGFR Kinase Assay Kit',
+  supplier: 'BPS Bioscience',
+  SKU: 40322,
+  testMoleculeName: 'TBD',
+  comment: 'dsgfkjsdfg'
+}];

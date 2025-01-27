@@ -33,6 +33,11 @@ export async function GET(request: Request) {
                                     status: true,
                                 }
                             },
+                            libraryReactions: {
+                                select: {
+                                    status: true,
+                                }
+                            },
                             owner: {
                                 select: {
                                     id: true,
@@ -93,6 +98,7 @@ export async function GET(request: Request) {
 
             query.include = {
                 ...query.include,
+                container_access_permission: true,
                 owner: {
                     select: {
                         id: true,
@@ -389,5 +395,41 @@ export async function PUT(request: Request) {
         });
     } finally {
         await prisma.$disconnect();
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const url = new URL(request.url);
+        const searchParams = new URLSearchParams(url.searchParams);
+        const project_id = searchParams.get('project_id');
+        const isDeleteRelationEnable = searchParams.get('isDeleteRelationEnable');
+        if (isDeleteRelationEnable) {
+            await prisma.molecule.deleteMany({
+                where: {
+                    project_id: Number(project_id),
+                },
+            });
+            await prisma.container.deleteMany({
+                where: {
+                    parent_id: Number(project_id),
+                },
+            });
+            
+        }
+        const result = await prisma.container.delete({
+            where: {
+                id: Number(project_id),
+            },
+        })
+        return new Response(json(result), {
+            headers: { "Content-Type": "application/json" },
+            status: SUCCESS,
+        });
+    } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { "Content-Type": "application/json" },
+            status: BAD_REQUEST, // BAD_REQUEST
+        });
     }
 }

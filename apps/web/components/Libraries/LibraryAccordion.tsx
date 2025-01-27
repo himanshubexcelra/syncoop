@@ -7,7 +7,11 @@ import { useRouter } from "next/navigation";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import { Popup, } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
-import { LibraryFields, ProjectDataFields, MoleculeStatusLabel, UserData } from "@/lib/definition";
+import {
+    LibraryFields, ProjectDataFields, MoleculeStatusLabel, UserData,
+    OrganizationDataFields,
+    FetchUserType
+} from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import { deleteLibrary } from './service';
 import {
@@ -16,14 +20,21 @@ import {
     popupPositionValue,
     debounce,
     fetchMoleculeStatus,
-    isDeleteLibraryEnable
+    isDeleteLibraryEnable,
+    isLibraryManger,
+    getEntity
 } from '@/utils/helpers';
 import TextWithToggle from "@/ui/TextWithToggle";
 import { Messages } from "@/utils/message";
 import CreateLibrary from './CreateLibrary';
 import { FormRef } from "devextreme-react/cjs/form";
-import DeleteConfirmation from "./DeleteConfirmation";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { ClickEvent } from "devextreme/ui/button";
+import { AssayData } from "@/utils/constants";
+import FunctionalAssay from "../FunctionalAssays/FunctionalAssay";
+import ADMESelector from "../ADMEDetails/ADMESelector";
+import { getOrganizationById } from "../Organization/service";
+import CreateProject from "../Projects/CreateProject";
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -36,7 +47,7 @@ type LibraryAccordionType = {
     projectId: string,
     sortBy: string,
     actionsEnabled: string[],
-    fetchLibraries: () => void,
+    fetchLibraries: FetchUserType,
     userData: UserData,
     selectedLibraryId: number,
     /* getLibraryData: (value: LibraryFields) => void, */
@@ -46,6 +57,12 @@ type LibraryAccordionType = {
     isDirty: boolean,
     setShowPopup: (value: boolean) => void,
     adminAccess: boolean,
+    childRef: React.RefObject<HTMLDivElement>,
+    setIsDirty: (val: boolean) => void,
+    reset: string,
+    adminProjectAccess: boolean,
+    organizationId: number,
+    setReset: any,
 }
 
 export default function LibraryAccordion({
@@ -66,6 +83,12 @@ export default function LibraryAccordion({
     isDirty,
     setShowPopup,
     adminAccess,
+    childRef,
+    setIsDirty,
+    reset,
+    adminProjectAccess,
+    organizationId,
+    setReset,
 }: LibraryAccordionType) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -79,7 +102,32 @@ export default function LibraryAccordion({
     const [deleteLibraryData, setDeleteLibraryData] = useState({ id: 0, name: '' });
     const [isLoading, setIsLoading] = useState(false);
     const formRef = useRef<FormRef>(null);
-
+    const formRefProject = useRef<FormRef>(null);
+    const [users, setUsers] = useState([])
+    const [organization, setOrganization] = useState<OrganizationDataFields[]>([]);
+    const [projectPopupVisible, setProjectPopupVisibile] = useState(false);
+    const projectType = projectData.metadata.type;
+    const entity = getEntity(projectType);
+    const entityLabel = projectType === 'Custom Reaction'
+        ? 'reactions'
+        : 'molecules'
+    const fetchOrganization = async () => {
+        const orgData = await getOrganizationById({
+            withRelation: ['orgUser', 'user_role', 'projects'],
+            id: organizationId
+        });
+        setOrganization([orgData]);
+        setUsers(orgData?.orgUser?.filter(
+            (user: UserData) => {
+                const roles = user.user_role
+                    .map(role => role.role.type)
+                    .filter(role => role !== undefined) as string[] || []
+                return isLibraryManger(roles) && user.id !== userData.id
+            }));
+    }
+    useEffect(() => {
+        fetchOrganization()
+    }, [])
     useEffect(() => {
         setPopupPosition(popupPositionValue());
     }, []);
@@ -88,7 +136,7 @@ export default function LibraryAccordion({
         <div className="header-text text-black">{title}</div>
     );
 
-    const sortByFields = ['Name', 'Owner', 'Updation time', 'Recent', 'Count of molecules'];
+    const sortByFields = ['Name', 'Owner', 'Updation time', 'Recent', `Count of ${entityLabel}`];
 
     const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -108,13 +156,13 @@ export default function LibraryAccordion({
             } else if (sortKey === 'Owner') {
                 sortKey = 'owner.first_name';
                 object = true;
-            } else if (sortKey === 'Count of molecules') {
-                sortKey = 'libraryMolecules';
+            } else if (sortKey === `Count of ${entityLabel}`) {
+                sortKey = entity;
                 sortBy = 'desc';
             } else {
                 sortKey = 'name';
             }
-            if (sortKey === 'libraryMolecules') {
+            if (sortKey === entity) {
                 tempLibraries = sortNumber(projectData.other_container, sortKey, sortBy);
             } else if (sortKey !== 'updated_at' && sortKey !== 'created_at') {
                 tempLibraries = sortString(projectData.other_container, sortKey, sortBy, object);
@@ -142,7 +190,7 @@ export default function LibraryAccordion({
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
-                    item.libraryMolecules.length.toString().includes(value.toLowerCase())
+                    item[entity].length.toString().includes(value.toLowerCase())
                 );
                 const tempProjects = {
                     ...projectData,
@@ -155,7 +203,7 @@ export default function LibraryAccordion({
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
-                    item.libraryMolecules.length.toString().includes(value.toLowerCase())
+                    item[entity].length.toString().includes(value.toLowerCase())
                 );
 
                 const tempProjects = {
@@ -205,9 +253,9 @@ export default function LibraryAccordion({
     }
     const deleteLibraryDetail = async () => {
         setIsLoading(true);
-        const result = await deleteLibrary(deleteLibraryData.id);
+        const result = await deleteLibrary(projectType, deleteLibraryData.id,);
         if (result.length === 0) {
-            toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE);
+            toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE(entityLabel));
             setIsLoading(false);
         }
         else {
@@ -217,9 +265,8 @@ export default function LibraryAccordion({
             }
             else {
                 toast.success(Messages.DELETE_LIBRARY_MESSAGE);
-                fetchLibraries();
+                fetchLibraries(true)
                 setIsLoading(false);
-
             }
         }
     }
@@ -227,14 +274,15 @@ export default function LibraryAccordion({
         setConfirm(false)
     };
     return (
-        <Accordion multiple={true} collapsible={true}>
+        <Accordion multiple={true} collapsible={true}
+            className="accordion-item-gap">
             {confirm && (
                 <DeleteConfirmation
                     onSave={() => deleteLibraryDetail()}
                     openConfirmation={confirm}
                     isLoader={isLoading}
                     setConfirm={() => handleCancel()}
-                    msg={Messages.deleteLibraryMsg(deleteLibraryData.name)}
+                    msg={Messages.deleteLibraryMsg(deleteLibraryData.name, entityLabel)}
                     title={Messages.DELETE_LIBRARY_TITLE}
                 />
             )}
@@ -259,19 +307,32 @@ export default function LibraryAccordion({
                         </div>
                         <div className='flex'>
                             <Button
-                                text="Manage Users"
+                                text={`View All ${entityLabel}`}
                                 type="normal"
                                 stylingMode="contained"
                                 elementAttr={{
-                                    class: "form_btn_primary mr-[20px]"
+                                    class: "btn-primary mr-[20px] capitalize"
                                 }}
-                                disabled={true}
+                                onClick={() => {
+                                    setLibraryId(0)
+                                    const url =
+                                        `/projects/${projectId}`
+                                    router.replace(url);
+                                    fetchLibraries()
+                                }}
                             />
-                            <Button
-                                text="Link"
+                            {adminProjectAccess && <Button
+                                text="Edit"
                                 type="normal"
                                 stylingMode="contained"
-                                elementAttr={{ class: "btn-primary" }}
+                                elementAttr={{ class: "btn-secondary mr-[20px]" }}
+                                onClick={() => setProjectPopupVisibile(true)}
+                            />}
+                            <Button
+                                text="URL"
+                                type="normal"
+                                stylingMode="contained"
+                                elementAttr={{ class: "btn-secondary" }}
                                 onClick={
                                     () => copyUrl('project', projectData.name)
                                 }
@@ -304,7 +365,65 @@ export default function LibraryAccordion({
                     </div>
                 </div>
             </Item>
-
+            <Item titleRender={
+                () => renderTitle('Project Properties')}>
+                <ADMESelector
+                    type="P"
+                    organizationId={userData.organization_id}
+                    data={projectData}
+                    childRef={childRef}
+                    setIsDirty={setIsDirty}
+                    isDirty={isDirty}
+                    reset={reset}
+                    fetchContainer={fetchLibraries}
+                    editAllowed={adminProjectAccess}
+                    setReset={setReset}
+                />
+            </Item>
+            <Item titleRender={() => renderTitle(`Functional Assay (${AssayData.length})`)}>
+                <FunctionalAssay
+                    data={AssayData}
+                    type="L"
+                />
+            </Item>
+            {actionsEnabled.includes('edit_project') &&
+                projectPopupVisible && (
+                    <Popup
+                        title="Edit Project"
+                        visible={projectPopupVisible}
+                        contentRender={() => (
+                            <CreateProject
+                                formRef={formRefProject}
+                                setCreatePopupVisibility={setProjectPopupVisibile}
+                                fetchOrganizations={fetchLibraries}
+                                userData={{
+                                    ...userData,
+                                    owner: {
+                                        first_name: userData.first_name,
+                                        last_name: userData.last_name
+                                    }
+                                }}
+                                projectData={projectData}
+                                users={users}
+                                organizationData={organization}
+                                myRoles={userData.myRoles}
+                                edit={true}
+                            />
+                        )}
+                        width={477}
+                        hideOnOutsideClick={true}
+                        height="100%"
+                        position={popupPosition}
+                        dragEnabled={false}
+                        onHiding={() => {
+                            formRefProject.current?.instance().reset();
+                            setProjectPopupVisibile(false);
+                        }}
+                        showCloseButton={true}
+                        wrapperAttr={{ class: "create-popup mr-[15px]" }}
+                    />
+                )
+            }
             {/* Libraries List Section */}
             <Item titleRender={() => renderTitle("Library List")}>
                 <div className='libraries'>
@@ -412,6 +531,7 @@ export default function LibraryAccordion({
                                         userData={userData}
                                         projectData={projectData}
                                         library_idx={-1}
+                                        setLibraryId={setLibraryId}
                                     />
                                 )}
                                 width={477}
@@ -446,6 +566,7 @@ export default function LibraryAccordion({
                                         userData={userData}
                                         projectData={projectData}
                                         library_idx={selectedLibraryIdIdx}
+                                        setLibraryId={setLibraryId}
                                     />
                                 )}
                                 width={477}
@@ -493,12 +614,11 @@ export default function LibraryAccordion({
                                 if (isDirty) {
                                     setShowPopup(true);
                                 } else {
-                                    const url =
+                                    /* const url =
                                         `/projects/${projectId}` +
                                         `?library_id=${item.id}`;
-                                    router.replace(url);
+                                    router.replace(url); */
                                     setLibraryId(item.id)
-                                    /* getLibraryData(item); */
                                 }
 
                             }}>
@@ -590,11 +710,11 @@ export default function LibraryAccordion({
                                         flex
                                         no-border`
                                     }>
-                                    <div className="my-0.5">Molecules:
-                                        <span>{item.libraryMolecules.length}</span>
+                                    <div className="my-0.5 capitalize">{entityLabel}:
+                                        <span>{item[entity].length}</span>
                                     </div>
                                     <div className="gap-[10px] flex flex-wrap">
-                                        {Object.entries(fetchMoleculeStatus(item))
+                                        {Object.entries(fetchMoleculeStatus(item, entity))
                                             .map(([key, statusObject]) => {
                                                 const statusObj = statusObject as
                                                     { count: number, className: string };
@@ -689,7 +809,7 @@ export default function LibraryAccordion({
                                     }}
                                 />
                                 {adminAccess &&
-                                    isDeleteLibraryEnable(item?.libraryMolecules) &&
+                                    isDeleteLibraryEnable(item[entity]) &&
                                     <Button
                                         text="Delete"
                                         type="normal"
@@ -716,7 +836,7 @@ export default function LibraryAccordion({
                             h-[70px] 
                             nodata`
                         }>
-                            {Messages.LIBRARY_LIST_EMPTY}
+                            {Messages.LIBRARY_LIST_EMPTY(entityLabel)}
                         </div>
                     )}
                 </div>

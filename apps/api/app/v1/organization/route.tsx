@@ -116,11 +116,10 @@ export async function GET(request: Request) {
                     }
                   }
                 }
-                
+
                 if (count && count.includes('molecules')) {
-                  query.include = {
-                    ...query.include,
-                    _count: {
+                  return {
+                    other_container: {
                       where: {
                         type: ContainerType.LIBRARY
                       },
@@ -128,6 +127,7 @@ export async function GET(request: Request) {
                         _count: {
                           select: {
                             libraryMolecules: true, // Count molecules in each library
+                            libraryReactions: true,
                           },
                         },
                       },

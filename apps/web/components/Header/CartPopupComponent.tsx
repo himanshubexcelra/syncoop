@@ -84,15 +84,14 @@ const CartPopupComponent = ({
     const removeAll = (user_id: number, type: string, msg: string) => {
         let moleculeStatus = containsProjects ?
             MoleculeStatusCode.New : MoleculeStatusCode.Validated;
+
         if (type == "SubmitOrder") {
             moleculeStatus = MoleculeStatusCode.Ordered
         }
         if (type == "LabJobOrder") {
             moleculeStatus = MoleculeStatusCode.InProgress
         }
-
         deleteMoleculeCart(user_id, moleculeStatus).then((res) => {
-
             if (res) {
                 setCartData([]);
                 context?.addToState({

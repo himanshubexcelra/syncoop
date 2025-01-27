@@ -30,8 +30,9 @@ export const Messages = {
     admeConfigUpdated(type: string) {
         return `ADME config details for ${type} updated successfully`;
     },
-    LIBRARY_LIST_EMPTY:
-        "Your library list is empty, add a library to import molecules",
+    LIBRARY_LIST_EMPTY(label: string) {
+        return `Your library list is empty, add a library to import ${label}`
+    },
     ADD_MOLECULE_SUCCESS: 'Molecule added successfully',
     ADD_MOLECULE_ERROR: 'Failed to add molecule for reason : ',
     deleteMoleculeMessage(moleculeId: number) {
@@ -79,11 +80,13 @@ export const Messages = {
     deleteUserMsg(user_name: string) {
         return `User ${user_name} deleted successfully`;
     },
-    deleteLibraryMsg(library_name: string) {
-        return `You are about to delete all the molecules in Library ${library_name}. Are you sure you want to delete?`;
+    deleteLibraryMsg(library_name: string, label: string) {
+        return `You are about to delete all the ${label} in Library ${library_name}. Are you sure you want to delete?`;
     },
     DELETE_LIBRARY_TITLE: `Delete Libraries`,
-    LIBRARY_NOT_DELETE_MESSAGE: 'Library can not be deleted because some of the molecules of this library are in stage other than NEW.',
+    LIBRARY_NOT_DELETE_MESSAGE(label: string) {
+        return `Library can not be deleted because some of the ${label} of this library are in stage other than NEW.`
+    },
     DELETE_LIBRARY_MESSAGE: 'Library Deleted Successfully.',
     DELETE_LIBRARY_ERROR_MESSAGE: 'Can not delete library. Some error occured while deleting the library',
 
@@ -107,5 +110,14 @@ export const Messages = {
         return messages;
     },
     SAVE_CHANGES: 'Save the changes?',
-    DISCARD_CHANGES: 'Discard the changes?'
+    DISCARD_CHANGES: 'Discard the changes?',
+    ADD_ASSAY: 'Functional assay added successfully',
+    DELETE_PROJECT_TITLE: `Delete Project`,
+    getProjectTitle(msg: string) {
+        return `You are about to delete all the molecules in Project ${msg}`;
+    },
+    DELETE_PROJECT_MESSAGE: 'Project Deleted Successfully.',
+    DELETE_PROJECT_ERROR_MESSAGE: 'Can not delete project. Some error occured while deleting the library',
+
+
 }

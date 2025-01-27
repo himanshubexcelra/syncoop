@@ -16,8 +16,10 @@ import {
   SaveLabJobOrder,
   UserData,
   CellData,
+  Pathway,
+  ReactionLabJobOrder
 } from "@/lib/definition";
-import { submitOrder, getLabJobOrderDetail, postLabJobOrder } from "./service";
+import { submitOrder, getLabJobOrderDetail, postLabJobOrder, updateLabJobApi } from "./service";
 import dynamic from "next/dynamic";
 import { generateRandomDigitNumber } from "@/utils/helpers";
 import toast from "react-hot-toast";
@@ -63,7 +65,9 @@ export default function CartDetails({
   const MoleculeStructure = dynamic(() => import("@/utils/MoleculeStructure"), {
     ssr: false,
   });
-  const cartDetails: CartDetail[] = cartData.map((item) => ({
+  
+  const cartDetails: CartDetail[] = cartData.map((item) => {
+    return {
     id: item.id,
     molecule_id: item.molecule_id,
     library_id: item.library_id,
@@ -76,7 +80,7 @@ export default function CartDetails({
     created_by: userData.id,
     "Project / Library": `${item.molecule.project.name} / ${item.molecule.library.name}`,
     "Organization / Order": `${item.organization.name} / ${item.molecule_order_id}`,
-  }));
+  }});
 
   const handleStructureZoom = (event: any, data: any) => {
     const { x, y } = event.event.target.getBoundingClientRect();
@@ -177,6 +181,29 @@ export default function CartDetails({
       });
   };
 
+  const prePareReactions = (reactionData: Pathway) => {
+    const result: ReactionLabJobOrder[] = [];
+    reactionData.reaction_detail.map((reaction_detail: any) => {
+      reaction_detail.reaction_compound.map((reaction_compound: any) => {
+        if (reaction_compound.compound_type === "R") {
+          const reaction_compound_number = reaction_compound.compound_label - 1;
+          const reagentLabel = String.fromCharCode(65 + reaction_compound_number);
+          const obj: ReactionLabJobOrder = {
+            "Solvent": reaction_detail.solvent,
+            "Step No": reaction_compound.compound_label,
+            "Product MW": reaction_detail.product_molecular_weight,
+            "Product 1 SMILES": reaction_detail.product_smiles_string,
+            [`Reagent ${reagentLabel} SMILES`]: reaction_compound.smiles_string,
+            [`Reagent ${reagentLabel} molar ratio`]: reaction_compound.molar_ratio,
+            [`Reagent ${reagentLabel} dispense time`]: reaction_compound.dispense_time,
+          }
+          result.push(obj)
+        }
+      })
+    })
+    return result;
+  }
+
   const prepareLabJobData = (
     res: any,
     moleculeId: number
@@ -185,6 +212,8 @@ export default function CartDetails({
     const finalProduct =
       res.pathway?.[0]?.reaction_detail?.[totalReaction - 1] ?? null;
     const organization = res?.organization;
+    const reactionData = prePareReactions(res.pathway[0])
+
     const labJobData: SaveLabJobOrder[] = [
       {
         molecule_id: moleculeId ? Number(moleculeId) : 0,
@@ -193,9 +222,7 @@ export default function CartDetails({
         product_molecular_weight: finalProduct?.product_molecular_weight,
         no_of_steps: res?.pathway[0].step_count,
         functional_bioassays: organization.metadata,
-        reactions: res.pathway[0]
-          ? JSON.stringify(res.pathway[0].reaction_detail)
-          : "",
+        reactions: reactionData,
         created_by: userData.id,
         status: LabJobStatus.Submitted,
         reactionStatus: ReactionStatus.InProgress,
@@ -204,28 +231,39 @@ export default function CartDetails({
     return labJobData;
   };
 
-  const handleLabJobOrder = () => {
-    cartData.map((item: any) => {
-      getLabJobOrderDetail(item.molecule_id).then((res) => {
-        const labJobData: SaveLabJobOrder[] = prepareLabJobData(
-          res,
-          item.molecule_id
+  const getLabJobOrderData = async () => {
+    setSubmitOrderLoading(true);
+    const labJobDataList: SaveLabJobOrder[] = [];
+    await Promise.all(
+      cartData.map(async (item: any) => {
+        const res = await getLabJobOrderDetail(item.molecule_id);
+        const labJobData: SaveLabJobOrder[] = prepareLabJobData(res, item.molecule_id);
+        labJobDataList.push(...labJobData);
+      })
+    );
+    return labJobDataList;
+  };
+
+  async function processLabJobOrders(labJobOrderData: SaveLabJobOrder[]) {
+    for (const item of labJobOrderData) {
+      try {
+        const result = await postLabJobOrder(item);
+        await updateLabJobApi(result.lab_job_order_id);
+        removeAll(
+          userData.id,
+          "LabJobOrder",
+          Messages.displayLabJobMessage(cartData.length)
         );
-        postLabJobOrder(labJobData[0])
-          .then(() => {
-            removeAll(
-              userData.id,
-              "LabJobOrder",
-              Messages.displayLabJobMessage(cartData.length)
-            );
-            setSubmitOrderLoading(true);
-          })
-          .catch((err) => {
-            toast.error(err);
-            setSubmitOrderLoading(true);
-          });
-      });
-    });
+      } catch (error) {
+        console.error("Error processing lab job order:", error);
+      }
+    }
+  }
+
+
+  const handleLabJobOrder = async () => {
+    const labJobOrderData = await getLabJobOrderData();
+    processLabJobOrders(labJobOrderData);
   };
 
   const handleClick = () => {
@@ -251,7 +289,6 @@ export default function CartDetails({
                 onClick={closeMagnifyPopup}>
                 <CustomDataGrid
                   columns={columns}
-                  height="auto"
                   data={cartDetails}
                   groupingColumn={rowGroupName()}
                   enableGrouping

@@ -1,5 +1,11 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import { getProjects, getOverviewCounts, createProject, editProject } from '../projectService';
+import {
+    getProjects,
+    getOverviewCounts,
+    createProject,
+    editProject,
+    deleteProject
+} from '../projectService';
 const mockData = {
     id: 2,
     name: 'Proj2',
@@ -238,4 +244,29 @@ describe('Project APIs test', () => {
         });
         expect(result).toEqual(mockResponse);
     });
+
+    test('deleteProject request to the correct URL', async () => {
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                json: () => Promise.resolve({ success: true }),
+            })
+        ) as jest.Mock;
+
+        const params = { project_id: '123', parent_id: '456' };
+        const result = await deleteProject(params);
+
+        const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
+        expectedUrl.searchParams.append('project_id', String(params.project_id));
+        expectedUrl.searchParams.append('parent_id', String(params.parent_id));
+        expect(fetch).toHaveBeenCalledTimes(1); // Assert fetch was called once
+
+        expect(fetch).toHaveBeenCalledWith(expectedUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        expect(result).toEqual({ success: true });
+    });
+
 })

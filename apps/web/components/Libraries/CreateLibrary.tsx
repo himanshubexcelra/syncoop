@@ -16,8 +16,9 @@ import { LibraryCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
 import { AppContext } from "@/app/AppState";
-import { useContext, useState } from "react";
-import DeleteConfirmation from "./DeleteConfirmation";
+import { useContext, useEffect, useState } from "react";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
+
 
 export default function CreateLibrary({
   setCreatePopupVisibility,
@@ -26,13 +27,19 @@ export default function CreateLibrary({
   userData,
   projectData,
   library_idx,
+  setLibraryId
 }: LibraryCreateFields) {
   const [isLoading, setIsLoading] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [deleteLibraryData, setDeleteLibraryData] = useState({ id: 0, name: '' });
   const context: any = useContext(AppContext);
   const appContext = context.state;
+  const [deleteLibraryEnabled, setDeleteLibraryEnabled] = useState(false);
 
+  const projectType = projectData.metadata.type;
+  const entityLabel = projectType === 'Custom Reaction'
+    ? 'reactions'
+    : 'molecules'
   const handleSubmit = async () => {
     const values = formRef?.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
@@ -57,8 +64,14 @@ export default function CreateLibrary({
       }
       if (!response.error) {
         formRef?.current!.instance().reset();
-        fetchLibraries();
         setCreatePopupVisibility(false);
+        if (library_idx !== -1) {
+          setLibraryId(values.id)
+          fetchLibraries();
+        }
+        else {
+          fetchLibraries(true)
+        }
         const status = `${library_idx !== -1 ? 'updated' : 'created'}`;
         const message = Messages.libraryAddedUpdated(status);
         const toastId = toast.success(message);
@@ -84,9 +97,9 @@ export default function CreateLibrary({
   }
   const deleteLibraryDetail = async () => {
     setIsLoading(true);
-    const result = await deleteLibrary(deleteLibraryData.id);
+    const result = await deleteLibrary(projectType, deleteLibraryData.id,);
     if (result.length === 0) {
-      toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE);
+      toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE(entityLabel));
       setIsLoading(false);
       setCreatePopupVisibility(false);
     }
@@ -98,7 +111,7 @@ export default function CreateLibrary({
       else {
         toast.success(Messages.DELETE_LIBRARY_MESSAGE);
         setCreatePopupVisibility(false);
-        fetchLibraries();
+        fetchLibraries(true);
         setIsLoading(false);
       }
     }
@@ -107,6 +120,12 @@ export default function CreateLibrary({
     setConfirm(false)
   };
 
+  useEffect(() => {
+    const libraryMolecules = projectData.other_container?.[library_idx]?.libraryMolecules;
+    if (libraryMolecules) {
+      setDeleteLibraryEnabled(isDeleteLibraryEnable(libraryMolecules))
+    }
+  }, [library_idx])
 
   return (
     <>
@@ -115,9 +134,7 @@ export default function CreateLibrary({
         showValidationSummary={true}
         formData={library_idx !== -1 ? projectData.other_container?.[library_idx] : {}
         }>
-        {
-
-          isDeleteLibraryEnable(projectData.other_container?.[library_idx]?.libraryMolecules)
+        {deleteLibraryEnabled
           && <ButtonItem cssClass="delete-button">
             <ButtonOptions
               stylingMode="text"
@@ -210,7 +227,7 @@ export default function CreateLibrary({
           openConfirmation={confirm}
           isLoader={isLoading}
           setConfirm={() => handleCancel()}
-          msg={Messages.deleteLibraryMsg(deleteLibraryData.name)}
+          msg={Messages.deleteLibraryMsg(deleteLibraryData.name, entityLabel)}
           title={Messages.DELETE_LIBRARY_TITLE}
         />
       )}

@@ -9,10 +9,11 @@ import { useRouter } from 'next/navigation';
 import {
     fetchMoleculeStatus, formatDetailedDate, popupPositionValue,
     formatDatetime,
-    isAdmin
+    isDeleteLibraryEnable,
+    isSharedActionEnable,
+    getEntity
 } from "@/utils/helpers";
 import {
-    ContainerPermission,
     FetchUserType,
     MoleculeStatusLabel,
     OrganizationDataFields,
@@ -26,6 +27,10 @@ import TextWithToggle from '@/ui/TextWithToggle';
 import { LoadIndicator } from 'devextreme-react';
 import Accordion, { Item } from 'devextreme-react/accordion';
 import ADMESelector from "../ADMEDetails/ADMESelector";
+import FunctionalAssay from '../FunctionalAssays/FunctionalAssay';
+import { AssayData } from '@/utils/constants';
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
+import { deleteProject } from './projectService';
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -45,6 +50,9 @@ type ProjectAccordionDetailProps = {
     popup: ReactNode;
     isDirty: boolean;
     setShowPopup: (val: boolean) => void;
+    allProjectData: ProjectDataFields[],
+    selectedProject: (val: any[]) => void;
+    setReset?: any
 }
 
 export default function ProjectAccordionDetail({
@@ -63,37 +71,42 @@ export default function ProjectAccordionDetail({
     popup,
     isDirty,
     setShowPopup,
+    allProjectData,
+    selectedProject,
+    setReset,
 }: ProjectAccordionDetailProps) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
     const [popupPosition, setPopupPosition] = useState({} as any);
     const formRef = useRef<FormRef>(null);
     const [editEnabled, setEditStatus] = useState<boolean>(false);
+    const [deleteEnabled, setDeleteStatus] = useState<boolean>(false);
     const [expandMenu, setExpandedMenu] = useState(-1);
     const [isExpanded, setIsExpanded] = useState<number[]>([]);
     const [isProjectExpanded, setProjectExpanded] = useState<number[]>([]);
     const [loader, setLoader] = useState(false);
     const [openButton, setOpenButton] = useState('Open');
-
-    // Project's molecule count count OPT: 1
+    const [confirm, setConfirm] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const projectType = data.metadata.type;
+    const entity = getEntity(projectType);
+    const entityLabel = projectType === 'Custom Reaction'
+        ? 'Reaction'
+        : 'Molecule'
     const moleculeCount = data.other_container?.reduce((count, library) => {
         // Add the count of molecules in each library
-        return count + library.libraryMolecules.length;
+        return count + (library[entity]?.length || 0);
     }, 0) || 0;
-
     // Library's under project with it's molecule status OPT: 2
     const combinedLibrary = data.other_container?.reduce((acc: any, lib) => {
-        acc.libraryMolecules.push(...lib.libraryMolecules);
+        acc[entity].push(...lib[entity]);
         return acc;
-    }, { libraryMolecules: [] }) || { libraryMolecules: [] };
+    }, { [entity]: [] }) || { [entity]: [] };
 
     useEffect(() => {
-        const sharedUser = data.container_access_permission?.find(u => u.user_id === userData.id
-            && u.access_type === ContainerPermission.Admin);
-        const owner = data.owner_id === userData.id;
-        const admin = isAdmin(myRoles);
-
-        setEditStatus(actionsEnabled.includes('edit_project') && (!!sharedUser || owner || admin))
+        const sharedActionEnabled = isSharedActionEnable(data, userData);
+        setEditStatus(actionsEnabled.includes('edit_project') && sharedActionEnabled)
+        setDeleteStatus(actionsEnabled.includes('delete_project') && sharedActionEnabled)
     }, [data]);
 
     useEffect(() => {
@@ -133,9 +146,64 @@ export default function ProjectAccordionDetail({
             }
         }
     }
+    const deleteProjectDetail = async () => {
 
+        let params: object = {
+            project_id: data.id,
+        }
+        if (data?.other_container?.length) {
+            params = {
+                ...params,
+                isDeleteRelationEnable: true
+            }
+        }
+        const result = await deleteProject(params);
+        if (result.error) {
+            toast.error(Messages.DELETE_PROJECT_ERROR_MESSAGE);
+            setIsLoading(false);
+        }
+        else {
+            toast.success(Messages.DELETE_PROJECT_MESSAGE);
+            const filterLibraryId = allProjectData.filter((item: any) => {
+                return Number(item.id) !== data.id;
+            });
+            fetchOrganizations();
+            if (filterLibraryId.length) {
+                selectedProject([filterLibraryId[0]])
+            }
+            setIsLoading(false);
+        }
+    }
+
+    const handleDelete = () => {
+        setConfirm(true)
+    }
+
+    const handleCancel = () => {
+        setConfirm(false)
+    }
+    const isDeleteProjectEnable = () => {
+        const projectLibraries = data?.other_container;
+        if (!projectLibraries) return true;
+        for (const item of projectLibraries) {
+            if (!isDeleteLibraryEnable(item[entity])) {
+                return false;
+            }
+        }
+        return true;
+    };
     return (
         <div className="accordion-content" >
+            {confirm && (
+                <DeleteConfirmation
+                    onSave={() => deleteProjectDetail()}
+                    openConfirmation={confirm}
+                    isLoader={isLoading}
+                    setConfirm={() => handleCancel()}
+                    msg={Messages.getProjectTitle(data?.name)}
+                    title="Delete Project"
+                />
+            )}
             <div className='flex justify-between'>
                 <div>
                     <div className='project-target flex'>
@@ -182,15 +250,32 @@ export default function ProjectAccordionDetail({
                     >
                         URL
                     </button>
+                    {deleteEnabled && isDeleteProjectEnable() &&
+                        <button
+                            className='secondary-button accordion-button'
+                            onClick={
+                                () => handleDelete()
+                            }
+                        >
+                            Delete
+                        </button>
+                    }
                 </div >
             </div >
             <div className='flex'>
-                <Image
-                    src="/icons/project-logo.svg"
-                    width={15}
-                    height={15}
-                    alt="project"
-                />
+                {data.metadata.type === 'Custom Reaction'
+                    ? <Image
+                        src="/icons/custom-reaction-sm.svg"
+                        width={18}
+                        height={19}
+                        alt="Custom Reaction"
+                    />
+                    : <Image
+                        src="/icons/retrosynthesis-md.svg"
+                        width={20}
+                        height={22}
+                        alt="Retrosynthesis"
+                    />}
                 <div className='pl-[10px] project-type'>{data.metadata.type}</div>
             </div>
             <div className='description'>
@@ -216,13 +301,13 @@ export default function ProjectAccordionDetail({
                         />
                         {moleculeCount}
                         <span className='pl-[5px]'>
-                            {moleculeCount !== 1 ? 'Molecules' : 'Molecule'}
+                            {moleculeCount !== 1 ? `${entityLabel}s` : entityLabel}
                         </span>
                     </div>
                     <div>
                         {moleculeCount > 0 && (
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {Object.entries(fetchMoleculeStatus(combinedLibrary))
+                                {Object.entries(fetchMoleculeStatus(combinedLibrary, entity))
                                     .map(([key, statusObject]) => {
                                         const statusObj =
                                             statusObject as { count: number, className: string };
@@ -329,7 +414,7 @@ export default function ProjectAccordionDetail({
                 <Accordion collapsible={true} multiple={false} className="adme-accordion">
                     <Item visible={false} />
                     <Item titleRender={
-                        () => renderTitle('ADME Properties')}>
+                        () => renderTitle('Properties')}>
                         <ADMESelector
                             type="P"
                             organizationId={userData.organization_id}
@@ -340,7 +425,19 @@ export default function ProjectAccordionDetail({
                             reset={reset}
                             fetchContainer={fetchOrganizations}
                             editAllowed={editEnabled}
-
+                            setReset={setReset}
+                        />
+                    </Item>
+                </Accordion>
+            </div>
+            <div className='mb-[10px]'>
+                <Accordion collapsible={true} multiple={false}>
+                    <Item visible={false} />
+                    <Item titleRender={
+                        () => renderTitle(`Functional Assay (${AssayData.length})`)}>
+                        <FunctionalAssay
+                            data={AssayData}
+                            type="P"
                         />
                     </Item>
                 </Accordion>
@@ -415,7 +512,7 @@ export default function ProjectAccordionDetail({
                                 }
                             </div>
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {Object.entries(fetchMoleculeStatus(item))
+                                {Object.entries(fetchMoleculeStatus(item, entity))
                                     .map(([key, statusObject]) => {
                                         const statusObj =
                                             statusObject as { count: number, className: string };
@@ -441,7 +538,8 @@ export default function ProjectAccordionDetail({
                             className={`flex justify-center items-center 
                             p-[40px] h-[70px] nodata-project`}
                         >
-                            Your library list is empty, add a library to import molecules
+                            {`Your library list is empty, 
+                            add a library to import ${entityLabel}s`}
                         </div>
                     )}
                 </div>

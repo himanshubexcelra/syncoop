@@ -62,6 +62,23 @@ export async function getMoleculeData(params: object) {
     const data = await response.json();
     return data;
 }
+export async function getReactionData(params: object) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/custom_reactions`);
+    if (params) {
+        Object.entries(params).map(([key, value]: any) => {
+            url.searchParams.append(key, value);
+        });
+    }
+    const response = await fetch(url, {
+        mode: "no-cors",
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+    const data = await response.json();
+    return data;
+}
 
 export async function createLibrary(formData: FormData) {
     try {
@@ -427,6 +444,34 @@ export async function getStatusCodes(params: object) {
     }
 }
 
+export async function updateLabJobApi(labJobId: number) {
+    try {
+        const payload = {
+            lab_job_order_id: Number(labJobId)
+        };
+        const response: any = await fetch(
+            `${process.env.PYTHON_API_HOST_URL}/lab_job_order/generate_csv`,
+            {
+                mode: "no-cors",
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            }
+        );
+        if (response.status !== 200) {
+            return response;
+        } else {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+
+    } catch (error: any) {
+        return error;
+    }
+}
+
 export async function deleteMolecule(molecule_id?: number, favourite_id?: number) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule/`);
@@ -451,11 +496,12 @@ export async function deleteMolecule(molecule_id?: number, favourite_id?: number
         return error;
     }
 }
-export async function deleteLibrary(library_id?: number) {
+export async function deleteLibrary(type: string, library_id?: number) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library/`);
-        if (library_id) {
+        if (library_id && type) {
             url.searchParams.append('library_id', String(library_id));
+            url.searchParams.append('type', type);
         }
         const response = await fetch(url, {
             method: "DELETE",

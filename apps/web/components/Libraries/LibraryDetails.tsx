@@ -23,7 +23,7 @@ import {
     /* getLibraryById, */
 } from './service';
 import { Messages } from "@/utils/message";
-import { DELAY } from "@/utils/constants";
+import { AssayData, DELAY } from "@/utils/constants";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import { delay, getUTCTime, isAdmin } from "@/utils/helpers";
@@ -31,6 +31,7 @@ import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import LibraryAccordion from './LibraryAccordion';
 import MoleculeList from './MoleculeList';
 import usePopupAndReset from '../usePopupandReset/usePopupAndReset';
+import FunctionalAssay from '../FunctionalAssays/FunctionalAssay';
 
 type breadCrumbParams = {
     projectTitle?: string,
@@ -136,13 +137,13 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [projectInitial, setInitProjects] = useState<ProjectDataFields>(initialProjectData);
     /* const [selectedLibrary, setSelectedLibrary] =
         useState(library_id ? Number(library_id) : -1); */
-    const [selectedLibraryName, setSelectedLibraryName] = useState('untitled');
+    const [selectedLibraryName, setSelectedLibraryName] = useState('');
     const [selectedLibraryData, setSelectedLibraryData] = useState<any>({});
     const [loader, setLoader] = useState(true);
     const [expanded, setExpanded] = useState(library_id ? false : true);
     const [adminAccess, setAdminAccess] = useState<boolean>(false);
     const [editEnabled, setEditAccess] = useState<boolean>(false);
-
+    const [adminProjectAccess, setAdminProjectAccess] = useState<boolean>(false);
     const context: any = useContext(AppContext);
     const {
         reset,
@@ -152,6 +153,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
         popup,
         setShowPopup,
         isDirty,
+        setReset,
     } = usePopupAndReset();
     const appContext = context.state;
 
@@ -171,7 +173,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
         setTableData(libraryData.libraryMolecules || []);
     } */
 
-    const fetchLibraries = async () => {
+    const fetchLibraries = async (setSelectedLibrary: boolean = false) => {
         const projectData = await getLibraries(['libraries'/* , 'organization' */], project_id);
         // let selectedLib = null;
         /* let selectedLib = { name: '' }; */
@@ -190,6 +192,9 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
             setInitProjects({ ...projectData });
             setOrganizationId(projectData.parent_id);
             setSortBy('Recent');
+            if (setSelectedLibrary && projectData.other_container.length) {
+                setLibraryId(projectData.other_container[0].id);
+            }
             const breadcrumbTemp = breadcrumbArr({
                 projectTitle: `${projectData.name}`,
                 projectHref: `/${project_id}`,
@@ -216,7 +221,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
             u.access_type === ContainerPermission.Admin);
         const owner = projectData.owner_id === userData.id;
         const admin = isAdmin(userData.myRoles);
-
+        setAdminProjectAccess(actionsEnabled.includes('edit_project')
+            && (!!sharedUser || owner || admin))
         setAdminAccess(actionsEnabled.includes('create_library') &&
             (!!sharedUser || owner || admin));
         const editUser = projectData.container_access_permission?.find(u =>
@@ -237,7 +243,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
             if (libraries?.length) {
                 const libraryData = library_id ? libraries.find((library: LibraryFields) => {
                     return Number(library.id) === Number(library_id)
-                }) : libraries[0];
+                }) : null;
                 setSelectedLibraryData(libraryData);
                 if (libraryData) {
                     // if (library_id != libraryData.id) {
@@ -279,34 +285,59 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
-            <div className='p-[20px]'>
+            <div className='px-[20px] library-page' id="containerElement">
                 {loader ?
                     <LoadIndicator
                         visible={loader}
                     /> :
                     <div>
                         {showPopup && popup}
-                        <div className="flex justify-between">
-                            <main className="main padding-sub-heading">
-                                <Image
-                                    src="/icons/libraries.svg"
-                                    width={33}
-                                    height={30}
-                                    alt="organization"
-                                />
-                                <span>{`Library: ${selectedLibraryName}`}</span>
-                                <Image
-                                    src={expanded ? "/icons/collapse.svg" : "/icons/expand.svg"}
-                                    width={33}
-                                    height={30}
-                                    alt="showDetailedView"
-                                    className='cursor-pointer'
-                                    onClick={() => setExpanded(!expanded)}
-                                />
-                            </main>
-                        </div>
                         <div className='flex'>
                             {expanded && (<div className='w-2/5 projects'>
+                                <div className="flex justify-between ">
+                                    <main className="main padding-sub-heading flex 
+                                    items-center justify-between w-full">
+                                        <div className="flex items-center gap-2">
+                                            <Image
+                                                src="/icons/project-icon.svg"
+                                                width={28}
+                                                height={31}
+                                                alt="project"
+                                            />
+                                            <span>{`${projectData.name}`}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <div className='project-type-highlight 
+                                            flex items-center gap-2'>
+                                                {projectData.metadata.type === 'Custom Reaction'
+                                                    ? <Image
+                                                        src="/icons/custom-reaction-black.svg"
+                                                        width={19}
+                                                        height={18}
+                                                        alt="Custom Reaction"
+                                                    />
+                                                    : <Image
+                                                        src="/icons/retrosynthesis-black.svg"
+                                                        width={21}
+                                                        height={18}
+                                                        alt="Retrosynthesis"
+                                                    />}
+                                                <div className='project-type-text'>
+                                                    {projectData.metadata.type}
+                                                </div>
+                                            </div>
+                                            <Image
+                                                src={"/icons/collapse.svg"}
+                                                width={33}
+                                                height={30}
+                                                alt="showDetailedView"
+                                                className='cursor-pointer'
+                                                onClick={() => setExpanded(!expanded)}
+                                            />
+                                        </div>
+                                    </main>
+                                </div>
                                 <LibraryAccordion
                                     projectData={projectData}
                                     setLoader={setLoader}
@@ -326,36 +357,68 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     isDirty={isDirty}
                                     setShowPopup={setShowPopup}
                                     adminAccess={adminAccess}
+                                    organizationId={Number(organization_id)}
+                                    childRef={childRef}
+                                    setIsDirty={setIsDirty}
+                                    reset={reset}
+                                    adminProjectAccess={adminProjectAccess}
+                                    setReset={setReset}
                                 />
                             </div >
                             )}
-                            <div className={`${expanded ? 'w-3/5' : 'w-full'}`}>
+                            <div className={`${expanded ? 'w-3/5' : 'w-full relative'}`}>
                                 {expanded && library_id != 0 && (
-                                    <Accordion collapsible={true} multiple={false}
-                                        className="adme-accordion">
-                                        <Item visible={false} />
-                                        <Item titleRender={() => 'ADME Properties'}>
-                                            <ADMESelector
-                                                type="L"
-                                                organizationId={
-                                                    userData.organization_id
-                                                }
-                                                childRef={childRef}
-                                                isDirty={isDirty}
-                                                setIsDirty={setIsDirty}
-                                                reset={reset}
-                                                data={{
-                                                    ...selectedLibraryData,
-                                                    container: {
-                                                        config
-                                                    }
-                                                }}
-                                                editAllowed={adminAccess}
-                                                fetchContainer={fetchLibraries}
-                                            />
-                                        </Item>
-                                    </Accordion>
+                                    <>
+                                        <main className="lib-heading padding-sub-heading">
+                                            <Image
+                                                src="/icons/library-icon-md.svg"
+                                                width={28}
+                                                height={31}
+                                                alt="Library" />
+                                            <span>{`${selectedLibraryName}`}</span>
+                                        </main>
+                                        <Accordion collapsible={true} multiple={false}
+                                            className="adme-accordion accordion-item-gap">
+                                            <Item visible={false} />
+                                            <Item titleRender={() => 'Library Properties'}>
+                                                <ADMESelector
+                                                    type="L"
+                                                    organizationId={userData.organization_id}
+                                                    childRef={childRef}
+                                                    isDirty={isDirty}
+                                                    setIsDirty={setIsDirty}
+                                                    reset={reset}
+                                                    setReset={setReset}
+                                                    data={{
+                                                        ...selectedLibraryData,
+                                                        container: {
+                                                            config
+                                                        }
+                                                    }}
+                                                    editAllowed={adminAccess}
+                                                    fetchContainer={fetchLibraries} />
+                                            </Item>
+                                        </Accordion>
+                                        <Accordion collapsible={true} multiple={false}>
+                                            <Item visible={false} />
+                                            <Item titleRender={() =>
+                                                `Functional Assay (${AssayData.length})`}>
+                                                <FunctionalAssay
+                                                    data={AssayData}
+                                                    type="L"
+                                                />
+                                            </Item>
+                                        </Accordion>
+                                    </>
                                 )}
+                                {!expanded && <Image
+                                    src={"/icons/expand.svg"}
+                                    width={33}
+                                    height={30}
+                                    alt="showDetailedView"
+                                    className='cursor-pointer absolute top-2.5 z-10'
+                                    onClick={() => setExpanded(!expanded)}
+                                />}
                                 <MoleculeList
                                     selectedLibraryName={selectedLibraryName}
                                     expanded={expanded}

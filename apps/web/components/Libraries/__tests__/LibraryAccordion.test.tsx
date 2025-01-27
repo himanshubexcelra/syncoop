@@ -5,6 +5,7 @@ import LibraryAccordion from '../LibraryAccordion';
 import { AppContext } from '../../../app/AppState';
 import { AppContextModel, ProjectDataFields, UserData } from '@/lib/definition';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 // Mock AddMolecule and EditMolecule
 jest.mock('@/components/Molecule/AddMolecule/AddMolecule', () => () => null);
@@ -206,7 +207,28 @@ const userData: UserData = {
         type: 'admin',
     }],
 };
-
+beforeEach(() => {
+    (global.fetch as jest.Mock).mockReset();
+    (global.fetch as jest.Mock).mockImplementation(() =>
+        Promise.resolve({
+            json: () => Promise.resolve({
+                id: 1,
+                name: 'Test Organization',
+                email_id: 'org@example.com',
+                is_active: true,
+                orgUser: [],
+                metadata: {
+                    functionalAssay1: '',
+                    functionalAssay2: '',
+                    functionalAssay3: '',
+                    functionalAssay4: '',
+                },
+                owner_id: 1,
+                type: 'internal',
+            })
+        })
+    );
+});
 describe('LibraryAccordion Component', () => {
     const mockSetLoader = jest.fn();
     const mockSetSortBy = jest.fn();
@@ -214,7 +236,10 @@ describe('LibraryAccordion Component', () => {
     const mockFetchLibraries = jest.fn();
     const mockSetExpanded = jest.fn();
     const mockSetLibraryId = jest.fn();
+    const mockSetShowPopup = jest.fn();
+    const mockSetIsDirty = jest.fn();
     const mockProjectInitial = projectData;
+    const childRef = React.createRef<HTMLDivElement>();
 
     test('renders without crashing', () => {
         render(
@@ -233,11 +258,19 @@ describe('LibraryAccordion Component', () => {
                     selectedLibraryId={0}
                     setExpanded={mockSetExpanded}
                     setLibraryId={mockSetLibraryId}
+                    adminProjectAccess={true}
+                    isDirty={false}
+                    setIsDirty={mockSetIsDirty}
+                    reset=""
+                    setShowPopup={mockSetShowPopup}
+                    adminAccess={true}
+                    childRef={childRef}
+                    organizationId={1}
                 />
             </AppContext.Provider>
         );
 
-        expect(screen.getByText('Project Details: Test Project')).toBeInTheDocument();
+        expect(screen.getByText(/Project Details/)).toBeInTheDocument();
     });
 
     test('displays project owner information', () => {
@@ -257,6 +290,14 @@ describe('LibraryAccordion Component', () => {
                     selectedLibraryId={0}
                     setExpanded={mockSetExpanded}
                     setLibraryId={mockSetLibraryId}
+                    adminProjectAccess={true}
+                    isDirty={false}
+                    setIsDirty={mockSetIsDirty}
+                    reset=""
+                    setShowPopup={mockSetShowPopup}
+                    adminAccess={true}
+                    childRef={childRef}
+                    organizationId={1}
                 />
             </AppContext.Provider>
         );
@@ -265,7 +306,7 @@ describe('LibraryAccordion Component', () => {
         expect(screen.getByText('Test User')).toBeInTheDocument();
     });
 
-    test('renders Manage Users button as disabled', () => {
+    test('renders edit button', () => {
         render(
             <AppContext.Provider value={mockAppContext}>
                 <LibraryAccordion
@@ -282,44 +323,20 @@ describe('LibraryAccordion Component', () => {
                     selectedLibraryId={0}
                     setExpanded={mockSetExpanded}
                     setLibraryId={mockSetLibraryId}
+                    adminProjectAccess={true}
+                    isDirty={false}
+                    setIsDirty={mockSetIsDirty}
+                    reset=""
+                    setShowPopup={mockSetShowPopup}
+                    adminAccess={true}
+                    childRef={childRef}
+                    organizationId={1}
                 />
             </AppContext.Provider>
         );
 
-        const manageUsersButton = screen.getByRole('button', { name: /Manage Users/i });
-        expect(manageUsersButton).toBeInTheDocument();
-        expect(manageUsersButton).toHaveAttribute('aria-disabled', 'true');
-    });
-
-    test('handles user role-based access', () => {
-        const userDataWithLimitedAccess: UserData = {
-            ...userData,
-            myRoles: ['user'],
-        };
-
-        render(
-            <AppContext.Provider value={mockAppContext}>
-                <LibraryAccordion
-                    projectData={projectData}
-                    setLoader={mockSetLoader}
-                    setSortBy={mockSetSortBy}
-                    setProjects={mockSetProjects}
-                    projectInitial={mockProjectInitial}
-                    projectId={projectData.id.toString()}
-                    sortBy=""
-                    actionsEnabled={[]}
-                    fetchLibraries={mockFetchLibraries}
-                    userData={userDataWithLimitedAccess}
-                    selectedLibraryId={0}
-                    setExpanded={mockSetExpanded}
-                    setLibraryId={mockSetLibraryId}
-                />
-            </AppContext.Provider>
-        );
-
-        const manageUsersButton = screen.getByRole('button', { name: /Manage Users/i });
-        expect(manageUsersButton).toBeInTheDocument();
-        expect(manageUsersButton).toHaveAttribute('aria-disabled', 'true');
+        const editButton = screen.getByRole('button', { name: /Edit/i });
+        expect(editButton).toBeInTheDocument();
     });
 
     test('handles sorting libraries', async () => {
@@ -343,6 +360,14 @@ describe('LibraryAccordion Component', () => {
                     selectedLibraryId={0}
                     setExpanded={mockSetExpanded}
                     setLibraryId={mockSetLibraryId}
+                    adminProjectAccess={true}
+                    isDirty={false}
+                    setIsDirty={mockSetIsDirty}
+                    reset=""
+                    setShowPopup={mockSetShowPopup}
+                    adminAccess={true}
+                    childRef={childRef}
+                    organizationId={1}
                 />
             </AppContext.Provider>
         );
@@ -354,7 +379,9 @@ describe('LibraryAccordion Component', () => {
                 <option value="owner">Owner</option>
             </select>
         );
-
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalled();
+        });
         const sortSelect = screen.getByLabelText('Sort by:');
         fireEvent.change(sortSelect, { target: { value: 'name' } });
 
@@ -471,6 +498,11 @@ describe('LibraryAccordion Component', () => {
                 isDirty={false}
                 setShowPopup={jest.fn()}
                 adminAccess={false}
+                adminProjectAccess={true}
+                setIsDirty={mockSetIsDirty}
+                reset=""
+                childRef={childRef}
+                organizationId={1}
             />
         );
 
@@ -506,6 +538,11 @@ describe('LibraryAccordion Component', () => {
                 isDirty={false}
                 setShowPopup={jest.fn()}
                 adminAccess={true}
+                adminProjectAccess={true}
+                setIsDirty={mockSetIsDirty}
+                reset=""
+                childRef={childRef}
+                organizationId={1}
             />
         );
 
@@ -542,6 +579,11 @@ describe('LibraryAccordion Component', () => {
                 isDirty={false}
                 setShowPopup={jest.fn()}
                 adminAccess={true}
+                adminProjectAccess={true}
+                setIsDirty={mockSetIsDirty}
+                reset=""
+                childRef={childRef}
+                organizationId={1}
             />
         );
 
@@ -578,6 +620,11 @@ describe('LibraryAccordion Component', () => {
                 isDirty={false}
                 setShowPopup={jest.fn()}
                 adminAccess={true}
+                adminProjectAccess={true}
+                setIsDirty={mockSetIsDirty}
+                reset=""
+                childRef={childRef}
+                organizationId={1}
             />
         );
         const libAcc = screen.getByText('Library List');

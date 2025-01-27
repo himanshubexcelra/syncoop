@@ -27,11 +27,11 @@ export async function GET(request: Request) {
                     include: {
                         reaction_detail: {
                             include: {
-                                reaction_compound: true,
-                            }
+                                reaction_compound: true
+                            },
                         },
-
                     },
+
                 },
                 organization: true,
             },

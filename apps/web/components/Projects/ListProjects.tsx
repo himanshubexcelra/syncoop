@@ -49,12 +49,12 @@ export default function ListProjects({
         popup,
         setShowPopup,
         isDirty,
+        setReset,
     } = usePopupAndReset();
 
     const fetchLibraryData = async (id: number) => {
         if (id) {
             const projectData = await getLibraries(['libraries'/* , 'projects' */], id.toString());
-
             setSelectedItems([projectData]);
             setLoader(false);
         }
@@ -89,7 +89,7 @@ export default function ListProjects({
                 if (Array.isArray(organizationData)) {
                     const filteredUsers = organizationData.filter(
                         (org: OrganizationDataFields) =>
-                            org.id === e.addedItems[0].parent_id)[0]?.orgUser;
+                            org.id === e.addedItems[0]?.parent_id)[0]?.orgUser;
 
                     if (filteredUsers) {
                         setUsers(filteredUsers?.filter(
@@ -141,6 +141,10 @@ export default function ListProjects({
                                     popup={popup}
                                     isDirty={isDirty}
                                     setShowPopup={setShowPopup}
+                                    allProjectData={data}
+                                    selectedProject={(data) =>
+                                        setSelectedItems(data)}
+                                    setReset={setReset}
                                 />
                             ))}
                 </div>

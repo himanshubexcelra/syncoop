@@ -19,23 +19,14 @@ import {
   userType,
   OrganizationDataFields,
   OrganizationType,
-  AssayLabel,
   ShowEditPopupType,
   fetchDataType,
   ProjectDataFields,
   ActionStatus
 } from "@/lib/definition";
-import { TextBoxTypes } from 'devextreme-react/text-box';
 import { User } from "@/lib/definition";
 import { AppContext } from "@/app/AppState";
 import { Messages } from "@/utils/message";
-
-const functionalAssay = {
-  functionalAssay1: '',
-  functionalAssay2: '',
-  functionalAssay3: '',
-  functionalAssay4: '',
-};
 
 export interface OrganizationEditField {
   organizationData: OrganizationDataFields,
@@ -61,7 +52,7 @@ export default function EditOrganization({
 }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.owner_id);
-  const meta = organizationData.metadata ? organizationData.metadata : functionalAssay
+  const meta = organizationData.metadata;
   const [metaData, setMetaData] = useState(meta);
   const context: any = useContext(AppContext);
   const appContext = context.state;
@@ -70,7 +61,7 @@ export default function EditOrganization({
   // Update local state when organizationData changes
 
   useEffect(() => {
-    const data = organizationData.metadata || functionalAssay;
+    const data = organizationData.metadata;
     const formValue = { ...organizationData, metadata: data };
     formRef.current?.instance().option('formData', formValue);
     setFormData(formValue);
@@ -132,22 +123,6 @@ export default function EditOrganization({
     onValueChanged: handleContactChange,
   };
 
-  const setMetaDataValue = (e: TextBoxTypes.ValueChangedEvent) => {
-    const field = e?.event?.currentTarget;
-    if (field) {
-      const { value, name } = field as any;
-      const data = {
-        ...metaData,
-        ...{ [name]: value }
-      };
-      setFormData((prevData: OrganizationDataFields) => ({
-        ...prevData,
-        metadata: data
-      }));
-      setMetaData(data);
-    }
-  }
-
   const disableAllowed = myRoles?.includes('admin') &&
     organizationData.owner_id !== loggedInUser;
 
@@ -169,7 +144,7 @@ export default function EditOrganization({
             <RadioGroup
               items={status}
               disabled={!disableAllowed}
-              className={!disableAllowed ? "disabled-field" : ""}
+              className={`radio-flex ${!disableAllowed} ? "disabled-field" : ""`}
               defaultValue={formData.is_active ? ActionStatus.Enabled : ActionStatus.Disabled}
               onValueChange={handleValueChange} />
           </SimpleItem>
@@ -187,49 +162,6 @@ export default function EditOrganization({
           editorType="dxSelectBox"
           editorOptions={primaryContact}        >
           <Label text="Primary Contact" />
-        </SimpleItem>
-        <GroupItem caption="Functional Assay" cssClass="groupItem" colCount={1}></GroupItem>
-        <SimpleItem
-          dataField="functionalAssay1"
-          editorOptions={
-            {
-              placeholder: "Functional Assay",
-              onChange: setMetaDataValue,
-              value: metaData.functionalAssay1
-            }
-          }>
-          <Label text={AssayLabel.functionalAssay1} />
-        </SimpleItem>
-        <SimpleItem
-          dataField="functionalAssay2"
-          editorOptions={
-            {
-              placeholder: "Functional Assay",
-              onChange: setMetaDataValue,
-              value: metaData.functionalAssay2
-            }
-          }>
-          <Label text={AssayLabel.functionalAssay2} />
-        </SimpleItem>
-        <SimpleItem dataField="functionalAssay3" editorOptions={
-          {
-            placeholder: "Functional Assay",
-            onChange: setMetaDataValue,
-            value: metaData.functionalAssay3
-          }
-        }>
-          <Label text={AssayLabel.functionalAssay3} />
-        </SimpleItem>
-        <SimpleItem
-          dataField="functionalAssay4"
-          editorOptions={
-            {
-              placeholder: "Functional Assay",
-              onChange: setMetaDataValue,
-              value: metaData.functionalAssay4
-            }
-          }>
-          <Label text={AssayLabel.functionalAssay4} />
         </SimpleItem>
         <GroupItem cssClass="buttons-group" colCount={2}>
           <GroupItem cssClass="buttons-group" colCount={2}>

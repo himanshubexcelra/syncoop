@@ -53,6 +53,7 @@ import dynamic from 'next/dynamic';
 import './MoleculeList.css';
 import CustomTooltip from '@/ui/CustomTooltip';
 import AdmeInfo from '../Tooltips/AdmeInfo';
+import AddCustomReaction from '../Molecule/AddCustomReaction/AddCustomReaction';
 
 type MoleculeListType = {
     /* moleculeLoader: boolean, */
@@ -85,6 +86,7 @@ export default function MoleculeList({
     organizationId,
     fetchLibraries,
     editEnabled,
+    projectData,
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
@@ -112,6 +114,7 @@ export default function MoleculeList({
     const [selectionEnabledRows, setSelectionEnabledRows] = useState<MoleculeType[]>([]);
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
 
+    const isCustomReaction = projectData.metadata.type === 'Custom Reaction'
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
@@ -1007,7 +1010,14 @@ export default function MoleculeList({
             text: "Add Molecule",
             onClick: addMolecule,
             icon: '/icons/plus-white.svg',
-            visible: editEnabled && !!library_id,
+            visible: editEnabled && !!library_id && !isCustomReaction,
+            class: 'btn-primary toolbar-item-spacing',
+        },
+        {
+            text: "Add Reaction",
+            onClick: addMolecule,
+            icon: '/icons/plus-white.svg',
+            visible: editEnabled && !!library_id && isCustomReaction,
             class: 'btn-primary toolbar-item-spacing',
         },
         {
@@ -1033,7 +1043,9 @@ export default function MoleculeList({
         return (
             <div className="flex items-center relative">
                 <div className="flex items-center">
-                    <p className='form-title mr-2'>{`Add Molecule`}</p>
+                    <p className='form-title mr-2'>
+                        {isCustomReaction ? 'Add Custom Reaction' : 'Add Molecule'}
+                    </p>
                     <div id="info-container">
                         <Image
                             src="/icons/info-icon.svg"
@@ -1114,7 +1126,8 @@ export default function MoleculeList({
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}
                         visible={viewAddMolecule}
-                        contentRender={() => (
+                        contentRender={() => (isCustomReaction ?
+                            <AddCustomReaction /> :
                             <AddMolecule
                                 libraryId={selectedLibrary}
                                 projectId={projectId}

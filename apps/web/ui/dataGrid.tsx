@@ -17,7 +17,7 @@ import DataGrid, {
     RowDragging,
     Export,
     ColumnChooser,
-    DataGridRef
+    DataGridRef,
 } from 'devextreme-react/data-grid';
 
 import CheckBox from 'devextreme-react/check-box';
@@ -212,6 +212,12 @@ const CustomDataGrid = ({
 
                     // Optional: Add some visual feedback like reducing opacity
                     e.cellElement.style.opacity = '0.2';
+
+                    if (grid.current) {
+                        const dataGrid = grid.current?.instance();
+                        dataGrid.deselectRows([rowData.id]);
+                    }
+
                 }
             }
         }

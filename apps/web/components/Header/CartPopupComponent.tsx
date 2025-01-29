@@ -30,6 +30,7 @@ const CartPopupComponent = ({
     const { myRoles } = userData;
     const context: any = useContext(AppContext);
     const appContext = context.state;
+    
     useEffect(() => {
         const fetchCartData = async () => {
             setLoader(true)

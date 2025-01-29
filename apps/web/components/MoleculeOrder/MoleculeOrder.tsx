@@ -1998,6 +1998,9 @@ export default function MoleculeOrderPage({
 
   const onRowPrepared = (e: any) => {
     if (e.rowType === 'data') {
+      if (e.rowType === 'data' && e.data.molecule_status === MoleculeStatusLabel.Ready) {
+        e.data.disabled = true;
+      }
       const isClickableRow = clickableRow(e.data.molecule_status);
       if (isClickableRow) {
         e.rowElement.style.cursor = 'pointer';

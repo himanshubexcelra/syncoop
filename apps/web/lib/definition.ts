@@ -65,10 +65,7 @@ export interface sharedUserType {
 }
 
 export interface metaDataType {
-  functionalAssay1: string,
-  functionalAssay2: string,
-  functionalAssay3: string,
-  functionalAssay4: string,
+  assay: AssayFieldList[];
 }
 
 export type FORMULA_CONFIG = {
@@ -92,6 +89,7 @@ export interface OrganizationDataFields {
   orgUser: User[];
   metadata: metaDataType;
   other_container?: ProjectDataFields[];
+  organizationMolecules?: MoleculeType[];
   owner_id: number;
   type: string;
   config?: OrganizationConfigType;
@@ -162,38 +160,6 @@ export interface MoleculeType {
   functional_assays: ColorSchemeFormat[],
 }
 
-export interface CustomReactionType {
-  created_at: Date;
-  created_by: number;
-  finger_print: string;
-  id: number;
-  molecule_id: number;
-  inchi_key: string;
-  library_id: number;
-  project_id: number;
-  organization_id: number;
-  molecular_weight: number;
-  smiles_string: string;
-  source_molecule_name: string;
-  "project / library": string;
-  "organization / order": string;
-  disabled: boolean;
-  status: number;
-  status_name: string;
-  favourite_id: number;
-  favourite: boolean;
-  updated_at: Date;
-  updated_by: number;
-  yield?: number;
-  anlayse?: number;
-  herg?: number;
-  caco2?: number;
-  clint?: number;
-  hepG2cytox?: number;
-  adme_data: ColorSchemeFormat[],
-  reaction_data: any;
-  functional_assays: ColorSchemeFormat[],
-}
 
 export type addToFavouritesProps = {
   molecule_id: number,
@@ -360,21 +326,27 @@ export interface AssayFields {
 }
 
 export interface AssayFieldList {
-  assay: string,
-  clinical_indication: string,
-  target: string,
-  description: string,
-  user_fields: AssayFields,
+  assay?: string,
+  clinical_indication?: string,
+  target?: string,
+  description?: string,
+  user_fields?: AssayFields,
   name: string,
-  supplier: string,
-  SKU: number,
-  testMoleculeName: string,
-  comment: string,
+  supplier?: string,
+  SKU?: number,
+  testMoleculeName?: string,
+  comment?: string,
+  commercial?: boolean,
+  assay_detail?: string,
+  id?: number,
 }
 
 export interface FunctionalAssayProps {
   data: AssayFieldList[],
   type?: string,
+  orgUser?: OrgUser,
+  fetchOrganizations?: fetchDataType,
+  color?: string
 }
 
 export interface ModuleFeature {
@@ -450,7 +422,7 @@ export interface TabDetail {
   title?: string;
   Component?: React.ComponentType<any>;
   props: AssayTableProps | ModuleTableProps |
-  StatusComponentProps | ADMEProps | UserTableProps | TabProps | FunctionalAssayProps[];
+  StatusComponentProps | ADMEProps | UserTableProps | TabProps | FunctionalAssayProps;
 }
 
 export interface OrgUser {

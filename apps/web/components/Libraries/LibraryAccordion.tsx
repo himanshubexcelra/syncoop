@@ -8,9 +8,13 @@ import Accordion, { Item } from 'devextreme-react/accordion';
 import { Popup, } from "devextreme-react/popup";
 import { Button } from "devextreme-react/button";
 import {
-    LibraryFields, ProjectDataFields, MoleculeStatusLabel, UserData,
+    LibraryFields,
+    ProjectDataFields,
+    MoleculeStatusLabel,
+    UserData,
+    ContainerType,
     OrganizationDataFields,
-    FetchUserType
+    FetchUserType,
 } from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import { deleteLibrary } from './service';
@@ -22,7 +26,7 @@ import {
     fetchMoleculeStatus,
     isDeleteLibraryEnable,
     isLibraryManger,
-    getEntity
+    isCustomReactionCheck,
 } from '@/utils/helpers';
 import TextWithToggle from "@/ui/TextWithToggle";
 import { Messages } from "@/utils/message";
@@ -106,9 +110,8 @@ export default function LibraryAccordion({
     const [users, setUsers] = useState([])
     const [organization, setOrganization] = useState<OrganizationDataFields[]>([]);
     const [projectPopupVisible, setProjectPopupVisibile] = useState(false);
-    const projectType = projectData.metadata.type;
-    const entity = getEntity(projectType);
-    const entityLabel = projectType === 'Custom Reaction'
+    const isCustomReaction = isCustomReactionCheck(projectData.metadata);
+    const entityLabel = isCustomReaction
         ? 'reactions'
         : 'molecules'
     const fetchOrganization = async () => {
@@ -157,12 +160,12 @@ export default function LibraryAccordion({
                 sortKey = 'owner.first_name';
                 object = true;
             } else if (sortKey === `Count of ${entityLabel}`) {
-                sortKey = entity;
+                sortKey = 'libraryMolecules';
                 sortBy = 'desc';
             } else {
                 sortKey = 'name';
             }
-            if (sortKey === entity) {
+            if (sortKey === 'libraryMolecules') {
                 tempLibraries = sortNumber(projectData.other_container, sortKey, sortBy);
             } else if (sortKey !== 'updated_at' && sortKey !== 'created_at') {
                 tempLibraries = sortString(projectData.other_container, sortKey, sortBy, object);
@@ -190,7 +193,7 @@ export default function LibraryAccordion({
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
-                    item[entity].length.toString().includes(value.toLowerCase())
+                    item.libraryMolecules.length.toString().includes(value.toLowerCase())
                 );
                 const tempProjects = {
                     ...projectData,
@@ -203,7 +206,7 @@ export default function LibraryAccordion({
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.first_name.toLowerCase().includes(value.toLowerCase()) ||
                     item.owner.last_name.toLowerCase().includes(value.toLowerCase()) ||
-                    item[entity].length.toString().includes(value.toLowerCase())
+                    item.libraryMolecules.length.toString().includes(value.toLowerCase())
                 );
 
                 const tempProjects = {
@@ -253,7 +256,7 @@ export default function LibraryAccordion({
     }
     const deleteLibraryDetail = async () => {
         setIsLoading(true);
-        const result = await deleteLibrary(projectType, deleteLibraryData.id,);
+        const result = await deleteLibrary(deleteLibraryData.id,);
         if (result.length === 0) {
             toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE(entityLabel));
             setIsLoading(false);
@@ -383,7 +386,7 @@ export default function LibraryAccordion({
             <Item titleRender={() => renderTitle(`Functional Assay (${AssayData.length})`)}>
                 <FunctionalAssay
                     data={AssayData}
-                    type="L"
+                    type={ContainerType.LIBRARY}
                 />
             </Item>
             {actionsEnabled.includes('edit_project') &&
@@ -711,10 +714,10 @@ export default function LibraryAccordion({
                                         no-border`
                                     }>
                                     <div className="my-0.5 capitalize">{entityLabel}:
-                                        <span>{item[entity].length}</span>
+                                        <span>{item.libraryMolecules.length}</span>
                                     </div>
                                     <div className="gap-[10px] flex flex-wrap">
-                                        {Object.entries(fetchMoleculeStatus(item, entity))
+                                        {Object.entries(fetchMoleculeStatus(item))
                                             .map(([key, statusObject]) => {
                                                 const statusObj = statusObject as
                                                     { count: number, className: string };
@@ -764,12 +767,7 @@ export default function LibraryAccordion({
                                     }
                                     onClick={() => {
                                         setExpanded(false);
-                                        const url =
-                                            `/projects/${projectId}` +
-                                            `?library_id=${item.id}`;
                                         setLibraryId(item.id)
-                                        router.push(url);
-
                                         /* getLibraryData(item); */
                                     }}
                                 />
@@ -809,7 +807,7 @@ export default function LibraryAccordion({
                                     }}
                                 />
                                 {adminAccess &&
-                                    isDeleteLibraryEnable(item[entity]) &&
+                                    isDeleteLibraryEnable(item.libraryMolecules) &&
                                     <Button
                                         text="Delete"
                                         type="normal"

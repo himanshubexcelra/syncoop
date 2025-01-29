@@ -26,7 +26,6 @@ import StatusComponent from "../StatusDetails/StatusComponent";
 import Module from "../Module/Module";
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import usePopupAndReset from "../usePopupandReset/usePopupAndReset";
-import { AssayData } from "@/utils/constants";
 import FunctionalAssay from "../FunctionalAssays/FunctionalAssay";
 
 type DashboardPageTypeProps = {
@@ -83,6 +82,15 @@ export default function LandingPage({
         }
     ];
 
+    const fetchOrganizationData = async () => {
+        const organization = await getOrganizationById(
+            {
+                withRelation: ['orgUser', 'user_role'],
+                id: customerOrgId ? customerOrgId : userData?.organization_id
+            });
+        setOrganization(organization);
+    };
+
     const tabsStatus: TabDetail[] = [
         {
             title: "Overview",
@@ -102,9 +110,13 @@ export default function LandingPage({
             }
         },
         {
-            title: `Functional Assay (${AssayData.length})`,
+            title: `Functional Assay (${organizationData?.metadata?.assay?.length || 0})`,
             Component: FunctionalAssay,
-            props: { data: AssayData, orgUser: orgDetail },
+            props: {
+                data: organizationData?.metadata?.assay || [],
+                orgUser: orgDetail,
+                fetchOrganizations: fetchOrganizationData
+            },
         },
         {
             title: "Modules",
@@ -112,14 +124,7 @@ export default function LandingPage({
             props: { orgUser: orgDetail, myRoles },
         }
     ];
-    const fetchOrganizationData = async () => {
-        const organization = await getOrganizationById(
-            {
-                withRelation: ['orgUser', 'user_role'],
-                id: customerOrgId ? customerOrgId : userData?.organization_id
-            });
-        setOrganization(organization);
-    };
+
 
     useEffect(() => {
         if (['admin', 'org_admin'].some((role) => myRoles?.includes(role))) {

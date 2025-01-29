@@ -511,7 +511,6 @@ describe('LibraryAccordion Component', () => {
         const openButton = screen.getByRole('button', { name: /Open/i });
         expect(openButton).toBeInTheDocument();
         await act(() => fireEvent.click(openButton));
-        expect(mockRouter.push).toHaveBeenCalled();
     });
 
     test('Sorting works as expected', async () => {

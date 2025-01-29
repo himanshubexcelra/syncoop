@@ -1,17 +1,21 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import { AssayFieldList, FunctionalAssayProps } from '@/lib/definition'
-import { debounce, popupPositionValue, popupPositionCentered } from '@/utils/helpers';
+import { AssayFieldList, FunctionalAssayProps, OrganizationDataFields } from '@/lib/definition'
+import { debounce, popupPositionValue, popupPositionCentered, delay } from '@/utils/helpers';
 import { Button, DropDownBox, LoadIndicator, Popup, Switch } from 'devextreme-react';
 import Image from 'next/image';
-import { FormRef } from "devextreme-react/cjs/form";
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import AddAssay from './AddAssay';
-import { AssayData } from '@/utils/constants';
+import { AssayData, DELAY } from '@/utils/constants';
 import { getBioAssays } from './service';
 import AssayFields from './AssayFields';
 import { DropDownBoxRef } from 'devextreme-react/cjs/drop-down-box';
+import { getOrganizationById } from '../Organization/service';
+import { AppContext } from '@/app/AppState';
+import { editOrganization } from "../Organization/service";
+import toast from 'react-hot-toast';
+import { Messages } from '@/utils/message';
 
-function FunctionalAssay({ data, type }: FunctionalAssayProps) {
+function FunctionalAssay({ data, type, orgUser, fetchOrganizations }: FunctionalAssayProps) {
     const [inherited, setInherited] = useState(type ? true : false);
     const [searchValue, setSearchValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -22,9 +26,30 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
     const [popupPositionCenter, setPopupPositionCenter] = useState({} as any);
     const [selectedValue, setSelectedValue] = useState<AssayFieldList | null>(null);
     const [editEnabled, setEditEnabled] = useState(true);
-    const formRef = useRef<FormRef>(null);
     const dropDownBoxRef = useRef<DropDownBoxRef>(null);
+    const listRef = useRef(null);
     const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
+    const [assayValue, setAssays] = useState(data);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [organizaitonData, setOrganizationData] = useState<OrganizationDataFields>();
+    const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
+    const formRef = useRef<any>(null);
+    const orgId = orgUser?.id;
+
+    const fetchData = async () => {
+        if (!type) {
+            const orgData = await getOrganizationById({ withRelation: [], id: orgId });
+            const processedData = orgData?.metadata?.assay || [];
+            setAssays(processedData);
+            setOrganizationData(orgData);
+        }
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, [orgId, appContext?.refreshAssayTable])
 
     useEffect(() => {
         setContainerElement(document.getElementById('containerElement'));
@@ -36,12 +61,31 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
         setPopupPositionCenter(popupPositionCentered());
     }, []);
 
+    // Scroll the selected item into view
+    useEffect(() => {
+        if (selectedIndex !== null && itemRefs.current[selectedIndex]) {
+            const selectedItem = itemRefs.current[selectedIndex];
+
+            if (selectedItem) {
+                // Scroll the selected item into view
+                selectedItem.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+
+                // Focus on the selected item
+                selectedItem.focus();
+            }
+        }
+    }, [selectedIndex]);
+
     const performCleanup = () => {
         if (dropDownBoxRef.current) {
             dropDownBoxRef.current.instance().close();
         }
         setSearchValue('');
         setFilteredItems([]);
+        setSelectedIndex(-1);
     }
 
     const handleAddNew = () => {
@@ -62,13 +106,50 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
         } else {
             setFilteredItems([]); // Show all items if no search term
         }
+        setSelectedIndex(-1);
+    }
+
+    const updateComment = (data: AssayFieldList) => {
+        const fieldIndex = assayValue.findIndex(val => val.id === data.id);
+        const values = [...assayValue];
+        values[fieldIndex].comment = data.comment;
+        setAssays(values);
     }
 
     const updateAssay = () => {
+        // console.log('update', assayValue);
         setIsLoading(true);
     }
 
     const cancelUpdate = () => {
+        // console.log('cancel')
+    }
+
+    const removeAssay = async (index: number) => {
+        const values = [...assayValue];
+        const deleted = values.splice(index, 1)[0];
+        const metadata = organizaitonData?.metadata || {};
+        const finalData = {
+            ...organizaitonData, metadata: {
+                ...metadata, assay: values
+            }
+        };
+        const response = await editOrganization(finalData);
+        if (!response.error) {
+            if (fetchOrganizations) {
+                fetchOrganizations();
+            } setShowAddAssayForm(false);
+            context?.addToState({ ...appContext, refreshAssayTable: true })
+            const toastId = toast.success(Messages.deleteAssayMsgConfirm(deleted.name));
+            await delay(DELAY);
+            toast.remove(toastId);
+            setIsLoading(false);
+        } else {
+            const toastId = toast.error(`${response.error}`);
+            await delay(DELAY);
+            toast.remove(toastId);
+            setIsLoading(false);
+        }
     }
 
     const handleValueChange = (e: any) => {
@@ -84,6 +165,31 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
         setInherited(!inherited);
     };
 
+    const handleKeyDown = (e: any) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault(); // Prevent page scroll
+            setSelectedIndex((prevIndex) => {
+                const nextIndex = prevIndex === null ? 0 :
+                    Math.min(filteredItems.length - 1, prevIndex + 1);
+                return nextIndex;
+            });
+        }
+
+        if (e.key === 'ArrowUp') {
+            e.preventDefault(); // Prevent page scroll
+            setSelectedIndex((prevIndex) => {
+                const prevIndexUpdated = prevIndex === null ?
+                    filteredItems.length - 1 : Math.max(0, prevIndex - 1);
+                return prevIndexUpdated;
+            });
+        }
+
+        // Select the item on 'Enter' key press
+        if (e.key === 'Enter' && selectedIndex !== null) {
+            handleValueChange(filteredItems[selectedIndex]);
+        }
+    };
+
     return (
         <div className={`
         ${type ? 'main-div-assay-other' : 'main-div-assay'} 
@@ -94,6 +200,7 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                     value={selectedValue}
                     ref={dropDownBoxRef}
                     dataSource={AssayData}
+                    onClosed={performCleanup}
                     valueExpr="SKU"
                     displayExpr="target"
                     className='assay-dropdown'
@@ -102,7 +209,7 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                     }}
                     contentRender={() => (
                         <div className='assay-dropdown'>
-                            <div className="search-box">
+                            <div className="search-box" style={{ visibility: 'hidden' }}>
                                 <Image
                                     src="/icons/search.svg"
                                     width={24}
@@ -116,17 +223,24 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                                     style={{ paddingLeft: '30px' }}
                                     onChange={searchData}
                                     value={searchValue}
+                                    onKeyDown={handleKeyDown}
                                 />
                             </div>
 
-                            <ul className='assay-list'>
+                            <ul className='assay-list' ref={listRef} onKeyDown={handleKeyDown}>
                                 {filteredItems
-                                    .map((item) => (
+                                    .map((item, index) => (
                                         <li key={item.target}
                                             className={`text-normal 
-                                                list-assay cursor-pointer
-                                                `}
+                                                list-assay cursor-pointer dropdown-item 
+                                                ${selectedIndex === index ? 'selected' : ''
+                                                }`}
                                             onClick={() => handleValueChange(item)}
+                                            onMouseEnter={() => setSelectedIndex(index)}
+                                            ref={(el) => {
+                                                itemRefs.current[index] = el
+                                            }}
+                                            tabIndex={selectedIndex === index ? 0 : -1}
                                         >
                                             {item.target}
                                         </li>
@@ -154,7 +268,7 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                         </div>
                     )}
                 />
-                {data.length !== 0 && (
+                {assayValue.length !== 0 && type && (
                     <div className="flex gap-[20px]">
                         {type && (
                             <div className="dx-field flex items-center">
@@ -193,22 +307,24 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                 )}
             </div>
             {
-                data.length === 0 ?
+                assayValue.length === 0 ?
                     <div className='no-assay flex'>
                         Your functional assay list is empty, search and add functional assay
                         from the above search bar
                     </div> :
                     <div className={`${type ? 'mt-[25px]' : 'grid-container'}`}>
-                        {data.map((assay: AssayFieldList) => (
+                        {assayValue.map((assay: AssayFieldList, index: number) => (
                             <div
                                 key={assay.SKU}
                             >
                                 <AssayFields
-                                    formRef={formRef}
                                     setShowConfirmForm={
                                         setShowConfirmForm}
                                     assay={assay}
-                                    cancelUpdate={cancelUpdate}
+                                    removeAssay={removeAssay}
+                                    index={index}
+                                    fetchOrganizations={fetchOrganizations}
+                                    updateComment={updateComment}
                                 />
                             </div>
                         ))}
@@ -218,6 +334,7 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                 showAddAssayForm && (
                     <Popup
                         title="Add Functional Assay"
+                        showCloseButton={true}
                         visible={showAddAssayForm}
                         dragEnabled={false}
                         contentRender={() => (
@@ -225,7 +342,8 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                                 formRef={formRef}
                                 setShowAddAssayForm={
                                     setShowAddAssayForm}
-                                selectedData={{}}
+                                data={organizaitonData}
+                                fetchOrganizations={fetchOrganizations}
                             />
                         )}
                         width={477}
@@ -254,12 +372,13 @@ function FunctionalAssay({ data, type }: FunctionalAssayProps) {
                         dragEnabled={false}
                         contentRender={() => (
                             <AssayFields
-                                formRef={formRef}
                                 setShowConfirmForm={
                                     setShowConfirmForm}
                                 assay={selectedValue}
                                 newForm={true}
-                                cancelUpdate={cancelUpdate}
+                                removeAssay={removeAssay}
+                                data={organizaitonData}
+                                fetchOrganizations={fetchOrganizations}
                             />
                         )}
                         width="40%"

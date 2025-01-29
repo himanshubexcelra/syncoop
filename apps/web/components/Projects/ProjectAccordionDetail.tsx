@@ -11,9 +11,10 @@ import {
     formatDatetime,
     isDeleteLibraryEnable,
     isSharedActionEnable,
-    getEntity
+    isCustomReactionCheck,
 } from "@/utils/helpers";
 import {
+    ContainerType,
     FetchUserType,
     MoleculeStatusLabel,
     OrganizationDataFields,
@@ -31,7 +32,6 @@ import FunctionalAssay from '../FunctionalAssays/FunctionalAssay';
 import { AssayData } from '@/utils/constants';
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { deleteProject } from './projectService';
-
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
 type ProjectAccordionDetailProps = {
@@ -88,20 +88,19 @@ export default function ProjectAccordionDetail({
     const [openButton, setOpenButton] = useState('Open');
     const [confirm, setConfirm] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const projectType = data.metadata.type;
-    const entity = getEntity(projectType);
-    const entityLabel = projectType === 'Custom Reaction'
+    const isCustomReaction = isCustomReactionCheck(data.metadata);
+    const entityLabel = isCustomReaction
         ? 'Reaction'
         : 'Molecule'
     const moleculeCount = data.other_container?.reduce((count, library) => {
         // Add the count of molecules in each library
-        return count + (library[entity]?.length || 0);
+        return count + (library.libraryMolecules?.length || 0);
     }, 0) || 0;
     // Library's under project with it's molecule status OPT: 2
     const combinedLibrary = data.other_container?.reduce((acc: any, lib) => {
-        acc[entity].push(...lib[entity]);
+        acc.libraryMolecules.push(...lib.libraryMolecules);
         return acc;
-    }, { [entity]: [] }) || { [entity]: [] };
+    }, { libraryMolecules: [] }) || { libraryMolecules: [] };
 
     useEffect(() => {
         const sharedActionEnabled = isSharedActionEnable(data, userData);
@@ -186,7 +185,7 @@ export default function ProjectAccordionDetail({
         const projectLibraries = data?.other_container;
         if (!projectLibraries) return true;
         for (const item of projectLibraries) {
-            if (!isDeleteLibraryEnable(item[entity])) {
+            if (!isDeleteLibraryEnable(item.libraryMolecules)) {
                 return false;
             }
         }
@@ -263,7 +262,7 @@ export default function ProjectAccordionDetail({
                 </div >
             </div >
             <div className='flex'>
-                {data.metadata.type === 'Custom Reaction'
+                {isCustomReaction
                     ? <Image
                         src="/icons/custom-reaction-sm.svg"
                         width={18}
@@ -307,7 +306,7 @@ export default function ProjectAccordionDetail({
                     <div>
                         {moleculeCount > 0 && (
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {Object.entries(fetchMoleculeStatus(combinedLibrary, entity))
+                                {Object.entries(fetchMoleculeStatus(combinedLibrary))
                                     .map(([key, statusObject]) => {
                                         const statusObj =
                                             statusObject as { count: number, className: string };
@@ -416,7 +415,7 @@ export default function ProjectAccordionDetail({
                     <Item titleRender={
                         () => renderTitle('Properties')}>
                         <ADMESelector
-                            type="P"
+                            type={ContainerType.PROJECT}
                             organizationId={userData.organization_id}
                             data={data}
                             childRef={childRef}
@@ -437,7 +436,7 @@ export default function ProjectAccordionDetail({
                         () => renderTitle(`Functional Assay (${AssayData.length})`)}>
                         <FunctionalAssay
                             data={AssayData}
-                            type="P"
+                            type={ContainerType.PROJECT}
                         />
                     </Item>
                 </Accordion>
@@ -512,7 +511,7 @@ export default function ProjectAccordionDetail({
                                 }
                             </div>
                             <div className='gap-[10px] flex mt-[8px] flex-wrap'>
-                                {Object.entries(fetchMoleculeStatus(item, entity))
+                                {Object.entries(fetchMoleculeStatus(item))
                                     .map(([key, statusObject]) => {
                                         const statusObj =
                                             statusObject as { count: number, className: string };

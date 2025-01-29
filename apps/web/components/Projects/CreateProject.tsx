@@ -148,6 +148,7 @@ export default function CreateProject({
     if (formRef.current!.instance().validate().isValid) {
       const sharedUsers = filteredData.filter(val => val.permission !== 'View');
       let response;
+
       setLoadIndicatorVisible(true);
       if (edit) {
         response = await editProject(
@@ -446,24 +447,26 @@ export default function CreateProject({
         </GroupItem>
       )}
       <GroupItem cssClass="buttons-group" colCount={2}>
-        <button className={
-          loadIndicatorVisible
-            ? 'disableButton w-[65px] h-[37px]'
-            : 'primary-button'}
-          onClick={handleSubmit}
-          disabled={loadIndicatorVisible}>
-          <LoadIndicator className={
-            `button-indicator`
-          }
-            visible={loadIndicatorVisible}
-            height={20}
-            width={20}
-          />
-          {loadIndicatorVisible ? '' : edit ? 'Update' : 'Create Project'}
-        </button>
-        <button className='secondary-button ml-[15px]' onClick={cancelSave}>
-          Discard
-        </button>
+        <div className="flex items-center">
+          <button className={
+            loadIndicatorVisible
+              ? `disableButton ${edit ? 'w-[65px]' : 'w-[108px]'} h-[37px]`
+              : 'primary-button'}
+            onClick={handleSubmit}
+            disabled={loadIndicatorVisible}>
+            <LoadIndicator className={
+              `button-indicator`
+            }
+              visible={loadIndicatorVisible}
+              height={20}
+              width={20}
+            />
+            {loadIndicatorVisible ? '' : edit ? 'Update' : 'Create Project'}
+          </button>
+          <button className='secondary-button ml-[15px]' onClick={cancelSave}>
+            Discard
+          </button>
+        </div>
       </GroupItem>
       {confirm && (
         <DeleteConfirmation

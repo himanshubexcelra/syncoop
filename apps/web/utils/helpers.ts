@@ -4,7 +4,6 @@ import {
   ColorSchemeFormat,
   CombinedLibraryType,
   ContainerPermission,
-  CustomReactionType,
   LibraryFields,
   LoginFormSchema,
   MoleculeStatusCode,
@@ -15,7 +14,7 @@ import {
   StatusType,
   UserData
 } from "@/lib/definition"
-import { COLOR_SCHEME } from "./constants";
+import { ChemistryType, COLOR_SCHEME } from "./constants";
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -159,8 +158,7 @@ type UnionLibType = LibraryFields | CombinedLibraryType;
 type UnionMoleculeType = MoleculeType | StatusType;
 
 export function fetchMoleculeStatus(
-  data: UnionLibType,
-  entity: "libraryReactions" | "libraryMolecules") {
+  data: UnionLibType,) {
 
   let projectStatusName: any = {};
   let projectStatusCount: any = {};
@@ -185,8 +183,8 @@ export function fetchMoleculeStatus(
   });
 
   const keys: string[] = Object.keys(projectStatusName);
-  if (data[entity]) {
-    data[entity].forEach((molecule: UnionMoleculeType) => {
+  if (data.libraryMolecules) {
+    data.libraryMolecules.forEach((molecule: UnionMoleculeType) => {
       const keyIndex = keys.indexOf(String(molecule.status));
       if (keyIndex > -1) {
         const status_code = keys[keyIndex];
@@ -242,7 +240,7 @@ export function isResearcherAndProtocolAproover(myRoles: string[]) {
 }
 
 export function isOnlyLibraryManger(myRoles: string[]) {
-  return myRoles?.length === 1 && myRoles?.includes('library_manager');
+  return myRoles.length === 1 && myRoles.includes('library_manager');
 }
 
 export function isOnlyResearcher(myRoles: string[]) {
@@ -400,10 +398,9 @@ export const isSharedActionEnable = (
   const sharedUser = containerData.container_access_permission?.find(u => u.user_id === userData.id
     && u.access_type === ContainerPermission.Admin);
   const owner = containerData.owner_id === userData.id;
-  const admin = isAdmin(userData.myRoles);
+  const admin = isAdmin(userData?.myRoles);
   return (!!sharedUser || owner || admin);
 }
 
-export const getEntity =
-  (projectType: string): "libraryReactions" | "libraryMolecules" =>
-    projectType === 'Custom Reaction' ? 'libraryReactions' : 'libraryMolecules';
+export const isCustomReactionCheck = (projectMetadata: any) =>
+  projectMetadata.type === ChemistryType.CUSTOM_REACTION;

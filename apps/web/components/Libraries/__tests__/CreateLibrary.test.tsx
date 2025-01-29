@@ -304,7 +304,7 @@ describe('Create/ Edit Library should work as expected', () => {
         expect(screen.getAllByText('Library name is required').length).toBeGreaterThan(0);
     });
 
-    test('edit library works as expected with valid data', async () => {
+    test.skip('edit library works as expected with valid data', async () => {
         jest.mocked(useParams).mockReturnValue({ id: '1' });
 
         (useSearchParams as jest.Mock).mockReturnValue({

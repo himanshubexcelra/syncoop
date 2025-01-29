@@ -158,4 +158,24 @@ describe('Edit Organization should work as expected', () => {
         expect(showEditPopup).toHaveBeenCalledWith(false);
         expect(mockFormRef.current.instance().reset);
     });
+    test('delete organization', () => {
+        const myRoles = ["admin"];
+        render(
+            <AppContext.Provider value={mockContextValue}>
+              <EditOrganization
+                organizationData={organizationData}
+                fetchOrganizations={fetchOrganizations}
+                showEditPopup={showEditPopup}
+                formRef={mockFormRef}
+                myRoles={myRoles}
+                loggedInUser={1}
+                editPopup={true}
+              />
+            </AppContext.Provider>
+          );
+        const deleteButton = screen.getByText(`Delete ${organizationData.name}`);
+        expect(deleteButton).toBeInTheDocument();
+        fireEvent.click(deleteButton);
+      });
+    
 })

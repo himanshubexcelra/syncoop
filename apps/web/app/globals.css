@@ -540,6 +540,11 @@ body {
   padding-left: 23px;
 }
 
+.list-assay:hover,
+.list-assay:focus {
+  background-color: var(--rowHoverColor);
+}
+
 .assay-list {
   max-height: 145px !important;
   overflow-y: auto;
@@ -600,4 +605,13 @@ body {
   font-style: normal;
   font-weight: 700;
   line-height: normal;
+}
+
+/* to avoid alignment change on toggle in dev extreme slider */
+.dx-slider-handle .dx-tooltip-wrapper .dx-overlay-content{
+  transform: translate(-6px, 29px) !important;
+}
+ 
+.dx-state-disabled .dx-slider-handle .dx-overlay-content {
+  transform: translate(-17px, 29px) !important;
 }

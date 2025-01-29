@@ -63,6 +63,7 @@ export const Messages = {
     EMAIL_REQUIRED: 'Email is required',
     UPDATE_USER: 'User details updated successfully',
     UPDATE_ORGANIZATION: 'Organization updated successfully',
+    UPDATE_ASSAY: 'New bioassay added successfully',
     UPDATE_PATHWAY_REACTION: 'Pathway has been updated successfully and sent for validation',
     UPDATE_PATHWAY_REACTION_VALIDATE: 'Pathway has been updated successfully and sent for validated',
     REACTION_VALIDATE_MSG(reactionNo: number, pathwayId: number) {
@@ -83,6 +84,14 @@ export const Messages = {
     deleteLibraryMsg(library_name: string, label: string) {
         return `You are about to delete all the ${label} in Library ${library_name}. Are you sure you want to delete?`;
     },
+    deleteAssayMsg(assay: string) {
+        return `You are about to delete assay "${assay}". Are you sure you want to delete?`;
+    },
+    deleteAssayMsgConfirm(assay: string) {
+        return `Assay "${assay}" deleted successfully.`;
+    },
+    REMOVE_ASSAY: 'Bioassay removed successfully',
+
     DELETE_LIBRARY_TITLE: `Delete Libraries`,
     LIBRARY_NOT_DELETE_MESSAGE(label: string) {
         return `Library can not be deleted because some of the ${label} of this library are in stage other than NEW.`
@@ -111,6 +120,12 @@ export const Messages = {
     },
     SAVE_CHANGES: 'Save the changes?',
     DISCARD_CHANGES: 'Discard the changes?',
+    deleteOrgMsg(org_name: string) {
+        return `You are about to delete all molecules and user in ${org_name}.`;
+    },
+    DELETE_ORGANIZATION_TITLE: 'Delete Organization',
+    DELETE_ORGANIZATION_SUCCESS: 'Organization Deleted Successfully',
+    DELETE_ORGANIZATION_ERROR: 'Some Error Occured while deleting organization',
     ADD_ASSAY: 'Functional assay added successfully',
     DELETE_PROJECT_TITLE: `Delete Project`,
     getProjectTitle(msg: string) {

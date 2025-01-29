@@ -244,6 +244,10 @@ export enum ReactionStatus {
   Done = 5,
   Failed = 6,
 }
+export enum ChemistryType {
+  RETRO_SYNTHESIS = 'Retrosynthesis',
+  CUSTOM_REACTION = 'Custom Reaction',
+}
 
 export function getCountCardsDetails(
   projectCount: number,
@@ -945,3 +949,8 @@ export const AssayData = [{
   testMoleculeName: 'TBD',
   comment: 'dsgfkjsdfg'
 }];
+
+export enum ChemistryType {
+  RETRO_SYNTHESIS = 'Retrosynthesis',
+  CUSTOM_REACTION = 'Custom Reaction',
+}

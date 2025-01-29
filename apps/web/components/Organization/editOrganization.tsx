@@ -12,9 +12,14 @@ import {
   GroupItem,
 } from "devextreme-react/form";
 import RadioGroup from "devextreme-react/radio-group";
-import { editOrganization } from "./service";
-import { delay } from "@/utils/helpers";
+import { editOrganization, deleteOrganization } from "./service";
+import {
+  delay,
+  isDeleteLibraryEnable
+} from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
+
 import {
   userType,
   OrganizationDataFields,
@@ -22,7 +27,7 @@ import {
   ShowEditPopupType,
   fetchDataType,
   ProjectDataFields,
-  ActionStatus
+  ActionStatus,
 } from "@/lib/definition";
 import { User } from "@/lib/definition";
 import { AppContext } from "@/app/AppState";
@@ -52,31 +57,24 @@ export default function EditOrganization({
 }: OrganizationEditField) {
   const [formData, setFormData] = useState(organizationData);
   const [primaryContactId, setPrimaryContactId] = useState(organizationData.owner_id);
-  const meta = organizationData.metadata;
-  const [metaData, setMetaData] = useState(meta);
   const context: any = useContext(AppContext);
   const appContext = context.state;
   const { orgUser, type } = organizationData;
-
+  const [confirm, setConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   // Update local state when organizationData changes
 
   useEffect(() => {
-    const data = organizationData.metadata;
-    const formValue = { ...organizationData, metadata: data };
+    const formValue = { ...organizationData };
     formRef.current?.instance().option('formData', formValue);
     setFormData(formValue);
     setPrimaryContactId(organizationData.owner_id);
-    setMetaData(data);
-    if (editPopup) {
-      setMetaData(meta);
-    }
   }, [organizationData, formRef, editPopup]);
 
 
   const handleSubmit = async () => {
     if (formRef.current!.instance().validate().isValid) {
-      const metadata = metaData;
-      const finalData = { ...formData, metadata: metadata, primaryContactId };
+      const finalData = { ...formData, primaryContactId };
       const response = await editOrganization(finalData);
       if (!response.error) {
         formRef.current!.instance().reset();
@@ -111,7 +109,7 @@ export default function EditOrganization({
   }
 
   const userList = orgUser?.filter((user: User) =>
-    user.user_role[0]?.role?.type ===
+    user.user_role?.[0]?.role?.type ===
     (type === OrganizationType.Internal ? 'admin' : 'org_admin'));
 
   const primaryContact = {
@@ -129,9 +127,53 @@ export default function EditOrganization({
   const cancelSave = () => {
     formRef?.current!.instance().reset();
     showEditPopup(false);
-    setMetaData(meta)
+  }
+  const handleDeleteOrganization = () => {
+    setConfirm(true);
   }
 
+  const validateDeleteProjectBtn = (data: OrganizationDataFields) => {
+    const projectLibraries = data?.other_container;
+    if (!projectLibraries) return true;
+    if (!isDeleteLibraryEnable(data?.organizationMolecules ?? [])) {
+      return false;
+    }
+    return true;
+  };
+
+  const deleteOrganizationData = async (data: OrganizationDataFields) => {
+    const projectIds: number[] = (data?.other_container ?? [])
+      .map((item: ProjectDataFields) => Number(item.id));
+    let params: object = {
+      org_id: data.id,
+    }
+    if (data?.other_container) {
+      params = {
+        ...params,
+        orgProjectIds: projectIds
+      }
+    }
+    if (data?.organizationMolecules) {
+      params = {
+        ...params,
+        isMolecule: true
+      }
+    }
+    const result = await deleteOrganization(params);
+    if (result.success) {
+      toast.success(Messages.DELETE_ORGANIZATION_SUCCESS);
+      setIsLoading(false);
+      showEditPopup(false);
+      fetchOrganizations();
+    }
+    else {
+      toast.error(Messages.DELETE_ORGANIZATION_ERROR);
+      setIsLoading(false);
+    }
+  }
+  const handleCancel = () => {
+    setConfirm(false)
+  }
   return (
     <>
       <Form ref={formRef} formData={formData}>
@@ -148,15 +190,20 @@ export default function EditOrganization({
               defaultValue={formData.is_active ? ActionStatus.Enabled : ActionStatus.Disabled}
               onValueChange={handleValueChange} />
           </SimpleItem>
-          <ButtonItem cssClass="delete-button">
-            <ButtonOptions
-              stylingMode="text"
-              text={`Delete 
+          {validateDeleteProjectBtn(formData) && myRoles?.includes('admin') &&
+            <ButtonItem cssClass="delete-button">
+              <ButtonOptions
+                stylingMode="text"
+                text={`Delete 
           ${formData.name}`}
-              visible={disableAllowed}
-              disabled={true}
-              elementAttr={{ class: 'lowercase' }} />
-          </ButtonItem>
+                visible={disableAllowed}
+                elementAttr={{ class: 'lowercase' }}
+                onClick={() => handleDeleteOrganization()}
+
+              />
+            </ButtonItem>
+          }
+
         </GroupItem>
         <SimpleItem
           editorType="dxSelectBox"
@@ -177,7 +224,18 @@ export default function EditOrganization({
             </ButtonItem>
           </GroupItem>
         </GroupItem>
+        {confirm && (
+          <DeleteConfirmation
+            onSave={() => deleteOrganizationData(formData)}
+            openConfirmation={confirm}
+            isLoader={isLoading}
+            setConfirm={() => handleCancel()}
+            msg={Messages.deleteOrgMsg(formData.name)}
+            title={Messages.DELETE_ORGANIZATION_TITLE}
+          />
+        )}
       </Form >
+
     </>
   );
 }

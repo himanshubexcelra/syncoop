@@ -496,12 +496,11 @@ export async function deleteMolecule(molecule_id?: number, favourite_id?: number
         return error;
     }
 }
-export async function deleteLibrary(type: string, library_id?: number) {
+export async function deleteLibrary(library_id?: number) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/library/`);
-        if (library_id && type) {
+        if (library_id) {
             url.searchParams.append('library_id', String(library_id));
-            url.searchParams.append('type', type);
         }
         const response = await fetch(url, {
             method: "DELETE",

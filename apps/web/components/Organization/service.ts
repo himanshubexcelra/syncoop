@@ -113,4 +113,30 @@ export async function createOrganization(formData: FormData, role_id: number) {
     return error;
   }
 }
+export async function deleteOrganization(params: any) {
+  try {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization/`);
+    if (params.org_id) {
+      url.searchParams.append('org_id', params.org_id);
+    }
+    if (params.orgProjectIds) {
+      url.searchParams.
+        append('orgProjectIds', JSON.stringify(params.orgProjectIds));
+    }
+
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    return data;
+  }
+  catch (error: any) {
+    console.log(error, 'Error')
+    return error;
+  }
+}
+
 

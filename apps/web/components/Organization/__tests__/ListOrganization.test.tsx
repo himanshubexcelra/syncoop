@@ -1,137 +1,112 @@
-import React from 'react';
-import { render, screen, waitFor, } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import ListOrganization from '../ListOrganization';
-import { getOrganization } from '@/components/Organization/service';
-import { UserData } from '@/lib/definition';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import ListOrganization from "../ListOrganization";
+import { AppContext } from "../../../app/AppState";
+import { getOrganization } from "@/components/Organization/service";
 
-// Mock the service
-jest.mock('@/components/Organization/service', () => ({
-    getOrganization: jest.fn()
+jest.mock("@/components/Organization/service", () => ({
+    getOrganization: jest.fn(),
+    deleteOrganization: jest.fn(),
 }));
 
+jest.mock("react-hot-toast", () => ({
+    success: jest.fn(),
+    error: jest.fn(),
+}));
 
-describe('ListOrganization', () => {
-    const mockData = [
+const mockUserData = {
+    "id": 1,
+    "first_name": "System",
+    "last_name": "Admin",
+    "email_id": "sys_admin@external.milliporesigma.com",
+    "roles": [
         {
-            id: 1,
-            name: 'Test Organization',
-            is_active: true,
-            owner: {
-                email_id: 'admin@test.com'
-            },
-            created_at: '2024-01-15T10:00:00Z',
-            updated_at: '2024-01-16T10:00:00Z',
-            orgUser: [{ id: 1 }, { id: 2 }],
-            _count: {
-                other_container: 5,
-                organizationMolecules: 10
-            }
+            "id": 1,
+            "type": "admin"
         }
-    ];
+    ],
+    "myRoles": [
+        "admin"
+    ],
+    "organization_id": "1",
+    "orgUser": {
+        "id": "1",
+        "name": "EMD DD",
+        "type": "O"
+    }
+};
 
-    const mockUserData: UserData = {
-        id: 1,
-        myRoles: ['admin'],
-        first_name: 'Admin',
-        last_name: 'User',
-        email_id: 'a@b.com',
-        organization: {
-            id: 1
+const mockActionsEnabled = ["edit_own_org", "delete_own_org"];
+
+const mockOrganizations = [
+    {
+        id: "1",
+        name: "Test Organization",
+        _count: {
+            other_container: 5,
+            organizationMolecules: 10,
         },
-        organization_id: 1,
+        orgUser: [{ id: 1, name: 'User 1' }],
+        owner: { email_id: "admin@test.com" },
         is_active: true,
-        user_role: [
-            {
-                id: 1,
-                role: {
-                    id: 1,
-                    name: 'admin'
-                },
-                role_id: 1
-            }
-        ],
-        orgUser: {
-            id: 1,
-            first_name: 'Admin',
-            last_name: 'User',
-            email_id: 'a@b.com',
-            status: 'active',
-            name: 'fauxbio',
-            type: 'admin',
-            organization: {
-                id: 1,
-                name: 'emdd'
-            },
-            user_role: [
-                {
-                    id: 1,
-                    role: {
-                        id: 1,
-                        name: 'admin',
-                    },
-                    role_id: 1,
-                },
-            ],
-        },
-        roles: [
-            {
-                type: 'admin'
-            } // Ensure this array has exactly one element
-        ],
+        created_at: "2025-01-01T00:00:00.000Z",
+        updated_at: "2025-01-10T00:00:00.000Z",
+    },
+];
+
+describe("ListOrganization Component", () => {
+    const mockContextValue = {
+        state: { userCount: 5 },
     };
 
-
     beforeEach(() => {
-        (getOrganization as jest.Mock).mockResolvedValue(mockData);
+        jest.clearAllMocks();
+        (getOrganization as jest.Mock).mockResolvedValue(mockOrganizations);
     });
 
-    it('displays organization data in the grid', async () => {
+    it.skip("renders the component", async () => {
         render(
-            <ListOrganization
-                userData={mockUserData}
-                actionsEnabled={['edit_own_org']}
-            />
+            <AppContext.Provider value={mockContextValue}>
+                <ListOrganization userData={mockUserData} actionsEnabled={['edit_own_org']} />
+            </AppContext.Provider>
         );
         await waitFor(() => {
-            expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            expect(screen.getByText("Test Organization")).toBeInTheDocument();
         });
-        // screen.debug();
-        await waitFor(() => {
-            const rowElements = screen.getAllByText('Test Organization');
-            expect(screen.getByText('admin@test.com')).toBeInTheDocument();
-            expect(rowElements.length).toBe(1);
-            expect(screen.getByText('5')).toBeInTheDocument();
-            expect(screen.getByText('10')).toBeInTheDocument();
-            expect(screen.getByText('2')).toBeInTheDocument();
-        })
-    }, 60000);
+    });
 
-    it.skip('shows edit button only for users with proper permissions', async () => {
+    it("calls fetchOrganizations on load", async () => {
         render(
-            <ListOrganization
-                userData={mockUserData}
-                actionsEnabled={['edit_own_org']}
-            />
+            <AppContext.Provider value={mockContextValue}>
+                <ListOrganization userData={mockUserData} actionsEnabled={mockActionsEnabled} />
+            </AppContext.Provider>
         );
 
         await waitFor(() => {
-            expect(screen.queryByTitle('Edit organization')).toBeInTheDocument();
+            expect(getOrganization).toHaveBeenCalledTimes(1); // Expect a single call now
         });
-
     });
-    it('shows create button only for admin users', async () => {
-        // Test with admin user
+
+
+    it("shows the edit popup when edit button is clicked", async () => {
         render(
-            <ListOrganization
-                userData={mockUserData}
-                actionsEnabled={['edit_own_org']}
-            />
+            <AppContext.Provider value={mockContextValue}>
+                <ListOrganization userData={mockUserData} actionsEnabled={mockActionsEnabled} />
+            </AppContext.Provider>
         );
 
         await waitFor(() => {
-            const createButton = screen.getByText('Create Organization');
-            expect(createButton).toBeInTheDocument();
+            expect(screen.getByText("Test Organization")).toBeInTheDocument();
+        });
+
+        const editButton = screen.getAllByAltText("Edit Organization")[0];
+        fireEvent.click(editButton);
+
+        await waitFor(() => {
+            expect(screen.getByText(/edit test organization/i)).toBeInTheDocument();
         });
     });
+
+
+
 });

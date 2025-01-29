@@ -38,7 +38,8 @@ import {
     getADMECalculation,
     getAverage,
     getADMEColor,
-    delay
+    delay,
+    isCustomReactionCheck
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
@@ -53,6 +54,7 @@ import dynamic from 'next/dynamic';
 import './MoleculeList.css';
 import CustomTooltip from '@/ui/CustomTooltip';
 import AdmeInfo from '../Tooltips/AdmeInfo';
+import AddCustomReaction from '../Molecule/AddCustomReaction/AddCustomReaction';
 
 type MoleculeListType = {
     /* moleculeLoader: boolean, */
@@ -85,6 +87,7 @@ export default function MoleculeList({
     organizationId,
     fetchLibraries,
     editEnabled,
+    projectData,
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
     const appContext = context.state;
@@ -111,7 +114,6 @@ export default function MoleculeList({
     const [deleteMoleculeId, setDeleteMolecules] = useState({ id: 0, name: '', favourite_id: 0 });
     const [selectionEnabledRows, setSelectionEnabledRows] = useState<MoleculeType[]>([]);
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
-
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
@@ -125,6 +127,7 @@ export default function MoleculeList({
         setCellData(data);
     }
 
+    const isCustomReaction = isCustomReactionCheck(projectData.metadata);
     const fetchMoleculeData = async (library_id?: number, project_id?: string) => {
         setMoleculeLoader(true);
         try {
@@ -190,7 +193,7 @@ export default function MoleculeList({
         },
         {
             dataField: 'smiles_string',
-            title: 'Structure',
+            title: isCustomReaction ? 'Product' : 'Structure',
             minWidth: 180,
             width: 180,
             allowSorting: false,
@@ -202,7 +205,8 @@ export default function MoleculeList({
                     structureName={data.source_molecule_name}
                     molecule_id={data.id}
                     onZoomClick={(e: any) => handleStructureZoom(e, data)}
-                    enableEdit={data.status === MoleculeStatusCode.New && editEnabled}
+                    enableEdit={data.status === MoleculeStatusCode.New && editEnabled
+                        && !isCustomReaction}
                     enableDelete={data.status === MoleculeStatusCode.New &&
                         editEnabled}
                     onEditClick={() => showEditMolecule(data)}
@@ -212,7 +216,7 @@ export default function MoleculeList({
         },
         {
             dataField: 'molecule_id',
-            title: 'Molecule ID',
+            title: isCustomReaction ? 'Reaction ID' : 'Molecule ID',
             allowHeaderFiltering: false,
             alignment: "center",
             width: 140,
@@ -221,14 +225,14 @@ export default function MoleculeList({
         },
         {
             dataField: 'source_molecule_name',
-            title: 'Molecule Name',
+            title: isCustomReaction ? 'Name' : 'Molecule Name',
             width: 140,
             allowHeaderFiltering: false,
             alignment: "center"
         },
         {
             dataField: 'molecular_weight',
-            title: 'Molecular Weight',
+            title: isCustomReaction ? 'Product MW' : 'Molecule Weight',
             width: 140,
             alignment: "center",
             allowHeaderFiltering: false,
@@ -1007,7 +1011,14 @@ export default function MoleculeList({
             text: "Add Molecule",
             onClick: addMolecule,
             icon: '/icons/plus-white.svg',
-            visible: editEnabled && !!library_id,
+            visible: editEnabled && !!library_id && !isCustomReaction,
+            class: 'btn-primary toolbar-item-spacing',
+        },
+        {
+            text: "Add Reaction",
+            onClick: addMolecule,
+            icon: '/icons/plus-white.svg',
+            visible: editEnabled && !!library_id && isCustomReaction,
             class: 'btn-primary toolbar-item-spacing',
         },
         {
@@ -1016,7 +1027,7 @@ export default function MoleculeList({
             class: !selectedRows.length
                 ? 'btn-disable toolbar-item-spacing' : 'btn-secondary toolbar-item-spacing',
             disabled: !selectedRows.length,
-            visible: editEnabled && !!library_id
+            visible: editEnabled && !!library_id && !isCustomReaction
         },
         {
             text: `Add to Cart (${selectedRows.length})`,
@@ -1033,7 +1044,9 @@ export default function MoleculeList({
         return (
             <div className="flex items-center relative">
                 <div className="flex items-center">
-                    <p className='form-title mr-2'>{`Add Molecule`}</p>
+                    <p className='form-title mr-2 ml-[15px]'>  {isCustomReaction
+                        ? 'Add Custom Reaction'
+                        : 'Add Molecule'}</p>
                     <div id="info-container">
                         <Image
                             src="/icons/info-icon.svg"
@@ -1051,7 +1064,9 @@ export default function MoleculeList({
                             position="bottom"
                             hideOnOutsideClick={false}
                         >
-                            <AddMoleculeCriteria />
+                            {isCustomReaction
+                                ? <div>Add Custom reaction</div>
+                                : <AddMoleculeCriteria />}
                         </Tooltip>
                     </div>
                 </div>
@@ -1115,7 +1130,7 @@ export default function MoleculeList({
                         titleRender={renderTitleField}
                         visible={viewAddMolecule}
                         contentRender={() => (
-                            <AddMolecule
+                            isCustomReaction ? <AddCustomReaction /> : <AddMolecule
                                 libraryId={selectedLibrary}
                                 projectId={projectId}
                                 organizationId={organizationId}

@@ -2,24 +2,23 @@
 import React from 'react';
 import Image from "next/image";
 import { ProjectDataFields } from '@/lib/definition';
-import { getEntity } from '@/utils/helpers';
+import { isCustomReactionCheck } from '@/utils/helpers';
 
 export default function ProjectTitle(data: ProjectDataFields) {
     const libraryCount = data.other_container?.length || 0;
     const { metadata } = data
-    const projectType = metadata.type;
-    const entity = getEntity(projectType);
-    const entityLabel = projectType === 'Custom Reaction'
+    const isCustomReaction = isCustomReactionCheck(metadata);
+    const entityLabel = isCustomReaction
         ? 'Reaction'
         : 'Molecule'
     const moleculeCount = data.other_container?.reduce((count, library: any) => {
         // Add the count of molecules in each library
-        return count + library._count[entity];
+        return count + library._count.libraryMolecules;
     }, 0);
     return (
         <div>
             <div className='flex'>
-                {projectType === 'Custom Reaction'
+                {isCustomReaction
                     ? <Image
                         src="/icons/custom-reaction-md.svg"
                         width={26}

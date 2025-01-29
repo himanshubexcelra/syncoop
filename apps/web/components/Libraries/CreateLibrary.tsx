@@ -10,7 +10,7 @@ import {
   Label,
   GroupItem,
 } from "devextreme-react/form";
-import { delay, isDeleteLibraryEnable } from "@/utils/helpers";
+import { delay, isCustomReactionCheck, isDeleteLibraryEnable } from "@/utils/helpers";
 import { createLibrary, deleteLibrary, editLibrary } from "./service";
 import { LibraryCreateFields } from "@/lib/definition";
 import { DELAY } from "@/utils/constants";
@@ -18,6 +18,7 @@ import { Messages } from "@/utils/message";
 import { AppContext } from "@/app/AppState";
 import { useContext, useEffect, useState } from "react";
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
+import { LoadIndicator } from "devextreme-react";
 
 
 export default function CreateLibrary({
@@ -35,14 +36,15 @@ export default function CreateLibrary({
   const context: any = useContext(AppContext);
   const appContext = context.state;
   const [deleteLibraryEnabled, setDeleteLibraryEnabled] = useState(false);
-
-  const projectType = projectData.metadata.type;
-  const entityLabel = projectType === 'Custom Reaction'
+  const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
+  const isCustomReaction = isCustomReactionCheck(projectData.metadata)
+  const entityLabel = isCustomReaction
     ? 'reactions'
     : 'molecules'
   const handleSubmit = async () => {
     const values = formRef?.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
+      setLoadIndicatorVisible(true)
       let response;
       if (library_idx !== -1) {
         response = await editLibrary(
@@ -78,10 +80,12 @@ export default function CreateLibrary({
         await delay(DELAY);
         context?.addToState({ ...appContext, refreshCart: true })
         toast.remove(toastId);
+        setLoadIndicatorVisible(false)
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
         toast.remove(toastId);
+        setLoadIndicatorVisible(false)
       }
     }
   };
@@ -97,7 +101,7 @@ export default function CreateLibrary({
   }
   const deleteLibraryDetail = async () => {
     setIsLoading(true);
-    const result = await deleteLibrary(projectType, deleteLibraryData.id,);
+    const result = await deleteLibrary(deleteLibraryData.id);
     if (result.length === 0) {
       toast.success(Messages.LIBRARY_NOT_DELETE_MESSAGE(entityLabel));
       setIsLoading(false);
@@ -209,16 +213,26 @@ export default function CreateLibrary({
           <Label text="Description" />
         </SimpleItem>
         <GroupItem cssClass="buttons-group" colCount={2}>
-          <ButtonItem horizontalAlignment="left" cssClass="form_btn_primary">
-            <ButtonOptions
-              text={library_idx !== -1 ? 'Update' : "Create Library"}
-              useSubmitBehavior={true}
+          <div className="flex items-center">
+            <button className={
+              loadIndicatorVisible
+                ? `disableButton ${library_idx !== -1 ? 'w-[65px]' : 'w-[108px]'} h-[37px]`
+                : 'primary-button'}
               onClick={handleSubmit}
-            />
-          </ButtonItem>
-          <ButtonItem horizontalAlignment="left" cssClass="form_btn_secondary">
-            <ButtonOptions text="Discard" onClick={cancelSave} />
-          </ButtonItem>
+              disabled={loadIndicatorVisible}>
+              <LoadIndicator className={
+                `button-indicator`
+              }
+                visible={loadIndicatorVisible}
+                height={20}
+                width={20}
+              />
+              {loadIndicatorVisible ? '' : library_idx !== -1 ? 'Update' : 'Create Library'}
+            </button>
+            <button className='secondary-button ml-[15px]' onClick={cancelSave}>
+              Discard
+            </button>
+          </div>
         </GroupItem>
       </Form>
       {confirm && (

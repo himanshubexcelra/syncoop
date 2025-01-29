@@ -1,5 +1,11 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import { AssayOptions, ShowEditPopupType } from "@/lib/definition";
+import {
+    AssayFieldList,
+    AssayOptions,
+    OrganizationDataFields,
+    ShowEditPopupType,
+    fetchDataType
+} from "@/lib/definition";
 import { DELAY, assayCreateOptions } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import { Messages } from "@/utils/message";
@@ -12,36 +18,38 @@ import {
     GroupItem,
 } from "devextreme-react/form";
 import RadioGroup from "devextreme-react/radio-group";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
-
+import { editOrganization } from "../Organization/service";
+import { AppContext } from "@/app/AppState";
 interface AssayFormType {
-    commercial?: AssayOptions.AddCommercial | AssayOptions.AddCustom,
+    commercial: boolean,
     SKU?: string,
 }
 
 interface AssayProps {
     setShowAddAssayForm: ShowEditPopupType,
     formRef: any,
-    selectedData: AssayFormType
+    fetchOrganizations?: fetchDataType,
+    data?: OrganizationDataFields,
 }
 const AddAssay = ({
     formRef,
-    selectedData,
     setShowAddAssayForm,
+    data,
+    fetchOrganizations,
 }: AssayProps) => {
-    const [formData, setFormData] = useState({
-        ...selectedData, commercial: selectedData?.SKU ?
-            AssayOptions.AddCommercial : AssayOptions.AddCustom
-    });
-    const [commercial, setCommercial] = useState(true);
-    const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
+    const [formData, setFormData] = useState({ commercial: true });
+    const [isLoading, setIsLoading] = useState(false);
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
 
     const handleValueChange = (value: AssayOptions.AddCommercial | AssayOptions.AddCustom) => {
-        setCommercial(value === AssayOptions.AddCommercial);
         setFormData((prevData: AssayFormType) => ({
             ...prevData,
-            commercial: value,
+            commercial: value === AssayOptions.AddCommercial,
+            assay_detail: '',
+            name: '',
         }));
     };
 
@@ -51,35 +59,45 @@ const AddAssay = ({
     }
 
     const handleSubmit = async () => {
-        setLoadIndicatorVisible(true);
         const values = formRef.current!.instance().option("formData");
-        console.log(values, formData)
         if (formRef.current!.instance().validate().isValid) {
-            //   const response = await createOrganization(values);
-            const response = { error: false };
+            setIsLoading(true);
+            let assayData: AssayFieldList[] = [];
+            const metadata = data?.metadata || {};
+            if (data?.metadata && data.metadata.assay) {
+                assayData = [...data.metadata.assay];
+            }
+            assayData.push({ ...values });
+            const finalData = {
+                ...data, metadata: {
+                    ...metadata, assay: assayData
+                }
+            };
+            const response = await editOrganization(finalData);
             if (!response.error) {
-                formRef.current!.instance().reset();
-                // fetchOrganizations();
-                // setCreatePopupVisibility(false);
-                const toastId = toast.success(Messages.ADD_ASSAY);
+                if (fetchOrganizations) {
+                    fetchOrganizations();
+                } setShowAddAssayForm(false);
+                context?.addToState({ ...appContext, refreshAssayTable: true })
+                const toastId = toast.success(Messages.UPDATE_ASSAY);
                 await delay(DELAY);
                 toast.remove(toastId);
-                setLoadIndicatorVisible(false);
+                setIsLoading(false);
             } else {
                 const toastId = toast.error(`${response.error}`);
                 await delay(DELAY);
                 toast.remove(toastId);
-                setLoadIndicatorVisible(false);
+                setIsLoading(false);
             }
         }
     };
 
     return (
-        <Form ref={formRef} showValidationSummary={true} formData={selectedData}>
+        <Form ref={formRef} showValidationSummary={true} formData={formData}>
             <SimpleItem>
                 <RadioGroup
                     items={assayCreateOptions}
-                    defaultValue={selectedData?.SKU ?
+                    value={formData.commercial ?
                         AssayOptions.AddCommercial : AssayOptions.AddCustom
                     }
                     onValueChange={handleValueChange} />
@@ -92,16 +110,16 @@ const AddAssay = ({
                 <Label text="Functional Assay Name" />
                 <RequiredRule message="Functional assay name is required" />
             </SimpleItem>
-            {commercial ? (
+            {formData.commercial ? (
                 <SimpleItem
-                    dataField="sku"
+                    dataField="assay_detail"
                     editorOptions={{ placeholder: "Functional Assay Name" }}
                 >
                     <Label text="Please provide Name / URL / SKU of the assay" />
                 </SimpleItem>
             ) : (
                 <SimpleItem
-                    dataField="description"
+                    dataField="assay_detail"
                     editorType="dxTextArea"
                     cssClass='textarea-field'
                     editorOptions={{
@@ -115,19 +133,19 @@ const AddAssay = ({
             )}
             <GroupItem cssClass="buttons-group" colCount={2}>
                 <button className={
-                    loadIndicatorVisible
+                    isLoading
                         ? 'disableButton w-[65px] h-[37px]'
                         : 'primary-button'}
                     onClick={handleSubmit}
-                    disabled={loadIndicatorVisible}>
+                    disabled={isLoading}>
                     <LoadIndicator className={
                         `button-indicator`
                     }
-                        visible={loadIndicatorVisible}
+                        visible={isLoading}
                         height={20}
                         width={20}
                     />
-                    {loadIndicatorVisible ? '' : 'Submit'}
+                    {isLoading ? '' : 'Submit'}
                 </button>
                 <button className='secondary-button ml-[15px]' onClick={cancelSave}>
                     Cancel

@@ -15,6 +15,7 @@ import {
     UserData,
     MoleculeType,
     ContainerPermission,
+    ContainerType,
 } from '@/lib/definition';
 import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
@@ -26,7 +27,7 @@ import { Messages } from "@/utils/message";
 import { AssayData, DELAY } from "@/utils/constants";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import ADMESelector from "../ADMEDetails/ADMESelector";
-import { delay, getUTCTime, isAdmin } from "@/utils/helpers";
+import { delay, getUTCTime, isAdmin, isCustomReactionCheck } from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import LibraryAccordion from './LibraryAccordion';
 import MoleculeList from './MoleculeList';
@@ -281,7 +282,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     }
     const config = projectData.inherits_configuration ?
         projectData.container.config : projectData.config;
-
+    const isCustomReaction = isCustomReactionCheck(projectData.metadata)
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -310,7 +311,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                         <div className="flex items-center gap-4">
                                             <div className='project-type-highlight 
                                             flex items-center gap-2'>
-                                                {projectData.metadata.type === 'Custom Reaction'
+                                                {isCustomReaction
                                                     ? <Image
                                                         src="/icons/custom-reaction-black.svg"
                                                         width={19}
@@ -382,8 +383,10 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                             <Item visible={false} />
                                             <Item titleRender={() => 'Library Properties'}>
                                                 <ADMESelector
-                                                    type="L"
-                                                    organizationId={userData.organization_id}
+                                                    type={ContainerType.LIBRARY}
+                                                    organizationId={
+                                                        userData.organization_id
+                                                    }
                                                     childRef={childRef}
                                                     isDirty={isDirty}
                                                     setIsDirty={setIsDirty}
@@ -405,7 +408,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                 `Functional Assay (${AssayData.length})`}>
                                                 <FunctionalAssay
                                                     data={AssayData}
-                                                    type="L"
+                                                    type={ContainerType.LIBRARY}
                                                 />
                                             </Item>
                                         </Accordion>

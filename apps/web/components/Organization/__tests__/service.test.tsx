@@ -1,4 +1,4 @@
-import { getOrganization, editOrganization, createOrganization } from '../service';
+import { getOrganization, editOrganization, createOrganization, deleteOrganization } from '../service';
 
 fdescribe('Organization API Functions', () => {
     const data = [
@@ -146,11 +146,39 @@ fdescribe('Organization API Functions', () => {
     test('createOrganization should handle fetch errors', async () => {
         const formData = new FormData();
         formData.append('name', 'Test Organization');
-
         global.fetch = jest.fn(() => Promise.reject(new Error('Network Error'))) as jest.Mock;
-
         const result = await createOrganization(formData, 2);
-
         expect(result).toEqual(new Error('Network Error'));
     });
+    test('successfully deletes an organization', async () => {
+        const mockResponse = { success: true, message: 'Organization deleted' };
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockResponse),
+            })
+        ) as jest.Mock;
+
+        const params = {
+            org_id: '123',
+            orgProjectIds: [20, 21],
+        };
+        const result = await deleteOrganization(params);
+        const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/organization/`);
+        if (params.org_id) {
+            expectedUrl.searchParams.append('org_id', params.org_id);
+        }
+        if (params.orgProjectIds) {
+            expectedUrl.searchParams.append('orgProjectIds', JSON.stringify(params.orgProjectIds));
+        }
+        expect(fetch).toHaveBeenCalledTimes(1); 
+        expect(fetch).toHaveBeenCalledWith(expectedUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        expect(result).toEqual(mockResponse);
+    });
+
 });

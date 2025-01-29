@@ -474,3 +474,107 @@ export async function PUT(request: Request) {
     await prisma.$disconnect();
   }
 }
+
+export async function DELETE(request: Request) {
+  const url = new URL(request.url);
+  const searchParams = new URLSearchParams(url.searchParams);
+  const orgProjectIds = searchParams.get('orgProjectIds');
+  const org_id = Number(searchParams.get('org_id'));
+
+  const transaction = await prisma.$transaction(async (prisma) => {
+    try {
+      // Delete Product Module
+      await prisma.org_product_module.deleteMany({
+        where: {
+          organization_id: Number(searchParams.get('org_id')), // Ensure proper casting
+        },
+      });
+
+      if (orgProjectIds) {
+        const projectIds: number[] = JSON.parse(orgProjectIds);
+        // Delete Molecule
+        await prisma.molecule.deleteMany({
+          where: {
+            organization_id: Number(org_id),
+          },
+        });
+        // Delete Library
+        await prisma.container.deleteMany({
+          where: {
+            type: ContainerType.LIBRARY,
+            parent_id: {
+              in: projectIds              
+            },
+          },
+        });
+        // Delete Project
+        await prisma.container.deleteMany({
+          where: {
+            type: ContainerType.PROJECT,
+            id: {
+              in: projectIds,
+            },
+          },
+        });
+      }
+
+      // Logic for Delete User and Container
+      const userIds = await prisma.users.findMany({
+        where: {
+          organization_id: org_id,
+        },
+        select: {
+          id: true,
+        },
+      });
+      const userIdArray = userIds.map(user => user.id);
+      await prisma.users.updateMany({
+        where: {
+          organization_id: org_id,
+        },
+        data: {
+          organization_id: null,
+        },
+      });
+
+      // Delete Container
+      await prisma.container.deleteMany({
+        where: {
+          owner_id: {
+            in: userIdArray,
+          },
+        },
+      });
+      // Delete User Role
+      await prisma.user_role.deleteMany({
+        where: {
+          user_id: {
+            in: userIdArray,
+          },
+        },
+      });
+
+      // Delete User
+      await prisma.users.deleteMany({
+        where: {
+          id: {
+            in: userIdArray,
+          },
+        },
+      });
+
+      return new Response(json({ success: true, message: 'Entities deleted successfully' }), {
+        headers: { "Content-Type": "application/json" },
+        status: SUCCESS,
+      });
+    } catch (error: any) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        headers: { "Content-Type": "application/json" },
+        status: BAD_REQUEST, // Adjust status code as needed
+      });
+    }
+
+  });
+
+  return transaction;
+}

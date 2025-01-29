@@ -135,7 +135,7 @@ describe('ProjectAccordionDetail', () => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
     });
 
-    test.skip('renders delete button when deleteEnabled is true', () => {
+    test.skip('renders delete button when editEnabled is true', () => {
         const noLibraryProps = {
             ...mockProps,
             data: { ...mockProps.data, other_container: [] },
@@ -145,7 +145,6 @@ describe('ProjectAccordionDetail', () => {
         fireEvent.click(deleteButton);
         expect(deleteButton).toBeInTheDocument();
     });
-
     test.skip('renders empty library message if no libraries exist', () => {
         const noLibraryProps = {
             ...mockProps,

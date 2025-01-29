@@ -15,17 +15,24 @@ import { Button as Btn } from "devextreme-react/button";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import {
   ActionStatus,
+  ContainerType,
   OrganizationDataFields,
   OrganizationType,
-  UserData
+  UserData,
 } from "@/lib/definition";
 import RenderCreateOrganization from "./createOrganization";
 import EditOrganization from "./editOrganization";
-import { getOrganization } from "@/components/Organization/service";
-import { formatDate } from "@/utils/helpers";
+import { deleteOrganization, getOrganization } from "@/components/Organization/service";
+import {
+  formatDate,
+  isDeleteLibraryEnable,
+} from "@/utils/helpers";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
 import { FormRef } from "devextreme-react/cjs/form";
+import DeleteConfirmation from "@/ui/DeleteConfirmation";
+import { Messages } from "@/utils/message";
+import toast from "react-hot-toast";
 
 type ListOrganizationProps = {
   userData: UserData, actionsEnabled: string[]
@@ -38,6 +45,8 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   const [createPopupVisible, setCreatePopupVisibility] = useState(false);
   const [tableData, setTableData] = useState<OrganizationDataFields[]>([]);
   const [loader, setLoader] = useState(true);
+  const [confirm, setConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { myRoles } = userData;
   const context: any = useContext(AppContext);
@@ -56,6 +65,13 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
 
   useEffect(() => {
     fetchOrganizations();
+    if (typeof window !== 'undefined') {
+      setPopupPosition({
+        my: 'top right',
+        at: 'top right',
+        of: window,
+      });
+    }
   }, [appContext?.userCount]);
 
   const grid = useRef<DataGridRef>(null);
@@ -67,18 +83,6 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
   };
 
   const [popupPosition, setPopupPosition] = useState({} as any);
-
-  useEffect(() => {
-    fetchOrganizations();
-    // This runs only in the browser
-    if (typeof window !== 'undefined') {
-      setPopupPosition({
-        my: 'top right',
-        at: 'top right',
-        of: window,
-      });
-    }
-  }, []);
 
   const statusHeaderFilter = [
     { value: ActionStatus.Enabled, text: 'Enabled' },
@@ -122,6 +126,54 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
       setCurrentSort({ field: newField, order: 'asc' });
     }
   };
+  const handleDeleteOrganization = (data: OrganizationDataFields) => {
+    setEditField(data);
+    setConfirm(true);
+  }
+
+  const validateDeleteProjectBtn = (data: OrganizationDataFields) => {
+    const projectLibraries = data?.other_container;
+    if (!projectLibraries) return true;
+    if (!isDeleteLibraryEnable(data?.organizationMolecules ?? [])) {
+      return false;
+    }
+    return true;
+  };
+
+
+  const deleteOrganizationData = async (data: OrganizationDataFields) => {
+    const projectIds: number[] = (data?.other_container ?? [])
+      .filter((item: any) => item.type === ContainerType.PROJECT)
+      .map((item: any) => Number(item.id));
+    let params: object = {
+      org_id: data.id,
+    }
+    if (data?.other_container) {
+      params = {
+        ...params,
+        orgProjectIds: projectIds
+      }
+    }
+    if (data?.organizationMolecules) {
+      params = {
+        ...params,
+        isMolecule: true
+      }
+    }
+    const result = await deleteOrganization(params);
+    if (result.success) {
+      toast.success(Messages.DELETE_ORGANIZATION_SUCCESS);
+      setIsLoading(false);
+      fetchOrganizations();
+    }
+    else {
+      toast.error(Messages.DELETE_ORGANIZATION_ERROR);
+      setIsLoading(false);
+    }
+  }
+  const handleCancel = () => {
+    setConfirm(false)
+  }
   return (
     <>
       {loader ? <div className="center">
@@ -148,6 +200,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
           }}
           onOptionChanged={handleSortChanged}
         >
+
           <Paging defaultPageSize={5} defaultPageIndex={0} />
           <Column
             dataField="name"
@@ -261,6 +314,29 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
               caption="Actions"
             />
           )}
+          {(actionsEnabled.includes('edit_own_org') || myRoles?.includes('admin')) && (
+            <Column
+              width={80}
+              cellRender={({ data }: any) => (
+                <Btn
+                  visible={validateDeleteProjectBtn(data)}
+                  render={() => (
+                    <>
+                      <Image
+                        src="/icons/delete-blue-sm.svg"
+                        width={24}
+                        height={24}
+                        alt="Delete Organization"
+                        title="Delete organization"
+                      />
+                    </>
+                  )}
+                  onClick={() => handleDeleteOrganization(data)}
+                />
+              )}
+              caption="Delete"
+            />
+          )}
           <GridToolbar>
             <Item location="after">
               {myRoles?.includes('admin') && (
@@ -333,6 +409,16 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
             <Item name="searchPanel" location="before" />
           </GridToolbar>
         </DataGrid>}
+      {confirm && (
+        <DeleteConfirmation
+          onSave={() => deleteOrganizationData(editField)}
+          openConfirmation={confirm}
+          isLoader={isLoading}
+          setConfirm={() => handleCancel()}
+          msg={Messages.deleteOrgMsg(editField.name)}
+          title={Messages.DELETE_ORGANIZATION_TITLE}
+        />
+      )}
     </>
   );
 }

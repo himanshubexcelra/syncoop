@@ -42,7 +42,8 @@ export default function Header({ userData }: HeaderProps) {
     const [cartCount, setCartCount] = useState<number>(0);
     const currentUrl = usePathname();
     const containsProjects = currentUrl.includes("/projects");
-    const containsMoleculeOrder = currentUrl.includes("/molecule_order");
+    const containsMoleculeOrder = currentUrl.includes("/molecule_order") ||
+        currentUrl.includes("/dashboard");
     const { myRoles } = userData;
 
     useEffect(() => {

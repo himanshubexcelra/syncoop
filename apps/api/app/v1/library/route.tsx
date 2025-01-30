@@ -185,7 +185,9 @@ export async function PUT(request: Request) {
             organization_id,
             id,
             config,
-            inherits_configuration
+            inherits_configuration,
+            inherits_bioassays,
+            metadata,
         } = req;
 
         const existingLibrary = await prisma.container.findMany({
@@ -235,7 +237,9 @@ export async function PUT(request: Request) {
                 },
                 updated_at: getUTCTime(new Date().toISOString()),
                 config,
-                inherits_configuration
+                inherits_configuration,
+                inherits_bioassays,
+                metadata,
             },
         });
 

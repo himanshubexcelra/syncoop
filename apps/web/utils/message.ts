@@ -50,9 +50,22 @@ export const Messages = {
     },
     UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully",
     CREATE_LAB_JOB_ORDER: "Pathway has been added to synthesis lab job cart",
-    LAP_JOB_CONFIRMATION_TITLE: 'Synthesis order confirmation',
-    displayLabJobMessage(count: number) {
-        return `You are ordering the synthesis of ${count} Molecule.`;
+    LAP_JOB_CONFIRMATION_TITLE: 'Order confirmation',
+    displayLabJobMessage(labJobStateCount: number, analysisStateCount: number) {
+        if (!labJobStateCount && !analysisStateCount) {
+            return ''; // No message if both counts are zero
+        }
+        const parts: Array<string> = [];
+        if (labJobStateCount) {
+            parts.push(`synthesis of ${labJobStateCount} molecule `);
+        }
+        if (analysisStateCount) {
+            parts.push(`analysis of ${analysisStateCount} molecule`);
+        }
+        return `You are ordering the ${parts.join(' and ')}`;
+    },
+    displayAnalysisMessage(count: number) {
+        return `You are ordering the Analysis of ${count} Molecule.`;
     },
     MOLECULES_VALIDATE_MSG: "Molecule have been validate successfully.",
     ADD_USER: 'User created successfully',
@@ -133,6 +146,5 @@ export const Messages = {
     },
     DELETE_PROJECT_MESSAGE: 'Project Deleted Successfully.',
     DELETE_PROJECT_ERROR_MESSAGE: 'Can not delete project. Some error occured while deleting the library',
-
-
+    ANALYSIS_ORDER: "Molecule has been added to analysis cart"
 }

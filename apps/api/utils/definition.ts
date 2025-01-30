@@ -11,6 +11,7 @@ export enum MoleculeStatusLabel {
   ValidatedInCart = 'Validated + In Cart',
   InProgress = 'In Progress',
   Done = 'Done',
+  OrderedInCart = 'Ordered + In Cart',
 }
 
 export enum MoleculeStatusCode {
@@ -24,7 +25,8 @@ export enum MoleculeStatusCode {
   Validated = 8,
   ValidatedInCart = 9,
   InProgress = 10,
-  Done = 11
+  Done = 11,
+  OrderedInCart = 12,
 }
 
 export enum MoleculeOrderStatusLabel {
@@ -56,3 +58,17 @@ export enum ContainerType {
   PROJECT = 'P',
   LIBRARY = 'L',
 }
+
+export interface labJobOrder {
+  molecule_id: number;
+  pathway_id?: number;
+  product_smiles_string: any;
+  product_molecular_weight: any;
+  no_of_steps: number;
+  functional_bioassays: any;
+  reactions: any;
+  status: any;
+  created_by: any;
+  submitted_by: any;
+  created_at: string;
+} 

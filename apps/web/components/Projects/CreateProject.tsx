@@ -64,6 +64,13 @@ export default function CreateProject({
   const [showIcon, setShowIcon] = useState({ name: 'arrow-both', permission: 'arrow-both' });
   const [confirm, setConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [projectType, setProjectType] = useState(
+    edit ?
+      projectData?.metadata.type
+      : PROJECT_TYPES[0]);
+  const [projectTarget, setProjectTarget] = useState(
+    (projectData?.metadata.target) ? projectData.metadata.target : ''
+  )
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id);
@@ -349,7 +356,8 @@ export default function CreateProject({
           items: PROJECT_TYPES,
           searchEnabled: true,
           disabled: edit,
-          value: edit ? projectData?.metadata.type : PROJECT_TYPES[0]
+          value: projectType,
+          onValueChanged: (e: any) => setProjectType(e.value)
         }}
       >
         <Label text="Project Type" />
@@ -366,7 +374,8 @@ export default function CreateProject({
         dataField="target"
         editorOptions={{
           placeholder: "Target",
-          value: (projectData?.metadata.target) ? projectData.metadata.target : ''
+          value: projectTarget,
+          onValueChanged: (e: any) => setProjectTarget(e.value)
         }}
       >
         <Label text="Target" />

@@ -107,6 +107,7 @@ export default function LandingPage({
                 reset: reset,
                 isDirty: isDirty,
                 setReset: setReset,
+                loggedInUser: userData.id
             }
         },
         {
@@ -115,7 +116,12 @@ export default function LandingPage({
             props: {
                 data: organizationData?.metadata?.assay || [],
                 orgUser: orgDetail,
-                fetchOrganizations: fetchOrganizationData
+                fetchOrganizations: fetchOrganizationData,
+                childRef: childRef,
+                setIsDirty: setIsDirty,
+                reset: reset,
+                isDirty: isDirty,
+                loggedInUser: userData.id
             },
         },
         {

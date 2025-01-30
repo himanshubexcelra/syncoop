@@ -132,7 +132,7 @@ model inventory_metadata {
 model lab_job_order {
   lab_job_order_id                        BigInt               @default(autoincrement())
   molecule_id                             BigInt
-  pathway_id                              BigInt
+  pathway_id                              BigInt?              // Optional field
   product_smiles_string                   String
   product_molecular_weight                Decimal?             @db.Decimal
   no_of_steps                             Int?
@@ -148,7 +148,7 @@ model lab_job_order {
   updated_by                              Int?
   users_lab_job_order_created_byTousers   users                @relation("lab_job_order_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_lab_job_order_created_by")
   molecule                                molecule             @relation(fields: [molecule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_lab_job_order_mol_id")
-  pathway                                 pathway              @relation(fields: [pathway_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_lab_job_order_pathway_id")
+  pathway                                 pathway?             @relation(fields: [pathway_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_lab_job_order_pathway_id")
   users_lab_job_order_submitted_byTousers users?               @relation("lab_job_order_submitted_byTousers", fields: [submitted_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_lab_job_order_submit_by")
   users_lab_job_order_updated_byTousers   users?               @relation("lab_job_order_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_lab_job_order_updated_by")
   molecule_adme_data                      molecule_adme_data[]

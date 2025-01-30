@@ -1,11 +1,9 @@
-
 /*eslint max-len: ["error", { "code": 100 }]*/
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CustomDataGrid from "@/ui/dataGrid";
 import ConfirmationDialog from "./ConfirmationDialog";
 import { Button as Btn } from "devextreme-react/button";
 import Image from "next/image";
-import Link from "next/link";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import {
   CartItem,
@@ -21,11 +19,19 @@ import {
 } from "@/lib/definition";
 import { submitOrder, getLabJobOrderDetail, postLabJobOrder, updateLabJobApi } from "./service";
 import dynamic from "next/dynamic";
-import { generateRandomDigitNumber } from "@/utils/helpers";
+import {
+  filterCartDataForAnalysis,
+  filterCartDataForLabJob,
+  generateRandomDigitNumber,
+  mapCartData
+} from "@/utils/helpers";
 import toast from "react-hot-toast";
 import { Messages } from "@/utils/message";
 import { LabJobStatus, ReactionStatus } from "@/utils/constants";
 import MoleculeStructureActions from "@/ui/MoleculeStructureActions";
+import Accordion, { Item } from 'devextreme-react/accordion';
+import { Switch } from "devextreme-react";
+import Link from "next/link";
 
 interface CartDetailsProps {
   cartData: CartItem[];
@@ -34,7 +40,7 @@ interface CartDetailsProps {
   removeItemFromCart: (item: DeleteMoleculeCart) => void;
   removeAll: (user_id: number, type: string, msg: string) => void;
   close: () => void;
-  loader: boolean
+  loader: boolean;
 }
 export default function CartDetails({
   cartData,
@@ -43,7 +49,7 @@ export default function CartDetails({
   removeItemFromCart,
   removeAll,
   close,
-  loader,
+  loader
 }: CartDetailsProps) {
   const [isDisable, setDisableButton] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -54,8 +60,19 @@ export default function CartDetails({
     source_molecule_name: ''
   });
   const [isSubmitOrderLoading, setSubmitOrderLoading] = useState(false);
-
+  const [showAccordion, setShowAccordion] = useState(true);
   const popupRef = useRef<HTMLDivElement>(null);
+  const [analysisState, setAnalysisState] = useState<CartDetail[]>([]);
+  const [labJobState, setLabJobState] = useState<CartDetail[]>([]);
+
+  useEffect(() => {
+    const analysisData = filterCartDataForAnalysis(cartData);
+    const labJobData = filterCartDataForLabJob(cartData);
+
+    setAnalysisState(mapCartData(analysisData, userData.id));
+    setLabJobState(mapCartData(labJobData, userData.id));
+  }, [cartData]);
+
 
   const closeMagnifyPopup = (event: any) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -65,22 +82,6 @@ export default function CartDetails({
   const MoleculeStructure = dynamic(() => import("@/utils/MoleculeStructure"), {
     ssr: false,
   });
-  
-  const cartDetails: CartDetail[] = cartData.map((item) => {
-    return {
-    id: item.id,
-    molecule_id: item.molecule_id,
-    library_id: item.library_id,
-    project_id: item.project_id,
-    molecule_order_id: item.molecule_order_id,
-    organization_id: item.organization_id,
-    molecular_weight: item.molecule.molecular_weight,
-    moleculeName: item.molecule.source_molecule_name,
-    smiles_string: item.molecule.smiles_string,
-    created_by: userData.id,
-    "Project / Library": `${item.molecule.project.name} / ${item.molecule.library.name}`,
-    "Organization / Order": `${item.organization.name} / ${item.molecule_order_id}`,
-  }});
 
   const handleStructureZoom = (event: any, data: any) => {
     const { x, y } = event.event.target.getBoundingClientRect();
@@ -204,31 +205,33 @@ export default function CartDetails({
     return result;
   }
 
-  const prepareLabJobData = (
-    res: any,
-    moleculeId: number
-  ): SaveLabJobOrder[] => {
-    const totalReaction: number = res.pathway[0].reaction_detail?.length ?? 0;
-    const finalProduct =
-      res.pathway?.[0]?.reaction_detail?.[totalReaction - 1] ?? null;
-    const organization = res?.organization;
-    const reactionData = prePareReactions(res.pathway[0])
+  const prepareData = (res: any, moleculeId: number): SaveLabJobOrder[] => {
+    const hasPathways = res?.pathway?.length > 0;
 
-    const labJobData: SaveLabJobOrder[] = [
+    const pathway = hasPathways ? res.pathway[0] : null;
+    const totalReactions = pathway?.reaction_detail?.length || 0;
+    const finalProduct = pathway?.reaction_detail?.[totalReactions - 1] || null;
+
+    return [
       {
-        molecule_id: moleculeId ? Number(moleculeId) : 0,
-        pathway_id: Number(res.pathway[0].id),
-        product_smiles_string: finalProduct?.product_smiles_string,
-        product_molecular_weight: finalProduct?.product_molecular_weight,
-        no_of_steps: res?.pathway[0].step_count,
-        functional_bioassays: organization.metadata,
-        reactions: reactionData,
+        molecule_id: moleculeId || 0,
+        pathway_id: pathway?.id || null,
+        product_smiles_string: hasPathways
+          ? finalProduct?.product_smiles_string || null
+          : res?.smiles_string || null,
+        product_molecular_weight: hasPathways
+          ? finalProduct?.product_molecular_weight || null
+          : res?.molecular_weight || null,
+        no_of_steps: hasPathways ? pathway?.step_count || null : null,
+        functional_bioassays: hasPathways
+          ? res?.organization?.metadata || null
+          : null,
+        reactions: hasPathways ? prePareReactions(pathway) : [],
         created_by: userData.id,
         status: LabJobStatus.Submitted,
         reactionStatus: ReactionStatus.InProgress,
       },
     ];
-    return labJobData;
   };
 
   const getLabJobOrderData = async () => {
@@ -237,7 +240,8 @@ export default function CartDetails({
     await Promise.all(
       cartData.map(async (item: any) => {
         const res = await getLabJobOrderDetail(item.molecule_id);
-        const labJobData: SaveLabJobOrder[] = prepareLabJobData(res, item.molecule_id);
+        const labJobData = prepareData(res, item.molecule_id);
+
         labJobDataList.push(...labJobData);
       })
     );
@@ -248,18 +252,24 @@ export default function CartDetails({
     for (const item of labJobOrderData) {
       try {
         const result = await postLabJobOrder(item);
-        await updateLabJobApi(result.lab_job_order_id);
+        if (!result || !result.lab_job_order_id) {
+          console.error("Invalid result from postLabJobOrder:", result);
+          continue; // Skip to the next iteration
+        }
+        await updateLabJobApi(result?.lab_job_order_id);
+        const labJobStateCount = labJobState?.length || 0;
+        const analysisStateCount = analysisState?.length || 0;
+        const message = Messages.displayLabJobMessage(labJobStateCount, analysisStateCount);
         removeAll(
           userData.id,
           "LabJobOrder",
-          Messages.displayLabJobMessage(cartData.length)
+          message,
         );
       } catch (error) {
         console.error("Error processing lab job order:", error);
       }
     }
   }
-
 
   const handleLabJobOrder = async () => {
     const labJobOrderData = await getLabJobOrderData();
@@ -278,75 +288,147 @@ export default function CartDetails({
     setConfirm(val);
   };
 
+  const handleToggleChange = () => {
+    setShowAccordion(!showAccordion);
+  };
+
   return (
 
     <>
       {
         loader ? <div style={{ marginTop: '300px', marginLeft: '255px' }}><LoadIndicator /></div>
           : cartData.length > 0 ? (
-            <div className="popup-content">
-              <div className="popup-grid"
-                onClick={closeMagnifyPopup}>
-                <CustomDataGrid
-                  columns={columns}
-                  data={cartDetails}
-                  groupingColumn={rowGroupName()}
-                  enableGrouping
-                  enableSorting={false}
-                  enableFiltering={false}
-                  enableOptions={false}
-                  enableRowSelection={false}
-                  enableSearchOption={false}
-                  loader={false}
-                  scrollMode={'infinite'}
-                />
-              </div>
+            <div>
+              <div className="popup-content">
+                <div className="popup-grid"
+                  onClick={closeMagnifyPopup}>
+                  {containsProjects ? (
+                    <div>
+                      <CustomDataGrid
+                        columns={columns}
+                        height="auto"
+                        data={mapCartData(cartData, userData.id)}
+                        groupingColumn={rowGroupName()}
+                        enableGrouping
+                        enableSorting={false}
+                        enableFiltering={false}
+                        enableOptions={false}
+                        enableRowSelection={false}
+                        enableSearchOption={false}
+                        loader={false}
+                        scrollMode="infinite"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Analysis Section */}
+                      {analysisState?.length > 0 &&
+                        <Accordion collapsible multiple={true}>
+                          <Item titleRender={() => "Molecules for Analysis"}>
+                            <div>
+                              <div className="flex flex-row items-center justify-end">
+                                <label className="mr-3 font-lato font-bold 
+                                  text-[12.69px] text-greyText">Show Products
+                                </label>
+                                <Switch value={showAccordion} onValueChanged={handleToggleChange} />
+                              </div>
+                              <CustomDataGrid
+                                columns={columns}
+                                height="auto"
+                                data={analysisState}
+                                groupingColumn={rowGroupName()}
+                                enableGrouping
+                                enableSorting={false}
+                                enableFiltering={false}
+                                enableOptions={false}
+                                enableRowSelection={false}
+                                enableSearchOption={false}
+                                loader={false}
+                                scrollMode="infinite"
+                              />
+                            </div>
+                          </Item>
+                        </Accordion>}
 
-              <div className="popup-buttons">
-                <Btn
-                  className={
-                    isSubmitOrderLoading
-                      ? "mol-ord-btn-disable btn-primary w-[130px]"
-                      : "btn-primary w-[130px]"
+                      {/* Lab Job Section */}
+                      {labJobState?.length > 0 &&
+                        <Accordion collapsible multiple={true}>
+                          <Item titleRender={() => "Synthesis Lab Job"}>
+                            <div>
+                              <div className="flex flex-row items-center justify-end">
+                                <label className="mr-3 font-lato font-bold 
+                                  text-[12.69px] text-greyText">Show Products
+                                </label>
+                                <Switch value={showAccordion} onValueChanged={handleToggleChange} />
+                              </div>
+                              <CustomDataGrid
+                                columns={columns}
+                                height="auto"
+                                data={labJobState}
+                                groupingColumn={rowGroupName()}
+                                enableGrouping
+                                enableSorting={false}
+                                enableFiltering={false}
+                                enableOptions={false}
+                                enableRowSelection={false}
+                                enableSearchOption={false}
+                                loader={false}
+                                scrollMode="infinite"
+                              />
+                            </div>
+                          </Item>
+                        </Accordion>}
+                    </div>
+                  )
                   }
-                  disabled={isDisable || isSubmitOrderLoading}
-                  onClick={handleClick}
-                  text={isSubmitOrderLoading ? '' : 'Submit Order'}
+                </div>
 
-                >
-                  {isSubmitOrderLoading && (
-                    <LoadIndicator
-                      className="button-indicator"
-                      style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        color: 'var(--themeSilverGreyColor)'
-                      }}
-                      height={20}
-                      width={20}
-                    />
-                  )}
-                </Btn>
-                <Btn
-                  className="btn-secondary"
-                  onClick={() => {
-                    close();
-                    setSubmitOrderLoading(false);
-                  }}
-                  text="Close"
-                />
-                <Link
-                  href="#"
-                  onClick={() =>
-                    removeAll(userData.id, "RemoveAll", Messages.REMOVE_ALL_MESSAGE)
-                  }
-                  className="text-themeBlueColor font-bold"
-                  style={{ marginLeft: "10px", marginTop: "10px" }}
-                >
-                  Remove All
-                </Link>
+                <div className="popup-buttons">
+                  <Btn
+                    className={
+                      isSubmitOrderLoading
+                        ? "mol-ord-btn-disable btn-primary w-[130px]"
+                        : "btn-primary w-[130px]"
+                    }
+                    disabled={isDisable || isSubmitOrderLoading}
+                    onClick={handleClick}
+                    text={isSubmitOrderLoading ? '' : 'Submit Order'}
+
+                  >
+                    {isSubmitOrderLoading && (
+                      <LoadIndicator
+                        className="button-indicator"
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          color: 'var(--themeSilverGreyColor)'
+                        }}
+                        height={20}
+                        width={20}
+                      />
+                    )}
+                  </Btn>
+                  <Btn
+                    className="btn-secondary"
+                    onClick={() => {
+                      close();
+                      setSubmitOrderLoading(false);
+                    }}
+                    text="Close"
+                  />
+                  <Link
+                    href="#"
+                    onClick={() =>
+                      removeAll(userData.id, "RemoveAll", Messages.REMOVE_ALL_MESSAGE)
+                    }
+                    className="text-themeBlueColor font-bold"
+                    style={{ marginLeft: "10px", marginTop: "10px" }}
+                  >
+                    Remove All
+                  </Link>
+                </div>
               </div>
             </div>
           ) : (
@@ -357,7 +439,7 @@ export default function CartDetails({
           onSave={handleLabJobOrder}
           openConfirmation={confirm}
           setConfirm={(e: any) => handleCancel(e)}
-          msg={Messages.displayLabJobMessage(cartData.length)}
+          msg={Messages.displayLabJobMessage(labJobState?.length, analysisState?.length)}
           title={Messages.LAP_JOB_CONFIRMATION_TITLE}
         />
       )}

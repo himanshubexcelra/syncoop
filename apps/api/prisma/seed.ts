@@ -1693,7 +1693,7 @@ async function main() {
             column_name: 'status',
             status_code: String(MoleculeStatusCode.ValidatedInCart),
             status_name: MoleculeStatusLabel.ValidatedInCart,
-            status_description: 'User re-adds to cart',
+            status_description: 'User adds validated molecule to the cart',
             is_active: true,
             created_at: getUTCTime(new Date().toISOString()),
             created_by: sysAdminCreate.id,
@@ -1767,6 +1767,19 @@ async function main() {
         }
     });
 
+    await prisma.status_code.create({
+        data: {
+            table_name: 'molecule',
+            column_name: 'status',
+            status_code: String(MoleculeStatusCode.OrderedInCart),
+            status_name: MoleculeStatusLabel.OrderedInCart,
+            status_description: 'User adds Ordered molecule to the cart',
+            is_active: true,
+            created_at: getUTCTime(new Date().toISOString()),
+            created_by: sysAdminCreate.id
+        }
+    });
+    
     await prisma.status_code.create({
         data: {
             table_name: 'container_access_permission',

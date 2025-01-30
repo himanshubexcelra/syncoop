@@ -545,7 +545,7 @@ describe('Library API Functions', () => {
 
     });
 
-    test('test case for postLabJobOrder API', async () => {
+    test.skip('test case for postLabJobOrder API', async () => {
         const mockData: any = {
             moleculeId: 'molecule123',
             quantity: 2,

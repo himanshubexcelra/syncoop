@@ -112,6 +112,7 @@ export async function GET(request: Request) {
                         id: true,
                         name: true,
                         config: true,
+                        metadata: true,
                     }
                 },
                 userWhoCreated: { // Include the user who created the project
@@ -265,7 +266,8 @@ export async function PUT(request: Request) {
     try {
         const req = await request.json();
         const { name, metadata, target, description,
-            organization_id, user_id, sharedUsers, id, config, inherits_configuration } = req;
+            organization_id, user_id, sharedUsers, id, config,
+            inherits_configuration, inherits_bioassays } = req;
 
         // Check if user is associated with another organization
         /* const organization = await prisma.container.findUnique({
@@ -355,6 +357,7 @@ export async function PUT(request: Request) {
                 },
                 config,
                 inherits_configuration,
+                inherits_bioassays,
                 userWhoUpdated: {
                     connect: { id: user_id }, // Associate the user who created/updated the project
                 },
@@ -415,7 +418,7 @@ export async function DELETE(request: Request) {
                     parent_id: Number(project_id),
                 },
             });
-            
+
         }
         const result = await prisma.container.delete({
             where: {

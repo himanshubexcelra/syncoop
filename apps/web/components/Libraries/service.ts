@@ -211,34 +211,36 @@ export async function getMoleculeOrder(params: object) {
     }
 }
 
-
 export async function deleteMoleculeCart(
     created_by?: number,
     moleculeStatus?: number,
-    molecule_id?: number,
-    library_id?: number,
-    project_id?: number,
+    molecule_ids?: number[],
+    library_ids?: number[],
+    project_ids?: number[],
+    bulk = false
 ) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart/`);
         if (created_by) {
             url.searchParams.append('user_id', String(created_by));
         }
-        if (molecule_id) {
-            url.searchParams.append('molecule_id', String(molecule_id));
-        }
-        if (library_id) {
-            url.searchParams.append('library_id', String(library_id));
-        }
-        if (project_id) {
-            url.searchParams.append('project_id', String(project_id));
+        if (bulk) {
+            url.searchParams.append('bulk', 'true');
         }
         if (moleculeStatus) {
             url.searchParams.append('moleculeStatus', String(moleculeStatus));
         }
+        if (molecule_ids?.length) {
+            url.searchParams.append('molecule_ids', JSON.stringify(molecule_ids));
+        }
+        if (library_ids?.length) {
+            url.searchParams.append('library_ids', JSON.stringify(library_ids));
+        }
+        if (project_ids?.length) {
+            url.searchParams.append('project_ids', JSON.stringify(project_ids));
+        }
 
-
-        const response = await fetch(url, {
+        const response = await fetch(url.toString(), {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -246,9 +248,8 @@ export async function deleteMoleculeCart(
         });
         const data = await response.json();
         return data;
-    }
-    catch (error: any) {
-        console.log(error, 'Error')
+    } catch (error: any) {
+        console.error('Error in deleteMoleculeCart:', error);
         return error;
     }
 }
@@ -305,7 +306,9 @@ export async function submitOrder(orderData: OrderType) {
 
 export async function updateMoleculeStatus(formData: MoleculeOrder[],
     status: number,
-    userId: number) {
+    userId: number,
+    analysis?: boolean,
+) {
     try {
         const response: any = await fetch(
             `${process.env.NEXT_API_HOST_URL}/v1/molecule`,
@@ -314,7 +317,12 @@ export async function updateMoleculeStatus(formData: MoleculeOrder[],
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ formData: formData, status: status, userId: userId }),
+                body: JSON.stringify({
+                    formData: formData,
+                    status: status,
+                    userId: userId,
+                    analysis: analysis,
+                }),
             }
         );
 
@@ -390,34 +398,36 @@ export async function getLabJobOrderDetail(molecule_id: number) {
         return error;
     }
 }
+
 export async function postLabJobOrder(data: SaveLabJobOrder) {
     try {
         const payload = {
-            order: data
+            order: data,
         };
-        const response: any = await fetch(
-            `${process.env.NEXT_API_HOST_URL}/v1/lab_job_order`,
-            {
-                mode: "no-cors",
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            }
-        );
 
-        if (response.status === 200) {
-            const data = await response.json();
-            return data;
-        } else if (response.status === 500) {
-            const error = await response.json();
-            return { status: response.status, error };
+        const response = await fetch(`${process.env.NEXT_API_HOST_URL}/v1/lab_job_order`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            // Log the error details for debugging
+            const errorDetails = await response.text();
+            //  Get response text if parsing JSON fails
+            return { status: response.status, error: errorDetails };
         }
+
+        const responseData = await response.json();
+        return responseData;
     } catch (error: any) {
+        // Log and rethrow the error for the caller to handle
         return error;
     }
 }
+
 
 export async function getStatusCodes(params: object) {
     try {
@@ -516,4 +526,3 @@ export async function deleteLibrary(library_id?: number) {
         return error;
     }
 }
-

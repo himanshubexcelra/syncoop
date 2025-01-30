@@ -329,7 +329,7 @@ describe('ADME details sliders should work as expected', () => {
             render(
                 <ADMESelector
                     data={libMockData}
-                    type="L"
+                    type={ContainerType.LIBRARY}
                     organizationId={24}
                     setIsDirty={jest.fn()}
                     isDirty={true}

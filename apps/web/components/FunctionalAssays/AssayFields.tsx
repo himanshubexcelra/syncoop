@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
     AssayFieldList,
-    OrganizationDataFields,
+    ContainerFields,
     ShowEditPopupType,
     fetchDataType
 } from '@/lib/definition';
@@ -22,10 +22,11 @@ interface AssayFieldType {
     newForm?: boolean,
     removeAssay: (index: number) => void,
     setShowConfirmForm: ShowEditPopupType,
-    data?: OrganizationDataFields,
+    data?: ContainerFields,
     fetchOrganizations?: fetchDataType,
     updateComment?: (data: AssayFieldList) => void,
     index?: number,
+    notInherited?: boolean
 }
 function AssayFields({
     type,
@@ -37,6 +38,7 @@ function AssayFields({
     fetchOrganizations,
     updateComment,
     index,
+    notInherited,
 }: AssayFieldType) {
     const fields = assay.user_fields ? Object.entries(assay.user_fields) : [];
     const [isLoading, setIsLoading] = useState(false);
@@ -101,9 +103,19 @@ function AssayFields({
             <div
                 className={`${type ? 'mb-[20px]' : ''} assay-card`}
             >
-                <div className='flex justify-between align-center mb-[20px]'>
-                    <span className='text-normal'>{assay.assay}</span>
-                    {!newForm && (
+                <div className='flex justify-between items-center mb-[20px]'>
+                    {!assay.hasOwnProperty('commercial') ?
+                        <span className='text-normal'>{assay.assay}</span>
+                        : <div className='flex'>
+                            <div className='text-normal'>
+                                Name:
+                            </div>
+                            <span className='ml-[5px] text-assay-desc'>
+                                {assay.name}
+                            </span>
+                        </div>
+                    }
+                    {!newForm && notInherited && (
                         <button className='secondary-button'
                             onClick={() => removeAssay(index || 0)}
                         >
@@ -123,16 +135,18 @@ function AssayFields({
                     </div>
                 )}
                 <div className={`${!assay.hasOwnProperty('commercial')
-                    ? 'flex justify-around align-center'
+                    ? 'flex justify-around items-center'
                     : ''} mb-[20px]`}>
-                    <div className='flex'>
-                        <div className='text-normal'>
-                            Name:
+                    {!assay.hasOwnProperty('commercial') &&
+                        <div className='flex'>
+                            <div className='text-normal'>
+                                Name:
+                            </div>
+                            <span className='ml-[5px] text-assay-desc'>
+                                {assay.name}
+                            </span>
                         </div>
-                        <span className='ml-[5px] text-assay-desc'>
-                            {assay.name}
-                        </span>
-                    </div>
+                    }
                     {!assay.hasOwnProperty('commercial') ?
                         <div className='flex'>
                             <div className='text-normal'>
@@ -154,7 +168,7 @@ function AssayFields({
                     }
                 </div>
                 {!assay.hasOwnProperty('commercial') && (
-                    <div className='flex justify-around align-center mb-[20px]'>
+                    <div className='flex justify-around items-center mb-[20px]'>
                         <div className='flex'>
                             <div className='text-normal'>
                                 SKU:
@@ -175,7 +189,7 @@ function AssayFields({
                 )}
                 {fieldPairs.map((pair, index) => (
                     <div key={index}
-                        className='flex justify-around align-center mb-[20px]'>
+                        className='flex justify-around items-center mb-[20px]'>
                         {pair.map(([key, value]) => (
                             <div key={key} className='flex'>
                                 <div className='text-normal'>
@@ -196,6 +210,7 @@ function AssayFields({
                             id="textarea"
                             height={90}
                             value={comment}
+                            placeholder='comments'
                             onValueChanged={onTextAreaValueChanged}
                         />
                     </div>

@@ -16,6 +16,7 @@ import {
     MoleculeType,
     ContainerPermission,
     ContainerType,
+    AssayFieldList,
 } from '@/lib/definition';
 import { useSearchParams, useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
@@ -24,7 +25,7 @@ import {
     /* getLibraryById, */
 } from './service';
 import { Messages } from "@/utils/message";
-import { AssayData, DELAY } from "@/utils/constants";
+import { DELAY } from "@/utils/constants";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import { delay, getUTCTime, isAdmin, isCustomReactionCheck } from "@/utils/helpers";
@@ -116,6 +117,7 @@ const initialProjectData: ProjectDataFields = {
     created_at: getUTCTime(new Date().toISOString()),
     other_container: [] as LibraryFields[],
     inherits_configuration: true,
+    inherits_bioassays: true,
 };
 
 type LibraryDetailsProps = {
@@ -145,6 +147,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [adminAccess, setAdminAccess] = useState<boolean>(false);
     const [editEnabled, setEditAccess] = useState<boolean>(false);
     const [adminProjectAccess, setAdminProjectAccess] = useState<boolean>(false);
+    const [assayValue, setAssays] = useState<AssayFieldList[]>([]);
     const context: any = useContext(AppContext);
     const {
         reset,
@@ -155,6 +158,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
         setShowPopup,
         isDirty,
         setReset,
+        selectType,
     } = usePopupAndReset();
     const appContext = context.state;
 
@@ -250,6 +254,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                     // if (library_id != libraryData.id) {
                     setLibraryId(libraryData.id);
                     setSelectedLibraryName(libraryData.name);
+                    setAssayFieldValue(libraryData);
                     // }
                     let breadcrumbTemp = breadcrumbArr({
                         projectTitle: `${projectData.name}`,
@@ -277,12 +282,39 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
         }
     }, [library_id, projectData]);
 
+    const setAssayFieldValue = (data: LibraryFields) => {
+        const inherits = data?.inherits_bioassays ?? true;
+        let metaData = data?.metadata?.assay
+        if (inherits) {
+            if (projectData?.metadata?.assay) {
+                metaData = projectData?.metadata?.assay
+            }
+            else {
+                metaData = projectData?.container?.metadata?.assay
+            }
+        }
+        setAssays(metaData || []);
+    }
+
+    useEffect(() => {
+        setAssayFieldValue(selectedLibraryData);
+    }, [appContext?.refreshAssayTable])
+
     const selectLibrary = (libId: number) => {
         setLibraryId(libId);
     }
     const config = projectData.inherits_configuration ?
         projectData.container.config : projectData.config;
-    const isCustomReaction = isCustomReactionCheck(projectData.metadata)
+
+    const assay = projectData.inherits_bioassays ?
+        projectData.container.metadata?.assay : projectData.metadata.assay
+
+    const setAssayValue = (assay: AssayFieldList[]) => {
+        setAssays(assay)
+    }
+
+    const isCustomReaction = isCustomReactionCheck(projectData.metadata);
+
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbValue} />
@@ -399,16 +431,34 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                         }
                                                     }}
                                                     editAllowed={adminAccess}
-                                                    fetchContainer={fetchLibraries} />
+                                                    fetchContainer={fetchLibraries}
+                                                    loggedInUser={userData.id}
+                                                />
                                             </Item>
                                         </Accordion>
                                         <Accordion collapsible={true} multiple={false}>
                                             <Item visible={false} />
                                             <Item titleRender={() =>
-                                                `Functional Assay (${AssayData.length})`}>
+                                                `Functional Assay (${assayValue.length})`}>
                                                 <FunctionalAssay
-                                                    data={AssayData}
+                                                    data={{
+                                                        ...selectedLibraryData,
+                                                        container: {
+                                                            metadata: { assay },
+                                                            id: organization_id
+                                                        }
+                                                    }}
                                                     type={ContainerType.LIBRARY}
+                                                    childRef={childRef}
+                                                    setIsDirty={setIsDirty}
+                                                    isDirty={isDirty}
+                                                    reset={reset}
+                                                    setParentAssay={setAssayValue}
+                                                    fetchContainer={fetchLibraries}
+                                                    loggedInUser={userData.id}
+                                                    editAllowed={adminAccess}
+                                                    selectType={selectType}
+                                                    setReset={setReset}
                                                 />
                                             </Item>
                                         </Accordion>

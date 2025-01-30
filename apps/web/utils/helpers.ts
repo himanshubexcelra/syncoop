@@ -1,6 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
   ADMEConfigTypes,
+  CartDetail,
   ColorSchemeFormat,
   CombinedLibraryType,
   ContainerPermission,
@@ -401,6 +402,38 @@ export const isSharedActionEnable = (
   const admin = isAdmin(userData?.myRoles);
   return (!!sharedUser || owner || admin);
 }
+
+export const getEntity =
+  (projectType: string): "libraryReactions" | "libraryMolecules" =>
+    projectType === 'Custom Reaction' ? 'libraryReactions' : 'libraryMolecules';
+
+// Utility to map cart data to CartDetail
+export const mapCartData = (cartData: any[], userId: number): CartDetail[] =>
+  cartData.map((item: any) => ({
+    id: item?.id,
+    molecule_id: item?.molecule_id,
+    library_id: item?.library_id,
+    project_id: item?.project_id,
+    molecule_order_id: item?.molecule_order_id,
+    organization_id: item?.organization_id,
+    molecular_weight: item?.molecule?.molecular_weight,
+    moleculeName: item?.molecule?.source_molecule_name,
+    smiles_string: item?.molecule?.smiles_string,
+    pathway: item?.molecule?.pathway?.length > 0 ? true : false,
+    created_by: userId,
+    "Project / Library": `${item?.molecule?.project.name} / ${item?.molecule?.library.name}`,
+    "Organization / Order": `${item?.organization?.name} / ${item?.molecule_order_id}`,
+  }));
+
+// Utility to filter cart data for analysis
+export const filterCartDataForAnalysis = (
+  cartData: any[],
+): any[] => cartData.filter((item: any) => item?.molecule?.pathway?.length === 0);
+
+// Utility to filter cart data For Lab Job
+export const filterCartDataForLabJob = (
+  cartData: any[],
+): any[] => cartData.filter((item: any) => item?.molecule?.pathway?.length > 0);
 
 export const isCustomReactionCheck = (projectMetadata: any) =>
   projectMetadata.type === ChemistryType.CUSTOM_REACTION;

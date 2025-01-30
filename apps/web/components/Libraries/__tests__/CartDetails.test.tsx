@@ -1,8 +1,13 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import React from "react";
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CartDetails from '../CartDetails';
 import { CartItem, UserData } from '@/lib/definition';
 import { Messages } from '@/utils/message';
+import "@testing-library/jest-dom";
+import Accordion, { Item } from "devextreme-react/accordion";
+import { Switch } from "devextreme-react";
+import CustomDataGrid from '@/ui/dataGrid';
 
 describe('CartDetails Component', () => {
     const mockRemoveItemFromCart = jest.fn();
@@ -17,53 +22,57 @@ describe('CartDetails Component', () => {
             "library_id": 9,
             "project_id": 5,
             "organization_id": 2,
-            "created_at": "2024-12-18T16:05:32.450Z",
-            "created_by": 3,
-            "updated_at": null,
-            "updated_by": null,
             "molecule": {
                 "molecular_weight": "0.7",
                 "source_molecule_name": "Molecule 1",
-                "is_added_to_cart": true,
                 "smiles_string": "CC(=O)Oc1ccccc1C(=O)O",
-                "status": 2,
                 "library": {
-                    "id": "9",
-                    "name": "Library31234"
+                    "name": "Library31234",
+                    "project": {
+                        "name": "Test Project 2"
+                    }
                 },
                 "project": {
-                    "id": "5",
                     "name": "Test Project 2"
                 }
             },
             "organization": {
                 "id": 2,
                 "name": "Fauxbio"
-            }
+            },
+            "moleculeName": "",
+            "smiles_string": "",
+            "orderName": ""
         }
     ];
 
     const userData: UserData = {
-        "id": 3,
-        "first_name": "User Library",
-        "last_name": "Manager",
-        "email_id": "lib_manager@external.milliporesigma.com",
-        "roles": [
-            {
-                "id": 3,
-                "type": "library_manager"
-            }
-        ],
-        "myRoles": [
-            "library_manager"
-        ],
-        "organization_id": 2,
-        "orgUser": {
-            "id": "2",
-            "name": "Fauxbio",
-            "type": "CO"
-        }
+        id: 3,
+        first_name: "User Library",
+        last_name: "Manager",
+        email_id: "lib_manager@external.milliporesigma.com",
+        organization_id: 2,
+        is_active: false,
+        user_role: [],
+        orgUser: {
+            id: 0,
+            first_name: '',
+            name: '',
+            email_id: '',
+            status: '',
+            last_name: '',
+            organization: {
+                id: 0,
+                name: '',
+            },
+            user_role: [],
+            type: ''
+        },
+        myRoles: [],
+        roles: [{ type: "admin" }]
     };
+
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -776,4 +785,112 @@ describe('CartDetails Component', () => {
         await act(async () => { fireEvent.click(submitButton) });
 
     });
+});
+
+describe("Accordion with Switch Component", () => {
+    const mockHandleToggleChange = jest.fn();
+    const mockRowGroupName = jest.fn(() => "groupName");
+    const columns = [
+        { dataField: "name", headerName: "Name" },
+        { dataField: "type", headerName: "Type" },
+        { dataField: "weight", headerName: "Weight" },
+    ];
+    
+    const moleculeData = [
+        { id: 1, name: "Benzene", type: "Aromatic", weight: "78.11 g/mol" },
+        { id: 2, name: "Ethanol", type: "Alcohol", weight: "46.07 g/mol" },
+    ];
+    const showAccordion = true;
+
+    beforeEach(() => {
+        render(
+            <Accordion collapsible multiple={false}>
+                <Item visible={false} />
+                <Item titleRender={() => "Molecules for Analysis"}>
+                    <div>
+                        <div className="flex flex-row items-center justify-end">
+                            <label className="mr-[12px] font-lato font-700 font-[13px]">
+                                Show Products
+                            </label>
+                            <Switch aria-label="switch" value={showAccordion} onValueChanged={mockHandleToggleChange} />
+                        </div>
+                        <CustomDataGrid
+                            columns={columns}
+                            height="auto"
+                            data={moleculeData}
+                            groupingColumn={mockRowGroupName()}
+                            enableGrouping
+                            enableSorting={false}
+                            enableFiltering={false}
+                            enableOptions={false}
+                            enableRowSelection={false}
+                            enableSearchOption={false}
+                            loader={false}
+                            scrollMode="infinite"
+                        />
+                    </div>
+                </Item>
+            </Accordion>
+        );
+    });
+
+    it("toggles Accordion Item correctly when clicked", () => {
+        const accordionTitle = screen.getByText("Molecules for Analysis");
+        expect(accordionTitle).toBeInTheDocument();
+
+        // Simulate a click to toggle the Accordion item
+        fireEvent.click(accordionTitle);
+
+        // Check if the content of the item becomes visible
+        const label = screen.getByText("Show Products");
+        expect(label).toBeInTheDocument();
+    });
+
+    it("does not render the Item with visible={false}", () => {
+        // DevExtreme items with `visible={false}` should not render
+        expect(screen.queryByText("Hidden Item")).not.toBeInTheDocument();
+    });
+
+    test("renders CustomDataGrid with correct rows and columns", async () => {
+        render(
+            <CustomDataGrid
+                columns={[
+                    { dataField: "name", title: "Name" },
+                    { dataField: "type", title: "Type" },
+                    { dataField: "weight", title: "Weight" },
+                    { dataField: "density", title: "Density" },
+                    { dataField: "formula", title: "Formula" },
+                ]}
+                data={[
+                    { id: 1, name: "Benzene", type: "Aromatic", weight: "78.11 g/mol", density: "0.876 g/cm³", formula: "C6H6" },
+                    { id: 2, name: "Ethanol", type: "Alcohol", weight: "46.07 g/mol", density: "0.789 g/cm³", formula: "C2H5OH" },
+                ]}
+                enableRowSelection
+                enableGrouping
+                enableSorting
+                loader={false}
+                enableHeaderFiltering
+                enableSearchOption={true}
+            />
+        );
+    
+        // Wait for the grid to render
+        await waitFor(() => {
+            // Get the grid by its role
+            const grid = screen.getByRole("group");
+    
+            // Check the aria-label dynamically
+            expect(grid).toHaveAttribute("aria-label", "Data grid with 2 rows and 6 columns");
+        });
+    
+        // Verify rows
+        const rows = screen.getAllByRole("row");
+        expect(rows.length).toBe(4); // Verify 4 rows
+    
+        // Verify columns
+        const columns = screen.getAllByRole("columnheader");
+        expect(columns.length).toBe(6); // Verify 6 columns
+    });
+    
+    
 });

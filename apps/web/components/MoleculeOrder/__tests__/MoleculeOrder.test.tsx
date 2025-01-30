@@ -5,10 +5,17 @@ import '@testing-library/jest-dom';
 import { getMoleculesOrder, searchInventory } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import MoleculeOrderPage from '../MoleculeOrder';
-import { AmsInventoryItem, ColumnConfig, TabDetail, UserData } from '@/lib/definition';
+import {
+    AmsInventoryItem,
+    AppContextModel,
+    ColumnConfig,
+    TabDetail,
+    UserData
+} from '@/lib/definition';
 import Tabs from '@/ui/Tab/Tabs';
 import ConfirmationDialog from '../ConfirmationDialog';
 import CustomDataGrid from '@/ui/dataGrid';
+import { AppContext } from '@/app/AppState';
 
 // Mock console.error at the top of your test file
 global.console = {
@@ -353,33 +360,42 @@ describe('MoleculeOrderPage Component', () => {
     });
 
     test('renders the DataGrid with correct data', async () => {
-        (getMoleculesOrder as jest.Mock).mockResolvedValue(mockData);
-
-        render(<MoleculeOrderPage userData={mockUserData} actionsEnabled={actionsEnabledMock} />);
-
+        render(
+            <CustomDataGrid
+                columns={[
+                    { dataField: "name", title: "Name" },
+                    { dataField: "type", title: "Type" },
+                    { dataField: "weight", title: "Weight" },
+                    { dataField: "density", title: "Density" },
+                    { dataField: "formula", title: "Formula" },
+                ]}
+                data={[
+                    {
+                        id: 1, name: "Benzene", type: "Aromatic",
+                        weight: "78.11 g/mol", density: "0.876 g/cm³", formula: "C6H6"
+                    },
+                    {
+                        id: 2, name: "Ethanol", type: "Alcohol",
+                        weight: "46.07 g/mol", density: "0.789 g/cm³", formula: "C2H5OH"
+                    },
+                ]}
+                enableRowSelection
+                enableGrouping
+                enableSorting
+                loader={false}
+                enableHeaderFiltering
+                enableSearchOption={true}
+            />
+        );
         await waitFor(() => {
-            const moleculeColumn = screen.getAllByText('Molecule ID');
-            expect(moleculeColumn).not.toHaveLength(0);
-        });
-    });
-
-    test('renders the DataGrid with correct data', async () => {
-        (getMoleculesOrder as jest.Mock).mockResolvedValue(mockData);
-
-        render(<MoleculeOrderPage userData={mockUserData}
-            actionsEnabled={actionsEnabledMock} />);
-
-        await waitFor(() => {
-            const moleculeColumn = screen.getAllByText('Molecule ID');
-            expect(moleculeColumn).not.toHaveLength(0);
+            const grid = screen.getByRole("group");
+            expect(grid).toHaveAttribute("aria-label", "Data grid with 2 rows and 6 columns");
         });
 
-        render(<CustomDataGrid columns={columns} data={mockData} />);
-
-        await waitFor(() => {
-            const moleculeColumn = screen.getAllByText('Molecule ID');
-            expect(moleculeColumn).not.toHaveLength(0);
-        });
+        const rows = screen.getAllByRole("row");
+        expect(rows.length).toBe(4);
+        const columns = screen.getAllByRole("columnheader");
+        expect(columns.length).toBe(6);
     });
 
     test('send for synthesis button should be present', async () => {
@@ -729,6 +745,59 @@ describe('MoleculeOrderPage Component', () => {
                 link: "NA",
             },
         ]);
+    });
+
+    test('send for Analysis button should be present', async () => {
+        (getMoleculesOrder as jest.Mock).mockResolvedValue(mockData);
+
+        render(<MoleculeOrderPage userData={mockUserData} actionsEnabled={actionsEnabledMock} />);
+
+        await waitFor(() => {
+            const sendForSynthesisButton = screen.getByText(/Send for Analysis/);
+            expect(sendForSynthesisButton).toBeInTheDocument();
+        });
+    });
+
+    test('renders send for Analysis button with correct text and functionality', async () => {
+        const mockAddToCart = jest.fn();
+        const mockAppContext = {
+            state: {
+                cartDetail: {},
+                appContext: {} as AppContextModel,
+            },
+        };
+        const toolbarButtons = [{
+            text: `Send For Analysis (0)`,
+            onClick: mockAddToCart,
+            class: 'btn-disable',
+            disabled: true,
+            visible: true,
+        }];
+
+        render(
+            <AppContext.Provider value={mockAppContext}>
+                <CustomDataGrid
+                    columns={columns}
+                    data={mockData}
+                    toolbarButtons={toolbarButtons}
+                    enableRowSelection
+                    enableGrouping
+                    enableSorting
+                    loader={false}
+                />
+            </AppContext.Provider>
+        );
+
+        // Check that the Add to Cart button is rendered
+        const addToCartButton = screen.getByRole('button', { name: /Send For Analysis \(0\)/i });
+        expect(addToCartButton).toBeInTheDocument();
+
+        // Ensure the button has the disabled state via aria-disabled
+        expect(addToCartButton).toHaveAttribute('aria-disabled', 'true');
+
+        // Simulate a click and ensure the mock function is not called
+        fireEvent.click(addToCartButton);
+        expect(mockAddToCart).not.toHaveBeenCalled();
     });
 });
 

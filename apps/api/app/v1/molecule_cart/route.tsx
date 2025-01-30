@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
-const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
+const { SUCCESS, BAD_REQUEST, INTERNAL_SERVER_ERROR } = STATUS_TYPE;
 interface Item {
     molecule_id: string; // or number, depending on your data type
     library_id: string; // or number
@@ -26,12 +26,13 @@ export async function GET(request: Request) {
         const project_id = searchParams.get('project_id');
         const organization_id = searchParams.get('organization_id');
         const lab_job_cart = searchParams.get('lab_job_cart');
+        const analysis_cart = searchParams.get('analysis_cart');
         const source = searchParams.get('source');
         const query: any = {
             where: {
                 created_by: Number(user_id),
                 ...(() => {
-                    if (lab_job_cart) {
+                    if (lab_job_cart || analysis_cart) {
                         return {
                             NOT: {
                                 molecule_order_id: null
@@ -60,6 +61,16 @@ export async function GET(request: Request) {
                                 select: {
                                     id: true,
                                     name: true,
+                                },
+                            },
+                            pathway: {
+                                select: {
+                                    id: true,
+                                    description: true,
+                                    pathway_score: true,
+                                    step_count: true,
+                                    created_at: true,
+                                    updated_at: true,
                                 },
                             },
                         },
@@ -151,66 +162,70 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
     try {
         const url = new URL(request.url);
-        const searchParams = new URLSearchParams(url.searchParams);
-        const molecule_id = Number(searchParams.get('molecule_id'));
-        const library_id = Number(searchParams.get('library_id'));
-        const project_id = Number(searchParams.get('project_id'));
+        const searchParams = url.searchParams;
+
         const user_id = Number(searchParams.get('user_id'));
         const moleculeStatus = Number(searchParams.get('moleculeStatus'));
-        // Code For Remove All
-        if (!molecule_id && !library_id && !project_id) {
-            const records = await prisma.molecule_cart.findMany({
+        const bulk = searchParams.get('bulk') === 'true';
+
+        const molecule_ids = JSON.parse(searchParams.get('molecule_ids') || '[]');
+        const library_ids = JSON.parse(searchParams.get('library_ids') || '[]');
+        const project_ids = JSON.parse(searchParams.get('project_ids') || '[]');
+
+        if (bulk && user_id) {
+            const updateConditions = molecule_ids.length
+                ? { id: { in: molecule_ids } }
+                : {};
+            await prisma.molecule.updateMany({
+                where: updateConditions,
+                data: {
+                    is_added_to_cart: true,
+                    status: moleculeStatus,
+                },
+            });
+
+            await prisma.molecule_cart.deleteMany({
                 where: {
                     created_by: user_id,
                 },
-                select: {
-                    molecule_id: true,
-                },
             });
-            const updatedIds = records.map(record => record.molecule_id);
+
+            return new Response(JSON.stringify({ success: true }), {
+                headers: { "Content-Type": "application/json" },
+                status: 200,
+            });
+        }
+
+        if (molecule_ids.length && library_ids.length && project_ids.length) {
             await prisma.molecule.updateMany({
-                where: {
-                    id: { in: updatedIds }
-                },
-                data: {
-                    is_added_to_cart: true,
-                    status: moleculeStatus
-                },
+                where: { id: { in: molecule_ids } },
+                data: { status: moleculeStatus },
             });
+
             await prisma.molecule_cart.deleteMany({
                 where: {
-                    created_by: user_id
-                }
+                    molecule_id: { in: molecule_ids },
+                    library_id: { in: library_ids },
+                    project_id: { in: project_ids },
+                    created_by: user_id,
+                },
             });
 
+            return new Response(JSON.stringify({ success: true }), {
+                headers: { "Content-Type": "application/json" },
+                status: SUCCESS,
+            });
         }
-        // Code For Remove
-        await prisma.molecule.update({
-            where: {
-                id: molecule_id,
-            },
-            data: {
-                status: moleculeStatus,
-            },
-        })
 
-        await prisma.molecule_cart.deleteMany({
-            where: {
-                molecule_id: molecule_id,
-                library_id: library_id,
-                project_id: project_id,
-                created_by: user_id
-            }
-        });
-
-        return new Response(JSON.stringify([{}]), {
+        return new Response(JSON.stringify({ error: "Invalid request" }), {
             headers: { "Content-Type": "application/json" },
-            status: SUCCESS, // SUCCESS
+            status: BAD_REQUEST,
         });
     } catch (error: any) {
+        console.error('Error in DELETE:', error);
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { "Content-Type": "application/json" },
-            status: BAD_REQUEST, // BAD_REQUEST
+            status: INTERNAL_SERVER_ERROR,
         });
     }
 }

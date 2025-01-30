@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { labJobOrder } from "@/utils/definition";
 import { json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 export async function GET(request: Request) {
@@ -52,9 +53,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const result = {
+    const result: labJobOrder = {
         molecule_id: Number(req.order.molecule_id),
-        pathway_id: Number(req.order.pathway_id),
         product_smiles_string: req.order.product_smiles_string,
         product_molecular_weight: req.order.product_molecule_weight,
         no_of_steps: Number(req.order.no_of_steps),
@@ -64,17 +64,23 @@ export async function POST(request: Request) {
         created_by: req.order.created_by,
         submitted_by: req.order.created_by,
         created_at: new Date().toISOString()
-    }
+    };
     try {
+        // Conditionally add 'pathway_id' if it's not null
+        if (req.order.pathway_id !== null) {
+            result.pathway_id = Number(req.order.pathway_id);
+        }
         // update status of all reactions with given pathway_instance and pathway_id
-        await prisma.reaction_detail.updateMany({
-            where: {
-                pathway_id: req.order.pathway_id,
-            },
-            data: {
-                status: req.order.reactionStatus,
-            },
-        })
+        if (req.order.pathway_id) {
+            await prisma.reaction_detail.updateMany({
+                where: {
+                    pathway_id: req.order.pathway_id,
+                },
+                data: {
+                    status: req.order.reactionStatus,
+                },
+            })
+        }
         /* await prisma.molecule.update({
             where: {
                 id: req.order.molecule_id,
@@ -85,7 +91,7 @@ export async function POST(request: Request) {
         }) */
         const response = await prisma.lab_job_order.create({
             data: result
-        })
+        });
         return new Response(json(response), {
             headers: { "Content-Type": "application/json" },
             status: STATUS_TYPE.SUCCESS,

@@ -6,6 +6,7 @@ const usePopupAndReset = () => {
     const [reset, setReset] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [type, setType] = useState('ADME config');
     const childRef = useRef<HTMLDivElement>(null);
 
     const handlePopupClose = (saveChanges: boolean) => {
@@ -17,6 +18,10 @@ const usePopupAndReset = () => {
             setShowPopup(false);
         }
     };
+
+    const selectType = (type: string) => {
+        setType(type);
+    }
 
     useEffect(() => {
         if (reset) {
@@ -45,7 +50,7 @@ const usePopupAndReset = () => {
         >
             <div>
                 <p className="mb-[20px]">
-                    You have unsaved ADME config. Do you want to save your changes?
+                    {`You have unsaved ${type}. Do you want to save your changes?`}
                 </p>
                 <button className="primary-button"
                     onClick={() => handlePopupClose(true)}
@@ -69,6 +74,7 @@ const usePopupAndReset = () => {
         isDirty,
         onSelectedIndexChange,
         setReset,
+        selectType,
     };
 };
 

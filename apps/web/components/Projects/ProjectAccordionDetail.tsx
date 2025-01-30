@@ -14,6 +14,7 @@ import {
     isCustomReactionCheck,
 } from "@/utils/helpers";
 import {
+    AssayFieldList,
     ContainerType,
     FetchUserType,
     MoleculeStatusLabel,
@@ -29,7 +30,6 @@ import { LoadIndicator } from 'devextreme-react';
 import Accordion, { Item } from 'devextreme-react/accordion';
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import FunctionalAssay from '../FunctionalAssays/FunctionalAssay';
-import { AssayData } from '@/utils/constants';
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { deleteProject } from './projectService';
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
@@ -50,9 +50,10 @@ type ProjectAccordionDetailProps = {
     popup: ReactNode;
     isDirty: boolean;
     setShowPopup: (val: boolean) => void;
-    allProjectData: ProjectDataFields[],
-    selectedProject: (val: any[]) => void;
+    /* allProjectData: ProjectDataFields[],
+    selectedProject: (val: any[]) => void; */
     setReset?: any
+    selectType: (val: string) => void;
 }
 
 export default function ProjectAccordionDetail({
@@ -71,9 +72,10 @@ export default function ProjectAccordionDetail({
     popup,
     isDirty,
     setShowPopup,
-    allProjectData,
-    selectedProject,
+    /* allProjectData,
+    selectedProject, */
     setReset,
+    selectType,
 }: ProjectAccordionDetailProps) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -88,6 +90,7 @@ export default function ProjectAccordionDetail({
     const [openButton, setOpenButton] = useState('Open');
     const [confirm, setConfirm] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [assayValue, setAssays] = useState<AssayFieldList[]>([]);
     const isCustomReaction = isCustomReactionCheck(data.metadata);
     const entityLabel = isCustomReaction
         ? 'Reaction'
@@ -106,6 +109,10 @@ export default function ProjectAccordionDetail({
         const sharedActionEnabled = isSharedActionEnable(data, userData);
         setEditStatus(actionsEnabled.includes('edit_project') && sharedActionEnabled)
         setDeleteStatus(actionsEnabled.includes('delete_project') && sharedActionEnabled)
+
+        const inherits = data?.inherits_bioassays ?? true;
+        const metadata = inherits ? data?.container?.metadata?.assay : data?.metadata?.assay;
+        setAssays(metadata || []);
     }, [data]);
 
     useEffect(() => {
@@ -121,6 +128,10 @@ export default function ProjectAccordionDetail({
     const renderTitle = (title: string) => (
         <div className="header-text text-themeGreyColor">{title}</div>
     );
+
+    const setAssayValue = (assay: AssayFieldList[]) => {
+        setAssays(assay)
+    }
 
     const toggleExpanded = (id: number, type: string) => {
         let expandedDescription = (type === 'library') ?
@@ -163,13 +174,13 @@ export default function ProjectAccordionDetail({
         }
         else {
             toast.success(Messages.DELETE_PROJECT_MESSAGE);
-            const filterLibraryId = allProjectData.filter((item: any) => {
+            /* const filterLibraryId = allProjectData.filter((item: any) => {
                 return Number(item.id) !== data.id;
-            });
+            }); */
             fetchOrganizations();
-            if (filterLibraryId.length) {
+            /* if (filterLibraryId.length) {
                 selectedProject([filterLibraryId[0]])
-            }
+            } */
             setIsLoading(false);
         }
     }
@@ -425,6 +436,7 @@ export default function ProjectAccordionDetail({
                             fetchContainer={fetchOrganizations}
                             editAllowed={editEnabled}
                             setReset={setReset}
+                            loggedInUser={userData.id}
                         />
                     </Item>
                 </Accordion>
@@ -433,10 +445,20 @@ export default function ProjectAccordionDetail({
                 <Accordion collapsible={true} multiple={false}>
                     <Item visible={false} />
                     <Item titleRender={
-                        () => renderTitle(`Functional Assay (${AssayData.length})`)}>
+                        () => renderTitle(`Functional Assay (${assayValue.length})`)}>
                         <FunctionalAssay
-                            data={AssayData}
+                            data={data}
                             type={ContainerType.PROJECT}
+                            childRef={childRef}
+                            setIsDirty={setIsDirty}
+                            isDirty={isDirty}
+                            reset={reset}
+                            setParentAssay={setAssayValue}
+                            fetchContainer={fetchOrganizations}
+                            loggedInUser={userData.id}
+                            editAllowed={editEnabled}
+                            selectType={selectType}
+                            setReset={setReset}
                         />
                     </Item>
                 </Accordion>

@@ -2,13 +2,11 @@
 import {
     AssayFieldList,
     AssayOptions,
-    OrganizationDataFields,
+    ContainerFields,
+    ContainerType,
     ShowEditPopupType,
-    fetchDataType
 } from "@/lib/definition";
-import { DELAY, assayCreateOptions } from "@/utils/constants";
-import { delay } from "@/utils/helpers";
-import { Messages } from "@/utils/message";
+import { assayCreateOptions } from "@/utils/constants";
 import { LoadIndicator } from "devextreme-react";
 import {
     Form,
@@ -18,10 +16,10 @@ import {
     GroupItem,
 } from "devextreme-react/form";
 import RadioGroup from "devextreme-react/radio-group";
-import { useContext, useState } from "react";
-import toast from "react-hot-toast";
+import { useState } from "react";
 import { editOrganization } from "../Organization/service";
-import { AppContext } from "@/app/AppState";
+import { editProject } from "../Projects/projectService";
+import { editLibrary } from "../Libraries/service";
 interface AssayFormType {
     commercial: boolean,
     SKU?: string,
@@ -30,19 +28,25 @@ interface AssayFormType {
 interface AssayProps {
     setShowAddAssayForm: ShowEditPopupType,
     formRef: any,
-    fetchOrganizations?: fetchDataType,
-    data?: OrganizationDataFields,
+    cleanup?: (response: any, value: string, data?: AssayFieldList) => void,
+    data?: ContainerFields,
+    type: string,
+    assayValue: AssayFieldList[],
+    loggedInUser: number,
+    organizationId: number,
 }
 const AddAssay = ({
     formRef,
     setShowAddAssayForm,
     data,
-    fetchOrganizations,
+    cleanup,
+    type,
+    assayValue,
+    loggedInUser,
+    organizationId,
 }: AssayProps) => {
     const [formData, setFormData] = useState({ commercial: true });
     const [isLoading, setIsLoading] = useState(false);
-    const context: any = useContext(AppContext);
-    const appContext = context.state;
 
     const handleValueChange = (value: AssayOptions.AddCommercial | AssayOptions.AddCustom) => {
         setFormData((prevData: AssayFormType) => ({
@@ -63,30 +67,37 @@ const AddAssay = ({
         if (formRef.current!.instance().validate().isValid) {
             setIsLoading(true);
             let assayData: AssayFieldList[] = [];
+            let response;
             const metadata = data?.metadata || {};
-            if (data?.metadata && data.metadata.assay) {
-                assayData = [...data.metadata.assay];
-            }
+            assayData = [...assayValue];
             assayData.push({ ...values });
-            const finalData = {
-                ...data, metadata: {
-                    ...metadata, assay: assayData
+            if (!type) {
+                const finalData = {
+                    ...data, metadata: {
+                        ...metadata, assay: assayData
+                    }
+                };
+                response = await editOrganization(finalData);
+            } else if (!Array.isArray(data)) {
+                const finalData = {
+                    ...data, metadata: {
+                        ...metadata, assay: assayData
+                    },
+                    inherits_bioassays: false,
+                    user_id: loggedInUser,
+                };
+                if (type === ContainerType.PROJECT) {
+                    response = await editProject(finalData);
+                } else {
+                    response = await editLibrary({
+                        ...finalData,
+                        organization_id: Number(organizationId),
+                        project_id: Number(data?.parent_id)
+                    });
                 }
-            };
-            const response = await editOrganization(finalData);
-            if (!response.error) {
-                if (fetchOrganizations) {
-                    fetchOrganizations();
-                } setShowAddAssayForm(false);
-                context?.addToState({ ...appContext, refreshAssayTable: true })
-                const toastId = toast.success(Messages.UPDATE_ASSAY);
-                await delay(DELAY);
-                toast.remove(toastId);
-                setIsLoading(false);
-            } else {
-                const toastId = toast.error(`${response.error}`);
-                await delay(DELAY);
-                toast.remove(toastId);
+            }
+            cleanup?.(response, 'added', values);
+            if (response.error) {
                 setIsLoading(false);
             }
         }
@@ -113,7 +124,7 @@ const AddAssay = ({
             {formData.commercial ? (
                 <SimpleItem
                     dataField="assay_detail"
-                    editorOptions={{ placeholder: "Functional Assay Name" }}
+                    editorOptions={{ placeholder: "Functional Assay Detail" }}
                 >
                     <Label text="Please provide Name / URL / SKU of the assay" />
                 </SimpleItem>
@@ -124,11 +135,11 @@ const AddAssay = ({
                     cssClass='textarea-field'
                     editorOptions={{
                         height: "90px",
-                        placeholder: "Description"
+                        placeholder: "Protocol"
                     }}
                     colSpan={2}
                 >
-                    <Label text="Description" />
+                    <Label text="Protocol" />
                 </SimpleItem>
             )}
             <GroupItem cssClass="buttons-group" colCount={2}>

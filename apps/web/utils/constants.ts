@@ -149,7 +149,15 @@ export const moleculeStatus: Status[] = [
     textColor: "text-red",
     /* image: '/icons/warning.svg', */
     dotColorStyle: ["dot-red", "dot-red", "dot-red"]
-  }
+  },
+  {
+    text: MoleculeStatusLabel.OrderedInCart,
+    code: MoleculeStatusCode.OrderedInCart,
+    number: 0,
+    background: "bg-gray",
+    textColor: "text-blue",
+    dotColorStyle: ["dot-blue", "dot-grey", "dot-grey"]
+  },
 ];
 
 export const moleculeOrderStatus: Status[] = [

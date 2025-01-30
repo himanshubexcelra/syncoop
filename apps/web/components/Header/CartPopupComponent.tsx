@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import { useEffect, useState, useContext } from "react";
 import { Popup as CartPopup } from "devextreme-react/popup";
 import CartDetails from '../Libraries/CartDetails';
@@ -7,6 +8,8 @@ import { getMoleculeCart, deleteMoleculeCart } from '../Libraries/service';
 import { AppContext } from "../../app/AppState";
 import toast from "react-hot-toast";
 import {
+    filterCartDataForAnalysis,
+    filterCartDataForLabJob,
     isProtocolAproover,
     isSystemAdmin,
 } from '@/utils/helpers';
@@ -22,15 +25,21 @@ type CartPopupProps = {
 };
 
 const CartPopupComponent = ({
-    createPopupVisible, setCreatePopupVisibility, userData, library_id, containsProjects,
-    containsMoleculeOrder, setOrderData, popupPosition
+    createPopupVisible,
+    setCreatePopupVisibility,
+    userData,
+    library_id,
+    containsProjects,
+    containsMoleculeOrder,
+    setOrderData,
+    popupPosition
 }: CartPopupProps) => {
     const [loader, setLoader] = useState(false);
     const [cartData, setCartData] = useState([]);
     const { myRoles } = userData;
     const context: any = useContext(AppContext);
     const appContext = context.state;
-    
+
     useEffect(() => {
         const fetchCartData = async () => {
             setLoader(true)
@@ -42,6 +51,7 @@ const CartPopupComponent = ({
                 params = {
                     ...params,
                     lab_job_cart: true,
+                    analysis_cart: true,
                     source: 'cart'
                 }
             }
@@ -51,11 +61,14 @@ const CartPopupComponent = ({
         };
         fetchCartData();
     }, [library_id, userData.id]);
+
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
-        const { molecule_id, library_id, project_id, created_by } = obj;
+        const { molecule_id, library_id, project_id, created_by, pathway } = obj;
+        const statusType = pathway ?
+            MoleculeStatusCode.Validated : MoleculeStatusCode.Ordered;
         const moleculeStatus = containsProjects ?
-            MoleculeStatusCode.New : MoleculeStatusCode.Validated;
-        deleteMoleculeCart(created_by, moleculeStatus, molecule_id, library_id, project_id).
+            MoleculeStatusCode.New : statusType;
+        deleteMoleculeCart(created_by, moleculeStatus, [molecule_id], [library_id], [project_id]).
             then((res) => {
                 if (res) {
                     const filteredData = cartData.filter((item: any) =>
@@ -82,43 +95,89 @@ const CartPopupComponent = ({
                 console.log(error);
             })
     }
-    const removeAll = (user_id: number, type: string, msg: string) => {
-        let moleculeStatus = containsProjects ?
-            MoleculeStatusCode.New : MoleculeStatusCode.Validated;
 
-        if (type == "SubmitOrder") {
-            moleculeStatus = MoleculeStatusCode.Ordered
-        }
-        if (type == "LabJobOrder") {
-            moleculeStatus = MoleculeStatusCode.InProgress
-        }
-        deleteMoleculeCart(user_id, moleculeStatus).then((res) => {
-            if (res) {
-                setCartData([]);
-                context?.addToState({
-                    ...appContext,
-                    cartDetail: [],
-                    refreshCart: !appContext.refreshCart,
+    const removeAll = async (user_id: number, type: string, msg: string) => {
+        let moleculeStatus: number;
 
-                })
-                if (type === 'RemoveAll') {
-                    setCreatePopupVisibility(false)
-                    toast.success(msg);
+        // Helper function for handling cart deletion
+        const handleDeleteCart = async (status: number, cartRecords: any[]) => {
+            const res = await deleteMoleculeCart(
+                user_id, status,
+                cartRecords.map((item: any) => item.molecule_id),
+                cartRecords.map((item: any) => item.library_id),
+                cartRecords.map((item: any) => item.project_id),
+                true
+            );
+            return res;
+        };
+
+        // Helper function to update the UI and state after deletion
+        const updateUIAfterDeletion = (msg: string) => {
+            setCartData([]);
+            context?.addToState({
+                ...appContext,
+                cartDetail: [],
+                refreshCart: !appContext.refreshCart,
+            });
+            setCreatePopupVisibility(false);
+            setOrderData(msg, true);
+        };
+
+        try {
+            if (type === "SubmitOrder" || type === "LabJobOrder") {
+                moleculeStatus = type === "SubmitOrder" ?
+                    MoleculeStatusCode.Ordered : MoleculeStatusCode.InProgress;
+
+                const res = await handleDeleteCart(moleculeStatus, cartData);
+
+                if (res) {
+                    updateUIAfterDeletion(msg);
                 }
-                else {
-                    setCreatePopupVisibility(false)
-                    setOrderData(msg, true)
-                }
+            } else {
+                const analysisRecords = filterCartDataForAnalysis(cartData);
+                const labJobRecords = filterCartDataForLabJob(cartData);
 
+                if (!containsProjects && analysisRecords.length > 0 && labJobRecords.length > 0) {
+                    // Handle bulk deletion for both statuses in parallel
+                    await Promise.all([
+                        handleDeleteCart(MoleculeStatusCode.Ordered, analysisRecords),
+                        handleDeleteCart(MoleculeStatusCode.Validated, labJobRecords),
+                    ]);
+
+                    updateUIAfterDeletion(msg);
+                } else if (!containsProjects && analysisRecords.length > 0) {
+                    moleculeStatus = MoleculeStatusCode.Ordered;
+                    const res = await handleDeleteCart(moleculeStatus, analysisRecords);
+
+                    if (res) {
+                        updateUIAfterDeletion(msg);
+                    }
+                } else if (!containsProjects && labJobRecords.length > 0) {
+                    moleculeStatus = MoleculeStatusCode.Validated;
+                    const res = await handleDeleteCart(moleculeStatus, labJobRecords);
+
+                    if (res) {
+                        updateUIAfterDeletion(msg);
+                    }
+                } else {
+                    moleculeStatus = MoleculeStatusCode.New;
+                    const res = await handleDeleteCart(moleculeStatus, cartData);
+
+                    if (res) {
+                        updateUIAfterDeletion(msg);
+                    }
+                }
             }
-        }).catch((error) => {
-            console.log(error);
-        })
-    }
+        } catch (error) {
+            console.error('Error in removeAll:', error);
+            toast.error('An error occurred while deleting records.');
+        }
+    };
+
     return (
         createPopupVisible && (
             <CartPopup
-                title={containsProjects ? "Molecule Cart" : "Synthesis Lab Job"}
+                title={containsProjects ? "Molecule Cart" : "Order Cart"}
                 visible={createPopupVisible}
                 onHiding={() => setCreatePopupVisibility(false)}
                 contentRender={() => (

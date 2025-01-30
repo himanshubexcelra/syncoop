@@ -26,6 +26,7 @@ const ADMESelector = ({ data,
     isDirty,
     editAllowed,
     setReset,
+    loggedInUser,
 }: ADMEProps) => {
     const [sliderValues, setSliderValues] = useState<ADMEConfigTypes[]>([]);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
@@ -48,7 +49,7 @@ const ADMESelector = ({ data,
         {
             label: 'Cancel',
             class: 'secondary-button ml-[10px]',
-            action: () => setReset('reset'),
+            action: () => setReset?.('reset'),
             loader: false,
         }
     ]
@@ -178,7 +179,7 @@ const ADMESelector = ({ data,
         } else if (type === ContainerType.PROJECT) {
             formValue = {
                 ...data, config: { ...data?.config, ADMEParams: inherited ? null : sliderValues },
-                organization_id: Number(data?.parent_id), user_id: data?.owner_id,
+                organization_id: Number(data?.parent_id), user_id: loggedInUser,
                 inherits_configuration: inherited
             };
             response = await editProject(formValue);
@@ -187,7 +188,7 @@ const ADMESelector = ({ data,
             formValue = {
                 ...data,
                 config: { ...data?.config, ADMEParams: sliderValues },
-                project_id: Number(data?.parent_id), user_id: data?.owner_id,
+                project_id: Number(data?.parent_id), user_id: loggedInUser,
                 organization_id: organizationId,
                 inherits_configuration: inherited
             };

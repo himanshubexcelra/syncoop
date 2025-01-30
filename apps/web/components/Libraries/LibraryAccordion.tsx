@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ import {
     ContainerType,
     OrganizationDataFields,
     FetchUserType,
+    AssayFieldList,
 } from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import { deleteLibrary } from './service';
@@ -34,11 +35,11 @@ import CreateLibrary from './CreateLibrary';
 import { FormRef } from "devextreme-react/cjs/form";
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { ClickEvent } from "devextreme/ui/button";
-import { AssayData } from "@/utils/constants";
 import FunctionalAssay from "../FunctionalAssays/FunctionalAssay";
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import { getOrganizationById } from "../Organization/service";
 import CreateProject from "../Projects/CreateProject";
+import { AppContext } from '@/app/AppState';
 
 const urlHost = process.env.NEXT_PUBLIC_UI_APP_HOST_URL;
 
@@ -67,6 +68,7 @@ type LibraryAccordionType = {
     adminProjectAccess: boolean,
     organizationId: number,
     setReset: any,
+    selectType?: (val: string) => void,
 }
 
 export default function LibraryAccordion({
@@ -93,6 +95,7 @@ export default function LibraryAccordion({
     adminProjectAccess,
     organizationId,
     setReset,
+    selectType,
 }: LibraryAccordionType) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -110,10 +113,15 @@ export default function LibraryAccordion({
     const [users, setUsers] = useState([])
     const [organization, setOrganization] = useState<OrganizationDataFields[]>([]);
     const [projectPopupVisible, setProjectPopupVisibile] = useState(false);
+    const [assayValue, setAssays] = useState<AssayFieldList[]>([]);
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
+
     const isCustomReaction = isCustomReactionCheck(projectData.metadata);
     const entityLabel = isCustomReaction
         ? 'reactions'
         : 'molecules'
+
     const fetchOrganization = async () => {
         const orgData = await getOrganizationById({
             withRelation: ['orgUser', 'user_role', 'projects'],
@@ -128,16 +136,30 @@ export default function LibraryAccordion({
                 return isLibraryManger(roles) && user.id !== userData.id
             }));
     }
+
     useEffect(() => {
-        fetchOrganization()
-    }, [])
+        fetchOrganization();
+    }, []);
+
     useEffect(() => {
         setPopupPosition(popupPositionValue());
     }, []);
 
+    useEffect(() => {
+        const inherits = projectData?.inherits_bioassays ?? true;
+        const metadata = inherits
+            ? projectData?.container?.metadata?.assay
+            : projectData?.metadata?.assay;
+        setAssays(metadata || []);
+    }, [appContext?.refreshAssayTable]);
+
     const renderTitle = (title: string) => (
         <div className="header-text text-black">{title}</div>
     );
+
+    const setAssayValue = (assay: AssayFieldList[]) => {
+        setAssays(assay)
+    }
 
     const sortByFields = ['Name', 'Owner', 'Updation time', 'Recent', `Count of ${entityLabel}`];
 
@@ -371,7 +393,7 @@ export default function LibraryAccordion({
             <Item titleRender={
                 () => renderTitle('Project Properties')}>
                 <ADMESelector
-                    type="P"
+                    type={ContainerType.PROJECT}
                     organizationId={userData.organization_id}
                     data={projectData}
                     childRef={childRef}
@@ -381,12 +403,24 @@ export default function LibraryAccordion({
                     fetchContainer={fetchLibraries}
                     editAllowed={adminProjectAccess}
                     setReset={setReset}
+                    loggedInUser={userData.id}
                 />
             </Item>
-            <Item titleRender={() => renderTitle(`Functional Assay (${AssayData.length})`)}>
+            <Item titleRender={() => renderTitle(`Functional Assay (${assayValue.length})`)}>
                 <FunctionalAssay
-                    data={AssayData}
-                    type={ContainerType.LIBRARY}
+                    data={projectData}
+                    type={ContainerType.PROJECT}
+                    page="library"
+                    childRef={childRef}
+                    setIsDirty={setIsDirty}
+                    isDirty={isDirty}
+                    reset={reset}
+                    setParentAssay={setAssayValue}
+                    fetchContainer={fetchLibraries}
+                    loggedInUser={userData.id}
+                    editAllowed={adminProjectAccess}
+                    selectType={selectType}
+                    setReset={setReset}
                 />
             </Item>
             {actionsEnabled.includes('edit_project') &&

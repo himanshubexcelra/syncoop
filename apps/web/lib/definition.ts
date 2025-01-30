@@ -84,7 +84,6 @@ export interface OrganizationDataFields {
   id: number;
   name: string;
   email_id: string;
-  // status?: string;
   is_active: boolean;
   orgUser: User[];
   metadata: metaDataType;
@@ -94,6 +93,8 @@ export interface OrganizationDataFields {
   type: string;
   config?: OrganizationConfigType;
   inherits_configuration: boolean;
+  inherits_bioassays: boolean;
+  parent_id?: number;
 }
 
 export interface OrganizationTableProps {
@@ -176,6 +177,7 @@ export interface LibraryFields {
   project: ProjectDataFields,
   metadata: {
     target?: string;
+    assay?: AssayFieldList[];
   };
   container_access_permission: sharedUserType[];
   userWhoUpdated?: userType;
@@ -189,6 +191,7 @@ export interface LibraryFields {
   container?: OrganizationDataFields;
   config?: OrganizationConfigType;
   inherits_configuration: boolean;
+  inherits_bioassays: boolean;
   parent_id?: number;
 }
 
@@ -220,12 +223,14 @@ export interface ProjectDataFields {
   other_container?: LibraryFields[];
   metadata: {
     target: string,
-    type: string
+    type: string,
+    assay?: AssayFieldList[],
   };
   created_at: Date;
   combinedLibrary?: CombinedLibraryType;
   config?: OrganizationConfigType;
   inherits_configuration: boolean;
+  inherits_bioassays: boolean;
 }
 
 export interface UserRole {
@@ -315,7 +320,8 @@ export interface ADMEProps {
   fetchContainer?: () => void;
   isDirty: boolean;
   editAllowed?: boolean;
-  setReset?: any
+  setReset?: (val: string) => void;
+  loggedInUser: number;
 }
 
 export interface AssayFields {
@@ -342,13 +348,25 @@ export interface AssayFieldList {
 }
 
 export interface FunctionalAssayProps {
-  data: AssayFieldList[],
+  data: AssayFieldList[] | ProjectDataFields | LibraryFields,
   type?: string,
   orgUser?: OrgUser,
   fetchOrganizations?: fetchDataType,
-  color?: string
+  color?: string,
+  setIsDirty: (val: boolean) => void;
+  childRef: React.RefObject<HTMLDivElement>;
+  reset: string;
+  isDirty: boolean;
+  setParentAssay?: (val: AssayFieldList[]) => void;
+  fetchContainer?: () => void;
+  loggedInUser: number;
+  editAllowed?: boolean;
+  selectType?: (val: string) => void;
+  setReset?: (val: string) => void;
+  page?: string;
 }
 
+export type ContainerFields = OrganizationDataFields | ProjectDataFields | LibraryFields;
 export interface ModuleFeature {
   id: number;
   name: string;
@@ -442,7 +460,8 @@ export enum MoleculeStatusLabel {
   ValidatedInCart = 'Validated + In Cart',
   InProgress = 'In Progress',
   Done = 'Done',
-  Failed = 'Failed'
+  Failed = 'Failed',
+  OrderedInCart = 'Ordered + In Cart',
 }
 
 export enum MoleculeStatusCode {
@@ -456,7 +475,8 @@ export enum MoleculeStatusCode {
   ValidatedInCart = 9,
   InProgress = 10,
   Done = 11,
-  Failed = 5
+  Failed = 5,
+  OrderedInCart = 12,
 }
 
 
@@ -559,6 +579,7 @@ export interface DeleteMoleculeCart {
   project_id: number;
   moleculeName: string,
   created_by: number;
+  pathway: number;
 }
 
 export interface MoleculeOrderParams {

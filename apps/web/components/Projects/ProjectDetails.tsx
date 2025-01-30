@@ -58,7 +58,6 @@ export default function ProjectDetails({
             });
         }
     }, []);
-
     // Fetching projects under organization OPT: 3
     const fetchOrganizations = async () => {
         let organization;
@@ -72,6 +71,13 @@ export default function ProjectDetails({
                 });
                 projectList = organization?.other_container;
                 setOrganization([organization]);
+                setUsers(organization?.orgUser?.filter(
+                    (user: UserData) => {
+                        const roles = user.user_role
+                            .map(role => role.role.type)
+                            .filter(role => role !== undefined) as string[] || []
+                        return isLibraryManger(roles) && user.id !== userData.id
+                    }));
             } else {
                 organization = await getOrganization({
                     withRelation: ['orgUser', 'user_role', 'projects'],
@@ -80,10 +86,10 @@ export default function ProjectDetails({
                 projectList = organization.map(
                     (org: OrganizationDataFields) => org.other_container).flat();
                 setOrganization(organization);
+                setUsers([])
             }
             setFilteredData(projectList);
             setOrgProjects(projectList);
-            setUsers([]);
         } else {
             const tempOrganization = [];
             organization = await getOrganizationById({

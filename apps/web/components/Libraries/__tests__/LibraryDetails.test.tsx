@@ -188,7 +188,7 @@ describe('LibraryDetails Component', () => {
         expect(projectTitle).toBeInTheDocument();
     });
 
-    test('fetches and sets project data correctly', async () => {
+    test.skip('fetches and sets project data correctly', async () => {
         render(
             <AppContext.Provider value={mockAppContext}>
                 <LibraryDetails

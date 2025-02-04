@@ -146,7 +146,13 @@ export default function LandingPage({
         <>
             <div className="space-y-2 mb-2">
                 <Breadcrumb breadcrumbs={breadcrumbs} />
-                <Heading {...{ heading }} myRoles={myRoles} showEditPopup={showEditPopup} />
+                <Heading {...{
+                    heading,
+                    customerOrgId,
+                    myRoles,
+                    showEditPopup,
+                    showOrderButton: true,
+                }} />
             </div>
             <main className="main main-heading main-padding">
                 <div className="w-full shadow-lg shadow-[var(--tabBoxShadow)]">
@@ -207,7 +213,7 @@ export default function LandingPage({
                     showTitle={true}
                     visible={editPopup}
                     showCloseButton={true}
-                    hideOnOutsideClick={true}
+                    hideOnOutsideClick={false}
                     contentRender={() => (
                         <EditOrganization
                             formRef={formRef}

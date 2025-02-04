@@ -484,7 +484,7 @@ function FunctionalAssay({
                             />
                         )}
                         width={477}
-                        hideOnOutsideClick={true}
+                        hideOnOutsideClick={false}
                         height="100%"
                         position={popupPosition}
                         onHiding={() => {
@@ -519,7 +519,7 @@ function FunctionalAssay({
                             />
                         )}
                         width="40%"
-                        hideOnOutsideClick={true}
+                        hideOnOutsideClick={false}
                         height="90%"
                         position={popupPositionCenter}
                         onHiding={() => {

@@ -2,6 +2,9 @@
 import { render, screen, act, waitFor, fireEvent } from '@testing-library/react';
 import SendMoleculesForSynthesis from '../SendMoleculesForSynthesis';
 import { MoleculeOrder, MoleculeStatusLabel } from '@/lib/definition';
+import DataGrid, { Column } from 'devextreme-react/data-grid';
+import { Button } from "devextreme-react/button";
+import Image from 'next/image';
 
 const moleculeData = [
     {
@@ -31,8 +34,10 @@ const inRetroData: MoleculeOrder[] = [];
 
 const generateReactionPathway = jest.fn();
 const setSynthesisView = jest.fn();
+const setDisableAnalysis = jest.fn();
 const handleStructureZoom = jest.fn();
 const closeMagnifyPopup = jest.fn();
+const removeSynthesisData = jest.fn();
 
 describe('Send Molecules For Synthesis should work as expected', () => {
     beforeEach(() => {
@@ -51,8 +56,10 @@ describe('Send Molecules For Synthesis should work as expected', () => {
                     inRetroData={inRetroData}
                     generateReactionPathway={generateReactionPathway}
                     setSynthesisView={setSynthesisView}
+                    setDisableAnalysis={setDisableAnalysis}
                     handleStructureZoom={handleStructureZoom}
                     closeMagnifyPopup={closeMagnifyPopup}
+                    removeSynthesisData={removeSynthesisData}
                 />);
         });
 
@@ -73,8 +80,10 @@ describe('Send Molecules For Synthesis should work as expected', () => {
                     inRetroData={moleculeData}
                     generateReactionPathway={generateReactionPathway}
                     setSynthesisView={setSynthesisView}
+                    setDisableAnalysis={setDisableAnalysis}
                     handleStructureZoom={handleStructureZoom}
                     closeMagnifyPopup={closeMagnifyPopup}
+                    removeSynthesisData={removeSynthesisData}
                 />);
         });
 
@@ -91,8 +100,10 @@ describe('Send Molecules For Synthesis should work as expected', () => {
                     inRetroData={moleculeData}
                     generateReactionPathway={generateReactionPathway}
                     setSynthesisView={setSynthesisView}
+                    setDisableAnalysis={setDisableAnalysis}
                     handleStructureZoom={handleStructureZoom}
                     closeMagnifyPopup={closeMagnifyPopup}
+                    removeSynthesisData={removeSynthesisData}
                 />);
         });
 
@@ -102,7 +113,7 @@ describe('Send Molecules For Synthesis should work as expected', () => {
         expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
-    test('cancel button should work as expected', async () => {
+    test('Remove Synthesis should work as expected', async () => {
         await act(async () => {
             render(
                 <SendMoleculesForSynthesis
@@ -110,8 +121,10 @@ describe('Send Molecules For Synthesis should work as expected', () => {
                     inRetroData={moleculeData}
                     generateReactionPathway={generateReactionPathway}
                     setSynthesisView={setSynthesisView}
+                    setDisableAnalysis={setDisableAnalysis}
                     handleStructureZoom={handleStructureZoom}
                     closeMagnifyPopup={closeMagnifyPopup}
+                    removeSynthesisData={removeSynthesisData}
                 />);
         });
 
@@ -119,5 +132,39 @@ describe('Send Molecules For Synthesis should work as expected', () => {
         expect(cancelButton).toBeInTheDocument();
         await act(async () => { fireEvent.click(cancelButton) });
         expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    test('cancel button should work as expected', async () => {
+        await act(async () => {
+            render(
+                <DataGrid
+                    dataSource={moleculeData}
+                    showBorders={true}
+                    columnAutoWidth={false}
+                    width="100%"
+                >
+                    <Column dataField="molecule_id" caption="Molecule ID" alignment="center" />
+                    <Column cellRender={({ data }) => (
+                        <Button
+                            onClick={() => removeSynthesisData(data)}
+                            render={() => (
+                                <Image src="/icons/delete.svg"
+                                    width={24}
+                                    height={24}
+                                    alt="Delete Molecule" />
+                            )}
+                        />
+                    )} caption="Remove" />
+                </DataGrid>
+            );
+
+
+        });
+
+        const deleteButtons = screen.getByAltText('Delete Molecule');
+        fireEvent.click(deleteButtons);
+
+        await waitFor(() => {
+            expect(removeSynthesisData).toHaveBeenCalledWith(moleculeData[0]);
+        });
     });
 });

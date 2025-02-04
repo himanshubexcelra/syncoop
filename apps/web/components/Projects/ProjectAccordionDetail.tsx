@@ -483,7 +483,7 @@ export default function ProjectAccordionDetail({
                                 visible={expandMenu === item.id}
                                 onHiding={() => setExpandedMenu(-1)}
                                 dragEnabled={false}
-                                hideOnOutsideClick={true}
+                                hideOnOutsideClick={false}
                                 showCloseButton={false}
                                 showTitle={false}
                                 width={80}
@@ -585,7 +585,7 @@ export default function ProjectAccordionDetail({
                             />
                         )}
                         width={477}
-                        hideOnOutsideClick={true}
+                        hideOnOutsideClick={false}
                         height="100%"
                         position={popupPosition}
                         dragEnabled={false}

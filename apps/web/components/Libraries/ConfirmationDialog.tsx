@@ -40,6 +40,7 @@ const ConfirmationDialog = ({
         visible={visible}
         onHiding={() => setConfirm(false)}
         showTitle={false}
+        hideOnOutsideClick={false}
         title=""
         width={577}
         height={236}

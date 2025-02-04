@@ -31,7 +31,7 @@ export default function Tabs({
         const tabColor = tabsDetails[index]?.props?.color || 'var(--themeBlueColor)';
         (tab as HTMLElement).style.setProperty('--tab-color', tabColor);
         if (tabsDetails[index]?.props?.color) {
-          (tab as HTMLElement).style.setProperty('color', tabIndex === index ? tabColor : '#757575');
+          (tab as HTMLElement).style.setProperty('color', activeTab === index ? tabColor : '#757575');
         }
       });
     };

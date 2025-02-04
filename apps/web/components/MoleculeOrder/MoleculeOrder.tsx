@@ -165,6 +165,7 @@ type PathObjectType = {
 type MoleculeOrderPageTypeProps = {
   userData: UserData,
   actionsEnabled: string[],
+  customerOrgId?: number
 }
 
 const isClickable = [MoleculeStatusLabel.Ordered, MoleculeStatusLabel.InRetroQueue];
@@ -176,6 +177,7 @@ const MoleculeStructure = dynamic(() => import("@/utils/MoleculeStructure"), {
 export default function MoleculeOrderPage({
   userData,
   actionsEnabled,
+  customerOrgId
 }: MoleculeOrderPageTypeProps) {
   const { organization_id, orgUser, myRoles } = userData;
   const { type } = orgUser;
@@ -240,6 +242,7 @@ export default function MoleculeOrderPage({
   const [isHandleOpenClick, setIsHandleOpenClick] = useState<boolean>(false);
   const permitSubmitAnalysis = ['admin', 'protocol_approver', 'researcher'].some(role =>
     myRoles?.includes(role));
+  const [disableAnalysis, setDisableAnalysis] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -256,6 +259,7 @@ export default function MoleculeOrderPage({
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       setPopupVisible(false);
       setButtonClicked(false);
+      setDisableAnalysis(false);
     }
   };
   const permitValidatePathway = actionsEnabled.includes('validate_pathway');
@@ -275,40 +279,45 @@ export default function MoleculeOrderPage({
       svgWidth: 16, svgHeight: 16, href: '/projects', isActive: true
     },
   ];
+
   const filterMoleculeStatus =
     [
       MoleculeStatusCode.Done,
       MoleculeStatusCode.InProgress,
       MoleculeStatusCode.Failed
-    ]
-  const clickableRow = (moleculeStatus: MoleculeStatusLabel) => {
+    ];
+
+  const clickableRow = (data: MoleculeOrder) => {
+    const { molecule_status: moleculeStatus } = data;
     let isClickableRow = !isClickable.includes(moleculeStatus);
     if (isSystemAdmin(myRoles) || isResearcherAndProtocolAproover(myRoles)) {
-      isClickableRow = (moleculeStatus === MoleculeStatusLabel.Ready ||
+      isClickableRow = (
+        moleculeStatus === MoleculeStatusLabel.Ready ||
         moleculeStatus === MoleculeStatusLabel.InReview ||
         moleculeStatus === MoleculeStatusLabel.Validated ||
         moleculeStatus === MoleculeStatusLabel.InProgress ||
         moleculeStatus === MoleculeStatusLabel.Failed ||
         moleculeStatus === MoleculeStatusLabel.Done)
-    }
-    else if (isResearcher(myRoles)) {
+    } else if (isResearcher(myRoles)) {
       // Researchers can click only if status is 'Ready'
-      isClickableRow = (moleculeStatus === MoleculeStatusLabel.Ready ||
+      isClickableRow = (
+        moleculeStatus === MoleculeStatusLabel.Ready ||
         moleculeStatus === MoleculeStatusLabel.InProgress ||
         moleculeStatus === MoleculeStatusLabel.Done ||
         moleculeStatus === MoleculeStatusLabel.Failed
       )
     } else if (isProtocolAproover(myRoles)) {
       // Protocol approvers can click only if status is 'InReview' and 'Validated'
-      isClickableRow = (moleculeStatus === MoleculeStatusLabel.InReview
-        || moleculeStatus === MoleculeStatusLabel.Validated ||
+      isClickableRow = (
+        moleculeStatus === MoleculeStatusLabel.InReview ||
+        moleculeStatus === MoleculeStatusLabel.Validated ||
         moleculeStatus === MoleculeStatusLabel.InProgress ||
         moleculeStatus === MoleculeStatusLabel.Done ||
         moleculeStatus === MoleculeStatusLabel.Failed
       )
     }
 
-    return isClickableRow;
+    return isClickableRow && !!data.pathway_id;
   };
 
   const columns: ColumnConfig[] = [
@@ -359,18 +368,16 @@ export default function MoleculeOrderPage({
       alignment: 'center',
       defaultSortOrder: "desc",
       customRender: (data) => {
-        const isClickableRow = clickableRow(data.molecule_status);
-        return isClickableRow ? (
+        /* const pathwaysCheck = ((data?.pathway_id !== null &&
+          (data?.molecule_status === MoleculeStatusLabel.InProgress ||
+            data?.molecule_status === MoleculeStatusLabel.Done ||
+            data?.molecule_status === MoleculeStatusLabel.Failed)) ||
+          (data?.molecule_status === MoleculeStatusLabel.Ready ||
+            data?.molecule_status === MoleculeStatusLabel.Validated))
+          ? true : false; */
+        const isClickable = clickableRow(data);
+        return (isClickable) ? (
           <button
-            /* onClick={() => {
-              setPath(data);
-              setEditPahway(true);
-              setSelectedMoleculeOrder([data]);
-              setActiveTab(0);
-              setNextReaction(false);
-              setIsLabJobLoading(false);
-              setIsLoading(false);
-            }} */
             className="text-themeBlueColor underline"
           >
             {data.molecule_id}
@@ -985,7 +992,7 @@ export default function MoleculeOrderPage({
   // }, []);
 
   const rowGroupName = () => {
-    if (type === OrganizationType.External) {
+    if (type === OrganizationType.External || customerOrgId) {
       if (isAdmin(myRoles) || isResearcher(myRoles) || isProtocolAproover(myRoles)) {
         return "organization / Order";
       }
@@ -1142,10 +1149,10 @@ export default function MoleculeOrderPage({
     let transformedData: any[] = [];
     setLoader(true);
     try {
-      if (type === OrganizationType.External) {
+      if (type === OrganizationType.External || customerOrgId) {
         // External users: fetch records filtered by organization_id
         let params: MoleculeOrderParams = {
-          organization_id: organization_id,
+          organization_id: customerOrgId || organization_id,
           sample_molecule_id: Number(randomValue(sample_molecule_ids))
         };
         if (isLibraryManger(myRoles)) {
@@ -1201,7 +1208,7 @@ export default function MoleculeOrderPage({
             order_name,
             organizationMetadata,
             ...(() => {
-              if (type === OrganizationType.External) {
+              if (type === OrganizationType.External || customerOrgId) {
                 if (isAdmin(myRoles) || isResearcher(myRoles) || isProtocolAproover(myRoles)) {
                   return {
                     "organization / Order":
@@ -1251,9 +1258,11 @@ export default function MoleculeOrderPage({
 
   const handleSendForSynthesis = () => {
     setSynthesisView(true);
+    setDisableAnalysis(true);
   };
 
   const handleSendForAnalysis = async () => {
+    setSendForSynthesisEnabled(true);
     // Ensure moleculeData is handled as an array of objects
     const selectedMolecule: CreateLabJobOrder[] = moleculeData.map((molecule) => ({
       molecule_id: molecule.molecule_id,
@@ -1404,7 +1413,7 @@ export default function MoleculeOrderPage({
     setSelectedRows([]);
     extractJsonData(PathwayData, moleculeData);
     setMoleculeData([]);
-
+    setDisableAnalysis(false);
     //needed for api
     // const groupedOrder = moleculeData.reduce((
     //   acc: Map<number, MoleculeOrder[]>, molecule: MoleculeOrder) => {
@@ -1548,8 +1557,9 @@ export default function MoleculeOrderPage({
     {
       text: `Send for Analysis (${selectedRows.length})`,
       onClick: handleSendForAnalysis,
-      disabled: selectedRows?.length > 0 ? false : true,
-      class: selectedRows?.length > 0 ? 'btn-primary mr-2' : 'mol-ord-btn-disable mr-2',
+      disabled: (selectedRows?.length > 0 && !disableAnalysis) ? false : true,
+      class: (selectedRows?.length > 0 && !disableAnalysis) ?
+        'btn-primary mr-2' : 'mol-ord-btn-disable mr-2',
       visible: permitSubmitAnalysis
     },
     {
@@ -1695,6 +1705,10 @@ export default function MoleculeOrderPage({
       }];
       try {
         const insertedData = await saveReactionPathway(reactionDataInput);
+        context?.addToState({
+          ...appContext,
+          pathwayReaction: insertedData[0]
+        })
         setPathWayReaction(insertedData);
         await fetchData(insertedData[0]?.id, selectedPathwayIndex);
         // await updateMoleculeDataStatus(moleculeStatus, moleculeStatusLabel)
@@ -1935,7 +1949,11 @@ export default function MoleculeOrderPage({
     },
   ];
 
-  localStorage.setItem("tabsLength", String(tabsDetails?.length));
+  useEffect(() => {
+    if (typeof window !== "undefined" && tabsDetails?.length !== undefined) {
+      localStorage.setItem("tabsLength", String(tabsDetails.length));
+    }
+  }, [tabsDetails]);
 
   const onFormChange = (hasChanged: boolean) => {
     setPopUpType(FormState.UPDATE);
@@ -1983,7 +2001,10 @@ export default function MoleculeOrderPage({
   const handleOpenClick = async (index: number, tab?: number) => {
     // need to fetch by id since the index in which path show will not 
     // match the actual pathway_index once pathway_instance_id is generated
-    const pathwayId = nodeValue[index][1].id.split('R')[0];
+    const nodeValuepathwayId = nodeValue[index][1].id.split('R')[0];
+    const pathwayId = nodeValue[index][1].id.split('R')[0] ===
+      appContext?.pathwayReaction?.parent_id
+      ? appContext.pathwayReaction.id : nodeValuepathwayId;
     setPathwayID(Number(pathwayId));
     setEditPahway(true)
     setActiveTab(tab || 0);
@@ -2024,7 +2045,7 @@ export default function MoleculeOrderPage({
     if (e.rowType === 'data') {
       const rowData = e.data;
       if (!buttonClicked) {
-        const isClickableRow = clickableRow(rowData.molecule_status);
+        const isClickableRow = clickableRow(rowData);
         if (isClickableRow) {
           if (rowData.molecule_status === MoleculeStatusLabel.Validated) {
             setReactionOnlyView(true)
@@ -2044,16 +2065,18 @@ export default function MoleculeOrderPage({
 
   const onRowPrepared = (e: any) => {
     if (e.rowType === 'data') {
-      if (e.rowType === 'data' && (e.data.molecule_status === MoleculeStatusLabel.Ready ||
-        e.data.molecule_status === MoleculeStatusLabel.Validated ||
-        e.data.molecule_status === MoleculeStatusLabel.ValidatedInCart ||
-        e.data.molecule_status === MoleculeStatusLabel.OrderedInCart ||
-        e.data.molecule_status === MoleculeStatusLabel.InProgress ||
-        e.data.molecule_status === MoleculeStatusLabel.Done 
-      )) {
+      if (e.rowType === 'data' &&
+        (e.data.molecule_status === MoleculeStatusLabel.Ready ||
+          e.data.molecule_status === MoleculeStatusLabel.InRetroQueue ||
+          e.data.molecule_status === MoleculeStatusLabel.Validated ||
+          e.data.molecule_status === MoleculeStatusLabel.ValidatedInCart ||
+          e.data.molecule_status === MoleculeStatusLabel.OrderedInCart ||
+          e.data.molecule_status === MoleculeStatusLabel.InProgress ||
+          e.data.molecule_status === MoleculeStatusLabel.Done
+        )) {
         e.data.disabled = true;
       }
-      const isClickableRow = clickableRow(e.data.molecule_status);
+      const isClickableRow = clickableRow(e.data);
       if (isClickableRow) {
         e.rowElement.style.cursor = 'pointer';
         if (selectedRow === e.rowIndex)
@@ -2124,6 +2147,19 @@ export default function MoleculeOrderPage({
       resetNodes(true);
     }
   };
+
+  const removeSynthesisData = (data: MoleculeOrder) => {
+    const updateSelectedRows = selectedRows.filter
+      ((item: number) => Number(item) !== Number(data.id));
+    const updatedData = moleculeData.filter((item) => item.molecule_id !== data.molecule_id);
+    setMoleculeData(updatedData);
+    setSelectionEnabledRows(updatedData);
+    if (!updatedData.length) {
+      setSynthesisView(false);
+    }
+    onSelectionUpdated(updateSelectedRows, updatedData);
+  }
+
   return (
     <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
@@ -2153,6 +2189,7 @@ export default function MoleculeOrderPage({
             onSelectionUpdated={onSelectionUpdated}
             onRowPrepared={onRowPrepared}
             showFooter={true}
+            selectedRow={selectedRows}
           />
         </div>
 
@@ -2165,9 +2202,12 @@ export default function MoleculeOrderPage({
                 moleculeData={moleculeData}
                 generateReactionPathway={generateReactionPathway}
                 setSynthesisView={setSynthesisView}
+                setDisableAnalysis={setDisableAnalysis}
                 inRetroData={inRetroData}
                 closeMagnifyPopup={closeMagnifyPopup}
                 handleStructureZoom={handleStructureZoom}
+                removeSynthesisData={(data: MoleculeOrder) => removeSynthesisData(data)}
+
               />
             )}
             width={700}
@@ -2176,8 +2216,13 @@ export default function MoleculeOrderPage({
             dragEnabled={false}
             position={synthesisPopupPos}
             onHiding={() => {
+              context?.addToState({
+                ...appContext,
+                pathwayReaction: {}
+              })
               setPopupVisible(false);
               setSynthesisView(false);
+              setDisableAnalysis(false);
               setReactionOnlyView(false);
             }}
             showCloseButton={true}
@@ -2541,6 +2586,7 @@ export default function MoleculeOrderPage({
 
               </div>
             )}
+            hideOnOutsideClick={false}
             defaultWidth={popupWidth}
             minWidth={PATHWAY_BOX_WIDTH}
             dragEnabled={false}
@@ -2550,6 +2596,10 @@ export default function MoleculeOrderPage({
             minHeight={'100%'}
             position={synthesisPopupPos}
             onHiding={() => {
+              context?.addToState({
+                ...appContext,
+                pathwayReaction: {}
+              })
               setPathwayView(false);
               setSelectRow(-1);
               setSelectedPathway(-1);
@@ -2607,7 +2657,7 @@ export default function MoleculeOrderPage({
               </>
             )}
             resizeEnabled={true}
-            hideOnOutsideClick={true}
+            hideOnOutsideClick={false}
             defaultWidth={870}
             minWidth={870}
             minHeight={'100%'}
@@ -2617,6 +2667,10 @@ export default function MoleculeOrderPage({
               at: { x: 'right', y: 'top' },
             }}
             onHiding={() => {
+              context?.addToState({
+                ...appContext,
+                pathwayReaction: {}
+              })
               setViewImage(false);
               setReactionOnlyView(false);
             }}

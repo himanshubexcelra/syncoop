@@ -602,6 +602,7 @@ export interface MoleculeOrder {
   molecule_id: number;
   library_id: number;
   project_id: number;
+  pathway_id: number;
   organization_id: number;
   molecularWeight?: number;
   pathway_instance_id?: number;

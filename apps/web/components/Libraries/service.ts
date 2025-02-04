@@ -462,7 +462,6 @@ export async function updateLabJobApi(labJobId: number) {
         const response: any = await fetch(
             `${process.env.PYTHON_API_HOST_URL}/lab_job_order/generate_csv`,
             {
-                mode: "no-cors",
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -470,12 +469,12 @@ export async function updateLabJobApi(labJobId: number) {
                 body: JSON.stringify(payload),
             }
         );
-        if (response.status !== 200) {
-            return response;
-        } else {
+        if (!response.ok) {
             const error = await response.json();
             return { status: response.status, error };
         }
+
+        return await response.json();
 
     } catch (error: any) {
         return error;

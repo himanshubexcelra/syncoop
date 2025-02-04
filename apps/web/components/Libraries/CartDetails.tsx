@@ -23,11 +23,12 @@ import {
   filterCartDataForAnalysis,
   filterCartDataForLabJob,
   generateRandomDigitNumber,
-  mapCartData
+  mapCartData,
+  delay
 } from "@/utils/helpers";
 import toast from "react-hot-toast";
 import { Messages } from "@/utils/message";
-import { LabJobStatus, ReactionStatus } from "@/utils/constants";
+import { DELAY, LabJobStatus, ReactionStatus } from "@/utils/constants";
 import MoleculeStructureActions from "@/ui/MoleculeStructureActions";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import { Switch } from "devextreme-react";
@@ -249,25 +250,56 @@ export default function CartDetails({
   };
 
   async function processLabJobOrders(labJobOrderData: SaveLabJobOrder[]) {
-    for (const item of labJobOrderData) {
-      try {
-        const result = await postLabJobOrder(item);
-        if (!result || !result.lab_job_order_id) {
-          console.error("Invalid result from postLabJobOrder:", result);
-          continue; // Skip to the next iteration
+    try {
+      let labJobStateCount = 0;
+      let analysisStateCount = 0;
+      let successMessage = '';
+      for (const item of labJobOrderData) {
+        try {
+          // Post the lab job order
+          const result = await postLabJobOrder(item);
+          if (!result || !result.lab_job_order_id) {
+            console.error("Invalid result from postLabJobOrder:", result);
+            // Skip this iteration if we don't get a valid result.
+            continue;
+          }
+
+          // Update the lab job order by API call
+          const response = await updateLabJobApi(result.lab_job_order_id);
+
+          if (!response.error) {
+            successMessage = response?.message;
+            // Update counts after successful processing
+            labJobStateCount = labJobState?.length || 0;
+            analysisStateCount = analysisState?.length || 0;
+          } else {
+            // Handle error returned from update API
+            const errorMessage = response.error.detail;
+            const toastId = toast.error(errorMessage);
+            await delay(DELAY);
+            toast.remove(toastId);
+          }
+        } catch (error) {
+          // Catch any unexpected errors per order
+          const errorMessage = Messages.PROCESSING_LABJOB_ERROR;
+          console.error(errorMessage, error);
+          const toastId = toast.error(errorMessage);
+          await delay(DELAY);
+          toast.remove(toastId);
+          analysisStateCount++;
         }
-        await updateLabJobApi(result?.lab_job_order_id);
-        const labJobStateCount = labJobState?.length || 0;
-        const analysisStateCount = analysisState?.length || 0;
-        const message = Messages.displayLabJobMessage(labJobStateCount, analysisStateCount);
-        removeAll(
-          userData.id,
-          "LabJobOrder",
-          message,
-        );
-      } catch (error) {
-        console.error("Error processing lab job order:", error);
       }
+      const toastId = toast.success(successMessage);
+      await delay(DELAY);
+      toast.remove(toastId);
+      // After processing all orders, show a summary message and remove all orders
+      const summaryMessage = Messages.displayLabJobMessage(labJobStateCount, analysisStateCount);
+      removeAll(userData.id, "LabJobOrder", summaryMessage);
+      // Turn off the submit/loading state
+      setSubmitOrderLoading(false);
+    } catch (error) {
+      console.error("Unexpected error in processLabJobOrders:", error);
+      setSubmitOrderLoading(false);
     }
   }
 

@@ -372,7 +372,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                   />
                 )}
                 width={550}
-                hideOnOutsideClick={true}
+                hideOnOutsideClick={false}
                 height="100%"
                 position={popupPosition}
                 onHiding={() => {
@@ -387,7 +387,7 @@ export default function ListOrganization({ userData, actionsEnabled }: ListOrgan
                 visible={editPopup}
                 dragEnabled={false}
                 showCloseButton={true}
-                hideOnOutsideClick={true}
+                hideOnOutsideClick={false}
                 contentRender={() => (
                   <EditOrganization
                     formRef={formRef}

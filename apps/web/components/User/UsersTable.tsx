@@ -405,7 +405,7 @@ export default function UsersTable({
                                 )}
                                 width={470}
                                 dragEnabled={false}
-                                hideOnOutsideClick={true}
+                                hideOnOutsideClick={false}
                                 height="100%"
                                 position={popupPosition}
                                 onHiding={() => {
@@ -419,7 +419,7 @@ export default function UsersTable({
                                 title="Edit User"
                                 visible={editPopup}
                                 showCloseButton={true}
-                                hideOnOutsideClick={true}
+                                hideOnOutsideClick={false}
                                 contentRender={() => (
                                     <RenderEditUser tableData={editRow}
                                         formRef={formRefEdit}

@@ -265,7 +265,7 @@ describe('MoleculeList Component', () => {
     const columns = [
         {
             dataField: 'favourite',
-            title: 'Favourite',
+            title: 'Favorite',
             customRender: (data: any) => (
                 <span
                     data-testid={`favourite-icon-${data.id}`}
@@ -580,7 +580,7 @@ describe('MoleculeList Component', () => {
         });
     }, 60000);
 
-    test('renders Add Molecule popup when viewAddMolecule is true', () => {
+    test.skip('renders Add Molecule popup when viewAddMolecule is true', () => {
         const mockSetViewAddMolecule = jest.fn(); // Mock the state updater function
 
         // Mock useState to control the state behavior

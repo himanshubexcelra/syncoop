@@ -20,6 +20,7 @@ const initialContext = {
   refreshUsersTable: false,
   cartDetail: [],
   refreshCart: false,
+  pathwayReaction:[],
 }
 
 interface AppContextData {

@@ -2,6 +2,11 @@ import React from 'react';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import ProfileInfo from '../ProfileInfo';
 import { getUsersById } from '../service';
+import { useRouter } from 'next/navigation';
+
+jest.mock('next/navigation', () => ({
+    useRouter: jest.fn(),
+}));
 
 jest.mock('../service', () => ({
     getUsersById: jest.fn(),
@@ -36,6 +41,9 @@ describe('ProfileInfo Component', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (getUsersById as jest.Mock).mockResolvedValue(mockUserData);
+        (useRouter as jest.Mock).mockReturnValue({
+            push: jest.fn(),
+        });
     });
 
     it('should fetch and display user data correctly', async () => {

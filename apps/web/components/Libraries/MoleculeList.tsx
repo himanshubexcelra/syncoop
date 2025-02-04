@@ -166,8 +166,8 @@ export default function MoleculeList({
                 height={24} alt="Bookmark" />,
             headerFilter: {
                 dataSource: [
-                    { value: true, text: 'Favourites' },
-                    { value: false, text: 'Non-Favourites' },
+                    { value: true, text: 'Favorites' },
+                    { value: false, text: 'Non-Favorites' },
                 ],
             },
             customRender: (data) => {
@@ -1035,7 +1035,7 @@ export default function MoleculeList({
             class: isAddToCartEnabled
                 ? 'btn-disable' : 'btn-secondary',
             disabled: isAddToCartEnabled,
-            visible: cartEnabled && !!library_id,
+            visible: cartEnabled,
             loader: loadingCartEnabled
         }
     ];
@@ -1140,7 +1140,7 @@ export default function MoleculeList({
                             />
                         )}
                         resizeEnabled={true}
-                        hideOnOutsideClick={true}
+                        hideOnOutsideClick={false}
                         defaultWidth={710}
                         minWidth={710}
                         defaultHeight={'100%'}
@@ -1174,7 +1174,7 @@ export default function MoleculeList({
                                 callLibraryId={callLibraryId} />
                         )}
                         resizeEnabled={true}
-                        hideOnOutsideClick={true}
+                        hideOnOutsideClick={false}
                         defaultWidth=
                         {editMolecules.length > 1
                             ? 896 : 710}
@@ -1235,7 +1235,7 @@ export default function MoleculeList({
                                 </>
                             )}
                             resizeEnabled={true}
-                            hideOnOutsideClick={true}
+                            hideOnOutsideClick={false}
                             defaultWidth={870}
                             minWidth={870}
                             minHeight={'100%'}

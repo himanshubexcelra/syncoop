@@ -230,7 +230,7 @@ export default function ProjectDetails({
                                                     clickedOrg={Number(organizationId)} />
                                             )}
                                             width={477}
-                                            hideOnOutsideClick={true}
+                                            hideOnOutsideClick={false}
                                             height="100%"
                                             position={popupPosition}
                                             onHiding={() => {

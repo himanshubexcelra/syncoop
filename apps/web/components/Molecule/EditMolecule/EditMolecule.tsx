@@ -291,6 +291,7 @@ const EditMolecule = ({
                 onHiding={hideUpdateVisible}
                 dragEnabled={false}
                 showCloseButton={true}
+                hideOnOutsideClick={false}
                 width={455}
                 height={151}
                 contentRender={() => <UpdateMoleculePopup

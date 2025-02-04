@@ -62,10 +62,7 @@ export const Messages = {
         if (analysisStateCount) {
             parts.push(`analysis of ${analysisStateCount} molecule`);
         }
-        return `You are ordering the ${parts.join(' and ')}`;
-    },
-    displayAnalysisMessage(count: number) {
-        return `You are ordering the Analysis of ${count} Molecule.`;
+        return `You are ordering the ${parts.join(' and ')}.`;
     },
     MOLECULES_VALIDATE_MSG: "Molecule have been validate successfully.",
     ADD_USER: 'User created successfully',
@@ -146,5 +143,6 @@ export const Messages = {
     },
     DELETE_PROJECT_MESSAGE: 'Project Deleted Successfully.',
     DELETE_PROJECT_ERROR_MESSAGE: 'Can not delete project. Some error occured while deleting the library',
-    ANALYSIS_ORDER: "Molecule has been added to analysis cart"
+    ANALYSIS_ORDER: "Molecule has been added to analysis cart",
+    PROCESSING_LABJOB_ERROR: "Error processing lab job order",
 }

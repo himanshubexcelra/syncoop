@@ -70,6 +70,7 @@ interface CustomDataGridProps {
     onExporting?: (e: any) => void;
     cssClass?: string;
     hoverStateEnabled?: boolean;
+    selectedRow?: any[];
 }
 
 const CustomDataGrid = ({
@@ -100,11 +101,14 @@ const CustomDataGrid = ({
     onEditorPreparing,
     onRowClick,
     onRowPrepared,
+    selectedRow,
 }: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
     const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
-
+    useEffect(() => {
+        setSelectedRowKeys(selectedRow ? selectedRow : []);
+    }, [selectedRow]);
     const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
         window.innerHeight - 100 : height); // Default height
     const grid = useRef<DataGridRef>(null);
@@ -195,16 +199,23 @@ const CustomDataGrid = ({
 
     const onSelectionChanged = (e: any) => {
         setSelectedRowKeys([...e.selectedRowKeys]);
-        if (onSelectionUpdated)
+        if (onSelectionUpdated) {
             onSelectionUpdated(e.selectedRowKeys, e.selectedRowsData);
+        }
     };
+
+    const disableCheckBox = (rowData: any) => {
+        if (grid.current) {
+            const dataGrid = grid.current?.instance();
+            dataGrid.deselectRows([rowData.id]);
+        }
+    }
 
     // onCellPrepared to disable the checkbox
     const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
         if (e.rowType === 'data') {
             if (e.column.type === 'selection') {
                 const rowData = e.row.data;
-
                 // Disable the checkbox for rows where 'disabled' is true
                 if (rowData.disabled) {
                     // Set pointer-events to 'none' to disable interaction with the checkbox
@@ -212,12 +223,7 @@ const CustomDataGrid = ({
 
                     // Optional: Add some visual feedback like reducing opacity
                     e.cellElement.style.opacity = '0.2';
-
-                    if (grid.current) {
-                        const dataGrid = grid.current?.instance();
-                        dataGrid.deselectRows([rowData.id]);
-                    }
-
+                    disableCheckBox(rowData);
                 }
             }
         }
@@ -233,8 +239,9 @@ const CustomDataGrid = ({
         } else if (args.value !== null) {
             setSelectedRowKeys([]);
         }
-        if (onSelectionUpdated)
+        if (onSelectionUpdated) {
             onSelectionUpdated(selectedRowsKeys, selectionEnabledRows);
+        }
     }
 
     // Determine if the header checkbox should be checked or not

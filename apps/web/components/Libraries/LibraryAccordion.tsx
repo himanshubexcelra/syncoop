@@ -448,7 +448,7 @@ export default function LibraryAccordion({
                             />
                         )}
                         width={477}
-                        hideOnOutsideClick={true}
+                        hideOnOutsideClick={false}
                         height="100%"
                         position={popupPosition}
                         dragEnabled={false}
@@ -572,7 +572,7 @@ export default function LibraryAccordion({
                                     />
                                 )}
                                 width={477}
-                                hideOnOutsideClick={true}
+                                hideOnOutsideClick={false}
                                 height="100%"
                                 position={popupPosition}
                                 onHiding={() => {
@@ -607,7 +607,7 @@ export default function LibraryAccordion({
                                     />
                                 )}
                                 width={477}
-                                hideOnOutsideClick={true}
+                                hideOnOutsideClick={false}
                                 height="100%"
                                 position={popupPosition}
                                 onHiding={() => {

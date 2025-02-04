@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { MoleculeOrderStatusCode, MoleculeStatusCode } from "@/utils/definition";
 import { json, getUTCTime } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
+import { Prisma } from "@prisma/client";
 
 const { SUCCESS, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
 
@@ -11,6 +12,14 @@ export async function GET(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const sample_molecule_id = searchParams.get("sample_molecule_id");
+        const organization_id = searchParams.get("organization_id");
+        let where;
+        if (organization_id) {
+            where = Prisma.sql`mo.organization_id = ${Number(organization_id)}`;
+        }
+        else {
+            where = Prisma.sql`1=1`;
+        }
         const result = await prisma.$queryRaw`SELECT 
         CONCAT(m.id, mo.order_id) AS id,
         mo.order_id,
@@ -28,6 +37,7 @@ export async function GET(request: Request) {
         m.library_id,
         m.project_id,
         mo.id AS molecule_order_id,
+        pathway.id as pathway_id,
         org.name AS "organizationName",
         org.metadata AS "organizationMetadata",
         org.config AS "organizationConfig",
@@ -62,7 +72,7 @@ export async function GET(request: Request) {
             m.status = ${MoleculeStatusCode.Done} 
             LEFT JOIN molecule_adme_data mad ON mad.molecule_id = m.id and 
             m.status = ${MoleculeStatusCode.Done} 
-
+            LEFT JOIN pathway ON pathway.molecule_id = m.id
 
             /* LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data 
             WHERE molecule_id = ${Number(sample_molecule_id)} 
@@ -78,7 +88,8 @@ export async function GET(request: Request) {
         /* AND mo.status = sco.status_code::int */
         JOIN container org ON mo.organization_id = org.id 
         JOIN container lib ON m.library_id = lib.id
-        JOIN container proj ON m.project_id = proj.id`;
+        JOIN container proj ON m.project_id = proj.id
+        WHERE ${where}`;
 
         if (result) {
             return new Response(json(result), {

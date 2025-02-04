@@ -64,6 +64,7 @@ const DeleteConfirmation = ({
                 title=""
                 width={577}
                 height={236}
+                hideOnOutsideClick={false}
                 position={{ of: window, my: 'center', at: 'center', offset: 'window' }}  // Apply left offset here
                 wrapperAttr={{ class: 'order-popup-internal' }}
             >

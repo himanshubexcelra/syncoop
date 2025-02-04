@@ -29,6 +29,7 @@ const OrderPopupComponent = ({
                 wrapperAttr={{ class: 'order-popup' }}
                 showTitle={false}
                 dragEnabled={false}
+                hideOnOutsideClick={false}
                 style={{ backgroundColor: 'white' }}
             />
         )

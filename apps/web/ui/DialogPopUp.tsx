@@ -41,6 +41,7 @@ export default function DialogPopUp({
                 showCloseButton={true}
                 width={width}
                 height={height}
+                hideOnOutsideClick={false}
                 contentRender={() => <Content
                     onClose={hidePopup}
                     onSubmit={onSubmit}

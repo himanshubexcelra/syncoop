@@ -41,7 +41,7 @@ const ConfirmationDialog = ({ description, onSave, openConfirmation, setConfirm 
         width={263}
         height={143}
         position={{ of: window, my: 'center', at: 'center', offset: '450 0' }}  // Apply left offset here
-
+        hideOnOutsideClick={false}
       >
         <div className='confirm-popup'>
           <p>{description}</p>

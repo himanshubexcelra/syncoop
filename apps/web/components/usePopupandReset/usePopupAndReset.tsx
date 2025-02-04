@@ -47,6 +47,7 @@ const usePopupAndReset = () => {
             showTitle={true}
             width={400}
             height={210}
+            hideOnOutsideClick={false}
         >
             <div>
                 <p className="mb-[20px]">

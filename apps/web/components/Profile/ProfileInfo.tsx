@@ -89,7 +89,7 @@ export default function ProfileInfo({ id,
     return (
         <>
             <Breadcrumb breadcrumbs={breadcrumbs} />
-            <Heading heading={heading} myRoles={myRoles} />
+            <Heading heading={heading} myRoles={myRoles} showOrderButton={false} />
             <main className={styles.main}>
                 <div className={styles.box}>
                     <div className="flex justify-between items-center mb-4">
@@ -147,7 +147,7 @@ export default function ProfileInfo({ id,
                             myRoles={myRoles} />
                     )}
                     width={470}
-                    hideOnOutsideClick={true}
+                    hideOnOutsideClick={false}
                     height="100%"
                     position={{
                         my: { x: 'right', y: 'top' },

@@ -19,8 +19,10 @@ type SendMoleculesForSynthesisProps = {
     inRetroData: MoleculeOrder[],
     generateReactionPathway: () => void,
     setSynthesisView: (val: boolean) => void,
+    setDisableAnalysis: (val: boolean) => void,
     handleStructureZoom: (e: any, data: MoleculeOrder) => void,
     closeMagnifyPopup: (e: any) => void,
+    removeSynthesisData: (val:MoleculeOrder) => void,
 }
 
 export default function SendMoleculesForSynthesis({
@@ -28,10 +30,11 @@ export default function SendMoleculesForSynthesis({
     inRetroData,
     generateReactionPathway,
     setSynthesisView,
+    setDisableAnalysis,
     handleStructureZoom,
     closeMagnifyPopup,
+    removeSynthesisData
 }: SendMoleculesForSynthesisProps) {
-
     const [isLoading, setLoading] = useState(false);
     const grid = useRef<DataGridRef>(null);
     const confirmSynthesis = async () => {
@@ -132,8 +135,9 @@ export default function SendMoleculesForSynthesis({
                         cellRender={({ data }) => Number(data.molecular_weight).toFixed(2)}
                     />
                     <Column
-                        cellRender={() => (
+                        cellRender={({ data }) => (
                             <Button
+                                onClick={() => {removeSynthesisData(data) }}
                                 render={() => (
                                     <>
                                         <Image
@@ -168,6 +172,7 @@ export default function SendMoleculesForSynthesis({
                     elementAttr={{ class: "btn-secondary" }}
                     onClick={() => {
                         setSynthesisView(false)
+                        setDisableAnalysis(false)
                         closeMagnifyPopup(true)
                     }}
                 />

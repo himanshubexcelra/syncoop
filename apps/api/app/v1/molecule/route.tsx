@@ -23,6 +23,7 @@ export async function GET(request: Request) {
         const result = await prisma.$queryRaw`SELECT  
             mo.*,
             mo.id as molecule_id,
+            co.name as library_name,
             sc.status_name,
             ufm.id as favourite_id,
             CASE WHEN ufm.id IS NULL THEN false ELSE true END AS favourite,
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
             mo.status = ${MoleculeStatusCode.Done}
             LEFT JOIN molecule_adme_data mad ON mad.molecule_id = mo.id and
             mo.status = ${MoleculeStatusCode.Done}
- 
+            JOIN container co ON co.id = mo.library_id
             /* LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data
             WHERE molecule_id = ${Number(sample_molecule_id)}
             ORDER BY molecule_id, reaction_step_no DESC) AS mcd ON mo.status = ${MoleculeStatusCode.Done}

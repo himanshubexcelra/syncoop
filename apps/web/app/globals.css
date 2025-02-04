@@ -624,3 +624,6 @@ body {
 .dx-state-disabled .dx-slider-handle .dx-overlay-content {
   transform: translate(-17px, 29px) !important;
 }
+.dx-group-panel-item {
+  margin-left: 30px;
+}

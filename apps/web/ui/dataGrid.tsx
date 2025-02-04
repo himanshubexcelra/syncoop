@@ -70,6 +70,7 @@ interface CustomDataGridProps {
     onExporting?: (e: any) => void;
     cssClass?: string;
     hoverStateEnabled?: boolean;
+    dropdownButtions?: any;
 }
 
 const CustomDataGrid = ({
@@ -100,6 +101,7 @@ const CustomDataGrid = ({
     onEditorPreparing,
     onRowClick,
     onRowPrepared,
+    dropdownButtions
 }: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -186,9 +188,14 @@ const CustomDataGrid = ({
 
     const onToolbarPreparing = (e: any) => {
         if (enableExport) {
-            const customConfiguration = e?.toolbarOptions?.items[0].options.items;
-            customConfiguration[0].text = "Export all data to CSV";
-            customConfiguration[0].icon = "export";
+            e?.toolbarOptions?.items.map((d: any, index: any) => {
+                if (d.name === "exportButton") {
+                    const customConfiguration = e?.toolbarOptions?.items[index]?.options.items;
+                    customConfiguration[0].text = "Export all data to CSV";
+                    customConfiguration[0].icon = "export";
+                }
+            })
+
         }
     }
     const exportFormats = ['csv'];
@@ -246,6 +253,19 @@ const CustomDataGrid = ({
     } else if (selectedRowKeys.length && selectedRowKeys.length < selectionEnabledRows.length) {
         isHeaderCheckboxChecked = null;
     }
+    const renderDropdown = () =>
+    (dropdownButtions.map((dropdown: any, index: any) =>
+        <div key={index}>
+            <label className="text-[#0f69af]">{dropdown.text}</label>
+            <select value={dropdown.value}
+                onChange={(e) => dropdown.onValueChanged(e)}
+                className="text-[#0f69af] border-none"
+            >
+                {dropdown.options.map((option: any, index: any) =>
+                    <option value={option.id} key={index}>{option.category}</option>)}
+            </select>
+        </div>
+    ))
 
     return (
         <div>
@@ -281,7 +301,7 @@ const CustomDataGrid = ({
                     />
                 }
                 {enableExport && <Export enabled={true} formats={exportFormats} />}
-
+                
                 {showDragIcons && <RowDragging
                     allowReordering={true}
                     onReorder={onReorder}
@@ -348,6 +368,7 @@ const CustomDataGrid = ({
                     />
                 )}
                 {enableToolbar && <Toolbar>
+                    {dropdownButtions && <Item> {renderDropdown()}</Item>}
                     {groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }

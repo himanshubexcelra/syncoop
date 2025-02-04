@@ -1039,6 +1039,18 @@ export default function MoleculeList({
             loader: loadingCartEnabled
         }
     ];
+    const [selectedValue, setSelectedValue] = useState('smiles_string');
+    const dropdownButtions = [
+        {
+            text: "Group By:",
+            onValueChanged: ((e: any) => setSelectedValue(e.target.value)),
+            options: [
+                { id: 'smiles_string', category: "Smiles String" },
+                { id: 'library_name', category: "Library Name" }
+            ],
+            value: selectedValue
+        },
+    ]
 
     const renderTitleField = () => {
         return (
@@ -1084,7 +1096,8 @@ export default function MoleculeList({
             </div>
         );
     };
-
+    const rowGroupName = () => selectedValue
+  
     return (
         <>
             {confirm && (
@@ -1109,6 +1122,7 @@ export default function MoleculeList({
                     <CustomDataGrid
                         columns={columns}
                         data={tableData}
+                        groupingColumn={rowGroupName()}
                         enableRowSelection
                         enableGrouping
                         enableSorting
@@ -1125,6 +1139,7 @@ export default function MoleculeList({
                         selectionEnabledRows={selectionEnabledRows}
                         onExporting={onExporting}
                         showFooter={true}
+                        dropdownButtions={dropdownButtions}
                     />
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}

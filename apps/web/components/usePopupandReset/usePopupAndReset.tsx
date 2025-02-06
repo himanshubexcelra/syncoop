@@ -19,6 +19,11 @@ const usePopupAndReset = () => {
         }
     };
 
+    const setDirtyField = (value: boolean, type: string) => {
+        setIsDirty(value);
+        setType(type);
+    }
+
     const selectType = (type: string) => {
         setType(type);
     }
@@ -76,6 +81,7 @@ const usePopupAndReset = () => {
         onSelectedIndexChange,
         setReset,
         selectType,
+        setDirtyField,
     };
 };
 

@@ -3,6 +3,16 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import { editOrganization, getOrganizationById } from '@/components/Organization/service';
 import ADMESelector from '../ADMESelector';
 import { ContainerType, ProjectDataFields } from '@/lib/definition';
+import { AppContext } from '../../../app/AppState';
+import { AppContextModel } from '@/lib/definition';
+
+const mockAppContext = {
+    addToState: jest.fn(),
+    state: {
+        cartDetail: {},
+        appContext: {} as AppContextModel,
+    },
+};
 
 const orgDetails = {
     id: 24,
@@ -245,13 +255,15 @@ describe('ADME details sliders should work as expected', () => {
     test('Changing slider should work as expected for organization', async () => {
         await act(async () => {
             render(
-                <ADMESelector
-                    organizationId={orgDetails.id}
-                    setIsDirty={jest.fn()}
-                    isDirty={true}
-                    childRef={null as any}
-                    reset={''}
-                />
+                <AppContext.Provider value={mockAppContext}>
+                    <ADMESelector
+                        organizationId={orgDetails.id}
+                        setDirtyField={jest.fn()}
+                        isDirty={true}
+                        childRef={null as any}
+                        reset={''}
+                    />
+                </AppContext.Provider>
             );
         });
 
@@ -264,15 +276,17 @@ describe('ADME details sliders should work as expected', () => {
     test('Changing slider should work as expected for project and library', async () => {
         await act(async () => {
             render(
-                <ADMESelector
-                    data={projectMockData}
-                    type={ContainerType.PROJECT}
-                    organizationId={24}
-                    setIsDirty={jest.fn()}
-                    isDirty={true}
-                    childRef={null as any}
-                    reset={''}
-                />
+                <AppContext.Provider value={mockAppContext}>
+                    <ADMESelector
+                        data={projectMockData}
+                        type={ContainerType.PROJECT}
+                        organizationId={24}
+                        setDirtyField={jest.fn()}
+                        isDirty={true}
+                        childRef={null as any}
+                        reset={''}
+                    />
+                </AppContext.Provider>
             );
         });
 
@@ -286,13 +300,15 @@ describe('ADME details sliders should work as expected', () => {
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
             render(
-                <ADMESelector
-                    organizationId={orgDetails.id}
-                    setIsDirty={jest.fn()}
-                    isDirty={true}
-                    childRef={null as any}
-                    reset={''}
-                />
+                <AppContext.Provider value={mockAppContext}>
+                    <ADMESelector
+                        organizationId={orgDetails.id}
+                        setDirtyField={jest.fn()}
+                        isDirty={true}
+                        childRef={null as any}
+                        reset={''}
+                    />
+                </AppContext.Provider>
             );
         });
         const updateButton = screen.getByText('Update');
@@ -305,15 +321,17 @@ describe('ADME details sliders should work as expected', () => {
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
             render(
-                <ADMESelector
-                    data={projectMockData}
-                    type={ContainerType.PROJECT}
-                    organizationId={24}
-                    setIsDirty={jest.fn()}
-                    isDirty={true}
-                    childRef={null as any}
-                    reset={''}
-                />
+                <AppContext.Provider value={mockAppContext}>
+                    <ADMESelector
+                        data={projectMockData}
+                        type={ContainerType.PROJECT}
+                        organizationId={24}
+                        setDirtyField={jest.fn()}
+                        isDirty={true}
+                        childRef={null as any}
+                        reset={''}
+                    />
+                </AppContext.Provider>
             );
         });
         const updateButton = screen.getByText('Update');
@@ -326,15 +344,17 @@ describe('ADME details sliders should work as expected', () => {
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
             render(
-                <ADMESelector
-                    data={libMockData}
-                    type={ContainerType.LIBRARY}
-                    organizationId={24}
-                    setIsDirty={jest.fn()}
-                    isDirty={true}
-                    childRef={null as any}
-                    reset={''}
-                />
+                <AppContext.Provider value={mockAppContext}>
+                    <ADMESelector
+                        data={libMockData}
+                        type={ContainerType.LIBRARY}
+                        organizationId={24}
+                        setDirtyField={jest.fn()}
+                        isDirty={true}
+                        childRef={null as any}
+                        reset={''}
+                    />
+                </AppContext.Provider>
             );
         });
         const updateButton = screen.getByText('Update');
@@ -347,13 +367,15 @@ describe('ADME details sliders should work as expected', () => {
         act(() => { (editOrganization as jest.Mock).mockResolvedValue(mockResponse) });
         await act(async () => {
             render(
-                <ADMESelector
-                    organizationId={orgDetails.id}
-                    setIsDirty={jest.fn()}
-                    isDirty={true}
-                    childRef={null as any}
-                    reset={''}
-                />
+                <AppContext.Provider value={mockAppContext}>
+                    <ADMESelector
+                        organizationId={orgDetails.id}
+                        setDirtyField={jest.fn()}
+                        isDirty={true}
+                        childRef={null as any}
+                        reset={''}
+                    />
+                </AppContext.Provider>
             );
         });
 

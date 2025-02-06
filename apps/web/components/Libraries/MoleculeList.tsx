@@ -18,10 +18,10 @@ import {
     ProjectDataFields,
     Status,
     UserData,
-    addToFavoritesProps
+    addToFavouritesProps
 } from '@/lib/definition';
 import {
-    addToFavorites,
+    addToFavourites,
     addMoleculeToCart,
     getMoleculeData,
     deleteMolecule
@@ -859,13 +859,13 @@ export default function MoleculeList({
         );
         setTableData(rows);
 
-        const dataField: addToFavoritesProps = {
+        const dataField: addToFavouritesProps = {
             molecule_id: selectedRow.id,
             user_id: userData.id,
             favourite_id: selectedRow.favourite_id,
             favourite: !selectedRow.favourite
         };
-        addToFavorites(dataField).then(() => { },
+        addToFavourites(dataField).then(() => { },
             async (error) => {
                 const toastId = toast.error(error);
                 await delay(DELAY);

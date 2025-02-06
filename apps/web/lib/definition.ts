@@ -95,6 +95,7 @@ export interface OrganizationDataFields {
   inherits_configuration: boolean;
   inherits_bioassays: boolean;
   parent_id?: number;
+  container?: any;
 }
 
 export interface OrganizationTableProps {
@@ -312,7 +313,7 @@ export interface ADMEProps {
   type?: string;
   organizationId: number;
   data?: ProjectDataFields | LibraryFields;
-  setIsDirty: (val: boolean) => void;
+  setDirtyField: (val: boolean, type: string) => void;
   childRef: React.RefObject<HTMLDivElement>;
   reset: string;
   fetchContainer?: () => void;
@@ -320,6 +321,7 @@ export interface ADMEProps {
   editAllowed?: boolean;
   setReset?: (val: string) => void;
   loggedInUser: number;
+  onSelectedIndexChange: () => void;
 }
 
 export interface AssayFields {
@@ -346,12 +348,12 @@ export interface AssayFieldList {
 }
 
 export interface FunctionalAssayProps {
-  data: AssayFieldList[] | ProjectDataFields | LibraryFields,
+  data: OrganizationDataFields | ProjectDataFields | LibraryFields,
   type?: string,
   orgUser?: OrgUser,
   fetchOrganizations?: fetchDataType,
   color?: string,
-  setIsDirty: (val: boolean) => void;
+  setDirtyField: (val: boolean, type: string) => void;
   childRef: React.RefObject<HTMLDivElement>;
   reset: string;
   isDirty: boolean;
@@ -362,6 +364,7 @@ export interface FunctionalAssayProps {
   selectType?: (val: string) => void;
   setReset?: (val: string) => void;
   page?: string;
+  onSelectedIndexChange: () => void;
 }
 
 export type ContainerFields = OrganizationDataFields | ProjectDataFields | LibraryFields;
@@ -384,7 +387,7 @@ export interface ModuleTableProps {
 
 export interface Status {
   text: string;
-  code: number | number[];
+  code: number;
   number: number;
   background: string;
   textColor: string;

@@ -346,8 +346,8 @@ export async function PUT(request: Request) {
 
         // Step 4: Determine which users need to be removed
         const usersToRemove = existingProject[0]?.container_access_permission
-            .filter(user => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
-            .map(user => user.id); // Collect the IDs of shared users to remove
+            .filter((user: any) => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
+            .map((user: any) => user.id); // Collect the IDs of shared users to remove
 
 
         const updatedProject = await prisma.container.update({

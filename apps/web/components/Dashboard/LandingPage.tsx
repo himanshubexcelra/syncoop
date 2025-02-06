@@ -52,7 +52,7 @@ export default function LandingPage({
     const {
         reset,
         showPopup,
-        setIsDirty,
+        setDirtyField,
         childRef,
         popup,
         isDirty,
@@ -103,7 +103,7 @@ export default function LandingPage({
             props: {
                 organizationId: orgDetail.id,
                 childRef: childRef,
-                setIsDirty: setIsDirty,
+                setDirtyField: setDirtyField,
                 reset: reset,
                 isDirty: isDirty,
                 setReset: setReset,
@@ -114,11 +114,11 @@ export default function LandingPage({
             title: `Functional Assay (${organizationData?.metadata?.assay?.length || 0})`,
             Component: FunctionalAssay,
             props: {
-                data: organizationData?.metadata?.assay || [],
+                data: organizationData,
                 orgUser: orgDetail,
                 fetchOrganizations: fetchOrganizationData,
                 childRef: childRef,
-                setIsDirty: setIsDirty,
+                setDirtyField: setDirtyField,
                 reset: reset,
                 isDirty: isDirty,
                 loggedInUser: userData.id

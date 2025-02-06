@@ -37,23 +37,28 @@ export default function CreateLibrary({
   const appContext = context.state;
   const [deleteLibraryEnabled, setDeleteLibraryEnabled] = useState(false);
   const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
-  const isCustomReaction = isCustomReactionCheck(projectData.metadata)
+  const isCustomReaction = isCustomReactionCheck(projectData.metadata);
+
   const entityLabel = isCustomReaction
     ? 'reactions'
-    : 'molecules'
+    : 'molecules';
+
   const handleSubmit = async () => {
     const values = formRef?.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
       setLoadIndicatorVisible(true)
       let response;
       if (library_idx !== -1) {
+        const metadata = { ...values.metadata, target: values.target };
         response = await editLibrary(
           {
             ...values,
             user_id: userData.id,
             project_id: projectData.id,
-            organization_id: projectData.container.id
+            organization_id: projectData.container.id,
+            metadata
           });
+        context?.addToState({ ...appContext, refreshAssayTable: true, refreshADME: true });
       } else {
         response = await createLibrary(
           {

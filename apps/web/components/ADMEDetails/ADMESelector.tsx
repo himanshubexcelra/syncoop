@@ -1,5 +1,5 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import RangeSlider, { Tooltip } from 'devextreme-react/range-slider';
 import Switch from 'devextreme-react/switch';
 import {
@@ -15,18 +15,20 @@ import { COLOR_SCHEME, DELAY, MAX_RANGE } from "@/utils/constants";
 import { LoadIndicator } from 'devextreme-react';
 import { editProject } from '../Projects/projectService';
 import { editLibrary } from '../Libraries/service';
+import { AppContext } from "@/app/AppState";
 
 const ADMESelector = ({ data,
     type,
     organizationId,
-    setIsDirty,
+    setDirtyField,
     childRef,
     reset,
     fetchContainer,
-    isDirty,
     editAllowed,
     setReset,
     loggedInUser,
+    isDirty,
+    onSelectedIndexChange,
 }: ADMEProps) => {
     const [sliderValues, setSliderValues] = useState<ADMEConfigTypes[]>([]);
     const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
@@ -39,6 +41,9 @@ const ADMESelector = ({ data,
     const [currentId, setCurrentId] = useState<number>();
     const [editEnabled, setEditEnabled] = useState(true);
     const [mounted, setMounted] = useState(false);
+    const [isLocalDirty, setIsLocalDirty] = useState(false);
+    const context: any = useContext(AppContext);
+    const appContext = context.state;
     const buttonConfig = [
         {
             label: 'Update',
@@ -85,6 +90,8 @@ const ADMESelector = ({ data,
         });
         setUnit(units);
         setLoader(false);
+        setIsLocalDirty(false);
+        context?.addToState({ ...appContext, refreshADME: false });
     }
 
     useEffect(() => {
@@ -92,13 +99,14 @@ const ADMESelector = ({ data,
     }, [organizationId, data?.id, editAllowed]);
 
     useEffect(() => {
-        if (mounted) {
+        if (mounted || appContext?.refreshADME) {
             fetchData();
         }
-    }, [mounted]);
+    }, [mounted, appContext?.refreshADME]);
 
     useEffect(() => {
         if (reset === 'reset') {
+            setMounted(true);
             fetchData();
         } else if (reset === 'save') {
             saveADMEConfig();
@@ -120,6 +128,11 @@ const ADMESelector = ({ data,
         }
     }, [changeInheritence]);
 
+    const setLocalDirtyField = (value: boolean) => {
+        setDirtyField(value, 'ADME config');
+        setIsLocalDirty(value);
+    }
+
     // Update the value when the slider changes
     const handleRangeChange = (e: any, index: number) => {
         if (!inherited && !reset && !mounted) {
@@ -140,8 +153,12 @@ const ADMESelector = ({ data,
                     }
                 };
                 if (!deepEqual(updatedSlider, sliderValues)) {
-                    setSliderValues(updatedSlider);
-                    setIsDirty(true);
+                    if (!isDirty || (isDirty && isLocalDirty)) {
+                        setSliderValues(updatedSlider);
+                        if (!isLocalDirty) setLocalDirtyField(true);
+                    } else {
+                        onSelectedIndexChange();
+                    }
                 } else {
                     setCurrentId(selectedId);
                 }
@@ -167,8 +184,8 @@ const ADMESelector = ({ data,
         setLoadIndicatorVisible(true);
         let formValue;
         let response;
-        let success = Messages.admeConfigUpdated('organization');
-        if (!type) {
+        let success = '';
+        if (!type && isLocalDirty) {
             formValue = {
                 ...organizationData, config: {
                     ...organizationData.config, ADMEParams: sliderValues
@@ -176,7 +193,8 @@ const ADMESelector = ({ data,
                 inherits_configuration: inherited
             };
             response = await editOrganization(formValue);
-        } else if (type === ContainerType.PROJECT) {
+            success = Messages.admeConfigUpdated('organization');
+        } else if (type === ContainerType.PROJECT && isLocalDirty) {
             formValue = {
                 ...data, config: { ...data?.config, ADMEParams: inherited ? null : sliderValues },
                 organization_id: Number(data?.parent_id), user_id: loggedInUser,
@@ -184,7 +202,7 @@ const ADMESelector = ({ data,
             };
             response = await editProject(formValue);
             success = Messages.admeConfigUpdated('project');
-        } else if (type === ContainerType.LIBRARY) {
+        } else if (type === ContainerType.LIBRARY && isLocalDirty) {
             formValue = {
                 ...data,
                 config: { ...data?.config, ADMEParams: sliderValues },
@@ -195,15 +213,18 @@ const ADMESelector = ({ data,
             response = await editLibrary(formValue);
             success = Messages.admeConfigUpdated('library');
         }
-        if (!response.error) {
-            setIsDirty(false);
+        if (!response?.error) {
+            setLocalDirtyField(false);
             if (type) {
                 fetchContainer?.();
             }
-            const toastId = toast.success(success);
-            await delay(DELAY);
-            toast.remove(toastId);
-            setLoadIndicatorVisible(false);
+            if (success) {
+                const toastId = toast.success(success);
+                await delay(DELAY);
+                toast.remove(toastId);
+                setLoadIndicatorVisible(false);
+                context?.addToState({ ...appContext, refreshADME: true });
+            }
         } else {
             const toastId = toast.error(`${response.error}`);
             await delay(DELAY);
@@ -213,10 +234,14 @@ const ADMESelector = ({ data,
     }
 
     const inheritedModification = () => {
-        if (!mounted) {
-            setIsDirty(true);
-            if (!inherited) setChangeInheritence(true);
-            setInherited(!inherited);
+        if (!mounted && !reset) {
+            if (!isDirty || (isDirty && isLocalDirty)) {
+                if (!isLocalDirty) setLocalDirtyField(true);
+                if (!inherited) setChangeInheritence(true);
+                setInherited(!inherited);
+            } else {
+                onSelectedIndexChange();
+            }
         }
         setMounted(false);
     };
@@ -229,9 +254,10 @@ const ADMESelector = ({ data,
                 </div>
             ) : (
                 <div className={type != ContainerType.LIBRARY ? 'm-[20px]' : ''}>
-                    <div className={`flex ${type ? 'justify-between' : 'justify-end'}`}>
+                    <div className={`flex switch-wrapper
+                    ${type ? 'justify-between' : 'justify-end'}`}>
                         {type && (
-                            <div className="dx-field block flex mt-2 mr-2]">
+                            <div className="dx-field block flex mt-2 mr-2 items-baseline">
                                 <div className='pr-[10px] inherited text-greyText'>
                                     {/* {`Inherited from 
                                     ${type === ContainerType.PROJECT ? 'organization' :
@@ -248,22 +274,25 @@ const ADMESelector = ({ data,
                                 </div>
                             </div>
                         )}
-                        <div className='flex items-center'>
+                        <div className='flex items-start'>
                             {buttonConfig.map((button, index) =>
                                 <button key={index}
-                                    className={loadIndicatorVisible || !isDirty
+                                    className={(loadIndicatorVisible && isLocalDirty)
+                                        || !isLocalDirty
                                         ? 'disableButton w-[64px] h-[37px] ml-[10px]'
                                         : button.class}
                                     onClick={() => button.action()}
-                                    disabled={loadIndicatorVisible || !isDirty}>
+                                    disabled={(loadIndicatorVisible && isLocalDirty)
+                                        || !isLocalDirty}>
                                     <LoadIndicator className={
                                         `button-indicator`
                                     }
-                                        visible={button.loader && loadIndicatorVisible}
+                                        visible={button.loader &&
+                                            (loadIndicatorVisible && isLocalDirty)}
                                         height={20}
                                         width={20}
                                     />
-                                    {(button.loader && loadIndicatorVisible)
+                                    {(button.loader && (loadIndicatorVisible && isLocalDirty))
                                         ? ''
                                         : button.label}
                                 </button>

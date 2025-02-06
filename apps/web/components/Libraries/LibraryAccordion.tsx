@@ -63,12 +63,13 @@ type LibraryAccordionType = {
     setShowPopup: (value: boolean) => void,
     adminAccess: boolean,
     childRef: React.RefObject<HTMLDivElement>,
-    setIsDirty: (val: boolean) => void,
+    setDirtyField: (val: boolean, type: string) => void,
     reset: string,
     adminProjectAccess: boolean,
     organizationId: number,
     setReset: any,
     selectType?: (val: string) => void,
+    onSelectedIndexChange: () => void,
 }
 
 export default function LibraryAccordion({
@@ -90,12 +91,13 @@ export default function LibraryAccordion({
     setShowPopup,
     adminAccess,
     childRef,
-    setIsDirty,
+    setDirtyField,
     reset,
     adminProjectAccess,
     organizationId,
     setReset,
     selectType,
+    onSelectedIndexChange,
 }: LibraryAccordionType) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -110,7 +112,7 @@ export default function LibraryAccordion({
     const [isLoading, setIsLoading] = useState(false);
     const formRef = useRef<FormRef>(null);
     const formRefProject = useRef<FormRef>(null);
-    const [users, setUsers] = useState([])
+    const [users, setUsers] = useState([]);
     const [organization, setOrganization] = useState<OrganizationDataFields[]>([]);
     const [projectPopupVisible, setProjectPopupVisibile] = useState(false);
     const [assayValue, setAssays] = useState<AssayFieldList[]>([]);
@@ -295,9 +297,11 @@ export default function LibraryAccordion({
             }
         }
     }
+
     const handleCancel = () => {
         setConfirm(false)
     };
+
     return (
         <Accordion multiple={true} collapsible={true}
             className="accordion-item-gap">
@@ -397,8 +401,9 @@ export default function LibraryAccordion({
                     organizationId={userData.organization_id}
                     data={projectData}
                     childRef={childRef}
-                    setIsDirty={setIsDirty}
+                    setDirtyField={setDirtyField}
                     isDirty={isDirty}
+                    onSelectedIndexChange={onSelectedIndexChange}
                     reset={reset}
                     fetchContainer={fetchLibraries}
                     editAllowed={adminProjectAccess}
@@ -412,8 +417,9 @@ export default function LibraryAccordion({
                     type={ContainerType.PROJECT}
                     page="library"
                     childRef={childRef}
-                    setIsDirty={setIsDirty}
+                    setDirtyField={setDirtyField}
                     isDirty={isDirty}
+                    onSelectedIndexChange={onSelectedIndexChange}
                     reset={reset}
                     setParentAssay={setAssayValue}
                     fetchContainer={fetchLibraries}

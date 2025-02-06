@@ -48,7 +48,8 @@ export const ADME_fieldNames: string[] = ["yield", "anlayse", "herg", "caco2"];
 export const moleculeStatus: Status[] = [
   {
     text: MoleculeStatusLabel.New,
-    code: [MoleculeStatusCode.New, MoleculeStatusCode.NewInCart, MoleculeStatusCode.Ordered],
+    // code: [MoleculeStatusCode.New, MoleculeStatusCode.NewInCart, MoleculeStatusCode.Ordered],
+    code: MoleculeStatusCode.New,
     number: 0,
     background: "bg-gray",
     textColor: "text-grey",
@@ -70,7 +71,7 @@ export const moleculeStatus: Status[] = [
     textColor: "text-blue",
     dotColorStyle: ["dot-blue", "dot-grey", "dot-grey"]
   },
-  {
+  /* {
     text: MoleculeStatusLabel.PreProcessing,
     code: [
       MoleculeStatusCode.InRetroQueue,
@@ -83,7 +84,7 @@ export const moleculeStatus: Status[] = [
     background: "bg-blue",
     textColor: "text-blue",
     dotColorStyle: ["dot-blue", "dot-blue", "dot-grey"]
-  },
+  }, */
   {
     text: MoleculeStatusLabel.InRetroQueue,
     code: MoleculeStatusCode.InRetroQueue,
@@ -251,10 +252,6 @@ export enum ReactionStatus {
   InProgress = 4,
   Done = 5,
   Failed = 6,
-}
-export enum ChemistryType {
-  RETRO_SYNTHESIS = 'Retrosynthesis',
-  CUSTOM_REACTION = 'Custom Reaction',
 }
 
 export function getCountCardsDetails(

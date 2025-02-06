@@ -44,7 +44,7 @@ export default function ListProjects({
     const {
         reset,
         showPopup,
-        setIsDirty,
+        setDirtyField,
         childRef,
         popup,
         setShowPopup,
@@ -136,7 +136,7 @@ export default function ListProjects({
                                     myRoles={myRoles}
                                     clickedOrg={clickedOrg}
                                     childRef={childRef}
-                                    setIsDirty={setIsDirty}
+                                    setDirtyField={setDirtyField}
                                     reset={reset}
                                     showPopup={showPopup}
                                     popup={popup}

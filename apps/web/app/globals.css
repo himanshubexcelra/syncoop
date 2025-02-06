@@ -481,7 +481,17 @@ body {
 .main-div-assay,
 .main-div-assay-other {
   background-color: var(--themeLightBlueColor);
-  padding: 40px 34px;
+  padding: 20px 34px;
+
+  .dx-dropdownbox {
+    width: 290px;
+  }
+}
+
+.main-div-assay::after {
+  content: "";
+  display: table;
+  clear: both;
 }
 
 .main-div-assay-other {
@@ -508,18 +518,20 @@ body {
 }
 
 .grid-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 20px 0;
+  columns: 2 200px;
+  column-gap: 1rem;
+  margin-top: 20px;
 }
 
-.grid-item {
-  background-color: #f0f0f0;
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.grid-item,
+.grid-item-inline {
+  width: 150px;
+  margin: 0 1rem 1rem 0;
+  width: 100%;
+}
+
+.grid-item-inline {
+  display: inline-block;
 }
 
 .assay-card {
@@ -530,6 +542,8 @@ body {
 
 .text-assay-desc {
   font-weight: 400;
+  word-wrap: break-word;
+  word-break: break-all;
 }
 
 .list-assay {

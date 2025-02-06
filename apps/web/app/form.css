@@ -303,3 +303,8 @@
 .dx-button.dx-state-disabled .dx-button-text {
     color: var(--black);
 }
+
+.switch-wrapper .dx-switch-wrapper {
+    padding-bottom: 0;
+    margin-top: 8px;
+}

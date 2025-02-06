@@ -12,7 +12,6 @@ import { AssayData, DELAY } from '@/utils/constants';
 import { getBioAssays } from './service';
 import AssayFields from './AssayFields';
 import { DropDownBoxRef } from 'devextreme-react/cjs/drop-down-box';
-import { getOrganizationById } from '../Organization/service';
 import { AppContext } from '@/app/AppState';
 import { editOrganization } from "../Organization/service";
 import toast from 'react-hot-toast';
@@ -25,7 +24,7 @@ function FunctionalAssay({
     type,
     orgUser,
     fetchOrganizations,
-    setIsDirty,
+    setDirtyField,
     setParentAssay,
     fetchContainer,
     loggedInUser,
@@ -34,7 +33,8 @@ function FunctionalAssay({
     reset,
     setReset,
     page,
-    isDirty
+    isDirty,
+    onSelectedIndexChange,
 }: FunctionalAssayProps) {
     const [inherited, setInherited] = useState(type ? true : false);
     const [mounted, setMounted] = useState(type ? true : false);
@@ -54,6 +54,8 @@ function FunctionalAssay({
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [organizaitonData, setOrganizationData] = useState<ContainerFields>();
     const [enableInherit, setEnableInherit] = useState(true);
+    const [isLocalDirty, setIsLocalDirty] = useState(false);
+
     const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
     const context: any = useContext(AppContext);
     const appContext = context.state;
@@ -63,35 +65,34 @@ function FunctionalAssay({
 
     const fetchData = async () => {
         if (!type) {
-            const orgData = await getOrganizationById({ withRelation: [], id: orgId });
-            const processedData = orgData?.metadata?.assay || [];
+            const processedData = data?.metadata?.assay || [];
             setAssays(processedData);
-            setOrganizationData(orgData);
+            setOrganizationData(data);
         } else {
             selectType?.('Functional bioassay');
             setEditEnabled(!!editAllowed);
-            if (!Array.isArray(data)) {
-                let inherits = data.inherits_bioassays;
-                const metadata = inherits ?
-                    data?.container?.metadata?.assay : data?.metadata?.assay;
-                const assay = metadata || [];
-                if (!assay.length) {
-                    inherits = false;
-                }
-                if (!data?.container?.metadata?.assay?.length) {
-                    setEnableInherit(false);
-                }
-                setInherited(inherits);
-                setAssays(metadata || []);
-                setOrganizationData(data);
+            let inherits = data.inherits_bioassays;
+            const metadata = inherits ?
+                data?.container?.metadata?.assay : data?.metadata?.assay;
+            const assay = metadata || [];
+            if (!assay.length) {
+                inherits = false;
             }
+            if (!data?.container?.metadata?.assay?.length) {
+                setEnableInherit(false);
+            }
+            setInherited(inherits);
+            setAssays(metadata || []);
+            setOrganizationData(data);
         }
+        setIsLocalDirty(false);
         context?.addToState({ ...appContext, refreshAssayTable: false });
     }
 
     useEffect(() => {
         if (reset === 'reset') {
             fetchData();
+            setMounted(true);
         } else if (reset === 'save') {
             updateAssay();
         }
@@ -138,8 +139,12 @@ function FunctionalAssay({
     }
 
     const handleAddNew = () => {
-        setShowAddAssayForm(true);
-        performCleanup();
+        if (!isDirty || (isDirty && isLocalDirty)) {
+            setShowAddAssayForm(true);
+            performCleanup();
+        } else {
+            onSelectedIndexChange();
+        }
     };
 
     const handleSearch = debounce(async (value: string) => {
@@ -166,8 +171,8 @@ function FunctionalAssay({
     }
 
     const cleanup = async (response: any, type: string, data?: AssayFieldList, index?: number) => {
-        if (!response.error) {
-            setIsDirty(false);
+        if (!response?.error) {
+            setLocalDirtyField(false);
             fetchOrganizations?.();
             fetchContainer?.();
             setShowAddAssayForm(false);
@@ -182,14 +187,14 @@ function FunctionalAssay({
                 assayData.push({ ...data });
                 toastId = toast.success(Messages.UPDATE_ASSAY);
             } else {
-                toastId = toast.success(Messages.admeConfigUpdated(type));
+                toastId = toast.success(Messages.assayUpdated(type));
             }
             await delay(DELAY);
             toast.remove(toastId);
             setIsLoading(false);
             context?.addToState({ ...appContext, refreshAssayTable: true });
         } else {
-            const toastId = toast.error(`${response.error}`);
+            const toastId = toast.error(`${response?.error}`);
             await delay(DELAY);
             toast.remove(toastId);
             setIsLoading(false);
@@ -199,7 +204,7 @@ function FunctionalAssay({
     const updateAssay = async () => {
         let formValue;
         let response;
-        if (type && !Array.isArray(data)) {
+        if (type && isLocalDirty) {
             let metadata = data?.metadata;
             if (inherited && metadata.assay) {
                 delete metadata.assay;
@@ -211,7 +216,7 @@ function FunctionalAssay({
                 organization_id: Number(data?.parent_id), user_id: loggedInUser,
                 inherits_bioassays: inherited
             };
-            if (type === ContainerType.PROJECT) {
+            if (type === ContainerType.PROJECT && isLocalDirty) {
                 response = await editProject(formValue);
                 cleanup(response, 'project');
             } else {
@@ -231,37 +236,46 @@ function FunctionalAssay({
         setReset?.('reset');
     }
 
+    const setLocalDirtyField = (value: boolean) => {
+        setDirtyField(value, 'Functional bioassay');
+        setIsLocalDirty(value);
+    }
+
     const removeAssay = async (index: number) => {
-        const values = [...assayValue];
-        const deleted = values.splice(index, 1)[0];
-        let response;
-        if (!type) {
-            const metadata = organizaitonData?.metadata || {};
-            const finalData = {
-                ...organizaitonData, metadata: {
-                    ...metadata, assay: values
+        if (!isDirty || (isDirty && isLocalDirty)) {
+            const values = [...assayValue];
+            const deleted = values.splice(index, 1)[0];
+            let response;
+            if (!type) {
+                const metadata = organizaitonData?.metadata || {};
+                const finalData = {
+                    ...organizaitonData, metadata: {
+                        ...metadata, assay: values
+                    }
+                };
+                response = await editOrganization(finalData);
+                cleanup(response, 'delete', deleted, index);
+            } else if (type) {
+                const metadata = data?.metadata || {};
+                const formValue = {
+                    ...data, metadata: {
+                        ...metadata, assay: values
+                    }, inherits_bioassays: false,
+                    user_id: loggedInUser,
+                };
+                if (type === ContainerType.PROJECT) {
+                    response = await editProject(formValue);
+                } else {
+                    response = await editLibrary({
+                        ...formValue,
+                        organization_id: Number(data?.container?.id),
+                        project_id: Number(data?.parent_id)
+                    });
                 }
-            };
-            response = await editOrganization(finalData);
-            cleanup(response, 'delete', deleted, index);
-        } else if (type && !Array.isArray(data)) {
-            const metadata = data?.metadata || {};
-            const formValue = {
-                ...data, metadata: {
-                    ...metadata, assay: values
-                }, inherits_bioassays: false,
-                user_id: loggedInUser,
-            };
-            if (type === ContainerType.PROJECT) {
-                response = await editProject(formValue);
-            } else {
-                response = await editLibrary({
-                    ...formValue,
-                    organization_id: Number(data?.container?.id),
-                    project_id: Number(data?.parent_id)
-                });
+                cleanup(response, 'delete', deleted, index);
             }
-            cleanup(response, 'delete', deleted, index);
+        } else {
+            onSelectedIndexChange();
         }
     }
 
@@ -272,16 +286,18 @@ function FunctionalAssay({
     };
 
     const inheritedModification = () => {
-        if (!mounted) {
-            setIsDirty(true);
-            if (!inherited) {
-                if (!Array.isArray(data)) {
+        if (!mounted && !reset) {
+            if (!isDirty || (isDirty && isLocalDirty)) {
+                if (!isLocalDirty) setLocalDirtyField(true);
+                if (!inherited) {
                     const metadata = data?.container?.metadata?.assay || [];
                     setParentAssay?.(metadata);
                     setAssays(metadata);
                 }
+                setInherited(!inherited);
+            } else {
+                onSelectedIndexChange();
             }
-            setInherited(!inherited);
         }
         setMounted(false);
     };
@@ -315,7 +331,7 @@ function FunctionalAssay({
         <div className={`
         ${type ? 'main-div-assay-other' : 'main-div-assay'} 
         ${type === ContainerType.LIBRARY || page ? 'main-div-assay-lib' : ''}
-        `}>
+        `} key={data.id}>
 
             <div className={`flex ${notInherited
                 ? 'justify-between'
@@ -329,6 +345,7 @@ function FunctionalAssay({
                         valueExpr="SKU"
                         displayExpr="target"
                         className='assay-dropdown'
+                        placeholder='Search for or Add New Assay...'
                         dropDownOptions={{
                             container: containerElement || undefined
                         }}
@@ -373,7 +390,7 @@ function FunctionalAssay({
                                 </ul>
 
                                 <div className={`bg-themeLightBlueColor 
-                                mt-[10px] ml-[-10px] add-assay`}>
+                                mt-[10px] add-assay`}>
                                     <Button
                                         text={`+ Add New Kit for ${searchValue}`}
                                         stylingMode='text'
@@ -412,19 +429,19 @@ function FunctionalAssay({
                     {assayValue.length !== 0 && editEnabled && type && (
                         <>
                             <button
-                                className={isLoading || !isDirty
+                                className={(isLoading && isLocalDirty) || !isLocalDirty
                                     ? 'disableButton w-[64px] h-[37px]'
                                     : 'primary-button'}
                                 onClick={updateAssay}
                             >
                                 <LoadIndicator className="button-indicator"
-                                    visible={isLoading}
+                                    visible={(isLoading && isLocalDirty)}
                                     height={20}
                                     width={20} />
-                                {isLoading ? '' : 'Update'}
+                                {(isLoading && isLocalDirty) ? '' : 'Update'}
                             </button>
 
-                            <button className={isLoading || !isDirty
+                            <button className={(isLoading && isLocalDirty) || !isLocalDirty
                                 ? 'disableButton w-[64px] h-[37px]'
                                 : 'secondary-button'}
                                 onClick={cancelUpdate}
@@ -446,7 +463,8 @@ function FunctionalAssay({
                         {assayValue.map((assay: AssayFieldList, index: number) => (
                             <div
                                 key={assay.SKU}
-                                className={`${type ? 'mt-[25px]' : ''}`}
+                                className={`${assayValue.length !== 2 ?
+                                    'grid-item-inline' : 'grid-item'}`}
                             >
                                 <AssayFields
                                     setShowConfirmForm={
@@ -457,6 +475,7 @@ function FunctionalAssay({
                                     fetchOrganizations={fetchOrganizations}
                                     updateComment={updateComment}
                                     notInherited={notInherited}
+
                                 />
                             </div>
                         ))}
@@ -479,8 +498,7 @@ function FunctionalAssay({
                                 type={type || ''}
                                 assayValue={assayValue}
                                 loggedInUser={loggedInUser}
-                                organizationId={!Array.isArray(data) ?
-                                    data?.container?.id || -1 : -1}
+                                organizationId={data?.container?.id || -1}
                             />
                         )}
                         width={477}

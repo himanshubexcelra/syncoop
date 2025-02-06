@@ -30,6 +30,9 @@ export const Messages = {
     admeConfigUpdated(type: string) {
         return `ADME config details for ${type} updated successfully`;
     },
+    assayUpdated(type: string) {
+        return `Assay details for ${type} updated successfully`;
+    },
     LIBRARY_LIST_EMPTY(label: string) {
         return `Your library list is empty, add a library to import ${label}`
     },

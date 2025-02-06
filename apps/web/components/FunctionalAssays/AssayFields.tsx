@@ -26,7 +26,7 @@ interface AssayFieldType {
     fetchOrganizations?: fetchDataType,
     updateComment?: (data: AssayFieldList) => void,
     index?: number,
-    notInherited?: boolean
+    notInherited?: boolean,
 }
 function AssayFields({
     type,
@@ -38,7 +38,7 @@ function AssayFields({
     fetchOrganizations,
     updateComment,
     index,
-    notInherited,
+    notInherited
 }: AssayFieldType) {
     const fields = assay.user_fields ? Object.entries(assay.user_fields) : [];
     const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +71,7 @@ function AssayFields({
             if (fetchOrganizations) {
                 fetchOrganizations();
             } setShowConfirmForm(false);
-            context?.addToState({ ...appContext, refreshAssayTable: true })
+            context?.addToState({ ...appContext, refreshAssayTable: true });
             const toastId = toast.success(Messages.UPDATE_ORGANIZATION);
             await delay(DELAY);
             toast.remove(toastId);
@@ -107,10 +107,10 @@ function AssayFields({
                     {!assay.hasOwnProperty('commercial') ?
                         <span className='text-normal'>{assay.assay}</span>
                         : <div className='flex'>
-                            <div className='text-normal'>
+                            {/* <div className='text-normal'>
                                 Name:
-                            </div>
-                            <span className='ml-[5px] text-assay-desc'>
+                            </div> */}
+                            <span className='text-normal'>
                                 {assay.name}
                             </span>
                         </div>
@@ -158,7 +158,7 @@ function AssayFields({
                         </div>
                         :
                         <div className='flex mt-[20px]'>
-                            <div className='text-normal'>
+                            <div className='text-normal' style={{ minWidth: '85px' }}>
                                 Assay Details:
                             </div>
                             <span className='ml-[5px] text-assay-desc'>

@@ -44,7 +44,7 @@ type ProjectAccordionDetailProps = {
     myRoles: string[],
     clickedOrg?: number,
     childRef: React.RefObject<HTMLDivElement>,
-    setIsDirty: (val: boolean) => void,
+    setDirtyField: (val: boolean, type: string) => void,
     reset: string;
     showPopup: boolean;
     popup: ReactNode;
@@ -66,7 +66,7 @@ export default function ProjectAccordionDetail({
     actionsEnabled,
     clickedOrg,
     childRef,
-    setIsDirty,
+    setDirtyField,
     reset,
     showPopup,
     popup,
@@ -430,7 +430,7 @@ export default function ProjectAccordionDetail({
                             organizationId={userData.organization_id}
                             data={data}
                             childRef={childRef}
-                            setIsDirty={setIsDirty}
+                            setDirtyField={setDirtyField}
                             isDirty={isDirty}
                             reset={reset}
                             fetchContainer={fetchOrganizations}
@@ -450,7 +450,7 @@ export default function ProjectAccordionDetail({
                             data={data}
                             type={ContainerType.PROJECT}
                             childRef={childRef}
-                            setIsDirty={setIsDirty}
+                            setDirtyField={setDirtyField}
                             isDirty={isDirty}
                             reset={reset}
                             setParentAssay={setAssayValue}

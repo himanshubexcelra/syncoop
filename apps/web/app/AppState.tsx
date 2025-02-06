@@ -17,6 +17,7 @@ const initialContext = {
     internalUsers: 0
   },
   refreshAssayTable: false,
+  refreshADME: false,
   refreshUsersTable: false,
   cartDetail: [],
   refreshCart: false,

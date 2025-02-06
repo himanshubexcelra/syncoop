@@ -110,7 +110,7 @@ const mockProps = {
     myRoles: ['Admin'],
     clickedOrg: undefined,
     childRef: { current: null },
-    setIsDirty: jest.fn(),
+    setDirtyField: jest.fn(),
     reset: '',
     showPopup: false,
     popup: null,

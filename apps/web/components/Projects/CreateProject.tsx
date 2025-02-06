@@ -1,7 +1,7 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client'
 import toast from "react-hot-toast";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import {
   Form,
   SimpleItem,
@@ -39,6 +39,7 @@ import { SelectBox } from "devextreme-react";
 import { sortString, sortStringJoined } from "@/utils/sortString";
 import { Messages } from "@/utils/message";
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
+import { AppContext } from "@/app/AppState";
 
 export default function CreateProject({
   setCreatePopupVisibility,
@@ -70,7 +71,10 @@ export default function CreateProject({
       : PROJECT_TYPES[0]);
   const [projectTarget, setProjectTarget] = useState(
     (projectData?.metadata.target) ? projectData.metadata.target : ''
-  )
+  );
+  const context: any = useContext(AppContext);
+  const appContext = context.state;
+
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id);
@@ -158,13 +162,16 @@ export default function CreateProject({
 
       setLoadIndicatorVisible(true);
       if (edit) {
+        const metadata = { ...values.metadata, target: values.target };
         response = await editProject(
           {
             ...values,
             sharedUsers,
+            metadata,
             organization_id: projectData?.container?.id,
             user_id: userData.id,
-          })
+          });
+        context?.addToState({ ...appContext, refreshAssayTable: true, refreshADME: true });
       }
       else {
         const selectedOrg = organizationData.find(

@@ -1,3 +1,5 @@
+CREATE EXTENSION btree_gist;
+
 -- CreateTable
 CREATE TABLE "container" (
     "id" BIGSERIAL NOT NULL,

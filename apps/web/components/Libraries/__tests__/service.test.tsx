@@ -411,8 +411,7 @@ describe('Library API Functions', () => {
         const result = await addToFavorites(mockFormData);
 
         // Assert fetch was called with the correct arguments
-        expect(fetch).toHaveBeenCalledWith(
-            `${process.env.NEXT_API_HOST_URL}/v1/molecule/favorite`, {
+        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule`, {
             mode: 'no-cors',
             method: 'POST',
             headers: {

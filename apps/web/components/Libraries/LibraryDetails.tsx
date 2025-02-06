@@ -152,13 +152,14 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const {
         reset,
         showPopup,
-        setIsDirty,
         childRef,
         popup,
         setShowPopup,
         isDirty,
         setReset,
         selectType,
+        setDirtyField,
+        onSelectedIndexChange,
     } = usePopupAndReset();
     const appContext = context.state;
 
@@ -298,7 +299,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
 
     useEffect(() => {
         setAssayFieldValue(selectedLibraryData);
-    }, [appContext?.refreshAssayTable])
+    }, [appContext?.refreshAssayTable]);
 
     const selectLibrary = (libId: number) => {
         setLibraryId(libId);
@@ -314,6 +315,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     }
 
     const isCustomReaction = isCustomReactionCheck(projectData.metadata);
+
 
     return (
         <>
@@ -392,7 +394,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     adminAccess={adminAccess}
                                     organizationId={Number(organization_id)}
                                     childRef={childRef}
-                                    setIsDirty={setIsDirty}
+                                    setDirtyField={setDirtyField}
+                                    onSelectedIndexChange={onSelectedIndexChange}
                                     reset={reset}
                                     adminProjectAccess={adminProjectAccess}
                                     setReset={setReset}
@@ -420,8 +423,9 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                         userData.organization_id
                                                     }
                                                     childRef={childRef}
+                                                    setDirtyField={setDirtyField}
                                                     isDirty={isDirty}
-                                                    setIsDirty={setIsDirty}
+                                                    onSelectedIndexChange={onSelectedIndexChange}
                                                     reset={reset}
                                                     setReset={setReset}
                                                     data={{
@@ -450,8 +454,9 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                     }}
                                                     type={ContainerType.LIBRARY}
                                                     childRef={childRef}
-                                                    setIsDirty={setIsDirty}
+                                                    setDirtyField={setDirtyField}
                                                     isDirty={isDirty}
+                                                    onSelectedIndexChange={onSelectedIndexChange}
                                                     reset={reset}
                                                     setParentAssay={setAssayValue}
                                                     fetchContainer={fetchLibraries}

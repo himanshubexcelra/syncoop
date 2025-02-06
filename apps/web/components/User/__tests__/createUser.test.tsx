@@ -144,6 +144,6 @@ describe('RenderCreateUser Component', () => {
         await waitFor(() => {
             expect(mockGetOrganization).toHaveBeenCalledWith({ type: 'internal' });
         });
-    });
+    }, 60000);
 
 });

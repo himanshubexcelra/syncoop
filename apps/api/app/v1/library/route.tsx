@@ -2,7 +2,11 @@
 import prisma from "@/lib/prisma";
 import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE, MESSAGES } from "@/utils/message";
-import { ContainerType, MoleculeStatusCode } from "@/utils/definition";
+import {
+    ContainerAccessPermissionType,
+    ContainerType,
+    MoleculeStatusCode
+} from "@/utils/definition";
 
 const { LIBRARY_EXISTS, LIBRARY_NOT_FOUND } = MESSAGES;
 const { SUCCESS, INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND } = STATUS_TYPE;
@@ -61,6 +65,10 @@ export async function GET(request: Request) {
                 id: Number(library_id),
                 type: ContainerType.LIBRARY
             }; // Add the where condition to the query
+            query.include = {
+                ...query.include,
+                container_access_permission: true,
+            }
             const library = await prisma.container.findUnique(query);
 
             if (!library) {
@@ -97,7 +105,8 @@ export async function POST(request: Request) {
         project_id,
         organization_id,
         user_id,
-        config
+        config,
+        sharedUsers
     } = req;
 
     try {
@@ -155,6 +164,19 @@ export async function POST(request: Request) {
                     },
                 },
                 config,
+                container_access_permission: {
+                    create: sharedUsers?.map(({ id: user_id, permission }: {
+                        id: number, permission: string
+                    }) => ({
+                        user: {
+                            connect: { id: user_id }, // Connect the user by ID
+                        },
+                        access_type:
+                            ContainerAccessPermissionType
+                            [permission as keyof typeof ContainerAccessPermissionType],
+                        created_at: getUTCTime(new Date().toISOString()),
+                    }))
+                }
             },
         });
 
@@ -187,6 +209,7 @@ export async function PUT(request: Request) {
             inherits_configuration,
             inherits_bioassays,
             metadata,
+            sharedUsers
         } = req;
 
         const existingLibrary = await prisma.container.findMany({
@@ -211,6 +234,9 @@ export async function PUT(request: Request) {
                         type: ContainerType.LIBRARY
                     }
                 ]
+            },
+            include: {
+                container_access_permission: true,
             }
         });
 
@@ -221,6 +247,10 @@ export async function PUT(request: Request) {
             });
         }
 
+        const incomingUserIds = new Set(sharedUsers?.map(({ id }: { id: number }) => id));
+        const usersToRemove = existingLibrary[0]?.container_access_permission
+            .filter(user => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
+            .map(user => user.id); // Collect the IDs of shared users to remove
         const updatedLibrary = await prisma.container.update({
             where: { id },
             data: {
@@ -235,7 +265,29 @@ export async function PUT(request: Request) {
                 updated_at: getUTCTime(new Date().toISOString()),
                 config,
                 inherits_configuration,
-                inherits_bioassays
+                inherits_bioassays,
+                container_access_permission: {
+                    deleteMany: {
+                        id: { in: usersToRemove }, // Remove users not in the request
+                    },
+                    upsert: sharedUsers?.map(({ id: user_id, permission }: {
+                        id: number, permission: string
+                    }) => ({
+                        where: { container_id_user_id: { user_id, container_id: id } },
+                        update: {
+                            access_type: ContainerAccessPermissionType[
+                                permission as keyof typeof ContainerAccessPermissionType],
+                        },
+                        create: {
+                            user: {
+                                connect: { id: user_id }, // Connect the user by ID
+                            },
+                            access_type: ContainerAccessPermissionType[
+                                permission as keyof typeof ContainerAccessPermissionType],
+                            created_at: getUTCTime(new Date().toISOString()),
+                        },
+                    })) || []
+                }
             },
         });
 

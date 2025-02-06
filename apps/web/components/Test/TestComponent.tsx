@@ -56,14 +56,14 @@ export default function TestComponent({ sessionData }: TestProps) {
 
     const addToFavourite = async (data: MoleculeType, existingFavourite: boolean) => {
         console.log(existingFavourite, data);
-        /* const dataField: addToFavouritesProps = {
+        /* const dataField: addToFavoritesProps = {
             molecule_id: data.id,
             user_id: userData.id,
             favourite_id: data.favourite_id,
             favourite: !existingFavourite
         };
         // if (existingFavourite) dataField.existingFavourite = existingFavourite;
-        const response = await addToFavourites(dataField);
+        const response = await addToFavorites(dataField);
         if (!response.error) {
             fetchMoleculeData(data.library_id);
 

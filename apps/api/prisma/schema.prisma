@@ -57,9 +57,6 @@ model container {
   // users_users_organization_idTocontainer                   users[]              @relation("users_organization_idTocontainer")
   orgUser users[] @relation("users_organization_idTocontainer")
   container_access_permission container_access_permission[] @relation(map: "con_fk_container_access_permission_container_id")
-  libraryReactions custom_reactions[] @relation("custom_reaction_library_idTocontainer")
-  organizationReactions custom_reactions[] @relation("custom_reaction_organization_idTocontainer")
-  projectReactions custom_reactions[] @relation("custom_reaction_project_idTocontainer")
 
   @@unique([type, name, parent_id], map: "con_uk_container_type_and_name_and_parent_id")
   @@index([is_active], map: "idx_container_is_active")
@@ -647,9 +644,6 @@ model users {
   container_access_permission container_access_permission[] @relation("container_access_permission_user_idTousers")
   bioassay_bioassay_created_byTousers                            bioassay[]                    @relation("bioassay_created_byTousers")
   bioassay_bioassay_updated_byTousers                            bioassay[]                    @relation("bioassay_updated_byTousers")
-  custom_reaction_created_byTousers  custom_reactions[] @relation("custom_reaction_created_byTousers")
-  custom_reaction_updated_byTousers custom_reactions[] @relation("custom_reaction_updated_byTousers")
-  user_favourite_reaction user_favourite_reaction[] @relation(map: "con_fk_user_fav_reaction_user")
 
   @@index([is_active], map: "idx_user_is_active")  
 }
@@ -738,54 +732,4 @@ model bioassay {
   
   // users_bioassay_updated_byTousers users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
   userWhoUpdated users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model custom_reactions {
-  id                   BigInt          @id(map: "con_pk_reaction_id") @default(autoincrement())
-  source_reaction_name String?         @db.VarChar(150)
-  library_id           BigInt
-  project_id           BigInt
-  organization_id      BigInt
-  smiles_string        String
-  status               Int             @db.SmallInt
-  is_added_to_cart     Boolean         @default(false)
-  created_at           DateTime        @db.Timestamptz(6)
-  created_by           Int
-  updated_at           DateTime?       @db.Timestamptz(6)
-  updated_by           Int?
-
-  // users_reaction_created_byTousers              users                     @relation("reaction_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_created_by")
-  userWhoCreated users @relation("custom_reaction_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_created_by")
-
-  // container_reaction_library_idTocontainer      container                 @relation("reaction_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_library_id")
-  library container @relation("custom_reaction_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_library_id")
-
-  // container_reaction_organization_idTocontainer container                 @relation("reaction_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_org_id")
-  organization container @relation("custom_reaction_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_org_id")
-
-  // container_reaction_project_idTocontainer      container                 @relation("reaction_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_project_id")
-  project container @relation("custom_reaction_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_project_id")
-
-  // users_reaction_updated_byTousers              users?                    @relation("reaction_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_updated_by")
-  userWhoUpdated users? @relation("custom_reaction_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_updated_by")
-
-  user_favourite_reaction user_favourite_reaction[]
-
-  @@index([is_added_to_cart], map: "idx_custom_reaction_is_added_to_cart")
-  @@index([library_id], map: "idx_custom_reaction_library_id")
-  @@index([smiles_string], map: "idx_custom_reaction_smiles", type: Gist)
-  @@index([status], map: "idx_custom_reaction_status")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model user_favourite_reaction {
-  id          Int      @id(map: "con_pk_user_fav_reaction_id") @default(autoincrement())
-  user_id     Int
-  reaction_id BigInt
-  reaction    custom_reactions @relation(fields: [reaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_fav_reaction")
-  users       users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_fav_reaction_user")
-
-  @@unique([user_id, reaction_id], map: "con_uk_user_favourite_reaction")
 }

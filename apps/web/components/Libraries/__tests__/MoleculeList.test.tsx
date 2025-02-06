@@ -3,7 +3,7 @@ import MoleculeList from '../MoleculeList';
 import { AppContext } from '../../../app/AppState';
 import { AppContextModel, UserData, ProjectDataFields, MoleculeType } from '@/lib/definition';
 import { useRouter } from 'next/navigation';
-import { getMoleculeCart, getMoleculeOrder, addToFavourites } from '../service';
+import { getMoleculeCart, getMoleculeOrder, addToFavorites } from '../service';
 import CustomDataGrid from '@/ui/dataGrid';
 import MoleculeStructure from '@/utils/MoleculeStructure';
 import React from 'react';
@@ -43,7 +43,7 @@ jest.mock('../service', () => {
             ]);
         }),
         getMoleculeOrder: jest.fn(),
-        addToFavourites: jest.fn(), // Mocked function
+        addToFavorites: jest.fn(), // Mocked function
     };
 });
 
@@ -270,7 +270,7 @@ describe('MoleculeList Component', () => {
                 <span
                     data-testid={`favourite-icon-${data.id}`}
                     onClick={() =>
-                        addToFavourites({
+                        addToFavorites({
                             molecule_id: data.id,
                             favourite: !data.favourite,
                             user_id: 0,
@@ -526,9 +526,9 @@ describe('MoleculeList Component', () => {
     test.skip('toggles favourite status of a molecule in the custom data grid', async () => {
         const mockSetTableData = jest.fn();
 
-        // Mock implementation for addToFavourites
-        const addToFavouritesMock = addToFavourites as jest.Mock;
-        addToFavouritesMock.mockResolvedValueOnce(true); // Simulate success response
+        // Mock implementation for addToFavorites
+        const addToFavoritesMock = addToFavorites as jest.Mock;
+        addToFavoritesMock.mockResolvedValueOnce(true); // Simulate success response
 
         // Render the MoleculeList with the CustomDataGrid
         render(
@@ -569,9 +569,9 @@ describe('MoleculeList Component', () => {
         const favouriteIcons = screen.queryAllByText('★');
         fireEvent.click(favouriteIcons[0]);
 
-        // Verify the addToFavourites mock is called with the correct arguments
+        // Verify the addToFavorites mock is called with the correct arguments
         await waitFor(() => {
-            expect(addToFavouritesMock).toHaveBeenCalledWith({
+            expect(addToFavoritesMock).toHaveBeenCalledWith({
                 molecule_id: 1, // ID of the clicked molecule
                 favourite: false, // New favourite status
                 user_id: 0,

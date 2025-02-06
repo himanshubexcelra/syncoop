@@ -23,6 +23,7 @@ const config: Config = {
   coverageDirectory: "coverage",
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1', // Adjust based on your project structure
+    "uuid": require.resolve('uuid'),
   },
   testPathIgnorePatterns: [
     '<rootDir>/packages/',

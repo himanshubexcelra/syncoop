@@ -33,11 +33,6 @@ export async function GET(request: Request) {
                                     status: true,
                                 }
                             },
-                            libraryReactions: {
-                                select: {
-                                    status: true,
-                                }
-                            },
                             owner: {
                                 select: {
                                     id: true,
@@ -265,9 +260,18 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { name, metadata, target, description,
-            organization_id, user_id, sharedUsers, id, config,
-            inherits_configuration, inherits_bioassays } = req;
+        const { 
+            name, 
+            metadata, 
+            description,
+            organization_id, 
+            user_id, 
+            sharedUsers, 
+            id, 
+            config,
+            inherits_configuration, 
+            inherits_bioassays 
+        } = req;
 
         // Check if user is associated with another organization
         /* const organization = await prisma.container.findUnique({
@@ -351,10 +355,7 @@ export async function PUT(request: Request) {
             data: {
                 name,
                 description,
-                metadata: {
-                    ...metadata,
-                    target,
-                },
+                metadata,
                 config,
                 inherits_configuration,
                 inherits_bioassays,

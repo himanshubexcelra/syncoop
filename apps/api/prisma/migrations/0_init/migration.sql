@@ -1,6 +1,3 @@
--- Create btree_gist Extension
-CREATE EXTENSION IF not exists btree_gist;
-
 -- CreateTable
 CREATE TABLE "container" (
     "id" BIGSERIAL NOT NULL,
@@ -74,7 +71,7 @@ CREATE TABLE "inventory_metadata" (
 CREATE TABLE "lab_job_order" (
     "lab_job_order_id" BIGSERIAL NOT NULL,
     "molecule_id" BIGINT NOT NULL,
-    "pathway_id" BIGINT NOT NULL,
+    "pathway_id" BIGINT,
     "product_smiles_string" TEXT NOT NULL,
     "product_molecular_weight" DECIMAL,
     "no_of_steps" INTEGER,
@@ -477,33 +474,6 @@ CREATE TABLE "bioassay" (
     CONSTRAINT "con_pk_bioassay_id" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "custom_reactions" (
-    "id" BIGSERIAL NOT NULL,
-    "source_reaction_name" VARCHAR(150),
-    "library_id" BIGINT NOT NULL,
-    "project_id" BIGINT NOT NULL,
-    "organization_id" BIGINT NOT NULL,
-    "smiles_string" TEXT NOT NULL,
-    "status" SMALLINT NOT NULL,
-    "is_added_to_cart" BOOLEAN NOT NULL DEFAULT false,
-    "created_at" TIMESTAMPTZ(6) NOT NULL,
-    "created_by" INTEGER NOT NULL,
-    "updated_at" TIMESTAMPTZ(6),
-    "updated_by" INTEGER,
-
-    CONSTRAINT "con_pk_reaction_id" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "user_favourite_reaction" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "reaction_id" BIGINT NOT NULL,
-
-    CONSTRAINT "con_pk_user_fav_reaction_id" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE INDEX "idx_container_is_active" ON "container"("is_active");
 
@@ -650,21 +620,6 @@ CREATE UNIQUE INDEX "con_uk_container_access_permission_container_id_n_user_id" 
 
 -- CreateIndex
 CREATE UNIQUE INDEX "con_uk_bioassay_name" ON "bioassay"("name");
-
--- CreateIndex
-CREATE INDEX "idx_custom_reaction_is_added_to_cart" ON "custom_reactions"("is_added_to_cart");
-
--- CreateIndex
-CREATE INDEX "idx_custom_reaction_library_id" ON "custom_reactions"("library_id");
-
--- CreateIndex
-CREATE INDEX "idx_custom_reaction_smiles" ON "custom_reactions" USING GIST ("smiles_string");
-
--- CreateIndex
-CREATE INDEX "idx_custom_reaction_status" ON "custom_reactions"("status");
-
--- CreateIndex
-CREATE UNIQUE INDEX "con_uk_user_favourite_reaction" ON "user_favourite_reaction"("user_id", "reaction_id");
 
 -- AddForeignKey
 ALTER TABLE "container" ADD CONSTRAINT "con_fk_container_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -911,25 +866,4 @@ ALTER TABLE "bioassay" ADD CONSTRAINT "con_fk_bioassay_created_by" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "bioassay" ADD CONSTRAINT "con_fk_bioassay_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "custom_reactions" ADD CONSTRAINT "con_fk_reaction_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "custom_reactions" ADD CONSTRAINT "con_fk_reaction_library_id" FOREIGN KEY ("library_id") REFERENCES "container"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "custom_reactions" ADD CONSTRAINT "con_fk_reaction_org_id" FOREIGN KEY ("organization_id") REFERENCES "container"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "custom_reactions" ADD CONSTRAINT "con_fk_reaction_project_id" FOREIGN KEY ("project_id") REFERENCES "container"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "custom_reactions" ADD CONSTRAINT "con_fk_reaction_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "user_favourite_reaction" ADD CONSTRAINT "con_fk_user_fav_reaction" FOREIGN KEY ("reaction_id") REFERENCES "custom_reactions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "user_favourite_reaction" ADD CONSTRAINT "con_fk_user_fav_reaction_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 

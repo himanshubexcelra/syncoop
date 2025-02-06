@@ -5,7 +5,7 @@ import {
     createLibrary,
     editLibrary,
     getLibraryById,
-    addToFavourites,
+    addToFavorites,
     addMoleculeToCart,
     submitOrder,
     updateMoleculeStatus,
@@ -272,13 +272,14 @@ describe('Library API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test('addToFavourites should update favourite molecule successfully', async () => {
+    test('addToFavorites should update favourite molecule successfully', async () => {
         const formData = { molecule_id: 1, user_id: 1, favourite_id: 1, favourite: true };
 
-        const result = await addToFavourites(formData);
+        const result = await addToFavorites(formData);
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule`, {
+        expect(fetch).toHaveBeenCalledWith(
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule/favorite`, {
             mode: "no-cors",
             method: "POST",
             headers: {
@@ -392,7 +393,7 @@ describe('Library API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test('test case for addToFavourites API ', async () => {
+    test('test case for addToFavorites API ', async () => {
         const mockFormData: any = {
             id: 'molecule123',
             favourite: true,
@@ -407,10 +408,11 @@ describe('Library API Functions', () => {
         ) as jest.Mock;
 
 
-        const result = await addToFavourites(mockFormData);
+        const result = await addToFavorites(mockFormData);
 
         // Assert fetch was called with the correct arguments
-        expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_API_HOST_URL}/v1/molecule`, {
+        expect(fetch).toHaveBeenCalledWith(
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule/favorite`, {
             mode: 'no-cors',
             method: 'POST',
             headers: {

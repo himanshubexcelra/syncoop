@@ -13,12 +13,9 @@ export async function GET(request: Request) {
         const searchParams = new URLSearchParams(url.searchParams);
         const sample_molecule_id = searchParams.get("sample_molecule_id");
         const organization_id = searchParams.get("organization_id");
-        let where;
+        let where = Prisma.sql`1=1`;
         if (organization_id) {
             where = Prisma.sql`mo.organization_id = ${Number(organization_id)}`;
-        }
-        else {
-            where = Prisma.sql`1=1`;
         }
         const result = await prisma.$queryRaw`SELECT 
         CONCAT(m.id, mo.order_id) AS id,
@@ -37,7 +34,7 @@ export async function GET(request: Request) {
         m.library_id,
         m.project_id,
         mo.id AS molecule_order_id,
-        pathway.id as pathway_id,
+        (SELECT DISTINCT ON(molecule_id) id FROM pathway WHERE molecule_id = m.id) as pathway_id,
         org.name AS "organizationName",
         org.metadata AS "organizationMetadata",
         org.config AS "organizationConfig",
@@ -71,8 +68,7 @@ export async function GET(request: Request) {
             LEFT JOIN molecule_bio_data mbd ON mbd.molecule_id = m.id and
             m.status = ${MoleculeStatusCode.Done} 
             LEFT JOIN molecule_adme_data mad ON mad.molecule_id = m.id and 
-            m.status = ${MoleculeStatusCode.Done} 
-            LEFT JOIN pathway ON pathway.molecule_id = m.id
+            m.status = ${MoleculeStatusCode.Done}
 
             /* LEFT JOIN (SELECT DISTINCT ON(molecule_id) * FROM molecule_chem_data 
             WHERE molecule_id = ${Number(sample_molecule_id)} 

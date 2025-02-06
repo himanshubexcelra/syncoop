@@ -22,4 +22,4 @@ RUN pnpm build || true  # Adjust as necessary based on your build scripts
 EXPOSE 3000
 
 # Set the command to start the server
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]

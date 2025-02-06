@@ -162,7 +162,7 @@ export interface MoleculeType {
 }
 
 
-export type addToFavouritesProps = {
+export type addToFavoritesProps = {
   molecule_id: number,
   user_id: number,
   favourite: boolean,
@@ -187,7 +187,6 @@ export interface LibraryFields {
   created_at: Date;
   status?: MoleculeStatus[];
   libraryMolecules: StatusType[];
-  libraryReactions: StatusType[];
   container?: OrganizationDataFields;
   config?: OrganizationConfigType;
   inherits_configuration: boolean;
@@ -201,7 +200,6 @@ export interface StatusType {
 
 export interface CombinedLibraryType {
   libraryMolecules?: StatusType[];
-  libraryReactions?: StatusType[];
 }
 
 export interface ProjectDataFields {

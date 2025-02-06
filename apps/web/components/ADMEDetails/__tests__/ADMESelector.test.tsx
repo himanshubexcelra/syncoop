@@ -136,7 +136,6 @@ const libMockData = {
     updated_at: new Date(),
     updated_by: 11,
     libraryMolecules: [],
-    libraryReactions: [],
     owner: userData.orgUser,
     userWhoUpdated: userData,
     userWhoCreated: userData,

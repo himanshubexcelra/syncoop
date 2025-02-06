@@ -14,7 +14,7 @@ import { delay } from '@/utils/helpers';
 import { LoadIndicator, Popup } from 'devextreme-react';
 import { DELAY } from '@/utils/constants';
 import RejectedDialog from '../AddMolecule/RejectedDialog';
-import { getDeAromatizeSmile } from '@/components/KetcherTool/service';
+// import { getDeAromatizeSmile } from '@/components/KetcherTool/service';
 
 const MoleculeStructure = dynamic(
     () => import("@/utils/MoleculeStructure"),
@@ -95,7 +95,7 @@ const EditMolecule = ({
         const molList = JSON.stringify(editMolecules);
         setEditedMolecules(JSON.parse(molList))
     }
-    const onDiscardSubmit = async () => {
+    /* const onDiscardSubmit = async () => {
         resetEditedList();
         const actualMol = editMolecules.filter((mol) => mol.id === editMolecules[moleculeIndex]?.id)
         const smile = actualMol.length
@@ -103,6 +103,12 @@ const EditMolecule = ({
 
         const updatedSmile = smile && await getDeAromatizeSmile(smile);
         KetcherFunctions?.renderFromCtab(updatedSmile?.struct)
+        setMoleculeName(actualMol.length ? actualMol[0].source_molecule_name : '')
+    } */
+    const onDiscardSubmit = () => {
+        resetEditedList();
+        const actualMol = editMolecules.filter((mol) => mol.id === editMolecules[moleculeIndex]?.id)
+        KetcherFunctions.renderFromCtab(actualMol.length ? actualMol[0].smiles_string : '')
         setMoleculeName(actualMol.length ? actualMol[0].source_molecule_name : '')
     }
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);

@@ -2,7 +2,7 @@
 "use server";
 
 import {
-    addToFavouritesProps,
+    addToFavoritesProps,
     MoleculeOrder,
     OrderType,
     SaveLabJobOrder,
@@ -254,10 +254,10 @@ export async function deleteMoleculeCart(
     }
 }
 
-export async function addToFavourites(formData: addToFavouritesProps) {
+export async function addToFavorites(formData: addToFavoritesProps) {
     try {
         const response: any = await fetch(
-            `${process.env.NEXT_API_HOST_URL}/v1/molecule`,
+            `${process.env.NEXT_API_HOST_URL}/v1/molecule/favorite`,
             {
                 mode: "no-cors",
                 method: "POST",

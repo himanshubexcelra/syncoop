@@ -290,34 +290,30 @@ export default function MoleculeOrderPage({
   const clickableRow = (data: MoleculeOrder) => {
     const { molecule_status: moleculeStatus } = data;
     let isClickableRow = !isClickable.includes(moleculeStatus);
+    const labJobOrderStatus = moleculeStatus === MoleculeStatusLabel.InProgress ||
+      moleculeStatus === MoleculeStatusLabel.Failed ||
+      moleculeStatus === MoleculeStatusLabel.Done;
+    const isAnalysis = !data.pathway_id && labJobOrderStatus;
     if (isSystemAdmin(myRoles) || isResearcherAndProtocolAproover(myRoles)) {
       isClickableRow = (
         moleculeStatus === MoleculeStatusLabel.Ready ||
         moleculeStatus === MoleculeStatusLabel.InReview ||
         moleculeStatus === MoleculeStatusLabel.Validated ||
-        moleculeStatus === MoleculeStatusLabel.InProgress ||
-        moleculeStatus === MoleculeStatusLabel.Failed ||
-        moleculeStatus === MoleculeStatusLabel.Done)
+        labJobOrderStatus)
     } else if (isResearcher(myRoles)) {
       // Researchers can click only if status is 'Ready'
       isClickableRow = (
-        moleculeStatus === MoleculeStatusLabel.Ready ||
-        moleculeStatus === MoleculeStatusLabel.InProgress ||
-        moleculeStatus === MoleculeStatusLabel.Done ||
-        moleculeStatus === MoleculeStatusLabel.Failed
+        moleculeStatus === MoleculeStatusLabel.Ready || labJobOrderStatus
       )
     } else if (isProtocolAproover(myRoles)) {
       // Protocol approvers can click only if status is 'InReview' and 'Validated'
       isClickableRow = (
         moleculeStatus === MoleculeStatusLabel.InReview ||
-        moleculeStatus === MoleculeStatusLabel.Validated ||
-        moleculeStatus === MoleculeStatusLabel.InProgress ||
-        moleculeStatus === MoleculeStatusLabel.Done ||
-        moleculeStatus === MoleculeStatusLabel.Failed
+        moleculeStatus === MoleculeStatusLabel.Validated || labJobOrderStatus
       )
     }
 
-    return isClickableRow && !!data.pathway_id;
+    return isClickableRow && !isAnalysis;
   };
 
   const columns: ColumnConfig[] = [

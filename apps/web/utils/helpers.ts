@@ -403,10 +403,6 @@ export const isSharedActionEnable = (
   return (!!sharedUser || owner || admin);
 }
 
-export const getEntity =
-  (projectType: string): "libraryReactions" | "libraryMolecules" =>
-    projectType === 'Custom Reaction' ? 'libraryReactions' : 'libraryMolecules';
-
 // Utility to map cart data to CartDetail
 export const mapCartData = (cartData: any[], userId: number): CartDetail[] =>
   cartData.map((item: any) => ({

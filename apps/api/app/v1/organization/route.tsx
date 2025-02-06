@@ -127,7 +127,6 @@ export async function GET(request: Request) {
                         _count: {
                           select: {
                             libraryMolecules: true, // Count molecules in each library
-                            libraryReactions: true,
                           },
                         },
                       },

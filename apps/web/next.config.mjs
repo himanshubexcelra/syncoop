@@ -2,6 +2,7 @@ import CopyPlugin from 'copy-webpack-plugin';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode:false,
   webpack(config, { isServer }) {
     config.optimization.splitChunks = {
       chunks: 'all',

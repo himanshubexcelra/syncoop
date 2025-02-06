@@ -179,7 +179,6 @@ export async function PUT(request: Request) {
         const req = await request.json();
         const {
             name,
-            target,
             description, user_id,
             project_id,
             organization_id,
@@ -227,9 +226,7 @@ export async function PUT(request: Request) {
             data: {
                 name,
                 description,
-                metadata: {
-                    target
-                },
+                metadata,
                 userWhoUpdated: {
                     connect: {
                         id: user_id
@@ -238,8 +235,7 @@ export async function PUT(request: Request) {
                 updated_at: getUTCTime(new Date().toISOString()),
                 config,
                 inherits_configuration,
-                inherits_bioassays,
-                metadata,
+                inherits_bioassays
             },
         });
 

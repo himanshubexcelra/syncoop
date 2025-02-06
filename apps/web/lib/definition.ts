@@ -534,6 +534,7 @@ export interface LibraryCreateFields {
   userData: UserData,
   library_idx: number,
   setLibraryId: (value: number) => void,
+  users: User[],
 }
 
 export interface ValidateSmileRequest {

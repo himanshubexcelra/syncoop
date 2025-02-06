@@ -569,6 +569,7 @@ export default function LibraryAccordion({
                                         projectData={projectData}
                                         library_idx={-1}
                                         setLibraryId={setLibraryId}
+                                        users={users}
                                     />
                                 )}
                                 width={477}
@@ -604,6 +605,7 @@ export default function LibraryAccordion({
                                         projectData={projectData}
                                         library_idx={selectedLibraryIdIdx}
                                         setLibraryId={setLibraryId}
+                                        users={users}
                                     />
                                 )}
                                 width={477}

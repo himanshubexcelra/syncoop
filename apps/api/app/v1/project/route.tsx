@@ -28,6 +28,7 @@ export async function GET(request: Request) {
                     ...query.include,
                     other_container: {
                         include: {
+                            container_access_permission: true,
                             libraryMolecules: {
                                 select: {
                                     status: true,

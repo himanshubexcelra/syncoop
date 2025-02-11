@@ -22,7 +22,7 @@ type SendMoleculesForSynthesisProps = {
     setDisableAnalysis: (val: boolean) => void,
     handleStructureZoom: (e: any, data: MoleculeOrder) => void,
     closeMagnifyPopup: (e: any) => void,
-    removeSynthesisData: (val:MoleculeOrder) => void,
+    removeSynthesisData: (val: MoleculeOrder) => void,
 }
 
 export default function SendMoleculesForSynthesis({
@@ -76,6 +76,12 @@ export default function SendMoleculesForSynthesis({
             setCurrentSort({ field: newField, order: 'asc' });
         }
     };
+
+    const rawMoleculeData = moleculeData.map(item => ({
+        ...item,
+        molecular_weight: Number(item.molecular_weight).toFixed(2)
+    }));
+
     return (
         <>
             {inRetroData.length > 0 &&
@@ -85,7 +91,7 @@ export default function SendMoleculesForSynthesis({
                 </div>
             }
             <div className="mb-[20px] mt-[5px]">
-                {`${moleculeData.length} molecules will be sent for retrosynthesis.`}
+                {`${rawMoleculeData.length} molecules will be sent for retrosynthesis.`}
             </div>
             <div className="mb-[20px] mt-[5px]">
                 Estimated time 2 minutes.
@@ -93,7 +99,7 @@ export default function SendMoleculesForSynthesis({
             <div onClick={closeMagnifyPopup}>
                 <DataGrid
                     ref={grid}
-                    dataSource={moleculeData}
+                    dataSource={rawMoleculeData}
                     showBorders={true}
                     columnAutoWidth={false}
                     width="100%"
@@ -137,7 +143,7 @@ export default function SendMoleculesForSynthesis({
                     <Column
                         cellRender={({ data }) => (
                             <Button
-                                onClick={() => {removeSynthesisData(data) }}
+                                onClick={() => { removeSynthesisData(data) }}
                                 render={() => (
                                     <>
                                         <Image

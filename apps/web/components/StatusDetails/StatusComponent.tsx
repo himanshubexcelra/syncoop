@@ -7,14 +7,27 @@ import StatusCard from "@/ui/StatusCard";
 import { getOverviewCounts } from "../Projects/projectService";
 import { getCountCardsDetails, moleculeStatus } from "@/utils/constants";
 import { isSystemAdmin } from "@/utils/helpers";
-import { ArgumentAxis, Chart, Series, ValueAxis } from 'devextreme-react/chart';
+import {
+    ArgumentAxis,
+    Border,
+    Chart,
+    Font,
+    Grid,
+    Label,
+    Legend,
+    Series,
+    Tick,
+    ValueAxis
+} from 'devextreme-react/chart';
 
 export default function StatusComponent({ myRoles, orgUser, customerOrgId }: StatusComponentProps) {
     const { id } = orgUser;
     const [projectNumber, setProjectNumber] = useState<number>(0);
     const [libraryNumber, setLibraryNumber] = useState<number>(0);
     const [moleculeNumber, setMoleculeNumber] = useState<number>(0);
-    const [headerStatusCount, setHeaderCount] = useState<Status[]>([]);
+    const headerStatus = moleculeStatus.filter((status: Status) =>
+        [MoleculeStatusCode.New, MoleculeStatusCode.Done].includes(status.code))
+    const [headerStatusCount, setHeaderCount] = useState<Status[]>(headerStatus);
     const [graphDataSource, setGraphDataSource] = useState<object[]>([]);
     const countCardsDetails = getCountCardsDetails(
         projectNumber,
@@ -73,11 +86,11 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
 
     return (
         <div >
-            <div className="flex items-center h-[177px]">
+            <div className="flex items-center h-[120px]">
                 <div className="flex w-1/2 justify-around">
                     <CountCards {... { countCardsDetails }} />
                 </div>
-                <div className="flex w-1/2 justify-end pr-100">
+                <div className="flex w-1/2 justify-end mr-[100px]">
                     {headerStatusCount.map((stat: Status, index: number) => {
                         return (
                             <StatusCard
@@ -93,41 +106,45 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
 
                 </div>
             </div>
-            <div className="w-[900px] ml-[80px]">
-                <Chart id="chart"
+            <div className="w-[900px] ml-[80px] mb-[20px]">
+                <Chart
+                    id="chart"
                     dataSource={graphDataSource}
                     width={'auto'}
                     rotated={true}
-                    legend={{ visible: false }}>
+                    height={340}>
 
-                    <ArgumentAxis
-                        visible={false}
-                        grid={{ visible: false }} // Hide grid lines on the argument axis
-                        tick={{ visible: false }}
-                        label={{ font: { color: '#000', size: 14 } }}
-                    />
+                    <Legend visible={false}></Legend>
 
-                    {/* Define the value axis */}
-                    <ValueAxis
-                        visible={false}
-                        grid={{ visible: false }} // Hide grid lines on the value axis
-                        tick={{ visible: false }}
-                        label={{ visible: false }}
-                    />
+                    <ArgumentAxis visible={false}>
+                        <Grid visible={false}></Grid>
+                        <Tick visible={false}></Tick>
+                        <Label visible={true}>
+                            <Font color="#000000" size="14"></Font>
+                        </Label>
+                    </ArgumentAxis>
+
+                    <ValueAxis visible={false}>
+                        <Grid visible={false}></Grid>
+                        <Tick visible={false}></Tick>
+                        <Label visible={false}></Label>
+                    </ValueAxis>
+
                     <Series
                         valueField="number"
                         argumentField="text"
                         type="bar"
                         color="#D8EAF8"
-                        barWidth={18}
-                        border={{ color: '#085897' }}
-                        label={{
-                            position: 'outside',
-                            visible: true,  // Enable labels on bars
-                            backgroundColor: '#fff',  // Set background color for bar labels
-                            font: { color: '#000', size: 14 },  // Set font color and size
-                            padding: 5  // Padding around the label
-                        }} />
+                        barWidth={18}>
+                        <Border color='#085897' dashStyle="solid" visible={true}></Border>
+                        <Label
+                            position="outside"
+                            visible={true}
+                            backgroundColor="#ffffff">
+                            <Font color="#000000" size="14"></Font>
+                        </Label>
+                    </Series>
+
                 </Chart>
             </div>
         </div>

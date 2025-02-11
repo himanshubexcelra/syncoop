@@ -119,6 +119,7 @@ export default function ListProjects({
                             onSelectionChanged={selectionChanged}
                             itemTitleRender={ProjectTitle}
                             id="accordion-container"
+                            key={data.length}
                         />
                     </div>
                     {loader ?

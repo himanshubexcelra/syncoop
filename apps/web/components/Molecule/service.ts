@@ -2,13 +2,15 @@
 
 export async function uploadMoleculeSmiles(formData: FormData) {
     const requestBody = {
-        "smiles": formData.get('smiles'),
-        "createdBy": formData.get('created_by_user_id'),
+        "smiles": JSON.parse(formData.get('smiles') as string),
+        "createdBy": formData.get('createdBy'),
         "libraryId": formData.get('library_id'),
         "projectId": formData.get('project_id'),
         "organizationId": formData.get('organization_id'),
-        "sourceMoleculeName": formData.get('source_molecule_name')
+        "sourceMoleculeName": formData.get('source_molecule_name'),
+        "checkDuplicate": formData.get('checkDuplicate')
     }
+
     const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/upload_molecule_smiles`,
         {
             method: "POST",

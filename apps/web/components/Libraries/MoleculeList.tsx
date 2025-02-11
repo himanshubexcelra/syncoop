@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';
 import { exportDataGrid } from 'devextreme/excel_exporter';
 import { AppContext } from "../../app/AppState";
 import {
@@ -18,10 +17,10 @@ import {
     ProjectDataFields,
     Status,
     UserData,
-    addToFavouritesProps
+    addToFavoritesProps
 } from '@/lib/definition';
 import {
-    addToFavourites,
+    addToFavorites,
     addMoleculeToCart,
     getMoleculeData,
     deleteMolecule
@@ -55,6 +54,7 @@ import './MoleculeList.css';
 import CustomTooltip from '@/ui/CustomTooltip';
 import AdmeInfo from '../Tooltips/AdmeInfo';
 import AddCustomReaction from '../Molecule/AddCustomReaction/AddCustomReaction';
+import saveAs from 'file-saver';
 
 type MoleculeListType = {
     /* moleculeLoader: boolean, */
@@ -114,6 +114,21 @@ export default function MoleculeList({
     const [deleteMoleculeId, setDeleteMolecules] = useState({ id: 0, name: '', favourite_id: 0 });
     const [selectionEnabledRows, setSelectionEnabledRows] = useState<MoleculeType[]>([]);
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
+    const [selectedValue, setSelectedValue] = useState({
+        id: 'smiles_string',
+        category: "Molecule"
+    },);
+    const dropdownButtons = [
+        {
+            text: "Group By:",
+            onValueChanged: ((e: any) => setSelectedValue(e)),
+            options: [
+                { id: 'smiles_string', category: "Molecule" },
+                { id: 'library_name', category: "Library" }
+            ],
+            value: selectedValue
+        },]
+    const rowGroupName = () => selectedValue.id
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
@@ -818,39 +833,46 @@ export default function MoleculeList({
     }; */
 
     const onExporting = (e: any) => {
+        // Create a new workbook and worksheet.
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Molecule List');
 
         exportDataGrid({
             component: e.component,
             worksheet: worksheet,
-            customizeCell: function (options) {
-                /* const modifiedData = e.component.getDataSource().items().map((item: any) => {
-                    // Modify each row data here
-                    item.molecular_weight = Number(Number(item.molecular_weight).toFixed(2))
-                    return item;
-                });
-
-                // Set the modified data for export
-                e.component.getDataSource().items = () => modifiedData; */
-
+            customizeCell: (options: any) => {
                 if (options.gridCell?.rowType === 'data') {
-                    if (options?.gridCell?.column?.dataField === 'molecular_weight') {
-                        options.excelCell.value = Number(options?.gridCell?.value).toFixed(2);
+                    //  format the "molecular_weight" column.
+                    if (options.gridCell.column?.dataField === 'molecular_weight') {
+                        options.excelCell.value = Number(options.gridCell.value).toFixed(2);
                     }
                 }
-
                 options.excelCell.font = { name: 'Arial', size: 12 };
                 options.excelCell.alignment = { horizontal: 'left' };
             }
-        }).then(function () {
-            workbook.csv.writeBuffer().then(function (buffer: any) {
-                saveAs(new Blob([buffer], { type: "application/octet-stream" }),
-                    `MoleculeList_${selectedLibraryName}_${new Date()}.csv`);
+        }).then(() => {
+            // if (e.selectedRowsOnly) {
+            //     // Export in Excel
+            // workbook.xlsx.writeBuffer().then((buffer) => {
+            //     saveAs(
+            //         new Blob([buffer], { type: "application/octet-stream" }),
+            //         `MoleculeList_${selectedLibraryName}_${new Date().toISOString()}.xlsx`
+            //     );
+            // });
+            // } else {
+            //  export in CSV
+            workbook.csv.writeBuffer().then((buffer) => {
+                saveAs(
+                    new Blob([buffer], { type: "application/octet-stream" }),
+                    `MoleculeList_${selectedLibraryName}_${new Date()}.csv`
+                );
             });
-
+            // }
         });
-    }
+
+        // Prevent the default export behavior.
+        e.cancel = true;
+    };
 
     const addToFavourite = (selectedRow: MoleculeType) => {
 
@@ -859,13 +881,13 @@ export default function MoleculeList({
         );
         setTableData(rows);
 
-        const dataField: addToFavouritesProps = {
+        const dataField: addToFavoritesProps = {
             molecule_id: selectedRow.id,
             user_id: userData.id,
             favourite_id: selectedRow.favourite_id,
             favourite: !selectedRow.favourite
         };
-        addToFavourites(dataField).then(() => { },
+        addToFavorites(dataField).then(() => { },
             async (error) => {
                 const toastId = toast.error(error);
                 await delay(DELAY);
@@ -1125,6 +1147,8 @@ export default function MoleculeList({
                         selectionEnabledRows={selectionEnabledRows}
                         onExporting={onExporting}
                         showFooter={true}
+                        groupingColumn={rowGroupName()}
+                        dropdownButtons={dropdownButtons}
                     />
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}

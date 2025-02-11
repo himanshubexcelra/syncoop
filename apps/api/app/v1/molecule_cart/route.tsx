@@ -80,6 +80,11 @@ export async function GET(request: Request) {
                             name: true,
                         },
                     },
+                    molecule_order: {
+                        select: {
+                            order_id: true
+                        },
+                    }
                 },
             }),
         };

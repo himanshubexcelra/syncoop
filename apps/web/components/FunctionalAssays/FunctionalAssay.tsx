@@ -80,7 +80,7 @@ function FunctionalAssay({
             }
             if (!data?.container?.metadata?.assay?.length) {
                 setEnableInherit(false);
-            }
+            } else setEnableInherit(true);
             setInherited(inherits);
             setAssays(metadata || []);
             setOrganizationData(data);
@@ -142,7 +142,7 @@ function FunctionalAssay({
         if (!isDirty || (isDirty && isLocalDirty)) {
             setShowAddAssayForm(true);
             performCleanup();
-        } else {
+        } else if (onSelectedIndexChange) {
             onSelectedIndexChange();
         }
     };
@@ -274,7 +274,7 @@ function FunctionalAssay({
                 }
                 cleanup(response, 'delete', deleted, index);
             }
-        } else {
+        } else if (onSelectedIndexChange) {
             onSelectedIndexChange();
         }
     }
@@ -295,7 +295,7 @@ function FunctionalAssay({
                     setAssays(metadata);
                 }
                 setInherited(!inherited);
-            } else {
+            } else if (onSelectedIndexChange) {
                 onSelectedIndexChange();
             }
         }

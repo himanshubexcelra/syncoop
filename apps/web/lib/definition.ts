@@ -321,7 +321,7 @@ export interface ADMEProps {
   editAllowed?: boolean;
   setReset?: (val: string) => void;
   loggedInUser: number;
-  onSelectedIndexChange: () => void;
+  onSelectedIndexChange?: () => void;
 }
 
 export interface AssayFields {
@@ -364,7 +364,7 @@ export interface FunctionalAssayProps {
   selectType?: (val: string) => void;
   setReset?: (val: string) => void;
   page?: string;
-  onSelectedIndexChange: () => void;
+  onSelectedIndexChange?: () => void;
 }
 
 export type ContainerFields = OrganizationDataFields | ProjectDataFields | LibraryFields;
@@ -537,6 +537,7 @@ export interface LibraryCreateFields {
   userData: UserData,
   library_idx: number,
   setLibraryId: (value: number) => void,
+  users: User[],
 }
 
 export interface ValidateSmileRequest {

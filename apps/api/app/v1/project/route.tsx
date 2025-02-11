@@ -28,6 +28,7 @@ export async function GET(request: Request) {
                     ...query.include,
                     other_container: {
                         include: {
+                            container_access_permission: true,
                             libraryMolecules: {
                                 select: {
                                     status: true,
@@ -260,17 +261,17 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const req = await request.json();
-        const { 
-            name, 
-            metadata, 
+        const {
+            name,
+            metadata,
             description,
-            organization_id, 
-            user_id, 
-            sharedUsers, 
-            id, 
+            organization_id,
+            user_id,
+            sharedUsers,
+            id,
             config,
-            inherits_configuration, 
-            inherits_bioassays 
+            inherits_configuration,
+            inherits_bioassays
         } = req;
 
         // Check if user is associated with another organization

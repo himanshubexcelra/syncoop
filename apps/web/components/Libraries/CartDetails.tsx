@@ -286,7 +286,6 @@ export default function CartDetails({
           const toastId = toast.error(errorMessage);
           await delay(DELAY);
           toast.remove(toastId);
-          analysisStateCount++;
         }
       }
       const toastId = toast.success(successMessage);

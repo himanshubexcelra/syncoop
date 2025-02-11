@@ -418,7 +418,7 @@ export const mapCartData = (cartData: any[], userId: number): CartDetail[] =>
     pathway: item?.molecule?.pathway?.length > 0 ? true : false,
     created_by: userId,
     "Project / Library": `${item?.molecule?.project.name} / ${item?.molecule?.library.name}`,
-    "Organization / Order": `${item?.organization?.name} / ${item?.molecule_order_id}`,
+    "Organization / Order": `${item?.organization?.name} / Order${item?.molecule_order?.order_id}`,
   }));
 
 // Utility to filter cart data for analysis

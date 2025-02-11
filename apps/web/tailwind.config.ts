@@ -56,7 +56,8 @@ const config: Config = {
         themeLightBlueColor: "var(--themeLightBlueColor)",
         admeYellow: "var(--admeYellow)",
         admeRed: "var(--admeRed)",
-        admeGreen: "var(--admeGreen)"
+        admeGreen: "var(--admeGreen)",
+        themeGreyBorderSecondaryColor: "var(--themeGreyBorderSecondaryColor)"
       },
     },
   },

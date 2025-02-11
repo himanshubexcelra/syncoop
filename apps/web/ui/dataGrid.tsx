@@ -24,6 +24,9 @@ import CheckBox from 'devextreme-react/check-box';
 import { Button, LoadIndicator } from 'devextreme-react';
 import { ColumnConfig } from '@/lib/definition';
 import './dataGrid.css';
+import { ToolbarItem } from 'devextreme/ui/file_manager';
+import Image from 'next/image';
+
 interface ToolbarButtonConfig {
     text: string;
     onClick: () => void;
@@ -71,6 +74,7 @@ interface CustomDataGridProps {
     cssClass?: string;
     hoverStateEnabled?: boolean;
     selectedRow?: any[];
+    dropdownButtons?: any;
 }
 
 const CustomDataGrid = ({
@@ -102,6 +106,7 @@ const CustomDataGrid = ({
     onRowClick,
     onRowPrepared,
     selectedRow,
+    dropdownButtons
 }: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -190,12 +195,20 @@ const CustomDataGrid = ({
 
     const onToolbarPreparing = (e: any) => {
         if (enableExport) {
-            const customConfiguration = e?.toolbarOptions?.items[0].options.items;
-            customConfiguration[0].text = "Export all data to CSV";
-            customConfiguration[0].icon = "export";
+            e?.toolbarOptions?.items.map((d: ToolbarItem, index: number) => {
+                if (d.name === "exportButton") {
+                    const customConfiguration = e?.toolbarOptions?.items[index].options.items;
+                    if (customConfiguration && customConfiguration.length) {
+                        customConfiguration[0].text = "Export all data to CSV";
+                        customConfiguration[0].icon = "export";
+                    }
+                }
+            });
         }
     }
-    const exportFormats = ['csv'];
+
+    const exportFormatCSV = ['csv'];
+    // const exportFormatExcel = ['xlsx'];
 
     const onSelectionChanged = (e: any) => {
         setSelectedRowKeys([...e.selectedRowKeys]);
@@ -253,7 +266,50 @@ const CustomDataGrid = ({
     } else if (selectedRowKeys.length && selectedRowKeys.length < selectionEnabledRows.length) {
         isHeaderCheckboxChecked = null;
     }
-
+    const [isOpen, setIsOpen] = useState(false);
+    const renderDropdown = () =>
+        dropdownButtons.map((dropdown: any, index: any) =>
+        (<div className="dropdown" key={index}>
+            <label className="text-themeBlueColor">
+                {dropdown.text}
+            </label>
+            <button onClick={() => setIsOpen(!isOpen)}
+                className="text-themeBlueColor
+                border-0 bg-transparent ml-[5px]">
+                <div className='flex items-center gap-2'>
+                    {dropdown.value.category}
+                    <Image
+                        className="inline-block"
+                        src={isOpen
+                            ? '/icons/arrow-up.svg'
+                            : '/icons/arrow-down.svg'}
+                        alt="▼"
+                        width={16}
+                        height={16}
+                        priority
+                    />
+                </div>
+            </button>
+            {isOpen && (
+                <ul className="dropdown-list">
+                    {dropdown.options.map((option: any, index: any) => (
+                        <li
+                            key={index}
+                            className={dropdown.value.id === option.id ?
+                                "dropdown-item bg-themeGreyBorderSecondaryColor"
+                                : "dropdown-item"}
+                            onClick={() => {
+                                dropdown.onValueChanged(option)
+                                setIsOpen(false)
+                            }}
+                        >
+                            {option.category}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+        ))
     return (
         <div>
             <DataGrid
@@ -287,7 +343,9 @@ const CustomDataGrid = ({
                         title='Choose Columns'
                     />
                 }
-                {enableExport && <Export enabled={true} formats={exportFormats} />}
+                {enableExport &&
+                    <Export enabled={true} allowExportSelectedData={!!selectedRowKeys.length}
+                        formats={exportFormatCSV} />}
 
                 {showDragIcons && <RowDragging
                     allowReordering={true}
@@ -304,7 +362,6 @@ const CustomDataGrid = ({
                 {enableRowSelection && (
                     <Selection mode="multiple" />
                 )}
-                {enableExport && <Export enabled={true} allowExportSelectedData={true} />}
 
                 {enableRowSelection && <Column
                     dataField="id"
@@ -355,6 +412,7 @@ const CustomDataGrid = ({
                     />
                 )}
                 {enableToolbar && <Toolbar>
+                    {dropdownButtons && <Item> {renderDropdown()}</Item>}
                     {groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }

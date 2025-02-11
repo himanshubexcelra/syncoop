@@ -205,8 +205,6 @@ export default function MoleculeOrderPage({
   const [nextReaction, setNextReaction] = useState<boolean>(false);
   const [selectedRow, setSelectRow] = useState(-1);
   const [moleculeCompound, setMoleculeCompound] = useState<any[]>([]);
-  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-  const [isInnerOverlayVisible, setInnerOverlayVisible] = useState(false);
   const [reactionDetail, setReactionDetail] = useState<ReactionDetail>();
   const [confirm, setConfirm] = useState(false);
   const [reactionIndexList, setReactionIndexList] = useState<PathObjectType[]>([]);
@@ -239,11 +237,12 @@ export default function MoleculeOrderPage({
   const [popUpType, setPopUpType] = useState<number>(0);
   const [reactantList, setReactantList] = useState<ReactionCompoundType[]>([]);
   const [reactionOnlyView, setReactionOnlyView] = useState<boolean>(false);
-  const [isHandleOpenClick, setIsHandleOpenClick] = useState<boolean>(false);
+  const [pathwayWidth, setPathwayWidth] = useState<number>(0);
   const permitSubmitAnalysis = ['admin', 'protocol_approver', 'researcher'].some(role =>
     myRoles?.includes(role));
   const [disableAnalysis, setDisableAnalysis] = useState(false);
-
+  const [hideOpen, setHideOpen] = useState(false);
+    
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedValue = localStorage.getItem('pathway_box_width');
@@ -1099,7 +1098,6 @@ export default function MoleculeOrderPage({
       });
 
       setNodes(flattenedPathways);
-      showOverlay(15000);
       setReactionIndexList(reactionIndex);
       showPathway();
     }
@@ -1378,20 +1376,6 @@ export default function MoleculeOrderPage({
     // }
   }
 
-  const showOverlay = (timeOut: number) => {
-    setIsOverlayVisible(true);
-    setTimeout(() => {
-      setIsOverlayVisible(false);
-    }, timeOut);
-  }
-
-  const showInnerOverlay = (timeOut: number) => {
-    setInnerOverlayVisible(true);
-    setTimeout(() => {
-      setInnerOverlayVisible(false);
-    }, timeOut);
-  }
-
   const generateReactionPathway = async () => {
     setSendForSynthesisEnabled(true);
     setLoader(true);
@@ -1546,8 +1530,19 @@ export default function MoleculeOrderPage({
 
   const showPathway = () => {
     setPathwayView(true);
-    showOverlay(15000);
   }
+
+  useEffect(() => {
+    if (selectedMoleculeOrder[0]?.molecule_status === MoleculeStatusLabel.InProgress &&
+      selectedPathwayIndex === -1
+    ) {
+      setPathwayWidth(popupWidth - 42);
+      setUpdatedAt(Date.now());
+    } else {
+      setPathwayWidth(popupWidth - 50);
+      setUpdatedAt(Date.now());
+    }
+  }, [popupWidth, pathwayView, reactionOnlyView, selectedPathwayIndex]);
 
   const toolbarButtons = [
     {
@@ -1891,8 +1886,8 @@ export default function MoleculeOrderPage({
       try {
         const apiData: AmsInventoryItem[] = await searchInventory(payload);
         const updatedData: ReactionCompoundType[] = consolidatedReagents.map((item) => {
-          const apiItem = apiData.find(
-            (responseItem: any) => responseItem.smiles === item.smiles_string
+          const apiItem = apiData?.find(
+            (responseItem: any) => responseItem?.smiles === item?.smiles_string
           );
           return {
             ...item,
@@ -1911,6 +1906,40 @@ export default function MoleculeOrderPage({
       updateSmilesLinks();
     }
   }, [consolidatedReagents]);
+
+  useEffect(() => {
+    const handlePathwayReactionOpen = async () => {
+      try {
+        if (!Array.isArray(nodeValue)) {
+          toast(Messages.NO_PATHWAYS, {
+            icon: '⚠️',
+          });
+          return;
+        }
+
+        // Find the index of the first array containing an object with pathway_instance_id: 1
+        const validSelectedPathwayIndex = nodeValue.findIndex(
+          (subArray: any) =>
+            Array.isArray(subArray) &&
+            subArray.some((node: any) => node?.pathway_instance_id === 1)
+        );
+
+        // Ensure the index is valid before updating state
+        if (validSelectedPathwayIndex !== -1) {
+          await handleOpenClick(validSelectedPathwayIndex);
+        } else {
+          setSelectedPathway(-1);
+        }
+      } catch {
+        toast.error(Messages.ERROR_PATHWAYS)
+      }
+    };
+
+    if (reactionOnlyView) {
+      handlePathwayReactionOpen();
+    }
+  }, [nodeValue, reactionOnlyView]);
+
 
   const tabsDetails: TabDetail[] = [
     ...reactionsData.map((reaction, index) => {
@@ -2004,14 +2033,13 @@ export default function MoleculeOrderPage({
     setPathwayID(Number(pathwayId));
     setEditPahway(true)
     setActiveTab(tab || 0);
-    setLoadingButtonIndex(index)
+    setLoadingButtonIndex(index);
     await fetchData(pathwayId, index);
     setPathwayData(JSON.parse(JSON.stringify(nodeValue[index])));
-    setUpdatedKey('currentReaction');
-    setLoadingButtonIndex(null)
+    setLoadingButtonIndex(null);
+    setPathwayWidth(popupWidth - 50);
+    setUpdatedAt(Date.now());
   };
-
-
 
   const selectedReaction = (eventSource: number, pathwayIndex: number) => {
     const tab = eventSource - 1;
@@ -2024,7 +2052,6 @@ export default function MoleculeOrderPage({
   }
 
   const handleResize = (e: any) => {
-    showOverlay(5000);
     if (resizeTimeoutRef.current) {
       clearTimeout(resizeTimeoutRef.current);
     }
@@ -2034,7 +2061,7 @@ export default function MoleculeOrderPage({
         setPopupWidth(e.component.option("width"));
       else setPopupWidth(PATHWAY_BOX_WIDTH);
       setUpdatedAt(Date.now());
-    }, 1000);
+    }, 500);
   };
 
   const onRowClick = (e: RowClickEvent) => {
@@ -2119,14 +2146,14 @@ export default function MoleculeOrderPage({
     });
     setUpdatedAt(Date.now());
     if (showOuter) {
-      showOverlay(5000);
-      setSelectedPathway(-1);
       setActiveTab(0);
       setNextReaction(false);
       setIsLabJobLoading(false);
       setIsLoading(false);
+      setSelectedPathway(-1);
+      setPathwayWidth(popupWidth - 50);
+      setUpdatedAt(Date.now());
     } else {
-      showInnerOverlay(5000);
       setResetReaction((prev) => prev + 1);
       const updatedSubmittedTabs = [...submittedTabs];
       updatedSubmittedTabs[activeTab] = false;
@@ -2136,13 +2163,14 @@ export default function MoleculeOrderPage({
 
   const handlePathwayList = () => {
     setReactionOnlyView(false);
-    setIsHandleOpenClick(false);
+    setHideOpen(false);
     if (popUpType === FormState.UPDATE) {
       setConfirm(true);
     } else {
-      resetNodes(true);
+      setSelectedPathway(-1);
     }
   };
+
 
   const removeSynthesisData = (data: MoleculeOrder) => {
     const updateSelectedRows = selectedRows.filter
@@ -2257,71 +2285,44 @@ export default function MoleculeOrderPage({
                   }
                   {nodeValue?.length > 0 && (
                     <div style={{
-                      // Hide if overlay is visible or no filtered data
-                      display: isOverlayVisible
-                        ? 'none' : 'block',
                     }}>{
                         nodeValue.map((node, idx) => {
                           if ((selectedPathwayIndex === -1 || selectedPathwayIndex === idx)) {
                             const showLoader = loadingButtonIndex === idx;
                             return (
                               <div key={`node-${idx}`} className="mt-[10px] mb-[10px]">
-                                {!reactionOnlyView ?
-                                  <div>
+                                <div>
+                                  {((selectedPathwayIndex === -1) && hideOpen) &&
                                     <div style={{ textAlign: 'right', padding: '10px' }}
                                       className="bg-white">
-                                      {selectedPathwayIndex === -1 &&
-                                        <button className={showLoader
-                                          ? 'disableButton w-[53px] h-[37px]'
-                                          : 'primary-button'}
-                                          onClick={() => {
-                                            handleOpenClick(idx);
-                                          }}>
-                                          <LoadIndicator className="button-indicator"
-                                            visible={showLoader}
-                                            height={20}
-                                            width={20} />
-                                          {showLoader ? '' : 'Open'}
-                                        </button>}
-                                    </div>
-                                    {isInnerOverlayVisible && (
-                                      <div className="overlay"
-                                        style={{
-                                          height: 300,
-                                          position: 'relative',
-                                          background: '#fff'
+                                      <button className={showLoader
+                                        ? 'disableButton w-[53px] h-[37px]'
+                                        : 'primary-button'}
+                                        onClick={() => {
+                                          handleOpenClick(idx);
                                         }}>
-                                        <div className="overlay-content">
-                                          <LoadIndicator />
-                                        </div>
-                                      </div>
-                                    )}
-
-
-                                  </div>
-                                  : (() => {
-                                    if (!isHandleOpenClick) {
-                                      setSelectedPathway(-1)
-                                      handleOpenClick(0);
-                                      setIsHandleOpenClick(true)
-
-                                    }
-
-                                    return null;
-                                  })()}
-                                <PathwayImage
-                                  pathwayId={`node-${idx}-${updatedAt}`} nodes={node}
-                                  style={{ position: 'relative' }}
-                                  width={popupWidth - 43}
+                                        <LoadIndicator className="button-indicator"
+                                          visible={showLoader}
+                                          height={20}
+                                          width={20} />
+                                        {showLoader ? '' : 'Open'}
+                                      </button>
+                                    </div>
+                                  }
+                                </div>
+                                <PathwayImage pathwayId={`node-${idx}`} nodes={node}
+                                  key={`node-${idx}-${updatedAt}`}
+                                  style={{ position: 'relative', background: "#fff" }}
+                                  width={pathwayWidth}
                                   height={300}
                                   currentReaction={activeTab}
                                   updatedKey={updatedKey}
                                   updatedAt={updatedAt}
+                                  setHideOpen={setHideOpen}
                                 >
-                                  <PathwayAction pathwayId={`node-${idx}-${updatedAt}`}
+                                  <PathwayAction pathwayId={`node-${idx}`}
                                     selectedReaction={selectedReaction} updatedAt={updatedAt} />
                                 </PathwayImage>
-
                                 {selectedPathwayIndex === idx && (
                                   <div className="border border-[var(--themeSecondaryGreyColor)] 
                         bg-white shadow-[0px_-3px_1px_rgb(190_185_185_/_90%)] pb-[38px]">
@@ -2358,7 +2359,10 @@ export default function MoleculeOrderPage({
                                               }
                                               text={isLoading ? '' : 'Validate'}
                                               visible={permitValidatePathway}
-                                              style={{ cursor: isLoading ? 'default' : 'pointer' }}
+                                              style={{
+                                                cursor: isLoading ?
+                                                  'default' : 'pointer'
+                                              }}
                                             >
                                               {isLoading && (
                                                 <LoadIndicator
@@ -2419,7 +2423,10 @@ export default function MoleculeOrderPage({
                                                 : "btn-primary w-[75px]"
                                               }
                                               visible={permitEditReaction}
-                                              style={{ cursor: isLoading ? 'default' : 'pointer' }}
+                                              style={{
+                                                cursor: isLoading ?
+                                                  'default' : 'pointer'
+                                              }}
 
                                             >
                                               {isLoading && (
@@ -2561,7 +2568,8 @@ export default function MoleculeOrderPage({
                                       openConfirmation={confirm}
                                       setConfirm={setConfirm}
                                     />
-                                  </div>)}
+                                  </div>
+                                )}
                               </div>
                             )
                           }
@@ -2569,17 +2577,7 @@ export default function MoleculeOrderPage({
                     </div>
                   )
                   }
-
                 </div>
-
-                {isOverlayVisible && (
-                  <div className="overlay">
-                    <div className="overlay-content">
-                      <LoadIndicator />
-                    </div>
-                  </div>
-                )}
-
               </div>
             )}
             hideOnOutsideClick={false}
@@ -2602,7 +2600,6 @@ export default function MoleculeOrderPage({
               setSubmittedTabs([]);
               setFormStates([]);
               setReactionOnlyView(false);
-              setIsHandleOpenClick(false);
               if (typeof window !== "undefined") {
                 localStorage.setItem('pathway_box_width', JSON.stringify(popupWidth));
               }

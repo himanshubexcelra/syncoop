@@ -52,6 +52,9 @@ export async function POST(request: Request) {
       where: {
         email_id: req.email_id,
         is_active: true,
+        orgUser: {
+          is_active: true
+        }
       },
     });
 

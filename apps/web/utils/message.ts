@@ -112,7 +112,7 @@ export const Messages = {
     DELETE_LIBRARY_MESSAGE: 'Library Deleted Successfully.',
     DELETE_LIBRARY_ERROR_MESSAGE: 'Can not delete library. Some error occured while deleting the library',
 
-    displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number) {
+    displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number, duplicate_molecule_count: number) {
         let messages: string[] = [];
         if (upload_molecule_count > 0) {
             const uploadedMoleculeTxt = upload_molecule_count > 1 ? 'molecules' : 'molecule';
@@ -129,6 +129,16 @@ export const Messages = {
             ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected and can be downloaded.`
             ]
         }
+        if (duplicate_molecule_count > 0 && rejected_molecule_count > 0) {
+            const rejectedMoleculeText = rejected_molecule_count > 1 ? 'molecules' : 'molecule';
+            const duplicateMoleculeText = duplicate_molecule_count > 1 ? 'molecules are' : 'molecule is';
+
+            messages = [
+                `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) 
+            ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected and (${duplicate_molecule_count}) ${duplicateMoleculeText} duplicate molecule which can be downloaded.`
+            ]
+        }
+        
         return messages;
     },
     SAVE_CHANGES: 'Save the changes?',
@@ -148,4 +158,6 @@ export const Messages = {
     DELETE_PROJECT_ERROR_MESSAGE: 'Can not delete project. Some error occured while deleting the library',
     ANALYSIS_ORDER: "Molecule has been added to analysis cart",
     PROCESSING_LABJOB_ERROR: "Error processing lab job order",
+    NO_PATHWAYS: "No pathways found.",
+    ERROR_PATHWAYS: "Error in pathway reactions.",
 }

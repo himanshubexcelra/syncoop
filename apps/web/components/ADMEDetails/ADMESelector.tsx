@@ -156,7 +156,7 @@ const ADMESelector = ({ data,
                     if (!isDirty || (isDirty && isLocalDirty)) {
                         setSliderValues(updatedSlider);
                         if (!isLocalDirty) setLocalDirtyField(true);
-                    } else {
+                    } else if (onSelectedIndexChange) {
                         onSelectedIndexChange();
                     }
                 } else {
@@ -239,7 +239,7 @@ const ADMESelector = ({ data,
                 if (!isLocalDirty) setLocalDirtyField(true);
                 if (!inherited) setChangeInheritence(true);
                 setInherited(!inherited);
-            } else {
+            } else if (onSelectedIndexChange) {
                 onSelectedIndexChange();
             }
         }

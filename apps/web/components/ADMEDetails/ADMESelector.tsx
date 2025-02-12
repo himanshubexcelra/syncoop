@@ -253,7 +253,7 @@ const ADMESelector = ({ data,
                     <LoadIndicator visible={loader} />
                 </div>
             ) : (
-                <div className={type != ContainerType.LIBRARY ? 'm-[20px]' : ''}>
+                <div className={type != ContainerType.LIBRARY ? 'p-[20px]' : ''}>
                     <div className={`flex switch-wrapper
                     ${type ? 'justify-between' : 'justify-end'}`}>
                         {type && (

@@ -328,7 +328,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                     <div>
                         {showPopup && popup}
                         <div className='flex'>
-                            {expanded && (<div className='w-2/5 projects'>
+                            {expanded && (<div className='w-2/5 projects'
+                                style={{ background: '#e1e1eb' }}>
                                 <div className="flex justify-between ">
                                     <main className="main padding-sub-heading flex 
                                     items-center justify-between w-full">
@@ -402,7 +403,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                 />
                             </div >
                             )}
-                            <div className={`${expanded ? 'w-3/5' : 'w-full relative'}`}>
+                            <div className={`${expanded ? 'w-3/5 ml-[10px]' : 'w-full relative'}`}>
                                 {expanded && library_id != 0 && (
                                     <>
                                         <main className="lib-heading padding-sub-heading">

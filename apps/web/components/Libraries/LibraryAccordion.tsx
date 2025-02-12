@@ -304,7 +304,8 @@ export default function LibraryAccordion({
 
     return (
         <Accordion multiple={true} collapsible={true}
-            className="accordion-item-gap">
+            className="accordion-item-gap"
+            style={{ background: '#e1e1eb' }}>
             {confirm && (
                 <DeleteConfirmation
                     onSave={() => deleteLibraryDetail()}

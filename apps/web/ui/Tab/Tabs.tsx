@@ -47,7 +47,9 @@ export default function Tabs({
         const { Component, props, title } = tab;
         return (
           <Item key={index} title={title}>
-            {Component ? <Component {...props} /> : null}
+            <div style={{ background: '#ffffff' }}>
+              {Component ? <Component {...props} /> : null}
+            </div>
           </Item>
         );
       })}

@@ -144,7 +144,7 @@ body {
 }
 
 .padding-sub-heading {
-  padding: 0px 20px 20px 0px;
+  padding: 10px 20px 20px 10px;
 }
 
 .main-heading {
@@ -678,4 +678,12 @@ body {
 .dropdown-item {
   padding: 10px 20px;
   cursor: pointer;
+}
+
+.dx-datagrid-borders>.dx-datagrid-header-panel{
+  background: white;
+}
+
+.dx-datagrid-rowsview .dx-row.dx-group-row:not(.dx-row-focused){
+  background: #e1e1eb;
 }

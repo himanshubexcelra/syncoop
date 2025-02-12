@@ -106,7 +106,7 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
 
                 </div>
             </div>
-            <div className="w-[900px] ml-[80px] mb-[20px]">
+            <div className="w-[900px] ml-[80px] pb-[20px]">
                 <Chart
                     id="chart"
                     dataSource={graphDataSource}

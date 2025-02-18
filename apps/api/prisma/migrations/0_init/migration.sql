@@ -108,6 +108,7 @@ CREATE TABLE "molecule" (
     "created_by" INTEGER NOT NULL,
     "updated_at" TIMESTAMPTZ(6),
     "updated_by" INTEGER,
+    "assays" JSONB,
 
     CONSTRAINT "con_pk_molecule_id" PRIMARY KEY ("id")
 );
@@ -147,6 +148,7 @@ CREATE TABLE "molecule_cart" (
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "created_by" INTEGER NOT NULL,
     "updated_at" TIMESTAMPTZ(6),
+    "assays" JSONB,
     "updated_by" INTEGER,
 
     CONSTRAINT "con_pk_molecule_cart_id" PRIMARY KEY ("id")

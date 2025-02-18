@@ -376,11 +376,11 @@ export async function generatePathway(formData: GeneratePathwayType) {
         return error;
     }
 }
-export async function getLabJobOrderDetail(molecule_id: number) {
+export async function getSynthesisMoleculesData(molecule_ids: number[]) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/lab_job_order/`);
-        if (molecule_id) {
-            url.searchParams.append('molecule_id', String(molecule_id));
+        if (molecule_ids) {
+            url.searchParams.append('molecule_ids', JSON.stringify(molecule_ids));
         }
         const response = await fetch(url, {
             mode: "no-cors",
@@ -389,6 +389,7 @@ export async function getLabJobOrderDetail(molecule_id: number) {
                 "Content-Type": "application/json",
             },
         });
+
         if (response) {
             const data = await response.json();
             return data;
@@ -481,15 +482,15 @@ export async function updateLabJobApi(labJobId: number) {
     }
 }
 
-export async function deleteMolecule(molecule_id?: number, favourite_id?: number) {
+export async function deleteMolecule(molecule_id?: number, favorite_id?: number) {
     try {
         const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule/`);
 
         if (molecule_id) {
             url.searchParams.append('molecule_id', String(molecule_id));
         }
-        if (favourite_id) {
-            url.searchParams.append('favourite_id', String(favourite_id));
+        if (favorite_id) {
+            url.searchParams.append('favorite_id', String(favorite_id));
         }
         const response = await fetch(url, {
             method: "DELETE",

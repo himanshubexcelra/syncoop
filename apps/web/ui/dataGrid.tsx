@@ -6,7 +6,6 @@ import DataGrid, {
     GroupPanel,
     SearchPanel,
     Selection,
-    Scrolling,
     Sorting,
     FilterRow,
     LoadPanel,
@@ -18,14 +17,16 @@ import DataGrid, {
     Export,
     ColumnChooser,
     DataGridRef,
+    Editing,
 } from 'devextreme-react/data-grid';
 
 import CheckBox from 'devextreme-react/check-box';
-import { Button, LoadIndicator } from 'devextreme-react';
+import { Button, LoadIndicator, SelectBox } from 'devextreme-react';
 import { ColumnConfig } from '@/lib/definition';
 import './dataGrid.css';
 import { ToolbarItem } from 'devextreme/ui/file_manager';
 import Image from 'next/image';
+import { SelectBoxTypes } from 'devextreme-react/cjs/select-box';
 
 interface ToolbarButtonConfig {
     text: string;
@@ -48,7 +49,7 @@ interface CustomDataGridProps {
     enableRowSelection?: boolean;
     showFooter?: boolean;
     enableGrouping?: boolean;
-    scrollMode?: any;
+    paging?: boolean;
     enableAutoScroll?: boolean;
     enableSorting?: boolean;
     enableFiltering?: boolean;
@@ -70,11 +71,13 @@ interface CustomDataGridProps {
     onToolbarPreparing?: (e: any) => void;
     onRowPrepared?: (e: any) => void;
     onRowClick?: (e: any) => void;
+    onCellClick?: (e: any) => void;
     onExporting?: (e: any) => void;
     cssClass?: string;
     hoverStateEnabled?: boolean;
     selectedRow?: any[];
     dropdownButtons?: any;
+    onRowUpdated?: (e: DataGridTypes.RowUpdatingEvent) => void
 }
 
 const CustomDataGrid = ({
@@ -88,7 +91,7 @@ const CustomDataGrid = ({
     enableRowSelection = true,
     showFooter = false,
     enableGrouping = true,
-    scrollMode,
+    paging = false,
     enableSorting = true,
     enableFiltering = true,
     enableExport = false,
@@ -106,21 +109,25 @@ const CustomDataGrid = ({
     onRowClick,
     onRowPrepared,
     selectedRow,
-    dropdownButtons
+    onCellClick,
+    dropdownButtons,
+    onRowUpdated
 }: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
-    const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
+    // const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
     const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
+    // const [data, setData] = useState(tableData);
     useEffect(() => {
         setSelectedRowKeys(selectedRow ? selectedRow : []);
     }, [selectedRow]);
-    const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
-        window.innerHeight - 100 : height); // Default height
+    /* const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
+        window.innerHeight - 100 : height); // Default height */
     const grid = useRef<DataGridRef>(null);
     const [currentSort, setCurrentSort] = useState<{
         field: string | null;
         order: 'asc' | 'desc' | null
     }>({ field: null, order: null });
+
     const onContentReady = (e: any) => {
         const sortedColInfo = e.component
             .getVisibleColumns()
@@ -132,6 +139,7 @@ const CustomDataGrid = ({
             setCurrentSort({ field, order });
         }
     };
+
     const handleSortChanged = (e: any) => {
         // Only handle sorting-related changes
         if (e.name !== 'columns' || !e.fullName?.includes('sortOrder')) return;
@@ -159,20 +167,21 @@ const CustomDataGrid = ({
             setCurrentSort({ field: newField, order: 'asc' });
         }
     };
+
     // Function to adjust grid height dynamically
-    const adjustGridHeight = () => {
+    /* const adjustGridHeight = () => {
         const newHeight = window.innerHeight; // Subtract any offset if needed
         setGridHeight(newHeight);
-    };
+    }; */
 
     useEffect(() => {
         // Adjust height when the window is resized
-        window.addEventListener('resize', adjustGridHeight);
+        /* window.addEventListener('resize', adjustGridHeight); */
 
         // Cleanup the event listener on component unmount
-        return () => {
+        /* return () => {
             window.removeEventListener('resize', adjustGridHeight);
-        };
+        }; */
     }, []);
 
     const onAutoExpandAllChanged = useCallback(() => {
@@ -180,20 +189,19 @@ const CustomDataGrid = ({
     }, []);
 
     const onGroupingEnabledChanged = useCallback(() => {
-        setGroupingEnabled((prev) => !prev);
+        // setGroupingEnabled((prev) => !prev);
     }, []);
 
-
     // Custom render function for grouping cell to show only the value
-    const groupCellRender = (e: any) => <span>{e.value}</span>;
+    const groupCellRender = useCallback((e: any) => <span>{e.value}</span>, []);
 
-    const onReorder = (event: any) => {
+    const onReorder = useCallback((event: any) => {
         if (onReorderFunc) {
             onReorderFunc(event)
         }
-    };
+    }, []);
 
-    const onToolbarPreparing = (e: any) => {
+    const onToolbarPreparing = useCallback((e: any) => {
         if (enableExport) {
             e?.toolbarOptions?.items.map((d: ToolbarItem, index: number) => {
                 if (d.name === "exportButton") {
@@ -205,7 +213,7 @@ const CustomDataGrid = ({
                 }
             });
         }
-    }
+    }, [])
 
     const exportFormatCSV = ['csv'];
     // const exportFormatExcel = ['xlsx'];
@@ -215,7 +223,7 @@ const CustomDataGrid = ({
         if (onSelectionUpdated) {
             onSelectionUpdated(e.selectedRowKeys, e.selectedRowsData);
         }
-    };
+    }
 
     const disableCheckBox = (rowData: any) => {
         if (grid.current) {
@@ -225,7 +233,7 @@ const CustomDataGrid = ({
     }
 
     // onCellPrepared to disable the checkbox
-    const onCellPrepared = (e: DataGridTypes.CellPreparedEvent) => {
+    const onCellPrepared = useCallback((e: DataGridTypes.CellPreparedEvent) => {
         if (e.rowType === 'data') {
             if (e.column.type === 'selection') {
                 const rowData = e.row.data;
@@ -240,7 +248,7 @@ const CustomDataGrid = ({
                 }
             }
         }
-    };
+    }, [])
 
     // Handle the 'Select All' logic in the header checkbox
     const handleSelectAll = (args: any) => {
@@ -258,7 +266,6 @@ const CustomDataGrid = ({
     }
 
     // Determine if the header checkbox should be checked or not
-
     let isHeaderCheckboxChecked: any = false;
     if (selectedRowKeys.length === selectionEnabledRows.length
         && selectionEnabledRows.length !== 0) {
@@ -266,74 +273,44 @@ const CustomDataGrid = ({
     } else if (selectedRowKeys.length && selectedRowKeys.length < selectionEnabledRows.length) {
         isHeaderCheckboxChecked = null;
     }
-    const [isOpen, setIsOpen] = useState(false);
-    const renderDropdown = () =>
-        dropdownButtons.map((dropdown: any, index: any) =>
-        (<div className="dropdown" key={index}>
-            <label className="text-themeBlueColor">
-                {dropdown.text}
-            </label>
-            <button onClick={() => setIsOpen(!isOpen)}
-                className="text-themeBlueColor
-                border-0 bg-transparent ml-[5px]">
-                <div className='flex items-center gap-2'>
-                    {dropdown.value.category}
-                    <Image
-                        className="inline-block"
-                        src={isOpen
-                            ? '/icons/arrow-up.svg'
-                            : '/icons/arrow-down.svg'}
-                        alt="▼"
-                        width={16}
-                        height={16}
-                        priority
-                    />
-                </div>
-            </button>
-            {isOpen && (
-                <ul className="dropdown-list">
-                    {dropdown.options.map((option: any, index: any) => (
-                        <li
-                            key={index}
-                            className={dropdown.value.id === option.id ?
-                                "dropdown-item bg-themeGreyBorderSecondaryColor"
-                                : "dropdown-item"}
-                            onClick={() => {
-                                dropdown.onValueChanged(option)
-                                setIsOpen(false)
-                            }}
-                        >
-                            {option.category}
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-        ))
+
+    const [groupByColumn, setGroupingColumn] = useState(groupingColumn);
+
+    const onDropDownValueChanged = useCallback((e: SelectBoxTypes.ValueChangedEvent) => {
+        setGroupingColumn(e.value);
+    }, [])
+
+    const onRowUpdating = (e: DataGridTypes.RowUpdatingEvent) => {
+        if (onRowUpdated)
+            onRowUpdated(e);
+    };
+
     return (
         <div>
             <DataGrid
                 ref={grid}
+                paging={{ enabled: paging }}
                 dataSource={data}
                 keyExpr="id"
                 allowColumnReordering={false}
                 showBorders={true}
-                height={gridHeight}
                 width="100%"
                 onOptionChanged={handleSortChanged}
                 onCellPrepared={onCellPrepared}
                 onRowClick={onRowClick}
+                onCellClick={onCellClick}
                 selectedRowKeys={selectedRowKeys}
                 onSelectionChanged={onSelectionChanged}
                 onEditorPreparing={onEditorPreparing}
                 onRowPrepared={onRowPrepared}
                 onExporting={onExporting}
-                onToolbarPreparing={(e) => { onToolbarPreparing(e) }}
+                onToolbarPreparing={onToolbarPreparing}
                 style={{ maxHeight }}
                 className={cssClass}
                 onContentReady={onContentReady}
+                onRowUpdating={onRowUpdating}
             >
-                {scrollMode && <Scrolling mode={scrollMode} />}
+                {/* {scrollMode && <Scrolling mode={scrollMode} />} */}
                 {enableColumnChooser &&
                     <ColumnChooser
                         enabled={true}
@@ -355,7 +332,7 @@ const CustomDataGrid = ({
                 {enableGrouping && <GroupPanel visible={true} />}
 
                 {enableHeaderFiltering && <HeaderFilter visible={true} />}
-                {groupingEnabled && <Grouping autoExpandAll={autoExpandAll} />}
+                {enableGrouping && <Grouping autoExpandAll={autoExpandAll} />}
                 {enableFiltering && <FilterRow visible={true} />}
                 {enableSorting && <Sorting mode="multiple" />}
                 <LoadPanel enabled={!data?.length} />
@@ -371,6 +348,7 @@ const CustomDataGrid = ({
                     allowSorting={false}
                     allowFiltering={false}
                     defaultFilterValue={false}
+                    allowEditing={false}
                     showInColumnChooser={false}
                     allowExporting={false}
                     headerCellRender={() => (
@@ -387,6 +365,7 @@ const CustomDataGrid = ({
                 {columns.map((column) => (
                     <Column
                         key={String(column.dataField)}
+                        allowEditing={column.editingEnabled || false}
                         dataField={String(column.dataField)}
                         visible={column.visible !== undefined ? column.visible : true}
                         headerCellRender={column.headerCellRenderer}
@@ -403,22 +382,45 @@ const CustomDataGrid = ({
                     />
                 ))}
 
-                {groupingColumn && (
+                <Editing mode="cell" allowUpdating={true}></Editing>
+
+                {enableGrouping && groupByColumn && (
                     <Column
-                        dataField={String(groupingColumn)}
+                        dataField={groupByColumn}
                         dataType="string"
                         groupIndex={0}
                         groupCellRender={groupCellRender}
+                        allowHeaderFiltering={false}
+                        allowSorting={true}
                     />
                 )}
                 {enableToolbar && <Toolbar>
-                    {dropdownButtons && <Item> {renderDropdown()}</Item>}
-                    {groupingColumn &&
+                    {enableGrouping && groupByColumn && dropdownButtons &&
+                        dropdownButtons.map((dropdown: any, index: number) => <Item key={index}>
+                            <div className='w-[240px] float-right'>
+                                <div className="flex items-center justify-evenly">
+                                    <div className="text-themeBlueColor">{dropdown.text}</div>
+                                    <div className="dx-field-value">
+                                        <SelectBox
+                                            width={'auto'}
+                                            dataSource={dropdown.options}
+                                            defaultValue={dropdown.options[0].id}
+                                            valueExpr="id"
+                                            displayExpr="category"
+                                            value={groupByColumn}
+                                            onValueChanged={onDropDownValueChanged}
+                                            dropDownButtonRender={() =>
+                                                <Image alt="" width={18}
+                                                    height={18}
+                                                    src="/images/custom-dropbutton-icon.svg">
+                                                </Image>}
+                                        />
+                                    </div>
+                                </div>
+                            </div></Item>)}
+                    {enableGrouping && groupByColumn &&
                         <Item location="before" name="groupPanel" />
                     }
-                    {enableExport && <Item name="exportButton" location="after" />}
-                    {enableColumnChooser &&
-                        <Item name='columnChooserButton' widget='dxButton' location="after" />}
                     {toolbarButtons.map((button, index) => (
                         <Item key={index} location="after">
                             {!button.loader ? <Button
@@ -440,6 +442,9 @@ const CustomDataGrid = ({
                                 </Button>}
                         </Item>
                     ))}
+                    {enableExport && <Item name="exportButton" location="after" />}
+                    {enableColumnChooser &&
+                        <Item name='columnChooserButton' widget='dxButton' location="after" />}
                     <Item name="searchPanel" location="after" />
                 </Toolbar>}
                 {enableSearchOption && <SearchPanel
@@ -486,7 +491,7 @@ const CustomDataGrid = ({
                         <CheckBox
                             text="Enable Row Grouping"
                             id="enableGrouping"
-                            value={groupingEnabled}
+                            value={enableGrouping}
                             onValueChanged={onGroupingEnabledChanged}
                         />
                     </div>

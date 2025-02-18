@@ -587,7 +587,7 @@ const ReactionDetails = ({
                 onReorderFunc={handleReorder}
                 height='auto'
                 maxHeight='270px'
-                scrollMode={'infinite'}
+                paging={false}
             />
         </div>
     );

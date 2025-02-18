@@ -22,18 +22,20 @@ export async function GET(request: Request) {
     try {
         const result = await prisma.$queryRaw`SELECT  
             mo.*,
+            mo.id,
+            mo.smiles_string as molecule,
             mo.id as molecule_id,
-            co.name as library_name,
+            co.name as library,
             sc.status_name,
-            ufm.id as favourite_id,
-            CASE WHEN ufm.id IS NULL THEN false ELSE true END AS favourite,
+            ufm.id as favorite_id,
+            CASE WHEN ufm.id IS NULL THEN false ELSE true END AS favorite,
             CASE WHEN mo.status = ${MoleculeStatusCode.New} THEN false ELSE true END AS disabled,
             mcd.value as reaction_data,
             mad.value as adme_data,
             mbd.value as functional_assays
             FROM molecule mo
             JOIN status_code sc ON sc.table_name = 'molecule' AND mo.status = sc.status_code::int
-            LEFT JOIN user_favourite_molecule ufm ON ufm.molecule_id = mo.id
+            LEFT JOIN user_favorite_molecule ufm ON ufm.molecule_id = mo.id
             /*
  
             Enable below 3 lines when live automation lab job is integrated
@@ -134,10 +136,10 @@ export async function DELETE(request: Request) {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
         const molecule_id = searchParams.get('molecule_id');
-        const favourite_id = searchParams.get('favourite_id');
-        if (favourite_id) {
-            await prisma.user_favourite_molecule.delete({
-                where: { id: Number(favourite_id) },
+        const favorite_id = searchParams.get('favorite_id');
+        if (favorite_id) {
+            await prisma.user_favorite_molecule.delete({
+                where: { id: Number(favorite_id) },
             });
         }
         const result = await prisma.molecule.delete({

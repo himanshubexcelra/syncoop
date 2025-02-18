@@ -24,7 +24,9 @@ export const defaultRoutesEnabled = [
   '/organization',
   '/pathways',
   'ketchertool',
-  '/test'
+  '/test',
+  '/websocket',
+  '/websocket2'
 ];
 
 export const DELAY = 4000;
@@ -41,7 +43,7 @@ export enum ContainerAccessPermissionType {
   Edit = 2
 }
 
-export const DashboardStatuses = ['New', 'Pre Processing', 'In Progress', 'Done', 'Failed'];
+// export const DashboardStatuses = ['New', 'Pre Processing', 'In Progress', 'Done', 'Failed'];
 
 export const ADME_fieldNames: string[] = ["yield", "anlayse", "herg", "caco2"];
 

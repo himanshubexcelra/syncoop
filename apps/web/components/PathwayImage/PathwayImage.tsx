@@ -129,7 +129,6 @@ const PathwayImage: React.FC<PathwayImageProps> = ({
                 overlay.style.width = `${width}px`;
             }
             setIsLoading(false); // Hide loader when canvas appears
-            setHideOpen(true);
         } else {
             requestAnimationFrame(checkCanvasExists); // Keep checking
         }
@@ -138,6 +137,10 @@ const PathwayImage: React.FC<PathwayImageProps> = ({
     useEffect(() => {
         requestAnimationFrame(checkCanvasExists);
     }, []);
+
+    useEffect(() => {
+        setHideOpen(!isLoading);
+    }, [isLoading]);
 
     return (
         <div style={style}>

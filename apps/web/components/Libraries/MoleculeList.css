@@ -1,4 +1,5 @@
-.molecule-list .dx-datagrid-headers tbody tr:first-child td:nth-child(3) {
+.molecule-list.group .dx-datagrid-headers tbody tr:first-child td:nth-child(3),
+.molecule-list.no-group .dx-datagrid-headers tbody tr:first-child td:nth-child(2) {
     position: absolute;
     left: 8px;
     bottom: 0;

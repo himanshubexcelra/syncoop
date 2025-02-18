@@ -177,7 +177,7 @@ const CartPopupComponent = ({
     return (
         createPopupVisible && (
             <CartPopup
-                title={containsProjects ? "Molecule Cart" : "Order Cart"}
+                title={/* containsProjects ? "Molecule Cart" :  */"Order Cart"}
                 visible={createPopupVisible}
                 onHiding={() => setCreatePopupVisibility(false)}
                 contentRender={() => (
@@ -191,7 +191,7 @@ const CartPopupComponent = ({
                         loader={loader}
                     />
                 )}
-                width={570}
+                width={750}
                 dragEnabled={false}
                 height="100vh"
                 position={popupPosition}

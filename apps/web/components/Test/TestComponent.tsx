@@ -54,15 +54,15 @@ export default function TestComponent({ sessionData }: TestProps) {
         setCellData(data); */
     }
 
-    const addToFavourite = async (data: MoleculeType, existingFavourite: boolean) => {
-        console.log(existingFavourite, data);
+    const addToFavorite = async (data: MoleculeType, existingFavorite: boolean) => {
+        console.log(existingFavorite, data);
         /* const dataField: addToFavoritesProps = {
             molecule_id: data.id,
             user_id: userData.id,
-            favourite_id: data.favourite_id,
-            favourite: !existingFavourite
+            favorite_id: data.favorite_id,
+            favorite: !existingFavorite
         };
-        // if (existingFavourite) dataField.existingFavourite = existingFavourite;
+        // if (existingFavorite) dataField.existingFavorite = existingFavorite;
         const response = await addToFavorites(dataField);
         if (!response.error) {
             fetchMoleculeData(data.library_id);
@@ -127,7 +127,7 @@ export default function TestComponent({ sessionData }: TestProps) {
 
         },
         {
-            dataField: "favourite",
+            dataField: "favorite",
             type: "bookmark",
             width: 60,
             allowSorting: false,
@@ -135,8 +135,8 @@ export default function TestComponent({ sessionData }: TestProps) {
                 height={24} alt="Bookmark" />,
             headerFilter: {
                 dataSource: [
-                    { value: true, text: 'Favourites' },
-                    { value: false, text: 'Non-Favourites' },
+                    { value: true, text: 'Favorites' },
+                    { value: false, text: 'Non-Favurites' },
                 ],
             },
             customRender: (data: any) => {
@@ -145,19 +145,19 @@ export default function TestComponent({ sessionData }: TestProps) {
                                     justify-center
                                     cursor-pointer`}
                         onClick={() =>
-                            addToFavourite(
+                            addToFavorite(
                                 data,
-                                data.favourite
+                                data.favorite
                             )
                         }>
                         <Image
-                            src={data.favourite ?
+                            src={data.favorite ?
                                 "/icons/star-filled.svg" :
                                 "/icons/star.svg"
                             }
                             width={24}
                             height={24}
-                            alt="favourite"
+                            alt="favorite"
                         />
                     </span>
                 );

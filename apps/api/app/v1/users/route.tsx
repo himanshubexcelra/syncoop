@@ -89,8 +89,15 @@ export async function GET(request: Request) {
             };
         }
 
+        query.include = {
+            ...query.include,
+            _count: {
+                select: {
+                    owner: true,
+                },
+            },
+        };
         const users = await prisma.users.findMany(query);
-
         return new Response(json(users), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,

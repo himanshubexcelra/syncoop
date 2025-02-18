@@ -13,8 +13,8 @@ describe('RejectedDialog Component', () => {
     const mockUploadDuplicate = jest.fn();
 
     const rejectedMolecules = [
-        { smiles: "CCO", reason: "Invalid structure" },
-        { smiles: "CCN", reason: "Duplicate entry" }
+        { project_name:"Project1",library_name:"Library1",smiles: "CCO", reason: "Invalid structure" },
+        { project_name:"Project2",library_name:"Library2",smiles: "CCN", reason: "Duplicate entry" }
     ];
 
     const duplicateSmiles = [
@@ -72,7 +72,7 @@ describe('RejectedDialog Component', () => {
         fireEvent.click(downloadButton);
 
         expect(downloadCSV).toHaveBeenCalledWith(
-            { smiles: "SMILE", reason: "Reason" },
+            { project_name:"Project Name",library_name:"Library Name", smiles: "SMILE", reason: "Reason" },
             rejectedMolecules,
             'rejected_smiles'
         );

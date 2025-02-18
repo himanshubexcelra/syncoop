@@ -111,34 +111,30 @@ export const Messages = {
     },
     DELETE_LIBRARY_MESSAGE: 'Library Deleted Successfully.',
     DELETE_LIBRARY_ERROR_MESSAGE: 'Can not delete library. Some error occured while deleting the library',
-
     displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number, duplicate_molecule_count: number) {
         let messages: string[] = [];
-        if (upload_molecule_count > 0) {
+        if (upload_molecule_count > 0 || rejected_molecule_count > 0) {
             const uploadedMoleculeTxt = upload_molecule_count > 1 ? 'molecules' : 'molecule';
-            messages = [
-                ...messages,
-                `Valid ${uploadedMoleculeTxt} (${upload_molecule_count}) uploaded successfully.`
-            ];
-        }
-        if (rejected_molecule_count > 0) {
             const rejectedMoleculeText = rejected_molecule_count > 1 ? 'molecules' : 'molecule';
-            messages = [
-                ...messages,
-                `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) 
-            ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected and can be downloaded.`
-            ]
+            const rejectedMsg = rejected_molecule_count > 0
+                ? `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected`
+                : "";
+            const validMsg = upload_molecule_count > 0
+                ? `Valid ${uploadedMoleculeTxt} (${upload_molecule_count}) uploaded successfully.`
+                : "";
+            messages = [`${rejectedMsg}${upload_molecule_count > 0 && rejected_molecule_count > 0 ? ' and ' : ''}${validMsg}`]
         }
-        if (duplicate_molecule_count > 0 && rejected_molecule_count > 0) {
+        if ((duplicate_molecule_count > 0 || rejected_molecule_count > 0) && !upload_molecule_count) {
             const rejectedMoleculeText = rejected_molecule_count > 1 ? 'molecules' : 'molecule';
-            const duplicateMoleculeText = duplicate_molecule_count > 1 ? 'molecules are' : 'molecule is';
-
-            messages = [
-                `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) 
-            ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected and (${duplicate_molecule_count}) ${duplicateMoleculeText} duplicate molecule which can be downloaded.`
-            ]
+            const duplicateMoleculeText = duplicate_molecule_count > 1 ? 'molecules' : 'molecule';
+            const rejectedMsg = rejected_molecule_count > 0
+                ? `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected`
+                : "";
+            const duplicateMsg = duplicate_molecule_count > 0
+                ? `duplicate ${duplicateMoleculeText} (${duplicate_molecule_count}) ${duplicate_molecule_count > 1 ? 'are' : 'is'} found in current project which can be downloaded. `
+                : "";
+            messages = [`${rejectedMsg}${duplicate_molecule_count > 0 && rejected_molecule_count > 0 ? ' and ' : ''}${duplicateMsg}`]
         }
-        
         return messages;
     },
     SAVE_CHANGES: 'Save the changes?',
@@ -160,4 +156,7 @@ export const Messages = {
     PROCESSING_LABJOB_ERROR: "Error processing lab job order",
     NO_PATHWAYS: "No pathways found.",
     ERROR_PATHWAYS: "Error in pathway reactions.",
+    moleculeCopyHeadline: (count: number) => `${count} selected molecule(s),
+    will be copied to below library`,
+    moleculeCopySuccess: 'molecules copied successfully',
 }

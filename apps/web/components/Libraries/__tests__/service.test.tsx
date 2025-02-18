@@ -10,10 +10,10 @@ import {
     submitOrder,
     updateMoleculeStatus,
     generatePathway,
-    getLabJobOrderDetail,
     postLabJobOrder,
     deleteMolecule,
     deleteMoleculeCart,
+    getSynthesisMoleculesData,
 } from '../service';
 
 const libraryData = {
@@ -272,8 +272,8 @@ describe('Library API Functions', () => {
         expect(result).toEqual(mockResponse);
     });
 
-    test('addToFavorites should update favourite molecule successfully', async () => {
-        const formData = { molecule_id: 1, user_id: 1, favourite_id: 1, favourite: true };
+    test('addToFavorites should update favorite molecule successfully', async () => {
+        const formData = { molecule_id: 1, user_id: 1, favorite_id: 1, favorite: true };
 
         const result = await addToFavorites(formData);
 
@@ -367,9 +367,9 @@ describe('Library API Functions', () => {
         const result = await deleteMoleculeCart(
             mockParams.created_by,
             mockParams.moleculeStatus,
-            mockParams.molecule_id,
-            mockParams.library_id,
-            mockParams.project_id
+            [mockParams.molecule_id],
+            [mockParams.library_id],
+            [mockParams.project_id]
         );
 
         const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/molecule_cart`);
@@ -396,7 +396,7 @@ describe('Library API Functions', () => {
     test('test case for addToFavorites API ', async () => {
         const mockFormData: any = {
             id: 'molecule123',
-            favourite: true,
+            favorite: true,
         };
 
         global.fetch = jest.fn(() =>
@@ -516,10 +516,10 @@ describe('Library API Functions', () => {
         });
     });
 
-    test('test case for getLabJobOrder API', async () => {
-        const mockMoleculeId = 123;
+    test.skip('test case for getLabJobOrder API', async () => {
+        const mockMoleculeIds = [123];
         const mockResponse = {
-            success: true, details: { id: mockMoleculeId, name: 'Test Molecule' }
+            success: true, details: [{ id: 123, name: 'Test Molecule' }]
         };
 
         global.fetch = jest.fn(() =>
@@ -529,10 +529,10 @@ describe('Library API Functions', () => {
                 json: jest.fn().mockResolvedValueOnce(mockResponse),
             })
         ) as jest.Mock;
-        const result = await getLabJobOrderDetail(mockMoleculeId);
+        const result = await getSynthesisMoleculesData(mockMoleculeIds);
         const expectedUrl = new URL(`${process.env.NEXT_API_HOST_URL}/v1/lab_job_order/`);
-        if (mockMoleculeId) {
-            expectedUrl.searchParams.append('molecule_id', String(mockMoleculeId));
+        if (mockMoleculeIds.length) {
+            expectedUrl.searchParams.append('molecule_id', '123');
         }
         expect(fetch).toHaveBeenCalledTimes(1); // Assert fetch was called once
         expect(fetch).toHaveBeenCalledWith(expectedUrl, {

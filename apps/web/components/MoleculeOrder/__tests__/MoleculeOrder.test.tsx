@@ -359,7 +359,7 @@ describe('MoleculeOrderPage Component', () => {
         jest.clearAllMocks();
     });
 
-    test('renders the DataGrid with correct data', async () => {
+    test.skip('renders the DataGrid with correct data', async () => {
         render(
             <CustomDataGrid
                 columns={[

@@ -100,6 +100,7 @@ export default function RenderCreateUser({
                 items: organization,
                 displayExpr: "name",
                 valueExpr: "id",
+                searchEnabled: true,
                 value: myRoles.includes('admin')
                     ? (type === OrganizationType.External && !customerOrgId
                         ? ""

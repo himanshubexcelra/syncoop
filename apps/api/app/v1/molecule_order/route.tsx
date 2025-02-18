@@ -33,6 +33,7 @@ export async function GET(request: Request) {
         m.smiles_string,
         m.library_id,
         m.project_id,
+        m.assays,
         mo.id AS molecule_order_id,
         (SELECT DISTINCT ON(molecule_id) id FROM pathway WHERE molecule_id = m.id) as pathway_id,
         org.name AS "organizationName",
@@ -131,16 +132,19 @@ export async function POST(request: Request) {
         });
 
         if (response && moleculeIds?.length) {
-            await prisma.molecule.updateMany({
-                data: {
-                    status: MoleculeStatusCode.Ordered,
-                },
-                where: {
-                    id: {
-                        in: moleculeIds
+            for (const item of req.ordered_molecules_data) {
+                const moleculeId = item.id;
+                const assay = item.assays;
+                await prisma.molecule.update({
+                    where: {
+                        id: Number(moleculeId),
+                    },
+                    data: {
+                        assays: assay,
+                        status: MoleculeStatusCode.Ordered,
                     }
-                }
-            })
+                });
+            }
         }
 
         return new Response(json(response), {

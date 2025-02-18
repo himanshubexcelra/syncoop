@@ -11,7 +11,8 @@ export const MESSAGES = {
     PROJECT_NOT_FOUND: 'Project does not exist',
     MOLECULE_ORDER_NOT_FOUND: 'Molecule order does not exist',
     NOTFOUND: (field: string) => `${field} not found`,
-    REQUIRED: (field: string) => `${field} is required`
+    REQUIRED: (field: string) => `${field} is required`,
+    SMILE_EXIST: 'Smiles already exists.',
 }
 
 export const STATUS_TYPE = {

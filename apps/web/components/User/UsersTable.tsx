@@ -13,7 +13,7 @@ import { Popup as MainPopup, } from "devextreme-react/popup";
 import { Button as Btn } from "devextreme-react/button";
 import RenderCreateUser from "./createUser";
 import { OrganizationType, UserData, UserTableProps } from "@/lib/definition";
-import { getUsers, deleteUserData } from "./service";
+import { getUsers, deleteUserData, getUserEnabled } from "./service";
 import { User } from "@/lib/definition";
 import { LoadIndicator } from "devextreme-react";
 import DialogPopUp from "@/ui/DialogPopUp";
@@ -21,7 +21,7 @@ import ResetPassword from "../Profile/ResetPassword";
 import RenderEditUser from "./editUserDetails";
 import { useContext } from "react";
 import { AppContext } from "../../app/AppState";
-import { isOnlyLibraryManger } from "@/utils/helpers";
+import { isOnlyLibraryManger, isOrgAdmin } from "@/utils/helpers";
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
 import { Messages } from "@/utils/message";
 import toast from "react-hot-toast";
@@ -100,9 +100,11 @@ export default function UsersTable({
                 setInternalCount(internal.length);
                 setExternalCount(external.length);
                 if (type === OrganizationType.Internal) {
-                    setTableData(internal)
+                    const internalUsers = await insertEnableDelete(internal);
+                    setTableData(internalUsers)
                 } else {
-                    setTableData(external);
+                    const externalUsers = await insertEnableDelete(external);
+                    setTableData(externalUsers);
                 }
                 context?.addToState({
                     appContext: {
@@ -142,6 +144,27 @@ export default function UsersTable({
         return data?.user_role?.map((item: any) => item.role?.name).join(', ') || '';
     };
 
+    const insertEnableDelete = async (internal: any[]) => {
+        const internalUsers = await Promise.all(
+            internal.map(async (item: any) => {
+                const enableDelete = await isDeleteUserEnabled(item);
+                return { ...item, enableDelete };
+            })
+        );
+        return internalUsers;
+    };
+
+    const isDeleteUserEnabled = async (data: UserData) => {
+        // Case for Org Admin and Library Manager
+        if (isOrgAdmin(data?.user_role?.map((item: any) => item.role.type))
+            || isOnlyLibraryManger(data?.user_role?.map((item: any) => item.role.type))) {
+            return data._count.owner > 0 ? false : true;
+        }
+        else {
+            const userEnabled = await getUserEnabled(String(data.id));
+            return userEnabled.data.length > 0 ? false : true;
+        }
+    };
 
     const calculateFilterExpression = (filterValue: any) => {
         return [
@@ -164,7 +187,7 @@ export default function UsersTable({
             {
                 user_id: data.id,
                 name: data?.first_name,
-                role_id: Number(data.user_role[0].id)
+                role_id: Number(data?.user_role?.[0]?.id)
             }
         )
         setDeletePopup(true)
@@ -177,6 +200,7 @@ export default function UsersTable({
             .then((res) => {
                 if (res.error) {
                     toast.error("Failed to delete user");
+                    setLoader(false);
                 }
                 else {
                     toast.success(Messages.deleteUserMsg(deleteUserId.name));
@@ -345,11 +369,8 @@ export default function UsersTable({
                         alignment="left"
                         allowHeaderFiltering={false}
                         cellRender={({ data }: any) => {
-                            const enableDelete = isOnlyLibraryManger(
-                                data?.user_role?.map((item: any) => item.role.type))
-                                && data.owner?.length === 0
                             return (
-                                enableDelete && <div className="flex gap-2 cursor-pointer">
+                                data.enableDelete && <div className="flex gap-2 cursor-pointer">
                                     <Image
                                         src="/icons/delete-blue-sm.svg"
                                         title="Delete user"

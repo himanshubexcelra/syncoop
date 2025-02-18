@@ -343,15 +343,37 @@ export async function PUT(request: Request) {
         });
 
         // Step 3: Create a set of user IDs from the incoming shared users
-        const incomingUserIds = new Set(sharedUsers?.map(({ id }: { id: number }) => id));
+        const incomingUserIds = new Set<number>(sharedUsers?.map(({ id }: { id: number }) => id));
 
         // Step 4: Determine which users need to be removed
         const usersToRemove = existingProject[0]?.container_access_permission
             .filter((user: any) => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
             .map((user: any) => user.id); // Collect the IDs of shared users to remove
 
+        // Step 5: Find all libraries of given project
+        const libraries = await prisma.container.findMany({
+            where: {
+                parent_id: Number(id),  // Find libraries whose parent_id matches the given project
+            },
+        });
 
-        const updatedProject = await prisma.container.update({
+        // Step 6: Convert the set to an array
+        const userIdsArray = Array.from(incomingUserIds);
+
+        // Step 7: Delete the user's permissions from those libraries
+        const deletePermissions = prisma.container_access_permission.deleteMany({
+            where: {
+                user_id: {
+                    in: userIdsArray,
+                },
+                container_id: {
+                    in: libraries.map(lib => lib.id),
+                },
+            },
+        });
+
+        // Step 8: Update the project
+        const updatedProject = prisma.container.update({
             where: { id },
             data: {
                 name,
@@ -389,7 +411,10 @@ export async function PUT(request: Request) {
             },
         });
 
-        return new Response(json(updatedProject), {
+        // Step 9: Run both queries as part of the same transaction
+        const [updateResult] = await prisma.$transaction([updatedProject, deletePermissions]);
+
+        return new Response(json(updateResult), {
             headers: { "Content-Type": "application/json" },
             status: SUCCESS,
         });

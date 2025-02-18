@@ -27,7 +27,7 @@ import {
   ReactionButtonNames,
   ResetState,
   FormState,
-  AmsInventoryItem
+  AmsInventoryItem,
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
@@ -54,6 +54,7 @@ import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import {
+  createAssayColumns,
   getADMECalculation,
   getADMEColor,
   getAverage,
@@ -242,7 +243,7 @@ export default function MoleculeOrderPage({
     myRoles?.includes(role));
   const [disableAnalysis, setDisableAnalysis] = useState(false);
   const [hideOpen, setHideOpen] = useState(false);
-    
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedValue = localStorage.getItem('pathway_box_width');
@@ -253,7 +254,8 @@ export default function MoleculeOrderPage({
 
   useEffect(() => {
     fetchMoleculeOrders();
-  }, [appContext?.refreshCart])
+  }, [appContext?.refreshCart]);
+
   const closeMagnifyPopup = (event: any) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       setPopupVisible(false);
@@ -431,38 +433,6 @@ export default function MoleculeOrderPage({
         }
       }
     },
-    /* {
-      dataField: 'assay_1',
-      title: 'Assay 1',
-      width: 80,
-      allowHeaderFiltering: false,
-      allowSorting: true,
-      customRender: (data) => data.organizationMetadata?.functionalAssay1
-    },
-    {
-      dataField: 'assay_2',
-      title: 'Assay 2',
-      allowHeaderFiltering: false,
-      allowSorting: true,
-      width: 80,
-      customRender: (data) => data.organizationMetadata?.functionalAssay2
-    },
-    {
-      dataField: 'assay_3',
-      title: 'Assay 3',
-      allowHeaderFiltering: false,
-      allowSorting: true,
-      width: 80,
-      customRender: (data) => data.organizationMetadata?.functionalAssay3
-    },
-    {
-      dataField: 'assay_4',
-      title: 'Assay 4',
-      allowHeaderFiltering: false,
-      allowSorting: true,
-      width: 80,
-      customRender: (data) => data.organizationMetadata?.functionalAssay4
-    }, */
     {
       dataField: 'yield',
       title: 'Yield(%)',
@@ -929,6 +899,24 @@ export default function MoleculeOrderPage({
     }
   ];
 
+  const [orderColumns, setMoleculeOrderColumns] = useState(columns);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedValue = localStorage.getItem('pathway_box_width');
+      const width = storedValue ? Number(storedValue) : PATHWAY_BOX_WIDTH;
+      setPopupWidth(width);
+    }
+  }, []);
+
+  /* const selectionRef = useRef<{
+    checkBoxUpdating: boolean,
+    selectAllCheckBox: dxCheckBox | null
+  }>({
+    checkBoxUpdating: false,
+    selectAllCheckBox: null
+  }); */
+
   // useEffect(() => {
   //   // const socket = io(process.env.NEXT_PUBLIC_WEB_SOCKET_URL);
   //   // const socket = i
@@ -998,14 +986,16 @@ export default function MoleculeOrderPage({
   }
 
   const prepareLabOrderData = (data: MoleculeOrder) => {
-    const { molecule_id, molecule_order_id, library_id, project_id, organization_id } = data || {};
+    const { molecule_id, molecule_order_id, library_id, project_id,
+      organization_id, assays } = data || {};
     const selectedMolecule: CreateLabJobOrder[] = [{
       molecule_id: molecule_id,
       order_id: Number(molecule_order_id),
       library_id: library_id,
       project_id: project_id,
       organization_id: organization_id,
-      user_id: userData.id
+      user_id: userData.id,
+      assays,
     }];
     setSelecteLabJobOrder(selectedMolecule)
   }
@@ -1116,7 +1106,7 @@ export default function MoleculeOrderPage({
     context?.addToState({
       ...appContext,
       cartDetail: [...labjobOrder]
-    })
+    });
     addMoleculeToCart(labjobOrder, MoleculeStatusCode.ValidatedInCart)
       .then((res) => {
         if (res) {
@@ -1223,6 +1213,9 @@ export default function MoleculeOrderPage({
         });
 
         setMoleculeOrderData(transformedData);
+        const columnConfigs = createAssayColumns(transformedData);
+        const newColumns = [...columns, ...columnConfigs];
+        setMoleculeOrderColumns(newColumns);
       } else {
         const toastId = toast.error(`${data.error}`);
         await delay(DELAY);
@@ -1265,6 +1258,7 @@ export default function MoleculeOrderPage({
       project_id: molecule.project_id,
       organization_id: molecule.organization_id,
       user_id: userData.id,
+      assays: molecule.assays,
     }));
     context?.addToState({
       ...appContext,
@@ -1912,7 +1906,8 @@ export default function MoleculeOrderPage({
       try {
         if (!Array.isArray(nodeValue)) {
           toast(Messages.NO_PATHWAYS, {
-            icon: '⚠️',
+            icon: <Image src="/icons/warning-sign.svg" alt="warning"
+              width={18} height={18} />,
           });
           return;
         }
@@ -2194,7 +2189,7 @@ export default function MoleculeOrderPage({
         </main>
         <div className="p-[20px]" onClick={closeMagnifyPopup}>
           <CustomDataGrid
-            columns={columns}
+            columns={orderColumns}
             onRowClick={onRowClick}
             data={moleculeOrderData}
             groupingColumn={rowGroupName()}
@@ -2208,7 +2203,6 @@ export default function MoleculeOrderPage({
             enableHeaderFiltering
             enableSearchOption
             selectionEnabledRows={selectionEnabledRows}
-            scrollMode={'standard'}
             cssClass='molecule-order-list'
             onSelectionUpdated={onSelectionUpdated}
             onRowPrepared={onRowPrepared}

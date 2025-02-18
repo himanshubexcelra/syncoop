@@ -28,7 +28,10 @@ import { Messages } from "@/utils/message";
 import { DELAY } from "@/utils/constants";
 import Accordion, { Item } from 'devextreme-react/accordion';
 import ADMESelector from "../ADMEDetails/ADMESelector";
-import { delay, getUTCTime, isAdmin, isCustomReactionCheck } from "@/utils/helpers";
+import {
+    delay, getUTCTime, isAdmin,
+    isContainerAccess, isCustomReactionCheck
+} from "@/utils/helpers";
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
 import LibraryAccordion from './LibraryAccordion';
 import MoleculeList from './MoleculeList';
@@ -133,6 +136,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const searchParams = useSearchParams();
     const params = useParams<{ id?: string, projectId?: string }>();
     const [library_id, setLibraryId] = useState<number>(Number(searchParams.get('library_id')));
+    const [assays, setShowAssays] = useState(searchParams.get('assays'));
     const [project_id, setProjectId] = useState(params.projectId || params.projectId!);
     const [organization_id, setOrganizationId] = useState(organizationId);
     const [tableData, setTableData] = useState<MoleculeType[]>([]);
@@ -143,10 +147,12 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [selectedLibraryName, setSelectedLibraryName] = useState('');
     const [selectedLibraryData, setSelectedLibraryData] = useState<any>({});
     const [loader, setLoader] = useState(true);
-    const [expanded, setExpanded] = useState(library_id ? false : true);
+    const [expanded, setExpanded] = useState(library_id && !assays ? false : true);
+    const [expandedAssayIndex, setExpandedAssay] = useState(library_id && assays ? 1 : 0)
     const [adminAccess, setAdminAccess] = useState<boolean>(false);
+    const [adminLibAccess, setAdminLibAccess] = useState<boolean>(false);
+    const [editLibAccess, setEditLibAccess] = useState<boolean>(false);
     const [editEnabled, setEditAccess] = useState<boolean>(false);
-    const [adminProjectAccess, setAdminProjectAccess] = useState<boolean>(false);
     const [assayValue, setAssays] = useState<AssayFieldList[]>([]);
     const context: any = useContext(AppContext);
     const {
@@ -222,18 +228,14 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     }
 
     useEffect(() => {
-        const sharedUser = projectData.container_access_permission?.find(u =>
-            u.user_id === userData.id &&
-            u.access_type === ContainerPermission.Admin);
+        const sharedUser = isContainerAccess(projectData.container_access_permission,
+            userData.id, ContainerPermission.Admin);
         const owner = projectData.owner_id === userData.id;
         const admin = isAdmin(userData.myRoles);
-        setAdminProjectAccess(actionsEnabled.includes('edit_project')
+        setAdminAccess(actionsEnabled.includes('edit_project')
             && (!!sharedUser || owner || admin))
-        setAdminAccess(actionsEnabled.includes('create_library') &&
-            (!!sharedUser || owner || admin));
-        const editUser = projectData.container_access_permission?.find(u =>
-            u.user_id === userData.id &&
-            u.access_type === ContainerPermission.Edit);
+        const editUser = isContainerAccess(projectData.container_access_permission,
+            userData.id, ContainerPermission.Edit);
         setEditAccess(actionsEnabled.includes('create_molecule') &&
             (!!editUser || owner || admin))
     }, [projectData?.id]);
@@ -241,7 +243,17 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     useEffect(() => {
         setProjectId(params.id || params.projectId!)
         fetchLibraries();
-    }, [params.id, params.projectId, appContext?.cartDetail]);
+    }, [params.id, params.projectId, appContext?.cartDetail,
+    projectData.other_container?.length, appContext?.refreshAssayTable]);
+
+    useEffect(() => {
+        if (searchParams.get('assays') && searchParams.get('library_id')) {
+            setLibraryId(Number(searchParams.get('library_id')));
+            setShowAssays('true');
+            setExpandedAssay(1);
+            setExpanded(true)
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (projectData) {
@@ -256,6 +268,12 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                     setLibraryId(libraryData.id);
                     setSelectedLibraryName(libraryData.name);
                     setAssayFieldValue(libraryData);
+                    setAdminLibAccess(adminAccess ||
+                        !!isContainerAccess(libraryData.container_access_permission,
+                            userData.id, ContainerPermission.Admin));
+                    setEditLibAccess(
+                        !!isContainerAccess(libraryData.container_access_permission,
+                            userData.id, ContainerPermission.Edit));
                     // }
                     let breadcrumbTemp = breadcrumbArr({
                         projectTitle: `${projectData.name}`,
@@ -397,7 +415,6 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     setDirtyField={setDirtyField}
                                     onSelectedIndexChange={onSelectedIndexChange}
                                     reset={reset}
-                                    adminProjectAccess={adminProjectAccess}
                                     setReset={setReset}
                                 />
                             </div >
@@ -434,16 +451,24 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                             config
                                                         }
                                                     }}
-                                                    editAllowed={adminAccess}
+                                                    editAllowed={adminAccess || adminLibAccess}
                                                     fetchContainer={fetchLibraries}
                                                     loggedInUser={userData.id}
                                                 />
                                             </Item>
                                         </Accordion>
-                                        <Accordion collapsible={true} multiple={false}>
+                                        <Accordion
+                                            onSelectionChanged={() =>
+                                                setExpandedAssay(prevState => prevState ? 0 : 1)
+                                            }
+                                            collapsible={true}
+                                            multiple={false}
+                                            selectedIndex={expandedAssayIndex}
+                                        >
                                             <Item visible={false} />
-                                            <Item titleRender={() =>
-                                                `Functional Assay (${assayValue.length})`}>
+                                            <Item
+                                                titleRender={() =>
+                                                    `Functional Assay (${assayValue.length})`}>
                                                 <FunctionalAssay
                                                     data={{
                                                         ...selectedLibraryData,
@@ -461,7 +486,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                     setParentAssay={setAssayValue}
                                                     fetchContainer={fetchLibraries}
                                                     loggedInUser={userData.id}
-                                                    editAllowed={adminAccess}
+                                                    editAllowed={adminAccess || adminLibAccess}
                                                     selectType={selectType}
                                                     setReset={setReset}
                                                 />
@@ -483,13 +508,13 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     tableData={tableData}
                                     userData={userData}
                                     setTableData={setTableData}
-                                    selectedLibrary={library_id}
-                                    library_id={library_id}
+                                    selectedLibraryId={library_id}
                                     projectData={projectData}
                                     projectId={project_id}
                                     fetchLibraries={fetchLibraries}
                                     organizationId={organization_id || ''}
-                                    editEnabled={adminAccess || editEnabled}
+                                    editEnabled={adminAccess || editEnabled
+                                        || adminLibAccess || editLibAccess}
                                 />
                             </div>
                         </div>

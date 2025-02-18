@@ -52,7 +52,7 @@ export async function GET(request: Request) {
                     ...query.include,
                     libraryMolecules: {
                         include: {
-                            user_favourite_molecule: true
+                            user_favorite_molecule: true
                         }
                     },
                 }

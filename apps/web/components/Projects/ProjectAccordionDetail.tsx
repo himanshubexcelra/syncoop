@@ -502,6 +502,12 @@ export default function ProjectAccordionDetail({
                                         )
                                     }
                                 >
+                                    <LoadIndicator className={
+                                        `button-indicator`
+                                    }
+                                        visible={loader}
+                                        height={20}
+                                        width={20} />
                                     Open
                                 </p>
                                 <p

@@ -10,9 +10,9 @@ import {
 } from "devextreme-react/form";
 import { useEffect, useState, useCallback } from "react";
 import { Messages } from "@/utils/message";
-import { editUser, getUsers, deleteUserData } from "./service";
+import { editUser, getUsers, deleteUserData, getUserEnabled } from "./service";
 import toast from "react-hot-toast";
-import { delay, isOnlyLibraryManger } from "@/utils/helpers";
+import { delay, isOnlyLibraryManger, isOrgAdmin } from "@/utils/helpers";
 import { DELAY, status } from "@/utils/constants";
 import { getOrganization } from "../Organization/service";
 import { getFilteredRoles } from "../Role/service";
@@ -42,7 +42,6 @@ export default function RenderEditUser({
     const isOnlyLibManager = isOnlyLibraryManger(
         tableData?.user_role?.map((item: any) => item.role.type));
 
-    const enableDelete = isOnlyLibManager && tableData.owner?.length === 0;
 
     const filterContact = useCallback((users: any) => {
         return users?.filter((user: any) =>
@@ -103,6 +102,21 @@ export default function RenderEditUser({
         fetchContacts();
     }, [selectedOrgId, allUsers, filterContact]);
 
+    useEffect(()=>{
+        const insertEnableDelete = async (data: UserData[]) => {
+            const internalUsers = await Promise.all(
+                data.map(async (item: any) => {
+                    const enableDelete = await isDeleteUserEnabled(item);
+                    return { ...item, enableDelete };
+                })
+            );
+            return internalUsers;
+        };
+        if(tableData.length > 0){
+            insertEnableDelete(tableData);
+        }
+    },[tableData])
+
     const handleSubmit = async () => {
         const values = formRef.current!.instance().option("formData");
         const validationCheck = formRef.current!.instance().validate().isValid;
@@ -154,7 +168,7 @@ export default function RenderEditUser({
             {
                 user_id: tableData?.id,
                 name: tableData?.first_name,
-                role_id: Number(tableData.user_role[0].id)
+                role_id: Number(tableData?.user_role?.[0]?.id)
             }
         )
         setDeletePopup(true)
@@ -174,8 +188,20 @@ export default function RenderEditUser({
                 }
             })
     }
-
-
+    
+    const isDeleteUserEnabled = async (data: UserData) => {
+        // Case for Org Admin and Library Manager
+        if (isOrgAdmin(data?.user_role?.map((item: any) => item.role.type))
+            || isOnlyLibraryManger(data?.user_role?.map((item: any) => item.role.type))) {
+            return data._count.owner > 0 ? false : true;
+        }
+        else {
+            const userEnabled = await getUserEnabled(String(data.id));
+            return userEnabled.data.length > 0 ? false : true;
+        }
+    };
+    console.log(tableData,'tableData');
+    
     return (
         <>
             {deletePopup && (
@@ -228,7 +254,7 @@ export default function RenderEditUser({
                                     : ActionStatus.Disabled}
                                 onValueChange={handleValueChange} />
                         </SimpleItem>
-                        {enableDelete && <ButtonItem cssClass="delete-button">
+                        {tableData.enableDelete && <ButtonItem cssClass="delete-button">
                             <ButtonOptions
                                 stylingMode="text"
                                 text={`Delete User`}

@@ -121,3 +121,27 @@ export async function deleteUserData(user_id?: number, role_id?: number) {
         return error;
     }
 }
+export async function getUserEnabled(user_id: string) {
+    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
+    url.searchParams.append("user_id", user_id.toString());
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        }
+        else {
+            const data = await response.json();
+            throw new Error(`Error: ${data.errorMessage}`);
+        }
+
+    } catch (error) {
+        throw new Error(`Error: ${error}`);
+    }
+}

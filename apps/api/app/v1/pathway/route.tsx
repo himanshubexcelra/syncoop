@@ -11,39 +11,53 @@ export async function GET(request: Request) {
         const searchParams = new URLSearchParams(url.searchParams);
         const moleculeId = searchParams.get('molecule_id');
         const id = searchParams.get('id');
+        const user_id = searchParams.get('user_id');
+        let molecule;
+        if (user_id) {
+            molecule = await prisma.pathway.findMany({
+                where: {
+                    OR: [
+                        { created_by: Number(user_id) },
+                        { updated_by: Number(user_id) },
+                    ],
+                },
+            });
 
-        const molecule = await prisma.pathway.findMany({
-            distinct: ['pathway_index'],
-            orderBy: [{
-                pathway_instance_id: 'desc',
-            },
-            {
-                updated_at: 'desc', // Sort by updated_at for the distinct pathway_index
-            }],
-            where: {
-                molecule_id: Number(moleculeId),
-                ...(id ? { id: Number(id) } : {}),
-            },
-            include: {
-                reaction_detail: {
-                    orderBy: {
-                        reaction_sequence_no: "asc",
-                    },
-                    include: {
-                        reaction_compound: {
-                            orderBy: {
-                                compound_label: "asc",
-                            },
+        }
+        else {
+            molecule = await prisma.pathway.findMany({
+                distinct: ['pathway_index'],
+                orderBy: [{
+                    pathway_instance_id: 'desc',
+                },
+                {
+                    updated_at: 'desc', // Sort by updated_at for the distinct pathway_index
+                }],
+                where: {
+                    molecule_id: Number(moleculeId),
+                    ...(id ? { id: Number(id) } : {}),
+                },
+                include: {
+                    reaction_detail: {
+                        orderBy: {
+                            reaction_sequence_no: "asc",
                         },
-                        reaction_template_master: {
-                            select: {
-                                name: true, // Include the name of the template
-                            }
+                        include: {
+                            reaction_compound: {
+                                orderBy: {
+                                    compound_label: "asc",
+                                },
+                            },
+                            reaction_template_master: {
+                                select: {
+                                    name: true, // Include the name of the template
+                                }
+                            },
                         },
                     },
                 },
-            },
-        });
+            });
+        }
         return new Response(json({
             success: true,
             data: molecule

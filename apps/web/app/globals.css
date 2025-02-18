@@ -543,7 +543,7 @@ body {
 .text-assay-desc {
   font-weight: 400;
   word-wrap: break-word;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .list-assay {
@@ -599,6 +599,24 @@ body {
   }
 }
 
+
+.line-clip,
+.no-clip {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  line-height: 1.6em;
+  max-height: 4.8em;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.no-clip {
+  -webkit-line-clamp: unset;
+  max-height: none;
+}
+
 .lib-heading {
   display: inline-flex;
   align-items: center;
@@ -642,6 +660,7 @@ body {
 .dx-group-panel-item {
   margin-left: 30px;
 }
+
 /* Container for the dropdown */
 .dropdown {
   width: 150px;
@@ -656,7 +675,7 @@ body {
   font-size: 14px;
   font-weight: 700;
 }
- 
+
 /* List of options in the dropdown */
 .dropdown-list {
   font-size: 14px;
@@ -673,9 +692,20 @@ body {
   border-radius: 4px;
   z-index: 100;
 }
- 
+
 /* Individual items in the dropdown list */
 .dropdown-item {
   padding: 10px 20px;
   cursor: pointer;
+}
+
+.librarySortSelect {
+  width: 122px;
+  color: var(--themeBlueColor);
+  font-family: Lato;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  background-color: transparent;
 }

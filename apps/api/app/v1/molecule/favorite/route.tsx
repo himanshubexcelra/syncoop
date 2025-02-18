@@ -6,12 +6,12 @@ const { SUCCESS, BAD_REQUEST } = STATUS_TYPE;
 
 export async function POST(request: Request) {
     const req = await request.json();
-    const { user_id, molecule_id, favourite_id, favourite } = req;
+    const { user_id, molecule_id, favorite_id, favorite } = req;
 
     try {
-        if (favourite) {
+        if (favorite) {
             // Create a new favorite entry
-            const favorite = await prisma.user_favourite_molecule.create({
+            const favorite = await prisma.user_favorite_molecule.create({
                 data: {
                     user_id,
                     molecule_id,
@@ -22,10 +22,10 @@ export async function POST(request: Request) {
                 headers: { "Content-Type": "application/json" },
                 status: SUCCESS,
             });
-        } else if (favourite_id) {
-            const favorite = await prisma.user_favourite_molecule.delete({
+        } else if (favorite_id) {
+            const favorite = await prisma.user_favorite_molecule.delete({
                 where: {
-                    id: favourite_id,
+                    id: favorite_id,
                 },
             });
             return new Response(json(favorite), {

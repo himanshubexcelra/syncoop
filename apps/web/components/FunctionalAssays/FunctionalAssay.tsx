@@ -100,7 +100,7 @@ function FunctionalAssay({
 
     useEffect(() => {
         fetchData();
-    }, [orgId, appContext?.refreshAssayTable])
+    }, [orgId, appContext?.refreshAssayTable, data?.id])
 
     useEffect(() => {
         setContainerElement(document.getElementById('containerElement'));
@@ -331,7 +331,9 @@ function FunctionalAssay({
         <div className={`
         ${type ? 'main-div-assay-other' : 'main-div-assay'} 
         ${type === ContainerType.LIBRARY || page ? 'main-div-assay-lib' : ''}
-        `} key={data.id}>
+        `} key={data.id}
+            style={{ maxHeight: '400px', overflowY: 'scroll' }}
+        >
 
             <div className={`flex ${notInherited
                 ? 'justify-between'

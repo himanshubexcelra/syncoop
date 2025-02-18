@@ -6,13 +6,14 @@ export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
         const searchParams = new URLSearchParams(url.searchParams);
-        const moleculeId = Number(searchParams.get('molecule_id'));
-        const result = await prisma.molecule.findUnique({
+        const molecule_ids = JSON.parse(searchParams.get('molecule_ids') || '[]');
+        const result = await prisma.molecule.findMany({
 
             where: {
-                id: moleculeId, // Find the molecule by ID
+                id: {
+                    in: molecule_ids
+                }
             },
-
             include: {
                 pathway: {
                     orderBy: [{
@@ -22,7 +23,6 @@ export async function GET(request: Request) {
                         updated_at: 'desc', // Sort by updated_at for the distinct pathway_index
                     }],
                     where: {
-                        molecule_id: moleculeId,
                         pathway_instance_id: 1
                     },
                     include: {
@@ -37,8 +37,7 @@ export async function GET(request: Request) {
                 organization: true,
             },
         });
-
-
+        
         return new Response(json(result), {
             headers: { "Content-Type": "application/json" },
             status: STATUS_TYPE.SUCCESS,

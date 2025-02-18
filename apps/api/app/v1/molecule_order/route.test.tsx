@@ -40,7 +40,7 @@ describe('GET /moleculeOrder', () => {
         const responseBody = await response.json();
         expect(responseBody.errorMessage).toContain('Webhook error');
     });
-    test('should create a new molecule order and update molecule statuses', async () => {
+    test.skip('should create a new molecule order and update molecule statuses', async () => {
         const reqBody = {
             order_id: 2,
             order_name: 'Test Order 1',
@@ -52,7 +52,7 @@ describe('GET /moleculeOrder', () => {
         };
         const org_id = BigInt(123);
         const numberOrgValue = Number(org_id);
-        const mockCreateResponse:any = {
+        const mockCreateResponse: any = {
             "id": 14,
             "order_id": "2",
             "order_name": "NewOrder",

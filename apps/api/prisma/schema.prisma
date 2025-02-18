@@ -175,6 +175,7 @@ model molecule {
   updated_at           DateTime?       @db.Timestamptz(6)
   updated_by           Int?
   lab_job_order        lab_job_order[]
+  assays               Json?
 
   // users_molecule_created_byTousers              users                     @relation("molecule_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_created_by")
   userWhoCreated users @relation("molecule_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_created_by")
@@ -196,7 +197,7 @@ model molecule {
   molecule_cart           molecule_cart[]
   molecule_chem_data      molecule_chem_data[]
   pathway                 pathway[]
-  user_favourite_molecule user_favourite_molecule[]
+  user_favorite_molecule user_favorite_molecule[]
 
   @@index([finger_print], map: "idx_molecule_fingerprint")
   @@index([is_added_to_cart], map: "idx_molecule_is_added_to_cart")
@@ -244,6 +245,7 @@ model molecule_cart {
   created_at        DateTime  @db.Timestamptz(6)
   created_by        Int
   updated_at        DateTime? @db.Timestamptz(6)
+  assays            Json?
   updated_by        Int?
 
   // users_molecule_cart_created_byTousers              users           @relation("molecule_cart_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_created_by")
@@ -544,14 +546,14 @@ model timezone {
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model user_favourite_molecule {
+model user_favorite_molecule {
   id          Int      @id(map: "con_pk_user_fav_molecule_id") @default(autoincrement())
   user_id     Int
   molecule_id BigInt
   molecule    molecule @relation(fields: [molecule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_fav_molecule")
   users       users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_fav_molecule_user")
 
-  @@unique([user_id, molecule_id], map: "con_uk_user_favourite_molecule")
+  @@unique([user_id, molecule_id], map: "con_uk_user_favorite_molecule")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -620,7 +622,7 @@ model users {
   status_code_status_code_updated_byTousers               status_code[]             @relation("status_code_updated_byTousers")
   timezone_timezone_created_byTousers                     timezone[]                @relation("timezone_created_byTousers")
   timezone_timezone_updated_byTousers                     timezone[]                @relation("timezone_updated_byTousers")
-  user_favourite_molecule                                 user_favourite_molecule[] @relation(map: "con_fk_user_fav_molecule_user")
+  user_favorite_molecule                                 user_favorite_molecule[] @relation(map: "con_fk_user_fav_molecule_user")
   user_role_user_role_created_byTousers                   user_role[]               @relation("user_role_created_byTousers")
   user_role_user_role_updated_byTousers                   user_role[]               @relation("user_role_updated_byTousers")
 

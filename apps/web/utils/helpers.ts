@@ -1,19 +1,23 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
   ADMEConfigTypes,
+  AssaySaved,
   CartDetail,
   ColorSchemeFormat,
   CombinedLibraryType,
   ContainerPermission,
+  CopyMolecules,
   LibraryFields,
   LoginFormSchema,
+  MoleculeOrder,
   MoleculeStatusCode,
   MoleculeStatusLabel,
   MoleculeType,
   ProjectDataFields,
   Status,
   StatusType,
-  UserData
+  UserData,
+  sharedUserType
 } from "@/lib/definition"
 import { ChemistryType, COLOR_SCHEME } from "./constants";
 
@@ -252,6 +256,12 @@ export function isOnlyProtocolApprover(myRoles: string[]) {
   return myRoles.length === 1 && myRoles.includes('protocol_approver');
 }
 
+export function isContainerAccess(permission: sharedUserType[], id: number, permissionType: number) {
+  return permission?.find(u =>
+    u.user_id === id &&
+    u.access_type === permissionType);
+}
+
 export function generateRandomDigitNumber() {
   // Generate a random number between 10000000 and 99999999
   const randomNum = Math.floor(10000000 + Math.random() * 90000000);
@@ -416,6 +426,7 @@ export const mapCartData = (cartData: any[], userId: number): CartDetail[] =>
     moleculeName: item?.molecule?.source_molecule_name,
     smiles_string: item?.molecule?.smiles_string,
     pathway: item?.molecule?.pathway?.length > 0 ? true : false,
+    assays: item.assays,
     created_by: userId,
     "Project / Library": `${item?.molecule?.project.name} / ${item?.molecule?.library.name}`,
     "Organization / Order": `${item?.organization?.name} / Order${item?.molecule_order?.order_id}`,
@@ -433,3 +444,47 @@ export const filterCartDataForLabJob = (
 
 export const isCustomReactionCheck = (projectMetadata: any) =>
   projectMetadata.type === ChemistryType.CUSTOM_REACTION;
+
+export function createAssayColumns(transformedData: MoleculeOrder[] | MoleculeType[]) {
+  // Step 1: Collect all unique assays (proj1, proj2, etc.)
+  const allAssays = new Set();
+
+  transformedData.forEach((data) => {
+    const assays = data.assays || [];
+    assays.forEach((assay: any) => {
+      allAssays.add(assay?.name);
+    });
+  })
+
+  // Convert Set to Array (for easier iteration later)
+  const assayColumns = Array.from(allAssays);
+  const columnConfigs = assayColumns.map((assayName: any) => {
+    return {
+      dataField: assayName,
+      title: `${assayName}`,
+      width: 110,
+      allowHeaderFiltering: false,
+      allowSorting: true,
+      customRender: (data: MoleculeOrder | MoleculeType) => {
+        const assays = data.assays || [];
+        const assay = assays.find((assay: any) => assay[assayName]);
+        return assay ? assay[assayName] : '';
+      }
+    };
+  });
+
+  return columnConfigs;
+}
+
+export const transformMoleculeData = (inputData: any) => {
+  const smilesSet = new Set();
+  inputData.forEach(({ smiles }: CopyMolecules) => {
+    smilesSet.add(smiles);
+  });
+
+  return {
+    smiles: Array.from(smilesSet),
+    projectId: inputData[0].project_id,
+  };
+}
+

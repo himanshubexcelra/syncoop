@@ -1,0 +1,15 @@
+.headlineMessage {
+    color: var(--themeBlueColor);
+    font-family: Lato;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 700;
+}
+
+.borderGrid {
+    border-top: 1px solid var(--themeDotGreyColor);
+    border-bottom: 1px solid var(--themeDotGreyColor);
+    border-left: 1px solid var(--themeDotGreyColor);
+    border-right: 1px solid var(--themeDotGreyColor);
+    background: var(--background)
+}

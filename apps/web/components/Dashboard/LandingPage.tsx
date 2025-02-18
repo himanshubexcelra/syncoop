@@ -18,7 +18,7 @@ import ListOrganization from "@/components/Organization/ListOrganization";
 import Heading from "@/components/Heading/Heading";
 import Tabs from "@/ui/Tab/Tabs";
 import TabUsersTable from "@/components/Organization/TabUsersTable";
-import { popupPositionValue } from "@/utils/helpers";
+import { isSystemAdmin, popupPositionValue } from "@/utils/helpers";
 import { getOrganizationById } from "@/components/Organization/service";
 import EditOrganization from "../Organization/editOrganization";
 import { getDashBoardBreadCrumbs } from "./breadCrumbs";
@@ -27,7 +27,7 @@ import Module from "../Module/Module";
 import ADMESelector from "../ADMEDetails/ADMESelector";
 import usePopupAndReset from "../usePopupandReset/usePopupAndReset";
 import FunctionalAssay from "../FunctionalAssays/FunctionalAssay";
-
+import TemplatesComponent from "../Templates/Template";
 type DashboardPageTypeProps = {
     userData: UserData,
     filteredRoles: UserRole[],
@@ -68,6 +68,7 @@ export default function LandingPage({
             : orgUser,
         [customerOrgId, organizationData.name, orgUser]
     );
+
     const breadcrumbs: BreadCrumbsObj[] = getDashBoardBreadCrumbs(myRoles, orgDetail, customerOrgId)
     const heading: HeadingObj[] = [
         {
@@ -90,7 +91,7 @@ export default function LandingPage({
             });
         setOrganization(organization);
     };
-
+    const checkFileAccess = isSystemAdmin(myRoles) && !customerOrgId;
     const tabsStatus: TabDetail[] = [
         {
             title: "Overview",
@@ -128,7 +129,12 @@ export default function LandingPage({
             title: "Modules",
             Component: Module,
             props: { orgUser: orgDetail, myRoles },
-        }
+        },
+        ...((checkFileAccess ? [{
+            title: "File/Templates",
+            Component: TemplatesComponent,
+            props: { orgUser: orgDetail, myRoles },
+        }] : []))
     ];
 
 

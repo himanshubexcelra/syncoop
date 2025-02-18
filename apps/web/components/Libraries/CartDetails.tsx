@@ -1,9 +1,10 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CustomDataGrid from "@/ui/dataGrid";
 import ConfirmationDialog from "./ConfirmationDialog";
 import { Button as Btn } from "devextreme-react/button";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import {
   CartItem,
@@ -15,9 +16,16 @@ import {
   UserData,
   CellData,
   Pathway,
-  ReactionLabJobOrder
+  ReactionLabJobOrder,
+  AssayFieldList,
+  AssaySaved
 } from "@/lib/definition";
-import { submitOrder, getLabJobOrderDetail, postLabJobOrder, updateLabJobApi } from "./service";
+import {
+  submitOrder,
+  postLabJobOrder,
+  updateLabJobApi,
+  getSynthesisMoleculesData
+} from "./service";
 import dynamic from "next/dynamic";
 import {
   filterCartDataForAnalysis,
@@ -52,6 +60,7 @@ export default function CartDetails({
   close,
   loader
 }: CartDetailsProps) {
+  const router = useRouter();
   const [isDisable, setDisableButton] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -65,6 +74,7 @@ export default function CartDetails({
   const popupRef = useRef<HTMLDivElement>(null);
   const [analysisState, setAnalysisState] = useState<CartDetail[]>([]);
   const [labJobState, setLabJobState] = useState<CartDetail[]>([]);
+  const [expanded, setExpanded] = useState<number[]>([]);
 
   useEffect(() => {
     const analysisData = filterCartDataForAnalysis(cartData);
@@ -72,6 +82,7 @@ export default function CartDetails({
 
     setAnalysisState(mapCartData(analysisData, userData.id));
     setLabJobState(mapCartData(labJobData, userData.id));
+
   }, [cartData]);
 
 
@@ -90,6 +101,14 @@ export default function CartDetails({
     setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
     setPopupVisible(true);
     setCellData({ ...data, source_molecule_name: data.moleculeName });
+  }
+
+  const setExpandValue = (e: any) => {
+    if (e.columnIndex === 4) {
+      if (e.data?.id && !expanded.includes(e.data.id)) {
+        setExpanded((prev) => [...prev, e.data.id]);
+      }
+    }
   }
 
   const columns: ColumnConfig[] = [
@@ -129,25 +148,84 @@ export default function CartDetails({
       customRender: (data) => Number(data.molecular_weight).toFixed(2)
     },
     {
-      title: "Remove",
+      dataField: 'assays',
+      title: 'Bio Assay',
+      width: 120,
+      alignment: 'center',
+      allowHeaderFiltering: false,
+      allowSorting: false,
+      customRender: (data) => {
+        if (!expanded.includes(data.id)) {
+          const length = data.assays?.length;
+          const value = data.assays?.map((val: AssayFieldList, idx: number) => {
+            const name = val.name || Object.keys(val)[0];
+            if (idx >= 3) return;
+            if (length - 1 !== idx && idx < 2)
+              return <span key={`${name}-1`}>
+                {name} ,
+              </span>
+            if (length - 1 === idx && idx < 2)
+              return <span key={`${name}-2`}>
+                {name}
+              </span>
+            return <span key={`${name}-3`} className="text-themeBlueColor">
+              + {length - idx}
+            </span>
+          });
+          return <div className="cursor-pointer line-clip">
+            {value}
+          </div>
+        } else {
+          return <span className="no-clip">
+            {data.assays?.[0].name ?
+              data.assays.map((val: AssayFieldList) => val.name).join(', ')
+              :
+              data.assays.map((item: AssaySaved) => Object.keys(item)[0]).join(', ')
+            }
+          </span>
+        }
+        // return data.assays;
+      }
+    },
+    {
+      title: "Actions",
       width: 24,
       allowHeaderFiltering: false,
       allowSorting: false,
       customRender: (data) => (
-        <Btn
-          render={() => (
-            <Image
-              src="/icons/delete.svg"
-              width={24}
-              height={24}
-              alt="Remove"
-            />
-          )}
-          onClick={() => removeItemFromCart(data)}
-        />
+        <>
+          <Btn
+            render={() => (
+              <Image
+                src="/icons/edit.svg"
+                width={24}
+                height={24}
+                alt="Edit"
+              />
+            )}
+            onClick={() => {
+              router.push(
+                `/projects/${data.project_id}?library_id=${data.library_id}&assays=true`
+              )
+              close();
+            }}
+          />
+          <Btn
+            render={() => (
+              <Image
+                src="/icons/delete.svg"
+                width={24}
+                height={24}
+                alt="Remove"
+              />
+            )}
+            onClick={() => removeItemFromCart(data)}
+          />
+        </>
       ),
     },
   ];
+
   const rowGroupName = () => {
     if (containsProjects) {
       return "Project / Library";
@@ -158,11 +236,15 @@ export default function CartDetails({
 
   const handleSubmitOrder = () => {
     const ordered_molecules = cartData.map((item) => item.molecule_id);
+    const ordered_molecules_data = cartData.map((item) =>
+      ({ id: item.molecule_id, assays: item.assays || [] }));
     const order_id = generateRandomDigitNumber();
+
     const orderDetails: OrderType = {
       order_id: order_id,
       order_name: `Order${order_id}`,
       ordered_molecules: ordered_molecules,
+      ordered_molecules_data,
       organization_id: cartData[0].organization_id,
       created_by: userData.id,
       status: LabJobStatus.Submitted,
@@ -194,6 +276,8 @@ export default function CartDetails({
             "Solvent": reaction_detail.solvent,
             "Step No": reaction_compound.compound_label,
             "Product MW": reaction_detail.product_molecular_weight,
+            "Synthetic template": reaction_detail.reaction_name,
+            "Temperature setting": reaction_detail.temperature,
             "Product 1 SMILES": reaction_detail.product_smiles_string,
             [`Reagent ${reagentLabel} SMILES`]: reaction_compound.smiles_string,
             [`Reagent ${reagentLabel} molar ratio`]: reaction_compound.molar_ratio,
@@ -206,16 +290,15 @@ export default function CartDetails({
     return result;
   }
 
-  const prepareData = (res: any, moleculeId: number): SaveLabJobOrder[] => {
+  const prepareLabJobData = (res: any): SaveLabJobOrder[] => {
     const hasPathways = res?.pathway?.length > 0;
-
     const pathway = hasPathways ? res.pathway[0] : null;
     const totalReactions = pathway?.reaction_detail?.length || 0;
     const finalProduct = pathway?.reaction_detail?.[totalReactions - 1] || null;
 
     return [
       {
-        molecule_id: moleculeId || 0,
+        molecule_id: res.id,
         pathway_id: pathway?.id || null,
         product_smiles_string: hasPathways
           ? finalProduct?.product_smiles_string || null
@@ -224,9 +307,7 @@ export default function CartDetails({
           ? finalProduct?.product_molecular_weight || null
           : res?.molecular_weight || null,
         no_of_steps: hasPathways ? pathway?.step_count || null : null,
-        functional_bioassays: hasPathways
-          ? res?.organization?.metadata || null
-          : null,
+        functional_bioassays: res.assays,
         reactions: hasPathways ? prePareReactions(pathway) : [],
         created_by: userData.id,
         status: LabJobStatus.Submitted,
@@ -235,25 +316,12 @@ export default function CartDetails({
     ];
   };
 
-  const getLabJobOrderData = async () => {
-    setSubmitOrderLoading(true);
-    const labJobDataList: SaveLabJobOrder[] = [];
-    await Promise.all(
-      cartData.map(async (item: any) => {
-        const res = await getLabJobOrderDetail(item.molecule_id);
-        const labJobData = prepareData(res, item.molecule_id);
-
-        labJobDataList.push(...labJobData);
-      })
-    );
-    return labJobDataList;
-  };
-
-  async function processLabJobOrders(labJobOrderData: SaveLabJobOrder[]) {
+  const processLabJobOrders = async (labJobOrderData: SaveLabJobOrder[]) => {
     try {
       let labJobStateCount = 0;
       let analysisStateCount = 0;
       let successMessage = '';
+      let isSuccess = false;
       for (const item of labJobOrderData) {
         try {
           // Post the lab job order
@@ -263,12 +331,11 @@ export default function CartDetails({
             // Skip this iteration if we don't get a valid result.
             continue;
           }
-
           // Update the lab job order by API call
           const response = await updateLabJobApi(result.lab_job_order_id);
-
           if (!response.error) {
             successMessage = response?.message;
+            isSuccess = true;
             // Update counts after successful processing
             labJobStateCount = labJobState?.length || 0;
             analysisStateCount = analysisState?.length || 0;
@@ -288,12 +355,14 @@ export default function CartDetails({
           toast.remove(toastId);
         }
       }
-      const toastId = toast.success(successMessage);
-      await delay(DELAY);
-      toast.remove(toastId);
-      // After processing all orders, show a summary message and remove all orders
-      const summaryMessage = Messages.displayLabJobMessage(labJobStateCount, analysisStateCount);
-      removeAll(userData.id, "LabJobOrder", summaryMessage);
+      if (isSuccess) {
+        const toastId = toast.success(successMessage);
+        await delay(DELAY);
+        toast.remove(toastId);
+        // After processing all orders, show a summary message and remove all orders
+        const summaryMessage = Messages.displayLabJobMessage(labJobStateCount, analysisStateCount);
+        removeAll(userData.id, "LabJobOrder", summaryMessage);
+      }
       // Turn off the submit/loading state
       setSubmitOrderLoading(false);
     } catch (error) {
@@ -303,8 +372,19 @@ export default function CartDetails({
   }
 
   const handleLabJobOrder = async () => {
-    const labJobOrderData = await getLabJobOrderData();
-    processLabJobOrders(labJobOrderData);
+    setSubmitOrderLoading(true);
+    let labJobDataList: SaveLabJobOrder[] = [];
+    const molecule_ids = cartData.map((data) => data.molecule_id);
+    const moleculesSynthesisData = await getSynthesisMoleculesData(molecule_ids);
+    if (moleculesSynthesisData.length) {
+      moleculesSynthesisData.map((data: any) => {
+        labJobDataList = [
+          ...labJobDataList,
+          ...prepareLabJobData(data)
+        ];
+      });
+    }
+    processLabJobOrders(labJobDataList);
   };
 
   const handleClick = () => {
@@ -323,22 +403,24 @@ export default function CartDetails({
     setShowAccordion(!showAccordion);
   };
 
-  return (
+  const data = useMemo(() => mapCartData(cartData, userData.id), [cartData, userData.id]);
 
+  return (
     <>
       {
-        loader ? <div style={{ marginTop: '300px', marginLeft: '255px' }}><LoadIndicator /></div>
+        loader ? <div style={{ marginTop: '300px', marginLeft: '305px' }}><LoadIndicator /></div>
           : cartData.length > 0 ? (
             <div>
               <div className="popup-content">
-                <div className="popup-grid"
+                <div className="popup-grid max-h-[550px]"
                   onClick={closeMagnifyPopup}>
                   {containsProjects ? (
                     <div>
                       <CustomDataGrid
                         columns={columns}
-                        height="auto"
-                        data={mapCartData(cartData, userData.id)}
+                        maxHeight="550px"
+                        data={data}
+                        onCellClick={setExpandValue}
                         groupingColumn={rowGroupName()}
                         enableGrouping
                         enableSorting={false}
@@ -347,7 +429,6 @@ export default function CartDetails({
                         enableRowSelection={false}
                         enableSearchOption={false}
                         loader={false}
-                        scrollMode="infinite"
                       />
                     </div>
                   ) : (
@@ -365,9 +446,10 @@ export default function CartDetails({
                               </div>
                               <CustomDataGrid
                                 columns={columns}
-                                height="auto"
+                                maxHeight="550px"
                                 data={analysisState}
                                 groupingColumn={rowGroupName()}
+                                onCellClick={setExpandValue}
                                 enableGrouping
                                 enableSorting={false}
                                 enableFiltering={false}
@@ -375,7 +457,6 @@ export default function CartDetails({
                                 enableRowSelection={false}
                                 enableSearchOption={false}
                                 loader={false}
-                                scrollMode="infinite"
                               />
                             </div>
                           </Item>
@@ -394,8 +475,9 @@ export default function CartDetails({
                               </div>
                               <CustomDataGrid
                                 columns={columns}
-                                height="auto"
+                                maxHeight="550px"
                                 data={labJobState}
+                                onCellClick={setExpandValue}
                                 groupingColumn={rowGroupName()}
                                 enableGrouping
                                 enableSorting={false}
@@ -404,7 +486,7 @@ export default function CartDetails({
                                 enableRowSelection={false}
                                 enableSearchOption={false}
                                 loader={false}
-                                scrollMode="infinite"
+                                paging={false}
                               />
                             </div>
                           </Item>

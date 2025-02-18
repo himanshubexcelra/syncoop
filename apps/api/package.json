@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "npx tsx setENV.ts && next start",
+    "start": "next start --port 3001",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -14,9 +14,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.741.0",
     "@prisma/client": "^5.20.0",
-    "aws-sdk": "^2.1692.0",
     "next": "14.2.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

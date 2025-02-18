@@ -1,6 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 'use client';
-import { useCallback, useContext, useEffect, useState, useRef } from 'react';
+import { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react';
 import Image from "next/image";
 import toast from "react-hot-toast";
 import DeleteConfirmation from "@/ui/DeleteConfirmation";
@@ -12,6 +12,7 @@ import {
     CellData,
     ColumnConfig,
     FetchUserType,
+    LibraryFields,
     MoleculeStatusCode,
     MoleculeType,
     ProjectDataFields,
@@ -38,7 +39,8 @@ import {
     getAverage,
     getADMEColor,
     delay,
-    isCustomReactionCheck
+    isCustomReactionCheck,
+    createAssayColumns
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
@@ -54,7 +56,9 @@ import './MoleculeList.css';
 import CustomTooltip from '@/ui/CustomTooltip';
 import AdmeInfo from '../Tooltips/AdmeInfo';
 import AddCustomReaction from '../Molecule/AddCustomReaction/AddCustomReaction';
+import CopyDialog from '../Molecule/CopyTo/CopyDialog';
 import saveAs from 'file-saver';
+import { DataGridTypes } from 'devextreme-react/cjs/data-grid';
 
 type MoleculeListType = {
     /* moleculeLoader: boolean, */
@@ -63,15 +67,15 @@ type MoleculeListType = {
     userData: UserData,
     /* setMoleculeLoader: (value: boolean) => void, */
     setTableData: (value: MoleculeType[]) => void,
-    selectedLibrary: number,
+    selectedLibraryId: number,
     selectedLibraryName: string,
-    library_id: number,
     projectData: ProjectDataFields,
     projectId: string,
     organizationId: string,
     fetchLibraries: FetchUserType,
     editEnabled: boolean,
 }
+
 const MoleculeStructure = dynamic(
     () => import("@/utils/MoleculeStructure"),
     { ssr: false }
@@ -80,8 +84,7 @@ const MoleculeStructure = dynamic(
 export default function MoleculeList({
     expanded,
     userData,
-    selectedLibrary,
-    library_id,
+    selectedLibraryId,
     projectId,
     selectedLibraryName,
     organizationId,
@@ -111,24 +114,29 @@ export default function MoleculeList({
     const [moleculeLoader, setMoleculeLoader] = useState(false);
     const [confirm, setConfirm] = useState(false);
     const [loader, setLoader] = useState(false);
-    const [deleteMoleculeId, setDeleteMolecules] = useState({ id: 0, name: '', favourite_id: 0 });
+    const [deleteMoleculeId, setDeleteMolecules] = useState({ id: 0, name: '', favorite_id: 0 });
     const [selectionEnabledRows, setSelectionEnabledRows] = useState<MoleculeType[]>([]);
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
-    const [selectedValue, setSelectedValue] = useState({
-        id: 'smiles_string',
-        category: "Molecule"
-    },);
-    const dropdownButtons = [
+    const [assays, setAssays] = useState<Map<number, object[]>>();
+    const [groupingEnabled, setGroupingEnabled] = useState<boolean>(false);
+
+    const groupOptions = [
+        { id: 'molecule', category: "Molecule" },
+        { id: 'library', category: "Library" }
+    ];
+
+    // const [selectedValue, setSelectedValue] = useState(groupOptions[0]);
+
+    const dropdownButtons = useMemo(() => [
         {
+            key: 'molecules',
             text: "Group By:",
-            onValueChanged: ((e: any) => setSelectedValue(e)),
-            options: [
-                { id: 'smiles_string', category: "Molecule" },
-                { id: 'library_name', category: "Library" }
-            ],
-            value: selectedValue
-        },]
-    const rowGroupName = () => selectedValue.id
+            options: groupOptions,
+        },], [])
+
+    const rowGroupName = () => groupOptions[0].id;
+
+    const [copyDialog, setCopyDialog] = useState(false);
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
@@ -143,40 +151,14 @@ export default function MoleculeList({
     }
 
     const isCustomReaction = isCustomReactionCheck(projectData.metadata);
-    const fetchMoleculeData = async (library_id?: number, project_id?: string) => {
-        setMoleculeLoader(true);
-        try {
-            const params = library_id
-                ? {
-                    library_id,
-                    sample_molecule_id: randomValue(sample_molecule_ids)
-                }
-                : {
-                    project_id,
-                    sample_molecule_id: randomValue(sample_molecule_ids)
-                };
-            const moleculeData = await getMoleculeData(params);
-            const selectionEnabledRows = moleculeData.filter(
-                (row: MoleculeType) => !row.disabled);
-
-            setSelectionEnabledRows(selectionEnabledRows);
-            // }
-            setTableData(moleculeData);
-            setMoleculeLoader(false);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-    useEffect(() => {
-        fetchMoleculeData(library_id, projectId);
-    }, [library_id]);
 
     const columns: ColumnConfig[] = [
         {
-            dataField: "favourite",
+            dataField: "favorite",
             type: "bookmark",
-            width: 60,
+            width: 90,
             allowSorting: false,
+            alignment: 'center',
             headerCellRenderer: () => <Image src="/icons/star.svg" width={24}
                 height={24} alt="Bookmark" />,
             headerFilter: {
@@ -185,22 +167,20 @@ export default function MoleculeList({
                     { value: false, text: 'Non-Favorites' },
                 ],
             },
+            editingEnabled: true,
             customRender: (data) => {
                 return (
                     <span className={`flex
                                     justify-center
-                                    cursor-pointer`}
-                        onClick={() =>
-                            addToFavourite(data)
-                        }>
+                                    cursor-pointer`}>
                         <Image
-                            src={data.favourite ?
+                            src={data.favorite ?
                                 "/icons/star-filled.svg" :
                                 "/icons/star.svg"
                             }
                             width={24}
                             height={24}
-                            alt="favourite"
+                            alt="favorite"
                         />
                     </span>
                 );
@@ -782,6 +762,53 @@ export default function MoleculeList({
         }
     ];
 
+    const [moleculeColumns, setMoleculeColumns] = useState(columns);
+
+    const fetchMoleculeData = async (library_id?: number, project_id?: string) => {
+        setMoleculeLoader(true);
+        try {
+            let params = {};
+            if (library_id) {
+                params = {
+                    library_id,
+                    sample_molecule_id: randomValue(sample_molecule_ids)
+                };
+                setGroupingEnabled(false);
+            } else {
+                params = {
+                    project_id,
+                    sample_molecule_id: randomValue(sample_molecule_ids)
+                };
+                const { other_container } = projectData;
+                if (other_container?.length) {
+                    setGroupingEnabled(other_container?.length > 1);
+                } else {
+                    setGroupingEnabled(true);
+                }
+            };
+
+            const moleculeData = await getMoleculeData(params);
+            const selectionEnabledRows = moleculeData.filter(
+                (row: MoleculeType) => !row.disabled);
+
+            setSelectionEnabledRows(selectionEnabledRows);
+            setTableData(moleculeData);
+            const columnConfigs = createAssayColumns(moleculeData);
+            const newColumns = [...columns, ...columnConfigs];
+            setMoleculeColumns(newColumns);
+            setMoleculeLoader(false);
+        } catch (error: any) {
+            const toastId = toast.error(error);
+            await delay(DELAY);
+            toast.remove(toastId);
+        }
+    };
+
+    useEffect(() => {
+        fetchMoleculeData(selectedLibraryId, projectId);
+    }, [selectedLibraryId]);
+
+
     /* const fetchCartData = async () => {
         // OPT: 5
         const params: object = {
@@ -874,18 +901,12 @@ export default function MoleculeList({
         e.cancel = true;
     };
 
-    const addToFavourite = (selectedRow: MoleculeType) => {
-
-        const rows = tableData.map(item =>
-            item.id === selectedRow.id ? { ...item, favourite: !item.favourite } : item
-        );
-        setTableData(rows);
-
+    const addToFavorite = (selectedRow: MoleculeType) => {
         const dataField: addToFavoritesProps = {
             molecule_id: selectedRow.id,
             user_id: userData.id,
-            favourite_id: selectedRow.favourite_id,
-            favourite: !selectedRow.favourite
+            favorite_id: selectedRow.favorite_id,
+            favorite: selectedRow.favorite
         };
         addToFavorites(dataField).then(() => { },
             async (error) => {
@@ -951,19 +972,25 @@ export default function MoleculeList({
                 {
                     id: data.id,
                     name: data.source_molecule_name,
-                    favourite_id: data.favourite_id
+                    favorite_id: data.favorite_id
                 })
             setConfirm(true)
+        }
+    }
+
+    const onRowPrepared = (e: DataGridTypes.RowPreparedEvent) => {
+        if (e.rowType === 'data') {
+            e.rowElement.style.height = "90px";
         }
     }
 
     const handleDeleteMolecule = async () => {
         setLoader(true);
         const result =
-            await deleteMolecule(deleteMoleculeId.id, deleteMoleculeId.favourite_id);
+            await deleteMolecule(deleteMoleculeId.id, deleteMoleculeId.favorite_id);
         if (result) {
             toast.success(Messages.deleteMoleculeMsg(deleteMoleculeId.name));
-            setDeleteMolecules({ id: 0, name: '', favourite_id: 0 });
+            setDeleteMolecules({ id: 0, name: '', favorite_id: 0 });
             setReloadMolecules(true);
             setLoader(false);
         }
@@ -973,6 +1000,32 @@ export default function MoleculeList({
         setConfirm(false)
     }
 
+    const setAssayFieldValue = (data: LibraryFields) => {
+        const inherits = data?.inherits_bioassays ?? true;
+        let metaData = data?.metadata?.assay
+        if (inherits) {
+            if (projectData?.metadata?.assay) {
+                metaData = projectData?.metadata?.assay
+            }
+            else {
+                metaData = projectData?.container?.metadata?.assay
+            }
+        }
+        return metaData || [];
+    }
+
+    const fetchAssays = () => {
+        const libraries = projectData.other_container;
+        const tempAssay = new Map<number, object[]>();
+        if (libraries?.length) {
+            libraries.forEach(library => {
+                const data = setAssayFieldValue(library);
+                tempAssay.set(library.id, data);
+            });
+        }
+        setAssays(tempAssay);
+    }
+
     const addProductToCart = async () => {
         setLoadingCartEnabled(true);
         const moleculeData = selectedRowsData.map((row: MoleculeType) => ({
@@ -980,7 +1033,8 @@ export default function MoleculeList({
             library_id: row.library_id,
             organization_id: row.organization_id,
             project_id: row.project_id,
-            user_id: userData.id
+            user_id: userData.id,
+            assays: assays?.get(row.library_id),
         }));
 
         const response = await addMoleculeToCart(moleculeData, MoleculeStatusCode.NewInCart);
@@ -1001,6 +1055,10 @@ export default function MoleculeList({
         }
     }
 
+    const copyTo = () => {
+        setCopyDialog(true)
+    }
+
     useEffect(() => {
         if (reloadMolecules) {
             (async () => {
@@ -1008,7 +1066,7 @@ export default function MoleculeList({
                 setSelectedRowsData([]);
                 setSelectedRows([]);
 
-                await fetchMoleculeData(selectedLibrary, projectId);
+                await fetchMoleculeData(selectedLibraryId, projectId);
 
                 setReloadMolecules(false);
             })();
@@ -1017,7 +1075,11 @@ export default function MoleculeList({
 
     useEffect(() => {
         setReloadMolecules(true)
-    }, [appContext?.refreshCart])
+    }, [appContext?.refreshCart]);
+
+    useEffect(() => {
+        fetchAssays();
+    }, [projectData.other_container?.length, appContext?.refreshAssayTable]);
 
     const callLibraryId = async () => {
         setReloadMolecules(true);
@@ -1033,15 +1095,24 @@ export default function MoleculeList({
             text: "Add Molecule",
             onClick: addMolecule,
             icon: '/icons/plus-white.svg',
-            visible: editEnabled && !!library_id && !isCustomReaction,
+            visible: editEnabled && !!selectedLibraryId && !isCustomReaction,
             class: 'btn-primary toolbar-item-spacing',
         },
         {
             text: "Add Reaction",
             onClick: addMolecule,
             icon: '/icons/plus-white.svg',
-            visible: editEnabled && !!library_id && isCustomReaction,
+            visible: editEnabled && !!selectedLibraryId && isCustomReaction,
             class: 'btn-primary toolbar-item-spacing',
+        },
+        {
+            text: `Copy To`,
+            onClick: copyTo,
+            class: !selectedRows.length
+                ? 'btn-disable toolbar-item-spacing'
+                : 'btn-secondary toolbar-item-spacing',
+            disabled: !selectedRows.length,
+            visible: editEnabled,
         },
         {
             text: `Edit (${selectedRows.length})`,
@@ -1049,7 +1120,7 @@ export default function MoleculeList({
             class: !selectedRows.length
                 ? 'btn-disable toolbar-item-spacing' : 'btn-secondary toolbar-item-spacing',
             disabled: !selectedRows.length,
-            visible: editEnabled && !!library_id && !isCustomReaction
+            visible: editEnabled && !!selectedLibraryId && !isCustomReaction
         },
         {
             text: `Add to Cart (${selectedRows.length})`,
@@ -1107,6 +1178,15 @@ export default function MoleculeList({
         );
     };
 
+    const onRowUpdated = (e: DataGridTypes.RowUpdatingEvent) => {
+        if (e.newData.favorite !== undefined) {
+            addToFavorite({
+                ...e.oldData,
+                favorite: e.newData.favorite
+            })
+        }
+    };
+
     return (
         <>
             {confirm && (
@@ -1129,10 +1209,10 @@ export default function MoleculeList({
                     `pb-[10px] w-[100%]`}
                     onClick={closeMagnifyPopup}>
                     <CustomDataGrid
-                        columns={columns}
+                        columns={moleculeColumns}
                         data={tableData}
                         enableRowSelection
-                        enableGrouping
+                        enableGrouping={groupingEnabled}
                         enableSorting
                         enableFiltering={false}
                         enableOptions={false}
@@ -1142,20 +1222,22 @@ export default function MoleculeList({
                         loader={moleculeLoader}
                         enableHeaderFiltering
                         enableSearchOption={!expanded}
-                        cssClass='molecule-list'
+                        cssClass={`${'molecule-list' + (groupingEnabled ? ' group' : ' no-group')}`}
                         onSelectionUpdated={onSelectionUpdated}
                         selectionEnabledRows={selectionEnabledRows}
                         onExporting={onExporting}
                         showFooter={true}
-                        groupingColumn={rowGroupName()}
+                        groupingColumn={groupingEnabled ? rowGroupName() : undefined}
                         dropdownButtons={dropdownButtons}
+                        onRowUpdated={onRowUpdated}
+                        onRowPrepared={onRowPrepared}
                     />
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}
                         visible={viewAddMolecule}
                         contentRender={() => (
                             isCustomReaction ? <AddCustomReaction /> : <AddMolecule
-                                libraryId={selectedLibrary}
+                                libraryId={selectedLibraryId}
                                 projectId={projectId}
                                 organizationId={organizationId}
                                 userData={userData}
@@ -1190,7 +1272,7 @@ export default function MoleculeList({
                         contentRender={() => (
                             <EditMolecule
                                 editMolecules={editMolecules}
-                                libraryId={selectedLibrary}
+                                libraryId={selectedLibraryId}
                                 projectId={projectId}
                                 organizationId={organizationId}
                                 userData={userData}
@@ -1312,6 +1394,31 @@ export default function MoleculeList({
                     </div>
                 </div>
             )}
+            {copyDialog && <Popup
+                visible={copyDialog}
+                contentRender={() => (
+                    <CopyDialog
+                        selectedMolecules={selectedRowsData}
+                        projectData={projectData}
+                        setCopyDialog={setCopyDialog}
+                        user_id={userData.id}
+                        callLibraryId={callLibraryId}
+                        myRoles={userData.myRoles}
+                        currentLibraryId={selectedLibraryId}
+                        organizationId={organizationId}
+                    />
+                )}
+                resizeEnabled={false}
+                hideOnOutsideClick={false}
+                onHiding={() => {
+                    setCopyDialog(false)
+                }}
+                dragEnabled={false}
+                showCloseButton={true}
+                showTitle={false}
+                width={556}
+                height={527}
+            />}
         </>
     )
 }

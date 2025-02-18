@@ -32,8 +32,8 @@ jest.mock('../service', () => {
         ...originalModule,
         getMoleculeData: jest.fn().mockImplementation(() => {
             return Promise.resolve([
-                { id: 1, name: 'Benzene', favourite: true, smiles_string: 'C1=CC=CC=C1' },
-                { id: 2, name: 'Ethanol', favourite: false, smiles_string: 'CCO' },
+                { id: 1, name: 'Benzene', favorite: true, smiles_string: 'C1=CC=CC=C1' },
+                { id: 2, name: 'Ethanol', favorite: false, smiles_string: 'CCO' },
             ]);
         }),
         getMoleculeCart: jest.fn().mockImplementation(() => {
@@ -78,7 +78,7 @@ const mockAppContext = {
 const moleculeData: MoleculeType[] = [
     {
         id: 1,
-        favourite: true,
+        favorite: true,
         smiles_string: 'C1=CC=CC=C1',
         created_at: new Date(),
         created_by: 1,
@@ -93,18 +93,19 @@ const moleculeData: MoleculeType[] = [
         "organization / order": 'Organization 1 / Order 1',
         status: 1,
         status_name: 'Active',
-        favourite_id: 1,
+        favorite_id: 1,
         updated_at: new Date(),
         updated_by: 1,
         adme_data: [],
         reaction_data: {},
         functional_assays: [],
         molecule_id: 0,
-        disabled: false
+        disabled: false,
+        assays: []
     },
     {
         id: 2,
-        favourite: false,
+        favorite: false,
         smiles_string: 'CCO',
         created_at: new Date(),
         created_by: 1,
@@ -119,14 +120,15 @@ const moleculeData: MoleculeType[] = [
         "organization / order": 'Organization 1 / Order 1',
         status: 1,
         status_name: 'Active',
-        favourite_id: 2,
+        favorite_id: 2,
         updated_at: new Date(),
         updated_by: 1,
         adme_data: [],
         reaction_data: {},
         functional_assays: [],
         molecule_id: 0,
-        disabled: false
+        disabled: false,
+        assays: []
     },
 ];
 
@@ -167,12 +169,16 @@ const userData: UserData = {
     roles: [{
         type: 'admin',
     }],
-    is_active: false
+    is_active: false,
+    _count: {
+        owner: 1
+    }
 };
 
 const projectData: ProjectDataFields = {
     name: 'Test Project',
-    id: 1,
+    id: 1,    
+    inherits_bioassays: true,
     container: {
         id: 1,
         name: 'Test Organization',
@@ -180,11 +186,9 @@ const projectData: ProjectDataFields = {
         is_active: true,
         orgUser: [],
         metadata: {
-            functionalAssay1: '',
-            functionalAssay2: '',
-            functionalAssay3: '',
-            functionalAssay4: '',
-        },
+            assay: []      
+        },        
+        inherits_bioassays: false,
         owner_id: 1,
         type: 'internal',
         inherits_configuration: false
@@ -264,21 +268,21 @@ describe('MoleculeList Component', () => {
     // Define the columns for the CustomDataGrid
     const columns = [
         {
-            dataField: 'favourite',
+            dataField: 'favorite',
             title: 'Favorite',
             customRender: (data: any) => (
                 <span
-                    data-testid={`favourite-icon-${data.id}`}
+                    data-testid={`favorite-icon-${data.id}`}
                     onClick={() =>
                         addToFavorites({
                             molecule_id: data.id,
-                            favourite: !data.favourite,
+                            favorite: !data.favorite,
                             user_id: 0,
-                            favourite_id: 0
+                            favorite_id: 0
                         })
                     }
                 >
-                    {data.favourite ? '★' : '☆'}
+                    {data.favorite ? '★' : '☆'}
                 </span>
             ),
         },
@@ -295,8 +299,7 @@ describe('MoleculeList Component', () => {
                     expanded={false}
                     tableData={moleculeData}
                     setTableData={mockSetTableData}
-                    selectedLibrary={0}
-                    library_id={0}
+                    selectedLibraryId={0}
                     projectData={projectData}
                     projectId={''}
                     organizationId={''}
@@ -346,8 +349,7 @@ describe('MoleculeList Component', () => {
                     expanded={false}
                     tableData={moleculeData}
                     setTableData={mockSetTableData}
-                    selectedLibrary={0}
-                    library_id={0}
+                    selectedLibraryId={0}
                     projectData={projectData}
                     projectId={''}
                     organizationId={''}
@@ -523,7 +525,7 @@ describe('MoleculeList Component', () => {
         );
     });
 
-    test.skip('toggles favourite status of a molecule in the custom data grid', async () => {
+    test.skip('toggles favorite status of a molecule in the custom data grid', async () => {
         const mockSetTableData = jest.fn();
 
         // Mock implementation for addToFavorites
@@ -539,8 +541,7 @@ describe('MoleculeList Component', () => {
                     expanded={false}
                     tableData={moleculeData}
                     setTableData={mockSetTableData}
-                    selectedLibrary={1}
-                    library_id={1}
+                    selectedLibraryId={1}
                     projectData={projectData}
                     projectId="1"
                     organizationId="1"
@@ -561,21 +562,21 @@ describe('MoleculeList Component', () => {
 
         // Wait for the data to render
         await waitFor(() => {
-            const favouriteIcons = screen.queryAllByText('★');
-            expect(favouriteIcons.length).toBeGreaterThan(0); // Ensure at least one favorite icon is rendered
+            const favoriteIcons = screen.queryAllByText('★');
+            expect(favoriteIcons.length).toBeGreaterThan(0); // Ensure at least one favorite icon is rendered
         });
 
         // Simulate a click event on the favorite icon
-        const favouriteIcons = screen.queryAllByText('★');
-        fireEvent.click(favouriteIcons[0]);
+        const favoriteIcons = screen.queryAllByText('★');
+        fireEvent.click(favoriteIcons[0]);
 
         // Verify the addToFavorites mock is called with the correct arguments
         await waitFor(() => {
             expect(addToFavoritesMock).toHaveBeenCalledWith({
                 molecule_id: 1, // ID of the clicked molecule
-                favourite: false, // New favourite status
+                favorite: false, // New favorite status
                 user_id: 0,
-                favourite_id: 0
+                favorite_id: 0
             });
         });
     }, 60000);

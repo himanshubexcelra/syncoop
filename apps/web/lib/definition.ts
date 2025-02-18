@@ -147,8 +147,8 @@ export interface MoleculeType {
   disabled: boolean;
   status: number;
   status_name: string;
-  favourite_id: number;
-  favourite: boolean;
+  favorite_id: number;
+  favorite: boolean;
   updated_at: Date;
   updated_by: number;
   yield?: number;
@@ -160,16 +160,26 @@ export interface MoleculeType {
   adme_data: ColorSchemeFormat[],
   reaction_data: any;
   functional_assays: ColorSchemeFormat[],
+  assays: any[],
 }
 
 
 export type addToFavoritesProps = {
   molecule_id: number,
   user_id: number,
-  favourite: boolean,
-  favourite_id: number
+  favorite: boolean,
+  favorite_id: number
 }
-
+export type copyToProps = {
+  library_id: number,
+  smiles_string: string,
+  project_id: number;
+  organization_id: number;
+  molecular_weight: number;
+  created_by: number;
+  finger_print: string;
+  status: number;
+}
 export interface LibraryFields {
   name: string;
   id: number;
@@ -291,7 +301,10 @@ export interface UserData {
   roles: [{
     type: string;
   }];
-  primary_contact_id?: number
+  primary_contact_id?: number;
+  _count: {
+    owner: number,
+  }
 }
 export interface projectType {
   id: number,
@@ -556,6 +569,8 @@ export interface UploadMoleculeSmilesRequest {
 export interface RejectedSmiles {
   smiles: string;
   reason: string;
+  project_name: string,
+  library_name: string
 }
 export interface UploadMoleculeSmilesResponse {
   message: string;
@@ -564,6 +579,16 @@ export interface UploadMoleculeSmilesResponse {
   uploaded_smiles: string[];
   rejected_smiles: RejectedSmiles[]
 }
+
+export interface AssaySaved {
+  [key: string]: string
+}
+
+export interface MoleculeWithAssays {
+  id: number,
+  assays: AssaySaved[],
+}
+
 export interface OrderType {
   order_id: number;
   order_name: string;
@@ -572,6 +597,7 @@ export interface OrderType {
   created_by: number;
   status: number;
   reactionStatus: number,
+  ordered_molecules_data: MoleculeWithAssays[]
 }
 
 export interface DeleteMoleculeCart {
@@ -630,6 +656,7 @@ export interface MoleculeOrder {
     functionalAssay3: string;
     functionalAssay4: string;
   } | null;
+  assays: any[];
 }
 
 export enum OrganizationType {
@@ -666,6 +693,7 @@ export interface CartItem {
   molecule_order_id: number,
   orderName: string,
   organization: Organization;
+  assays?: [],
 }
 export interface UploadMoleculeFileRequest {
   file: File;
@@ -711,10 +739,12 @@ export interface ColumnConfig {
   allowSorting?: boolean,
   allowHeaderFiltering?: boolean,
   customRender?: (data: any) => React.ReactNode;
+  customRenderWithIndex?: (data: any, index: number) => React.ReactNode;
   headerCellRenderer?: () => React.ReactNode;
   headerFilter?: ColumnHeaderFilter;
   cssClass?: string;
   defaultSortOrder?: "asc" | "desc" | undefined
+  editingEnabled?: boolean,
 }
 
 export enum StatusTypes {
@@ -903,6 +933,7 @@ export type CreateLabJobOrder = {
   project_id: number,
   user_id: number,
   order_id?: number,
+  assays?: object[],
 }
 export type SaveLabJobOrder = {
   molecule_id: number,
@@ -998,3 +1029,6 @@ export interface AmsInventoryItem {
   details: AmsInventoryDetails;
 }
 
+export interface CopyMolecules {
+  smiles: string;
+}

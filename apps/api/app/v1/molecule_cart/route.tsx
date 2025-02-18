@@ -4,6 +4,29 @@ import { getUTCTime, json } from "@/utils/helper";
 import { STATUS_TYPE } from "@/utils/message";
 
 const { SUCCESS, BAD_REQUEST, INTERNAL_SERVER_ERROR } = STATUS_TYPE;
+
+export interface AssayFields {
+    sampleType: string,
+    concentration: string,
+    incubationTime: string,
+    specificInhibitors: string
+}
+interface AssayFieldList {
+    assay?: string,
+    clinical_indication?: string,
+    target?: string,
+    description?: string,
+    user_fields?: AssayFields,
+    name: string,
+    supplier?: string,
+    SKU?: number,
+    testMoleculeName?: string,
+    comment?: string,
+    commercial?: boolean,
+    assay_detail?: string,
+    id?: number,
+}
+
 interface Item {
     molecule_id: string; // or number, depending on your data type
     library_id: string; // or number
@@ -11,7 +34,8 @@ interface Item {
     project_id: string; // or number
     user_id: string; // or number
     order_id?: number,
-    created_at: string
+    created_at: string,
+    assays?: { id: number, value: AssayFieldList[] } | string,
 }
 interface updatedItem {
     molecule_id: number; // or number, depending on your data type
@@ -131,7 +155,8 @@ export async function POST(request: Request) {
             organization_id: Number(item.organization_id),
             project_id: Number(item.project_id),
             created_by: Number(item.user_id),
-            created_at: getUTCTime(new Date().toISOString())
+            created_at: getUTCTime(new Date().toISOString()),
+            assays: item.assays
         };
         if (item.order_id) {
             return { ...obj, molecule_order_id: item.order_id };

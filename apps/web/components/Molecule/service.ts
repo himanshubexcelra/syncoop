@@ -1,10 +1,9 @@
 "use server";
-
 export async function uploadMoleculeSmiles(formData: FormData) {
     const requestBody = {
         "smiles": JSON.parse(formData.get('smiles') as string),
         "createdBy": formData.get('createdBy'),
-        "libraryId": formData.get('library_id'),
+        "libraryId": JSON.parse(formData.get('library_id') as string),
         "projectId": formData.get('project_id'),
         "organizationId": formData.get('organization_id'),
         "sourceMoleculeName": formData.get('source_molecule_name'),
@@ -70,3 +69,4 @@ export async function updateMoleculeSmiles(formData: FormData) {
         return error;
     }
 }
+

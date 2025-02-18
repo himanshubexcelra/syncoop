@@ -18,8 +18,14 @@ export default function RejectedDialog({ onClose, rejected, rejectedMessage, upl
         setLoading(isLoader ?? false);
     }, [isLoader]);
     const downloadTemplate = () => {
-        const header = { smiles: "SMILE", reason: "Reason" }
-        downloadCSV(header, rejected, 'rejected_smiles')
+        const extractedData = rejected?.map(({ smiles, reason, project_name, library_name }) => ({
+            project_name: project_name ? project_name : "Not Available",
+            library_name: library_name ? library_name : "Not Available",
+            smiles,
+            reason,
+        }));
+        const header = { project_name: "Project Name", library_name: "Library Name", smiles: "SMILE", reason: "Reason" }
+        downloadCSV(header, extractedData, 'rejected_smiles')
     }
 
     return (
@@ -50,15 +56,17 @@ export default function RejectedDialog({ onClose, rejected, rejectedMessage, upl
                 </button>
                 {duplicateSmiles?.length > 0 &&
                     <button
-                        className='secondary-button'
+                        className={isLoading
+                            ? 'disableButton w-[125px]'
+                            : 'secondary-button'}
                         onClick={() => uploadDuplicate && uploadDuplicate()}
                     >
                         <LoadIndicator className="button-indicator"
                             visible={isLoading}
-                            height={5}
-                            width={95} />
+                            height={20}
+                            width={20} />
                         {isLoading ? '' : 'Upload Duplicate'}
-
+ 
                     </button>
                 }
                 <button className='reject-button' onClick={onClose}>Close</button>

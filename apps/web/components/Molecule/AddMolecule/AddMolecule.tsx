@@ -57,6 +57,7 @@ export default function AddMolecule({
     const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
     const [rejectedMessage, setRejectedMessage] = useState<string[]>([]);
     const [duplicateSmiles, setDuplicateSmiles] = useState<string[]>([]);
+    const [updateSmiles, setUploadSmiles] = useState<number>(0);
     const [, startTransition] = useTransition()
     const [isLoader, setIsLoader] = useState(false);
 
@@ -67,17 +68,26 @@ export default function AddMolecule({
 
     const hideRejectPopUp = () => {
         setShowRejectedDialog(false);
-        callLibraryId();
+        if (updateSmiles > 0) {
+            callLibraryId();
+        }
         removeItem()
         setViewAddMolecule(false)
     }
+    function getUniqueSmiles(molecules:any[]): string[] {
+        const uniqueSmiles = Array.from(new Set(molecules.map(mol => mol.smiles)));
+        return uniqueSmiles;
+    }
+    
+    
     const uploadDuplicateMolecule = () => {
         setIsLoader(true);
-        const smileList = duplicateSmiles.map((item: any) => item.smiles)
+        const uniqueSmileList = getUniqueSmiles(duplicateSmiles);
+        const smileLibraryId = [libraryId];
         const formData = new FormData();
-        formData.append('smiles', JSON.stringify(smileList));
+        formData.append('smiles', JSON.stringify(uniqueSmileList));
         formData.append('createdBy', userData?.id.toString());
-        formData.append('library_id', libraryId?.toString());
+        formData.append('library_id', JSON.stringify(smileLibraryId));
         formData.append('project_id', projectId?.toString());
         formData.append('organization_id', organizationId?.toString());
         formData.append('checkDuplicate', 'false');
@@ -85,11 +95,14 @@ export default function AddMolecule({
         startTransition(async () => {
             await uploadMoleculeSmiles(formData).then(async (result) => {
 
+                setRejected(result?.rejected_smiles.
+                    concat(result?.duplicate_smiles));
                 if (result?.error) {
                     const toastId = toast.error(result?.error?.detail);
                     await delay(DELAY);
                     toast.remove(toastId);
                 } else {
+                    setUploadSmiles(result?.uploaded_smiles_count)
                     if (result?.duplicate_smiles?.length) {
                         setDuplicateSmiles(result?.duplicate_smiles)
                     }
@@ -97,7 +110,6 @@ export default function AddMolecule({
                         setRejectedMessage(Messages.displayMoleculeSucessMsg
                             (result?.uploaded_smiles?.length, result?.rejected_smiles?.length,
                                 result?.duplicate_smiles?.length))
-                        setRejected(result?.rejected_smiles)
                         setShowRejectedDialog(true);
                         setIsLoader(false);
                     } else {
@@ -136,24 +148,27 @@ export default function AddMolecule({
     const saveMolecule = () => {
         KetcherFunctions.exportSmile().then(async (str) => {
             if (str) {
-                const smile = [str]
+                const smile = [str];
+                const smileLibraryId = [libraryId];
                 setSaveLoadIndicatorVisible(true);
                 setSaveButtonText('');
                 const formData = new FormData();
                 formData.append('smiles', JSON.stringify(smile));
                 formData.append('createdBy', userData?.id.toString());
-                formData.append('library_id', libraryId?.toString());
+                formData.append('library_id', JSON.stringify(smileLibraryId));
                 formData.append('project_id', projectId?.toString());
                 formData.append('organization_id', organizationId?.toString());
                 formData.append('source_molecule_name', moleculeName);
                 formData.append('checkDuplicate', 'true');
                 startTransition(async () => {
                     await uploadMoleculeSmiles(formData).then(async (result) => {
+                        setUploadSmiles(result?.uploaded_smiles_count)
+                        setRejected(result?.rejected_smiles.
+                            concat(result?.duplicate_smiles))
                         if (result?.rejected_smiles?.length) {
                             const rejectedSmile = result.rejected_smiles[0]
                             const message = Messages.ADD_MOLECULE_ERROR + rejectedSmile.reason;
                             setRejectedMessage([message])
-                            setRejected(result?.rejected_smiles)
                             setShowRejectedDialog(true);
                         } else if (result?.detail) {
                             setViewAddMolecule(false);
@@ -165,24 +180,12 @@ export default function AddMolecule({
                         }
                         else if (result?.duplicate_smiles?.length) {
                             setRejectedMessage([result?.message])
-                            const duplicateSmileString = result?.duplicate_smiles.map(
-                                ({ smiles, reason }: { smiles: string; reason: string }) =>
-                                    ({ smiles, reason })
-                            );
-                            setDuplicateSmiles(duplicateSmileString);
-                            setRejected(result?.rejected_smiles.
-                                concat(duplicateSmileString))
+                            setDuplicateSmiles(result?.duplicate_smiles)
                             setShowRejectedDialog(true);
                         }
                         else if (result?.warnings) {
                             setRejectedMessage([result?.message])
-                            const duplicateSmileString = result?.warnings.map(
-                                ({ smiles, reason }: { smiles: string; reason: string }) =>
-                                    ({ smiles, reason })
-                            );
-                            setDuplicateSmiles(duplicateSmileString);
-                            setRejected(result?.rejected_smiles.
-                                concat(duplicateSmileString))
+                            setDuplicateSmiles(result?.duplicate_smiles)
                             setShowRejectedDialog(true);
                         }
                         else {
@@ -279,7 +282,11 @@ export default function AddMolecule({
 
             startTransition(async () => {
                 await uploadMoleculeFile(formData).then(async (result) => {
-
+                    console.log(result,'RES');
+                    
+                    setUploadSmiles(result?.uploaded_smiles_count)
+                    setRejected(result?.rejected_smiles.
+                        concat(result?.duplicate_smiles));
                     if (result?.error) {
                         const toastId = toast.error(result?.error?.detail);
                         await delay(DELAY);
@@ -292,20 +299,6 @@ export default function AddMolecule({
                             setRejectedMessage(Messages.displayMoleculeSucessMsg
                                 (result?.uploaded_smiles?.length, result?.rejected_smiles?.length,
                                     result?.duplicate_smiles?.length))
-                            setRejected(result?.rejected_smiles)
-
-                            if (result?.duplicate_smiles?.length) {
-                                const duplicateSmileString = result?.duplicate_smiles.map(
-                                    ({ smiles, reason }: { smiles: string; reason: string }) =>
-                                        ({ smiles, reason })
-                                );
-
-                                setRejected(result?.rejected_smiles.
-                                    concat(duplicateSmileString))
-
-                            }
-
-
                             setShowRejectedDialog(true);
 
                         } else {

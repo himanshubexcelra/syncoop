@@ -16,6 +16,7 @@ import {
     OrganizationDataFields,
     FetchUserType,
     AssayFieldList,
+    ContainerPermission,
 } from "@/lib/definition";
 import { sortByDate, sortNumber, sortString } from '@/utils/sortString';
 import { deleteLibrary } from './service';
@@ -28,6 +29,7 @@ import {
     isDeleteLibraryEnable,
     isLibraryManger,
     isCustomReactionCheck,
+    isContainerAccess,
 } from '@/utils/helpers';
 import TextWithToggle from "@/ui/TextWithToggle";
 import { Messages } from "@/utils/message";
@@ -65,7 +67,6 @@ type LibraryAccordionType = {
     childRef: React.RefObject<HTMLDivElement>,
     setDirtyField: (val: boolean, type: string) => void,
     reset: string,
-    adminProjectAccess: boolean,
     organizationId: number,
     setReset: any,
     selectType?: (val: string) => void,
@@ -93,7 +94,6 @@ export default function LibraryAccordion({
     childRef,
     setDirtyField,
     reset,
-    adminProjectAccess,
     organizationId,
     setReset,
     selectType,
@@ -339,19 +339,20 @@ export default function LibraryAccordion({
                                 text={`View All ${entityLabel}`}
                                 type="normal"
                                 stylingMode="contained"
+                                disabled={!selectedLibraryId}
                                 elementAttr={{
-                                    class: "btn-primary mr-[20px] capitalize"
+                                    class: `${(!!selectedLibraryId ?
+                                        'btn-primary' : 'btn-disable') +
+                                        ' mr-[20px] capitalize'}`
                                 }}
                                 onClick={() => {
-                                    if (selectedLibraryId) {
-                                        setLibraryId(0)
-                                        const url = `/projects/${projectId}`
-                                        router.replace(url);
-                                        fetchLibraries()
-                                    }
+                                    setLibraryId(0)
+                                    const url = `/projects/${projectId}`
+                                    router.replace(url);
+                                    fetchLibraries()
                                 }}
                             />
-                            {adminProjectAccess && <Button
+                            {adminAccess && <Button
                                 text="Edit"
                                 type="normal"
                                 stylingMode="contained"
@@ -407,7 +408,7 @@ export default function LibraryAccordion({
                     onSelectedIndexChange={onSelectedIndexChange}
                     reset={reset}
                     fetchContainer={fetchLibraries}
-                    editAllowed={adminProjectAccess}
+                    editAllowed={adminAccess}
                     setReset={setReset}
                     loggedInUser={userData.id}
                 />
@@ -425,7 +426,7 @@ export default function LibraryAccordion({
                     setParentAssay={setAssayValue}
                     fetchContainer={fetchLibraries}
                     loggedInUser={userData.id}
-                    editAllowed={adminProjectAccess}
+                    editAllowed={adminAccess}
                     selectType={selectType}
                     setReset={setReset}
                 />
@@ -484,9 +485,7 @@ export default function LibraryAccordion({
                             <select
                                 value={sortBy}
                                 title="sort"
-                                className=
-                                {`w-[122px] bg-transparent cursor-pointer font-normal
-                                    text-normal text-themeBlueColor`}
+                                className={`cursor-pointer librarySortSelect`}
                                 onChange={(e) => handleSortChange(e)}>
                                 {sortByFields.map(option => (
                                     <option key={option} value={option}>
@@ -660,10 +659,10 @@ export default function LibraryAccordion({
                                 if (isDirty) {
                                     setShowPopup(true);
                                 } else {
-                                    /* const url =
+                                    const url =
                                         `/projects/${projectId}` +
                                         `?library_id=${item.id}`;
-                                    router.replace(url); */
+                                    router.replace(url);
                                     setLibraryId(item.id)
                                 }
 
@@ -810,27 +809,32 @@ export default function LibraryAccordion({
                                     }
                                     onClick={() => {
                                         setExpanded(false);
-                                        setLibraryId(item.id)
+                                        setLibraryId(item.id);
+                                        const url =
+                                            `/projects/${projectId}` +
+                                            `?library_id=${item.id}`;
+                                        router.replace(url);
                                         /* getLibraryData(item); */
                                     }}
                                 />
-                                {adminAccess && <Button
-                                    text="Edit"
-                                    type="normal"
-                                    id={`edit-${item.id}`}
-                                    stylingMode="contained"
-                                    elementAttr={
-                                        {
-                                            class: "btn-secondary"
+                                {(adminAccess || isContainerAccess(item.container_access_permission,
+                                    userData.id, ContainerPermission.Admin)) && <Button
+                                        text="Edit"
+                                        type="normal"
+                                        id={`edit-${item.id}`}
+                                        stylingMode="contained"
+                                        elementAttr={
+                                            {
+                                                class: "btn-secondary"
+                                            }
                                         }
-                                    }
-                                    onClick={(e: ClickEvent) => {
-                                        e.event?.stopPropagation();
-                                        setCreatePopupVisibility(false);
-                                        setSelectedLibraryIndex(idx);
-                                        setEditPopupVisibility(true);
-                                    }}
-                                />}
+                                        onClick={(e: ClickEvent) => {
+                                            e.event?.stopPropagation();
+                                            setCreatePopupVisibility(false);
+                                            setSelectedLibraryIndex(idx);
+                                            setEditPopupVisibility(true);
+                                        }}
+                                    />}
                                 <Button
                                     text="URL"
                                     id={`url-${item.id}`}

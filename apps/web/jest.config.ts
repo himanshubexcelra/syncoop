@@ -20,14 +20,13 @@ const config: Config = {
   collectCoverage: true,
 
   // The directory where Jest should output its coverage files
-  coverageDirectory: "coverage",
+  coverageDirectory: "<rootDir>/coverage",
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1', // Adjust based on your project structure
     "uuid": require.resolve('uuid'),
   },
   testPathIgnorePatterns: [
     '<rootDir>/packages/',
-    'packages'
   ],
 }
 

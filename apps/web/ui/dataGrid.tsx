@@ -274,10 +274,12 @@ const CustomDataGrid = ({
         isHeaderCheckboxChecked = null;
     }
 
-    const [groupByColumn, setGroupingColumn] = useState(groupingColumn);
+    const [groupByColumn, setGroupingColumn] =
+        useState(localStorage.getItem('groupByMoleculeList') || groupingColumn);
 
     const onDropDownValueChanged = useCallback((e: SelectBoxTypes.ValueChangedEvent) => {
         setGroupingColumn(e.value);
+        localStorage.setItem("groupByMoleculeList", e.value);
     }, [])
 
     const onRowUpdating = (e: DataGridTypes.RowUpdatingEvent) => {

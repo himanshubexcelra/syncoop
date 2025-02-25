@@ -148,6 +148,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [selectedLibraryData, setSelectedLibraryData] = useState<any>({});
     const [loader, setLoader] = useState(true);
     const [expanded, setExpanded] = useState(library_id && !assays ? false : true);
+    const [delayedExpand, setDelayedExpand] = useState(false);
     const [expandedAssayIndex, setExpandedAssay] = useState(library_id && assays ? 1 : 0)
     const [adminAccess, setAdminAccess] = useState<boolean>(false);
     const [adminLibAccess, setAdminLibAccess] = useState<boolean>(false);
@@ -155,6 +156,14 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     const [editEnabled, setEditAccess] = useState<boolean>(false);
     const [assayValue, setAssays] = useState<AssayFieldList[]>([]);
     const context: any = useContext(AppContext);
+    useEffect(() => {
+        setDelayedExpand(false)
+        const timer = setTimeout(() => {
+            setDelayedExpand(true); // Expand after 1 sec delay
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [expanded]);
+
     const {
         reset,
         showPopup,
@@ -502,7 +511,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     className='cursor-pointer absolute top-2.5 z-10'
                                     onClick={() => setExpanded(!expanded)}
                                 />}
-                                <MoleculeList
+                                {delayedExpand && <MoleculeList
                                     selectedLibraryName={selectedLibraryName}
                                     expanded={expanded}
                                     tableData={tableData}
@@ -515,7 +524,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     organizationId={organization_id || ''}
                                     editEnabled={adminAccess || editEnabled
                                         || adminLibAccess || editLibAccess}
-                                />
+                                />}
                             </div>
                         </div>
                     </div>

@@ -26,7 +26,6 @@ import { ColumnConfig } from '@/lib/definition';
 import './dataGrid.css';
 import { ToolbarItem } from 'devextreme/ui/file_manager';
 import Image from 'next/image';
-import { SelectBoxTypes } from 'devextreme-react/cjs/select-box';
 
 interface ToolbarButtonConfig {
     text: string;
@@ -73,6 +72,7 @@ interface CustomDataGridProps {
     onRowClick?: (e: any) => void;
     onCellClick?: (e: any) => void;
     onExporting?: (e: any) => void;
+    onDropDownValueChanged?:(e: any) => void;
     cssClass?: string;
     hoverStateEnabled?: boolean;
     selectedRow?: any[];
@@ -83,7 +83,6 @@ interface CustomDataGridProps {
 const CustomDataGrid = ({
     data,
     selectionEnabledRows = data,
-    height,
     maxHeight,
     columns,
     toolbarButtons = [],
@@ -111,7 +110,8 @@ const CustomDataGrid = ({
     selectedRow,
     onCellClick,
     dropdownButtons,
-    onRowUpdated
+    onRowUpdated,
+    onDropDownValueChanged
 }: CustomDataGridProps) => {
     const [autoExpandAll, setAutoExpandAll] = useState<boolean>(true);
     // const [groupingEnabled, setGroupingEnabled] = useState<boolean>(enableGrouping);
@@ -263,7 +263,7 @@ const CustomDataGrid = ({
         if (onSelectionUpdated) {
             onSelectionUpdated(selectedRowsKeys, selectionEnabledRows);
         }
-    }
+    } 
 
     // Determine if the header checkbox should be checked or not
     let isHeaderCheckboxChecked: any = false;
@@ -273,12 +273,6 @@ const CustomDataGrid = ({
     } else if (selectedRowKeys.length && selectedRowKeys.length < selectionEnabledRows.length) {
         isHeaderCheckboxChecked = null;
     }
-
-    const [groupByColumn, setGroupingColumn] = useState(groupingColumn);
-
-    const onDropDownValueChanged = useCallback((e: SelectBoxTypes.ValueChangedEvent) => {
-        setGroupingColumn(e.value);
-    }, [])
 
     const onRowUpdating = (e: DataGridTypes.RowUpdatingEvent) => {
         if (onRowUpdated)
@@ -384,9 +378,9 @@ const CustomDataGrid = ({
 
                 <Editing mode="cell" allowUpdating={true}></Editing>
 
-                {enableGrouping && groupByColumn && (
+                {enableGrouping && groupingColumn && (
                     <Column
-                        dataField={groupByColumn}
+                        dataField={groupingColumn}
                         dataType="string"
                         groupIndex={0}
                         groupCellRender={groupCellRender}
@@ -395,7 +389,7 @@ const CustomDataGrid = ({
                     />
                 )}
                 {enableToolbar && <Toolbar>
-                    {enableGrouping && groupByColumn && dropdownButtons &&
+                    {enableGrouping && groupingColumn && dropdownButtons &&
                         dropdownButtons.map((dropdown: any, index: number) => <Item key={index}>
                             <div className='w-[240px] float-right'>
                                 <div className="flex items-center justify-evenly">
@@ -407,7 +401,7 @@ const CustomDataGrid = ({
                                             defaultValue={dropdown.options[0].id}
                                             valueExpr="id"
                                             displayExpr="category"
-                                            value={groupByColumn}
+                                            value={groupingColumn}
                                             onValueChanged={onDropDownValueChanged}
                                             dropDownButtonRender={() =>
                                                 <Image alt="" width={18}
@@ -418,7 +412,7 @@ const CustomDataGrid = ({
                                     </div>
                                 </div>
                             </div></Item>)}
-                    {enableGrouping && groupByColumn &&
+                    {enableGrouping && groupingColumn &&
                         <Item location="before" name="groupPanel" />
                     }
                     {toolbarButtons.map((button, index) => (

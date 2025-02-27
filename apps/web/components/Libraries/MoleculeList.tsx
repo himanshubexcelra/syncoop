@@ -8,6 +8,7 @@ import { LoadIndicator } from 'devextreme-react/load-indicator';
 import ExcelJS from 'exceljs';
 import { exportDataGrid } from 'devextreme/excel_exporter';
 import { AppContext } from "../../app/AppState";
+import { SelectBoxTypes } from 'devextreme-react/cjs/select-box';
 import {
     CellData,
     ColumnConfig,
@@ -133,8 +134,14 @@ export default function MoleculeList({
             text: "Group By:",
             options: groupOptions,
         },], [])
+   const [groupByColumn, setGroupingColumn] =
+        useState(localStorage.getItem('groupByMoleculeList') || groupOptions[0].id);
 
-    const rowGroupName = () => groupOptions[0].id;
+    const onDropDownValueChanged = useCallback((e: SelectBoxTypes.ValueChangedEvent) => {
+        setGroupingColumn(e.value);
+        localStorage.setItem("groupByMoleculeList", e.value);
+    }, [])
+    const rowGroupName = () => groupByColumn;
 
     const [copyDialog, setCopyDialog] = useState(false);
     const closeMagnifyPopup = (event: any) => {
@@ -1231,6 +1238,7 @@ export default function MoleculeList({
                         dropdownButtons={dropdownButtons}
                         onRowUpdated={onRowUpdated}
                         onRowPrepared={onRowPrepared}
+                        onDropDownValueChanged={onDropDownValueChanged}
                     />
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}

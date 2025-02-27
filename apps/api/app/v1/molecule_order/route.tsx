@@ -42,6 +42,8 @@ export async function GET(request: Request) {
         lib.config AS "config",
         lib.inherits_configuration AS "inherits_configuration",
         proj.config AS "projectConfig",
+        proj.metadata AS "projectMetadata",
+        proj.metadata -> 'type' type,
         proj.inherits_configuration AS "project_inherits_configuration",
         sc.status_name as molecule_status,
         CASE WHEN m.status = ${MoleculeStatusCode.Ordered} THEN false ELSE true END AS disabled

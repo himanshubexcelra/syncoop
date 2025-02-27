@@ -1,44 +1,110 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 "use client";
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useTransition } from 'react';
 import styles from '../AddMolecule/AddMolecule.module.css'
 import DiscardCustomReaction from './DiscardCustomReaction';
 import DialogPopUp from '@/ui/DialogPopUp';
 import { LoadIndicator } from 'devextreme-react';
-import { downloadCSV } from '../file';
+import RejectedDialog from '../AddMolecule/RejectedDialog';
 import Image from 'next/image';
+import { uploadReactionFile } from '../service';
+import toast from 'react-hot-toast';
+import { delay } from '@/utils/helpers';
+import { DELAY } from '@/utils/constants';
+import { AddMoleculeProps, RejectedSmiles } from '@/lib/definition';
+import { Messages } from '@/utils/message';
 
 const DiscardDialogProperties = {
     width: 455,
     height: 158,
 }
 
+const RejectDialogProperties = {
+    width: 465,
+    height: 180,
+}
 
-export default function AddCustomReaction() {
-    const [file, setFile] = useState<File | null>(null);
+export default function AddCustomReaction({
+    userData,
+    libraryId,
+    projectId,
+    organizationId,
+    setViewAddMolecule,
+    callLibraryId,
+}: AddMoleculeProps) {
+    const [files, setFiles] = useState<File[]>([]);
     const [discardvisible, setDiscardVisible] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    const [moleculeName, setMoleculeName] = useState<string>('')
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [loadIndicatorVisible, setLoadIndicatorVisible] = useState(false);
-    const [buttonText, setButtonText] = useState('Upload');
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
+    const [duplicateSmiles, setDuplicateSmiles] = useState<string[]>([]);
+    const [updateSmiles, setUploadSmiles] = useState<number>(0);
+    const [rejected, setRejected] = useState<RejectedSmiles[]>([]);
+    const [rejectedMessage, setRejectedMessage] = useState<string[]>([]);
+    const [showRejectedDialog, setShowRejectedDialog] = useState(false);
+    const [, startTransition] = useTransition();
 
-    const isLoading = loadIndicatorVisible || loadIndicatorVisibleSave
     const hidePopup = () => {
         setDiscardVisible(false);
     };
 
-
-
     const onDiscardSubmit = () => {
-        setFile(null)
-        setMoleculeName('')
+        setFiles([])
     }
 
     const saveMolecule = () => {
         setSaveLoadIndicatorVisible(true)
-        console.log('save file');
+
+        if (files.length) {
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+            formData.append('createdBy', userData?.id.toString());
+            formData.append('libraryId', libraryId?.toString());
+            formData.append('projectId', projectId?.toString());
+            formData.append('organizationId', organizationId?.toString());
+            formData.append('checkDuplicate', 'true');
+            startTransition(async () => {
+                await uploadReactionFile(formData).then(async (result) => {
+                    setUploadSmiles(result?.uploaded_smiles_count)
+                    setRejected(result?.rejected_smiles?.
+                        concat(result?.duplicate_smiles));
+                    if (result?.error) {
+                        const toastId = toast.error(result?.error?.detail);
+                        await delay(DELAY);
+                        toast.remove(toastId);
+                    } else {
+                        if (result?.duplicate_smiles?.length) {
+                            setDuplicateSmiles(result?.duplicate_smiles)
+                        }
+                        if (result?.rejected_smiles?.length ||
+                            result?.duplicate_smiles?.length) {
+                            setRejectedMessage(
+                                Messages.displayMoleculeSucessMsg
+                                    (result?.uploaded_smiles?.length,
+                                        result?.rejected_smiles?.length,
+                                        result?.duplicate_smiles?.length, true))
+                            setShowRejectedDialog(true);
+
+                        } else {
+                            const toastId = toast.success(
+                                `${result?.uploaded_smiles?.length} ${result?.message}`
+                            );
+                            await delay(DELAY);
+                            toast.remove(toastId);
+                            setViewAddMolecule(false);
+                            callLibraryId();
+                        }
+                    }
+                }, async (error) => {
+                    const toastId = toast.error(error.message);
+                    await delay(DELAY);
+                    toast.remove(toastId);
+                });
+                setSaveLoadIndicatorVisible(false);
+            });
+        }
     }
 
     const handleDragOver = (e: any) => {
@@ -52,7 +118,7 @@ export default function AddCustomReaction() {
     };
 
     const validateFile = (file: any) => {
-        const validTypes = ['.csv', '.sdf', '.mol'];
+        const validTypes = ['.rdf', '.rd', '.rdfile'];
         const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
         const maxSizeBytes = 10 * 1024 * 1024;
         if (!validTypes.includes(fileExtension)) {
@@ -64,119 +130,70 @@ export default function AddCustomReaction() {
         return true;
     };
 
+    const hideRejectPopUp = () => {
+        setShowRejectedDialog(false);
+        if (updateSmiles > 0) {
+            callLibraryId();
+        }
+        setViewAddMolecule(false)
+    }
+
     const handleDrop = (e: any) => {
         e.preventDefault();
         setIsDragging(false);
 
-        const droppedFile = e.dataTransfer.files[0];
+        const droppedFile = e.dataTransfer.files;
         if (!droppedFile) return;
 
-        if (validateFile(droppedFile)) {
-            setFile(droppedFile);
-        }
+        const currentFiles: File[] = [...files];
+        Array.from(droppedFile).forEach((droppedFile: any) => {
+            if (validateFile(droppedFile)) {
+                currentFiles.push(droppedFile);
+            }
+        });
+        setFiles(currentFiles);
     };
     const handleFileSelect = (e: any) => {
-        const selectedFile = e.target.files?.[0];
-        if (!selectedFile) return;
+        const selectedFiles = e.target.files;
+        if (!selectedFiles) return;
 
-        if (validateFile(selectedFile)) {
-            setFile(selectedFile);
-        }
+        const currentFiles: File[] = [...files];
+        Array.from(selectedFiles).forEach((selectedFile: any) => {
+            if (validateFile(selectedFile)) {
+                currentFiles.push(selectedFile);
+            }
+        });
+        setFiles(currentFiles);
     };
     const handleBrowseClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.click();
         }
     };
-    const removeItem = () => {
-        setFile(null)
+    const removeItem = (fileName: string) => {
+        if (fileName) {
+            setFiles(files.filter(file => file.name !== fileName))
+        }
+        else setFiles([])
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     }
 
-    const handleUpload = () => {
-        setLoadIndicatorVisible(true);
-        setButtonText('');
-
-        if (file) {
-            console.log(file);
-
-        }
+    const rejectContentProps = {
+        rejected,
+        rejectedMessage,
+        onClose: hideRejectPopUp,
+        duplicateSmiles: duplicateSmiles,
+        title: 'Reactions',
     }
-    const downloadTemplate = () => {
-        const header = { col1: "ID (optional)", col2: "SMILES (mandatory)" }
-        downloadCSV(header, [], 'molecule_template')
-    }
+
     return (
         <>
             <div className="flex flex-col h-full">
-                {file &&
-                    <div className="overflow-y-auto max-h-[calc(100%-280px)]">
-
-                        {[1, 2].map((_, index) => (
-                            <div className={`w-full p-3 ${styles.uploadPart} mb-5`} key={index} >
-                                <div className="relative w-full">
-                                    <Image
-                                        src="/images/Custom_Reaction1.png"
-                                        alt="Custom_Reaction1"
-                                        width={0}
-                                        height={0}
-                                        sizes="100vw"
-                                        className="w-full h-auto max-w-full object-contain"
-                                        priority
-                                    />
-                                </div>
-                                <div className='flex justify-between items-center mb-2 mt-4'>
-                                    <div className="flex flex-col gap-2 mt-5">
-                                        <label className='text-normal text-grayMessage'>
-                                            Custom Reaction name (optional)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="molecule"
-                                            className={styles.moleculeInput}
-                                            placeholder="Reaction name"
-                                            value={moleculeName}
-                                            onChange={(event) =>
-                                                setMoleculeName(event.target.value)}
-                                        />
-                                    </div>
-                                    <div className="mt-[35px]">
-                                        <button
-                                            className='secondary-button'
-                                        >
-                                            <Image
-                                                src="/icons/delete.svg"
-                                                alt="Remove"
-                                                width={16}
-                                                height={16}
-                                                priority
-                                            />
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>))}
-                    </div>
-                }
-
-
                 <div className={`w-full p-3 mt-[25px] ${styles.uploadPart}`}>
                     <div className="flex justify-between items-center mb-2">
                         <h2 className={styles.heading}>Upload RDF</h2>
-                        <div>
-                            <span className={styles.subText}>
-                                To use the right format for importing,
-                            </span>
-                            &nbsp;
-                            <button
-                                className={styles.templateButton}
-                                onClick={() => downloadTemplate()}
-                            >
-                                Download Template
-                            </button>
-                        </div>
                     </div>
                     <div
                         className={isDragging ? styles.dottedBoxActive : styles.dottedBox}
@@ -188,14 +205,13 @@ export default function AddCustomReaction() {
                             type="file"
                             className="hidden"
                             onChange={handleFileSelect}
-                            accept=".csv,.sdf,.mol"
+                            accept=".rdf,.rd,.rdfile"
+                            multiple
                             ref={fileInputRef}
                         />
                         <div className="flex items-center justify-center">
                             <p className={`${styles.subMessage} p-4`}>
-                                {file
-                                    ? 'Drop a new file to replace the current one'
-                                    : 'Drag and drop a file here or click to browse'}
+                                Drag and drop files here or click to browse
                             </p>
                             <button
                                 onClick={handleBrowseClick}
@@ -205,46 +221,33 @@ export default function AddCustomReaction() {
                             </button>
                         </div>
                     </div>
-                    {file &&
-                        <div className='flex justify-between items-center mb-2 mt-4'>
-                            <div className='flex justify-start gap-2 rounded-lg 
+                    <div className='flex items-center mb-2 mt-4 flex-wrap'>
+                        {files.map((file, index) => (
+                            <div className='mb-2 mt-4 mr-2'
+                                key={`file-${index}`}>
+                                <div className='flex justify-start gap-2 rounded-lg 
                                 bg-blueLightBg pr-2'>
-                                <span className={styles.fileName}>{file?.name}</span>
-                                <Image
-                                    src="/icons/cross.svg"
-                                    alt="X"
-                                    width={16}
-                                    height={16}
-                                    priority
-                                    onClick={removeItem}
-                                />
+                                    <span className={styles.fileName}>{file?.name}</span>
+                                    <Image
+                                        src="/icons/cross.svg"
+                                        alt="X"
+                                        width={16}
+                                        height={16}
+                                        priority
+                                        onClick={() => removeItem(file.name)}
+                                    />
+                                </div>
                             </div>
-                            <div className="flex gap-2">
-                                <button className={loadIndicatorVisible
-                                    ? 'disableButton w-[63px]'
-                                    : 'primary-button'}
-                                    onClick={() => handleUpload()}
-                                    disabled={isLoading}>
-                                    <LoadIndicator className={
-                                        `button-indicator ${styles.white}`
-                                    }
-                                        visible={loadIndicatorVisible}
-                                        height={20}
-                                        width={20} />
-                                    {buttonText}</button>
-                                <button
-                                    className='secondary-button'
-                                    onClick={removeItem}
-                                >Reset</button>
-                            </div>
-                        </div>}
+                        ))}
+                    </div>
                 </div>
                 <div>
                     <div className="flex justify-start gap-2 mt-5 ">
-                        <button className={loadIndicatorVisibleSave
-                            ? 'disableButton w-[170px]'
-                            : 'primary-button'}
-                            disabled={isLoading}
+                        <button className={
+                            loadIndicatorVisibleSave || !files.length
+                                ? 'disableButton w-[170px]'
+                                : 'primary-button'}
+                            disabled={loadIndicatorVisibleSave || !files.length}
 
                             onClick={() => saveMolecule()}>
                             <LoadIndicator className={
@@ -252,12 +255,13 @@ export default function AddCustomReaction() {
                             }
                                 visible={loadIndicatorVisibleSave}
                                 height={20}
-                                width={20} />
+                                width={20}
+                            />
                             {loadIndicatorVisibleSave ? '' : 'Save Custom Reaction(s)'}
                         </button>
                         <button
                             className='secondary-button'
-                            disabled={isLoading}
+                            disabled={loadIndicatorVisibleSave}
                             onClick={() => setDiscardVisible(true)}
                         >
                             Reset
@@ -271,6 +275,15 @@ export default function AddCustomReaction() {
                         onSubmit: onDiscardSubmit,
                         Content: DiscardCustomReaction,
                         hidePopup
+                    }
+                } />
+                <DialogPopUp {
+                    ...{
+                        visible: showRejectedDialog,
+                        dialogProperties: RejectDialogProperties,
+                        Content: RejectedDialog,
+                        hidePopup: hideRejectPopUp,
+                        contentProps: rejectContentProps,
                     }
                 } />
             </div>

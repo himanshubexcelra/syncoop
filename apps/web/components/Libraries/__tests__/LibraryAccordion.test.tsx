@@ -501,7 +501,7 @@ describe('LibraryAccordion Component', () => {
             />
         );
 
-        const libAcc = screen.getByText('Library List');
+        const libAcc = screen.getByText(`Library List (${projectData?.other_container?.length})`);
         await act(() => fireEvent.click(libAcc));
         const openButton = screen.getByRole('button', { name: /Open/i });
         expect(openButton).toBeInTheDocument();
@@ -539,7 +539,7 @@ describe('LibraryAccordion Component', () => {
             />
         );
 
-        const libAcc = screen.getByText('Library List');
+        const libAcc = screen.getByText(`Library List (${projectData?.other_container?.length})`);
         await act(() => fireEvent.click(libAcc));
         const sortSelect = screen.getByTitle('sort');
         const select = sortSelect as HTMLSelectElement;
@@ -579,7 +579,7 @@ describe('LibraryAccordion Component', () => {
             />
         );
 
-        const libAcc = screen.getByText('Library List');
+        const libAcc = screen.getByText(`Library List (${projectData?.other_container?.length})`);
         await act(() => fireEvent.click(libAcc));
         const addLibButton = screen.getByText('Add Library');
         fireEvent.click(addLibButton);
@@ -618,7 +618,7 @@ describe('LibraryAccordion Component', () => {
                 organizationId={1}
             />
         );
-        const libAcc = screen.getByText('Library List');
+        const libAcc = screen.getByText(`Library List (${projectData?.other_container?.length})`);
         await act(() => fireEvent.click(libAcc));
         const moreButton = screen.getByText(/more/);
         await act(() => fireEvent.click(moreButton));

@@ -15,6 +15,7 @@ export async function GET(request: Request) {
         const orgId = searchParams.get('orgId');
         const project_id = searchParams.get('project_id');
         const joins = searchParams.get('with');
+        const userId = searchParams.get('userId');
         const query: any = {
             where: {
                 type: ContainerType.PROJECT
@@ -29,11 +30,13 @@ export async function GET(request: Request) {
                     other_container: {
                         include: {
                             container_access_permission: true,
-                            libraryMolecules: {
-                                select: {
-                                    status: true,
+                            ...(joins.includes('molecules') && {
+                                libraryMolecules: {
+                                    select: {
+                                        status: true,
+                                    }
                                 }
-                            },
+                            }),
                             owner: {
                                 select: {
                                     id: true,
@@ -60,7 +63,19 @@ export async function GET(request: Request) {
                             },
                         },
                         where: {
-                            type: ContainerType.LIBRARY
+                            type: ContainerType.LIBRARY,
+                            ...(userId && {
+                                OR: [
+                                    { owner_id: Number(userId) },
+                                    {
+                                        container_access_permission: {
+                                            some: {
+                                                user_id: Number(userId)
+                                            }
+                                        }
+                                    }
+                                ]
+                            })
                         },
                         orderBy: [
                             {
@@ -146,7 +161,6 @@ export async function GET(request: Request) {
                 id: 'desc',
             }
         }
-
         const projects = await prisma.container.findMany(query);
         return new Response(json(projects), {
             headers: { "Content-Type": "application/json" },
@@ -348,7 +362,7 @@ export async function PUT(request: Request) {
         // Step 4: Determine which users need to be removed
         const usersToRemove = existingProject[0]?.container_access_permission
             .filter((user: any) => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
-            .map((user: any) => user.id); // Collect the IDs of shared users to remove
+            .map((user: any) => user.id) || []; // Collect the IDs of shared users to remove
 
         // Step 5: Find all libraries of given project
         const libraries = await prisma.container.findMany({

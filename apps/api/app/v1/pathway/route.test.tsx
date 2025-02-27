@@ -26,7 +26,54 @@ jest.mock('@/utils/message', () => ({
 
 describe('route/pathway', () => {
     test('GET /pathway should return pathways for given molecule_id', async () => {
-        const mockPathwayData = [{ pathway_index: 1, molecule_id: 123 }];
+        const mockPathwayData: any = [
+            {
+                id: 1,
+                pathway_index: 1,
+                molecule_id: 123,
+                pathway_instance_id: 1,
+                updated_at: '2025-01-13T13:24:45.102Z',
+                created_at: '2025-01-13T13:00:00.000Z',
+                created_by: 'user123',
+                updated_by: 'user123',
+                description: 'Test Pathway',
+                selected: true,
+                pathway_score: 90,
+                reaction_detail: [
+                    {
+                        id: 101,
+                        reaction_sequence_no: 1,
+                        reaction_name: 'Test Reaction',
+                        reaction_smiles_string: 'CCO',
+                        product_smiles_string: 'CCO',
+                        temperature: 25,
+                        solvent: 'Water',
+                        confidence: 90,
+                        status: 1,
+                        created_at: '2025-01-13T13:00:00.000Z',
+                        reaction_compound: [
+                            {
+                                id: 1001,
+                                compound_label: 'A',
+                                compound_id: 'comp1',
+                                compound_name: 'Compound A',
+                                molar_ratio: 1,
+                                dispense_time: 10,
+                                smiles_string: 'C1CC1',
+                                compound_type: 'Solid',
+                                role: 'Reactant',
+                                created_at: '2025-01-13T13:00:00.000Z',
+                            },
+                        ],
+                        reaction_template_master: {
+                            reaction_template: {
+                                reaction_type: 'Suzuki',
+                            },
+                        },
+                    },
+                ],
+            },
+        ];
         prismaMock.pathway.findMany.mockResolvedValue(mockPathwayData);
         const request = new Request('http://localhost/?molecule_id=123', {
             method: 'GET',
@@ -47,7 +94,7 @@ describe('route/pathway', () => {
                             orderBy: { compound_label: 'asc' },
                         },
                         reaction_template_master: {
-                            select: { name: true },
+                            select: { reaction_template: true },
                         },
                     },
                 },

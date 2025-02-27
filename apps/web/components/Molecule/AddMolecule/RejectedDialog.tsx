@@ -1,3 +1,4 @@
+/*eslint max-len: ["error", { "code": 100 }]*/
 import Image from 'next/image';
 import { RejectedSmiles } from '@/lib/definition';
 import { downloadCSV } from '../file';
@@ -9,29 +10,39 @@ interface RejectedDialogProps {
     rejected?: RejectedSmiles[];
     rejectedMessage?: string[]
     uploadDuplicate?: () => void;
-    duplicateSmiles?: { smiles: string; reason: string; molecule_id: string; existing_status: string; existing_status_id: string }[];
+    duplicateSmiles?: {
+        smiles: string; reason: string;
+        molecule_id: string; existing_status: string; existing_status_id: string
+    }[];
     isLoader?: boolean;
+    title?: string;
 }
-export default function RejectedDialog({ onClose, rejected, rejectedMessage, uploadDuplicate, duplicateSmiles = [], isLoader }: RejectedDialogProps) {
+export default function RejectedDialog({ onClose, rejected, rejectedMessage,
+    uploadDuplicate, duplicateSmiles = [], isLoader, title }: RejectedDialogProps) {
     const [isLoading, setLoading] = useState(false);
     useEffect(() => {
         setLoading(isLoader ?? false);
     }, [isLoader]);
     const downloadTemplate = () => {
-        const extractedData = rejected?.map(({ smiles, reason, project_name, library_name }) => ({
-            project_name: project_name ? project_name : "Not Available",
-            library_name: library_name ? library_name : "Not Available",
-            smiles,
-            reason,
-        }));
-        const header = { project_name: "Project Name", library_name: "Library Name", smiles: "SMILE", reason: "Reason" }
-        downloadCSV(header, extractedData, 'rejected_smiles')
+        const extractedData = rejected?.map(({ smiles, reason, project_name,
+            library_name }) => ({
+                project_name: project_name ? project_name : "Not Available",
+                library_name: library_name ? library_name : "Not Available",
+                smiles,
+                reason,
+            }));
+        const header = {
+            project_name: "Project Name", library_name: "Library Name",
+            smiles: "SMILE", reason: "Reason"
+        }
+        const currentDate = new Date().toISOString().split('T')[0];
+        downloadCSV(header, extractedData, `Rejected ${title ? title : 'Smiles'}_${currentDate}`);
     }
 
     return (
         <><div className="flex justify-between">
             <div className="header-text text-messageDarkBlue">
-                Rejected Molecules
+                {`Rejected ${title ? title : 'Molecules'}`}
             </div>
             <Image
                 className='cursor-pointer'
@@ -54,7 +65,7 @@ export default function RejectedDialog({ onClose, rejected, rejectedMessage, upl
                     onClick={() => downloadTemplate()}
                 >Download Rejected List
                 </button>
-                {duplicateSmiles?.length > 0 &&
+                {!title && duplicateSmiles?.length > 0 &&
                     <button
                         className={isLoading
                             ? 'disableButton w-[125px]'
@@ -66,7 +77,7 @@ export default function RejectedDialog({ onClose, rejected, rejectedMessage, upl
                             height={20}
                             width={20} />
                         {isLoading ? '' : 'Upload Duplicate'}
- 
+
                     </button>
                 }
                 <button className='reject-button' onClick={onClose}>Close</button>

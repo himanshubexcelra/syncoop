@@ -116,7 +116,6 @@ const organizaitonData = {
 const projectData = {
     id: 1,
     name: 'Proj2',
-    target: null,
     type: 'Optimization',
     description: 'Example data',
     rganizationId: 1,
@@ -137,7 +136,6 @@ const projectData = {
             id: 1,
             name: 'EGFR-v1',
             description: 'Smaple data',
-            target: 'Target',
             project_id: 2,
             created_at: '2024-10-17T09:53:33.045Z',
             updated_at: null,
@@ -154,7 +152,6 @@ const projectData = {
             id: 2,
             name: 'Lib3',
             description: 'Smaple data',
-            target: 'Target',
             project_id: 2,
             created_at: '2024-10-17T09:53:33.070Z',
             updated_at: null,

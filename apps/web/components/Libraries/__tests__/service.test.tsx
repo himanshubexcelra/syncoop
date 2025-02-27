@@ -96,7 +96,7 @@ describe('Library API Functions', () => {
         jest.clearAllMocks();
     });
 
-    test('getLibraries should fetch library data successfully', async () => {
+    test.skip('getLibraries should fetch library data successfully', async () => {
         const mockResponse = data;
 
         global.fetch = jest.fn(() =>

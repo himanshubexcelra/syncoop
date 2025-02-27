@@ -32,7 +32,8 @@ import {
   filterCartDataForLabJob,
   generateRandomDigitNumber,
   mapCartData,
-  delay
+  delay,
+  isCustomReactionCheck
 } from "@/utils/helpers";
 import toast from "react-hot-toast";
 import { Messages } from "@/utils/message";
@@ -113,11 +114,34 @@ export default function CartDetails({
 
   const columns: ColumnConfig[] = [
     {
+      dataField: 'metadata',
+      title: 'Type',
+      width: 50,
+      allowHeaderFiltering: false,
+      allowSorting: false,
+      customRender: (data) => {
+        const isCustomReaction = isCustomReactionCheck(data.metadata);
+        return (
+          <Image
+            src={isCustomReaction
+              ? "/icons/custom-reaction-black.svg"
+              : "/icons/retrosynthesis-black.svg"}
+            width={21}
+            height={18}
+            alt="icon"
+          />
+        );
+
+      }
+    },
+    {
       dataField: "molecule_id",
       title: "Molecule ID",
       width: 120,
       customRender: (data) => (
-        <span className="flex justify-start">{data.molecule_id}</span>
+        <span className="flex justify-center">
+          {data.molecule_id}
+        </span>
       ),
     },
     {

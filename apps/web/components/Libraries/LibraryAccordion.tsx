@@ -154,7 +154,6 @@ export default function LibraryAccordion({
             : projectData?.metadata?.assay;
         setAssays(metadata || []);
     }, [appContext?.refreshAssayTable]);
-
     const renderTitle = (title: string) => (
         <div className="header-text text-black">{title}</div>
     );
@@ -304,7 +303,8 @@ export default function LibraryAccordion({
 
     return (
         <Accordion multiple={true} collapsible={true}
-            className="accordion-item-gap">
+            className="accordion-item-gap libraryBackgroundGrey"
+        >
             {confirm && (
                 <DeleteConfirmation
                     onSave={() => deleteLibraryDetail()}
@@ -470,7 +470,8 @@ export default function LibraryAccordion({
                 )
             }
             {/* Libraries List Section */}
-            <Item titleRender={() => renderTitle("Library List")}>
+            <Item titleRender={() => renderTitle(`Library List 
+                (${projectData?.other_container?.length})`)}>
                 <div className='libraries'>
                     <div className={
                         `flex 

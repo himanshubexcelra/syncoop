@@ -1,7 +1,6 @@
 /*eslint max-len: ["error", { "code": 100 }]*/
 import {
   ADMEConfigTypes,
-  AssaySaved,
   CartDetail,
   ColorSchemeFormat,
   CombinedLibraryType,
@@ -13,13 +12,28 @@ import {
   MoleculeStatusCode,
   MoleculeStatusLabel,
   MoleculeType,
+  NodeType,
+  PathObjectType,
+  PathwayType,
   ProjectDataFields,
+  ReactionCompoundType,
+  ReactionDetailType,
   Status,
   StatusType,
   UserData,
-  sharedUserType
+  sharedUserType,
+  SetPathType,
+  ReactionMoleculeType,
+  ReactionJsonType,
+  ExtractJSONDataType
 } from "@/lib/definition"
-import { ChemistryType, COLOR_SCHEME } from "./constants";
+import {
+  ChemistryType, COLOR_SCHEME, COMPOUND_TYPE_R, DEFAULT_TEMPERATURE,
+  filterMoleculeStatus, ReactionColors, ReactionColorsType, ReactionStatus
+} from "./constants";
+import { getReactionPathway, saveReactionPathway } from "@/components/MoleculeOrder/service";
+import { updateMoleculeStatus } from "@/components/Libraries/service";
+import { PathwayData } from '@/public/data/pathway2';
 
 export async function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -256,7 +270,10 @@ export function isOnlyProtocolApprover(myRoles: string[]) {
   return myRoles.length === 1 && myRoles.includes('protocol_approver');
 }
 
-export function isContainerAccess(permission: sharedUserType[], id: number, permissionType: number) {
+export function isContainerAccess(
+  permission: sharedUserType[],
+  id: number, permissionType: number
+) {
   return permission?.find(u =>
     u.user_id === id &&
     u.access_type === permissionType);
@@ -423,6 +440,7 @@ export const mapCartData = (cartData: any[], userId: number): CartDetail[] =>
     molecule_order_id: item?.molecule_order_id,
     organization_id: item?.organization_id,
     molecular_weight: item?.molecule?.molecular_weight,
+    metadata: item?.molecule.project.metadata,
     moleculeName: item?.molecule?.source_molecule_name,
     smiles_string: item?.molecule?.smiles_string,
     pathway: item?.molecule?.pathway?.length > 0 ? true : false,
@@ -474,6 +492,184 @@ export function createAssayColumns(transformedData: MoleculeOrder[] | MoleculeTy
   });
 
   return columnConfigs;
+}
+
+const prePareMolecule = (moleculeData: ReactionMoleculeType[], id: number) => {
+  const moleculeInsert = moleculeData.map((item: ReactionMoleculeType, index: number) => ({
+    smiles_string: item.reagentSMILES,
+    compound_id: item.molID,
+    // reaction_id: index,
+    compound_type: item.reactionPart.charAt(0).toUpperCase(),
+    compound_name: item.reagentName,
+    role: item.role,
+    compound_label: String(index + 1),
+    source: 'IN',
+    inventory_id: item.inventoryID,
+    inventory_url: item.inventoryURL,
+    created_by: id,
+    molar_ratio: item.molarRatio,
+    dispense_time: Number(item.dispenseTime),
+  }));
+  return moleculeInsert;
+}
+
+const prepareReaction = (reaction: ReactionJsonType[], id: number) => {
+  const reactionInsert = reaction.map((item: ReactionJsonType, index) => ({
+    reaction_template: item.rxnTemplate || '',
+    reaction_name: item.nameRXN.label,
+    pathway_instance_id: 0,
+    reaction_sequence_no: item.rxnindex,
+    confidence: item.Confidence || null,
+    temperature: item.conditions.temperature,
+    solvent: item.conditions.solvent,
+    product_smiles_string: item.productSMILES,
+    reaction_smiles_string: item.rxnSMILES,
+    product_type: index === reaction.length - 1 ? "F" : "I",
+    status: ReactionStatus.New,
+    created_by: id,
+    reaction_compound: prePareMolecule(item.molecules, id),
+  }));
+  return reactionInsert;
+}
+
+export const extractJsonData = async ({ molecules, id,
+  setLoader, setMoleculeStatus }: ExtractJSONDataType) => {
+
+  const synthesisData: any[] = [];
+  molecules.map(mol => {
+    const pathwayData = PathwayData.target.pathways.map((pathway: any) => ({
+      molecule_id: mol.molecule_id,  //data.target.targetID,
+      parent_id: 0,
+      pathway_instance_id: mol.pathway_instance_id,
+      pathway_index: pathway.pathIndex,
+      pathway_score: pathway.pathConfidence,
+      description: pathway.description,
+      selected: false,
+      created_by: id,
+      reaction_detail: prepareReaction(pathway.reactions, id)
+    }));
+    synthesisData.push(...pathwayData);
+  });
+  try {
+    setLoader(false);
+    await saveReactionPathway(synthesisData);
+    if (setMoleculeStatus) {
+      await updateMoleculeStatus(molecules as MoleculeOrder[], MoleculeStatusCode.Ready, id);
+      setMoleculeStatus(molecules as MoleculeOrder[], MoleculeStatusLabel.Ready);
+    }
+  } catch (err) {
+    if (err) {
+      if (setMoleculeStatus) {
+        await updateMoleculeStatus(molecules as MoleculeOrder[], MoleculeStatusCode.Failed, id);
+        setMoleculeStatus(molecules as MoleculeOrder[], MoleculeStatusLabel.Failed);
+      }
+    }
+  }
+}
+
+export const setPath = async ({
+  rowData,
+  setSelectedMoleculeId,
+  myRoles,
+  setReactionIndexList,
+  setPathwayView,
+  setNodes
+}: SetPathType) => {
+  const reactionIndex: PathObjectType[] = [];
+  if (rowData) {
+    if (setSelectedMoleculeId) {
+      setSelectedMoleculeId(rowData.molecule_id);
+    }
+    const pathways = await getReactionPathway(rowData.molecule_id);
+    let compounds: ReactionCompoundType[] = [];
+    const pathwayData = isOnlyProtocolApprover(myRoles)
+      || filterMoleculeStatus.includes(rowData.status)
+      ? [pathways.data[0]] : pathways.data;
+    const flattenedPathways = pathwayData?.map((pathway: PathwayType, pathIndex: number) => {
+      // Create an array to hold the nodes
+
+      const nodes: NodeType[] = [];
+      reactionIndex.push({ pathIndex: [] })
+      // Create a reaction node for each pathway's reaction detail
+
+      pathway.reaction_detail.reverse().map((reaction: ReactionDetailType, index: number) => {
+        reactionIndex[pathIndex].pathIndex.push(nodes.length ? nodes.length : 1);
+        let conditions = '';
+        if (reaction.solvent) {
+          conditions += `${reaction.solvent}`;
+        }
+        conditions += reaction.solvent ? ', ' : '';
+        conditions += reaction.temperature !== null ? `${reaction.temperature}°C` :
+          `${DEFAULT_TEMPERATURE}°C`;
+        const idx = pathway.reaction_detail.length - index;
+        const reactionNode: NodeType = {
+          id: reaction.id, // Ensure the ID is a string
+          type: "molecule",
+          name: reaction.reaction_name,
+          smiles: reaction.product_smiles_string,
+          condition: conditions,
+          reactionIndex: [idx],
+          pathway_instance_id: pathway.pathway_instance_id,
+        };
+        // Push the reaction node
+        if (reaction.product_type === 'F') {
+          nodes.push(reactionNode);
+        } else {
+          const molecule = compounds.find(compound =>
+            compound.smiles_string === reaction.product_smiles_string);
+          compounds = [];
+          if (molecule) {
+            const moleculeIndex = nodes.findIndex(val =>
+              val.smiles === reaction.product_smiles_string);
+            nodes[moleculeIndex].reactionIndex.push(idx);
+            reactionNode.id = molecule.id.toString();
+          }
+        }
+
+        // Add the pathway itself as a molecule node
+        const reactionColor: ReactionColorsType = `R${idx}` as ReactionColorsType;
+        const pathwayNode: NodeType = {
+          // need to add R here since if compound and reaction both ahve same ids, pathway breaks
+          id: reaction.product_type === 'F' ? `${pathway.id}R` : `${reaction.id}R`,
+          parentId: reactionNode.id?.toString(),
+          type: "reaction",
+          name: reactionNode.name,
+          condition: reactionNode.condition,
+          reactionIndex: [idx],
+          pathway_instance_id: reactionNode.pathway_instance_id,
+
+          reactionColor: ReactionColors[reactionColor],
+        };
+        nodes.push(pathwayNode);
+
+        // Create molecule nodes for each reaction compound
+        reaction.reaction_compound.forEach((compound: ReactionCompoundType) => {
+          compounds.push(compound);
+          if (compound.compound_type === COMPOUND_TYPE_R) {
+            const compoundNode = {
+              id: compound.id.toString(), // Ensure the ID is a string
+              parentId: pathwayNode.id, // Parent is the reaction
+              type: "molecule",
+              smiles: compound.smiles_string,
+              reactionIndex: [idx],
+              score: null, // Score is not defined for molecules in the provided format
+            };
+            nodes.push(compoundNode);
+          }
+        });
+      });
+      reactionIndex[pathIndex].pathIndex.reverse();
+      return nodes; // Return all nodes for the current pathway
+    });
+
+    setNodes(flattenedPathways);
+    if (setReactionIndexList) {
+      setReactionIndexList(reactionIndex);
+    }
+    if (setPathwayView) {
+      setPathwayView(true);
+    }
+  }
 }
 
 export const transformMoleculeData = (inputData: any) => {

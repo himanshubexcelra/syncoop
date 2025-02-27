@@ -306,10 +306,7 @@ export const sample_molecule_ids = [
   3941,
   3940,
   3939,
-  4057,
-  60,
-  61,
-  62
+  4057
 ];
 
 export const MAX_RANGE = 5;
@@ -961,3 +958,10 @@ export enum ChemistryType {
   RETRO_SYNTHESIS = 'Retrosynthesis',
   CUSTOM_REACTION = 'Custom Reaction',
 }
+
+export const filterMoleculeStatus =
+  [
+    MoleculeStatusCode.Done,
+    MoleculeStatusCode.InProgress,
+    MoleculeStatusCode.Failed
+  ];

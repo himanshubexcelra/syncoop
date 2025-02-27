@@ -16,7 +16,6 @@ import {
   Compound,
   ReactionCompoundType,
   PathwayType,
-  ReactionDetailType,
   ReactionDetail,
   CreateLabJobOrder,
   SelectedPathwayInstance,
@@ -32,7 +31,6 @@ import {
 import Image from 'next/image';
 import {
   COLOR_SCHEME,
-  DEFAULT_TEMPERATURE,
   moleculeStatus,
   PATHWAY_BOX_WIDTH,
   ReactionColors,
@@ -47,7 +45,7 @@ import {
 } from 'devextreme/ui/data_grid';
 import {
   getMoleculesOrder, saveReactionPathway,
-  getReactionPathway, getSolventTemperature, updateReaction,
+  getReactionPathway, updateReaction,
   searchInventory
 } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
@@ -55,19 +53,21 @@ import toast from 'react-hot-toast';
 import SendMoleculesForSynthesis from '../Libraries/SendMoleculesForSynthesis';
 import {
   createAssayColumns,
+  extractJsonData,
   getADMECalculation,
   getADMEColor,
   getAverage,
   getStatusObject,
   isAdmin,
+  isCustomReactionCheck,
   isLibraryManger,
-  isOnlyProtocolApprover,
   isProtocolAproover,
   isResearcher,
   isResearcherAndProtocolAproover,
   isSystemAdmin,
   popupPositionValue,
-  randomValue
+  randomValue,
+  setPath
 } from '@/utils/helpers';
 import './MoleculeOrder.css';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
@@ -87,7 +87,6 @@ import ConfirmationDialog from './ConfirmationDialog';
 import { COMPOUND_TYPE_R, DELAY } from "@/utils/constants";
 import { delay } from "@/utils/helpers";
 import StatusCard from '@/ui/StatusCard';
-import { PathwayData } from '@/public/data/pathway2';
 // import { basename } from 'path';
 import dynamic from 'next/dynamic';
 import AdmeInfo from '../Tooltips/AdmeInfo';
@@ -108,57 +107,6 @@ interface Reaction {
   solvent: string;
 }
 
-interface SolventTemperatureResponse {
-  solvent: string;
-  temperature: string;
-}
-
-// type ReactionsData = Reaction[];
-type SolventList = string[];
-type TemperatureList = number[];
-type PathwayJsonType = {
-  pathIndex: number,
-  pathConfidence: number,
-  moleculeId: number,
-  description: string,
-  reactions: ReactionJsonType[],
-}
-
-type ReactionMoleculeType = {
-  reagentSMILES: string,
-  molID: number,
-  reagentName: string,
-  index: number,
-  inventoryID: number,
-  reactionPart: string,
-  molarRatio: number,
-  dispenseTime: number,
-  role: string,
-  inventoryURL: string
-}
-
-type ReactionNameType = {
-  label: string,
-}
-
-type ConditionType = {
-  temperature: string,
-  solvent: string,
-}
-
-type ReactionJsonType = {
-  rxnTemplate: string,
-  nameRXN: ReactionNameType,
-  rxnindex: number,
-  Confidence: number,
-  conditions: ConditionType,
-  productSMILES: string,
-  product_type: string,
-  reaction_compound: ReactionMoleculeType,
-  molecules: ReactionMoleculeType[],
-  rxnTemplateGroup: string,
-  rxnSMILES: string,
-}
 type PathObjectType = {
   pathIndex: number[]; // pathIndex is an array of numbers
 }
@@ -200,8 +148,6 @@ export default function MoleculeOrderPage({
   const context: any = useContext(AppContext);
   const appContext = context.state;
   const [reactionsData, setReactionsData] = useState<any[]>([]);
-  const [solventList, setSolventList] = useState<SolventList>([]);
-  const [temperatureList, setTemperatureList] = useState<TemperatureList>([]);
   const [activeTab, setActiveTab] = useState<number>(0);
   const [nextReaction, setNextReaction] = useState<boolean>(false);
   const [selectedRow, setSelectRow] = useState(-1);
@@ -209,11 +155,11 @@ export default function MoleculeOrderPage({
   const [reactionDetail, setReactionDetail] = useState<ReactionDetail>();
   const [confirm, setConfirm] = useState(false);
   const [reactionIndexList, setReactionIndexList] = useState<PathObjectType[]>([]);
-  const [selectedMoleculeId, setSelecterdMoleculeId] = useState<number>();
+  const [selectedMoleculeId, setSelectedMoleculeId] = useState<number>();
   const [selecteLabJobOrder, setSelecteLabJobOrder] = useState<CreateLabJobOrder[]>([]);
   const [selectedMoleculeOrder, setSelectedMoleculeOrder] = useState<MoleculeOrder[]>([]);
   const [pathwayReaction, setPathWayReaction] = useState([])
-  const [isEditpathWay, setEditPahway] = useState(true)
+  const [isEditpathWay, setEditPathway] = useState(true)
   const [buttonClicked, setButtonClicked] = useState(false);
   const permitSumbitSynthesis = actionsEnabled.includes('generate_pathway');
   const permitEditReaction = actionsEnabled.includes("edit_reactions");
@@ -243,6 +189,9 @@ export default function MoleculeOrderPage({
     myRoles?.includes(role));
   const [disableAnalysis, setDisableAnalysis] = useState(false);
   const [hideOpen, setHideOpen] = useState(false);
+  const [clickedMolecule, setClickedMolecule] = useState(-1);
+  const [isCustomReaction, setCustomReaction] = useState(false);
+  // const [pathwayKeys, setPathwayKeys] = useState<string[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -281,13 +230,6 @@ export default function MoleculeOrderPage({
     },
   ];
 
-  const filterMoleculeStatus =
-    [
-      MoleculeStatusCode.Done,
-      MoleculeStatusCode.InProgress,
-      MoleculeStatusCode.Failed
-    ];
-
   const clickableRow = (data: MoleculeOrder) => {
     const { molecule_status: moleculeStatus } = data;
     let isClickableRow = !isClickable.includes(moleculeStatus);
@@ -318,6 +260,36 @@ export default function MoleculeOrderPage({
   };
 
   const columns: ColumnConfig[] = [
+    {
+      dataField: 'type',
+      title: 'Type',
+      width: 100,
+      alignment: 'left',
+      allowSorting: false,
+      customRender: (data) => {
+        const isCustomReaction = isCustomReactionCheck(data.projectMetadata);
+        if (isCustomReaction) {
+          return (
+            <Image
+              src="/icons/custom-reaction-md.svg"
+              width={18}
+              height={18}
+              alt="Custom Reaction"
+            />
+          );
+        }
+        else {
+          return (
+            <Image
+              src="/icons/retrosynthesis-md.svg"
+              width={18}
+              height={18}
+              alt="Retrosynthesis"
+            />
+          )
+        }
+      }
+    },
     {
       dataField: 'smiles_string',
       title: 'Structure',
@@ -361,7 +333,7 @@ export default function MoleculeOrderPage({
       title: 'Molecule ID',
       allowHeaderFiltering: true,
       allowSorting: true,
-      width: 140,
+      width: 150,
       alignment: 'center',
       defaultSortOrder: "desc",
       customRender: (data) => {
@@ -372,7 +344,7 @@ export default function MoleculeOrderPage({
           (data?.molecule_status === MoleculeStatusLabel.Ready ||
             data?.molecule_status === MoleculeStatusLabel.Validated))
           ? true : false; */
-        const isClickable = clickableRow(data);
+        const isClickable = clickableRow(data) || isCustomReactionCheck(data.projectMetadata);
         return (isClickable) ? (
           <button
             className="text-themeBlueColor underline"
@@ -899,15 +871,109 @@ export default function MoleculeOrderPage({
     }
   ];
 
-  const [orderColumns, setMoleculeOrderColumns] = useState(columns);
+  // useEffect(() => {
+  //   console.log('test12345');
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedValue = localStorage.getItem('pathway_box_width');
-      const width = storedValue ? Number(storedValue) : PATHWAY_BOX_WIDTH;
-      setPopupWidth(width);
-    }
-  }, []);
+  //   const socket = new WebSocket(
+  //     'wss://ia5cg5jeeb.execute-api.us-east-1.amazonaws.com/Dev/');
+
+  //   socket.onopen = () => {
+  //     console.log("WebSocket connection established");
+  //   };
+
+  //   socket.onmessage = (event) => {
+  //     console.log("Message received: ", event.data);
+  //   };
+
+  //   socket.onclose = () => {
+  //     console.log("WebSocket connection closed");
+  //   };
+
+  //   return () => {
+  //     socket.close();
+  //   };
+  // }, []);
+
+  // useEffect(() => {
+  //   if (pathwayKeys.length === 0) return;
+
+  //   const headers = {
+  //     'accept': 'application/json',
+  //     'Content-Type': 'application/json'
+  //   }
+  //   const queryParams = new URLSearchParams(headers).toString();
+  //   // const socket = new WebSocket(
+  //   //   `${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/?${queryParams}`);
+
+  //   // New Socket URL  
+  //   // const socket = new WebSocket(
+  //   //   `wss://ia5cg5jeeb.execute-api.us-east-1.amazonaws.com/Dev/?${queryParams}`); 
+  //   const socket = new WebSocket(
+  //     `${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/?${queryParams}`);
+  //   socket.onopen = () => {
+  //     console.log('Onopen socket');
+
+  //     pathwayKeys.forEach(key => {
+  //       socket.send(JSON.stringify({ key })); // Send each key one at a time
+  //     });
+  //   };
+
+  //   socket.onmessage = async (event) => {
+  //     console.log('onmessage socket');
+
+  //     if (event.data && typeof event.data === "string") {
+  //       const parsedData = JSON.parse(event.data);
+  //       console.log(parsedData, "parsedDataparsedData");
+
+  //       const message = parsedData.message;
+  //       if (typeof message === "string" && message !== "Forbidden") {
+  //         const parsedMessage = JSON.parse(message);
+  //         if (parsedMessage.status == true) {
+  //           setSelectedRows([]);
+  //           await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
+  //           setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
+  //           // extractJsonData(PathwayData, moleculeData);
+  //           setMoleculeData([]);
+  //         } else {
+  //           setSelectedRows([]);
+  //           setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
+  //           await updateMoleculeStatus
+  //             (moleculeData, MoleculeStatusCode.Failed, userData.id);
+  //         }
+  //       }
+  //       // since we use mock data this will be needed later
+
+  //       //   const foundMolecule = moleculeData.find((molecule: MoleculeOrder) =>
+  //       //     molecule.molecule_id === parsedMessage.molecule_id);
+  //       //   if (foundMolecule && parsedMessage.status == true) {
+  //       //     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
+  //       //     setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
+  //       //     const currentSelectedRows = selectedRows.filter(key =>
+  //       //       parsedMessage.molecule_id == key);
+  //       //     setSelectedRows(currentSelectedRows);
+  //       //     // extractJsonData(PathwayData, [foundMolecule]);
+  //       //     setMoleculeData(moleculeData.filter(molecule =>
+  //       //       foundMolecule.molecule_id == molecule.molecule_id));
+  //       //   } else if (moleculeData.includes(parsedMessage.molecule_id) &&
+  //       //     parsedMessage.status == false) {
+  //       //     setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
+  //       //     await updateMoleculeStatus
+  //       // (moleculeData, MoleculeStatusCode.Failed, userData.id);
+  //       //   }
+  //       // }
+  //     }
+  //   };
+
+  //   socket.onerror = (error) => {
+  //     console.log("WebSocket error", error);
+  //   };
+
+  //   return () => {
+  //     socket.close();
+  //   };
+  // }, [pathwayKeys]);
+
+  const [orderColumns, setMoleculeOrderColumns] = useState(columns);
 
   /* const selectionRef = useRef<{
     checkBoxUpdating: boolean,
@@ -916,63 +982,6 @@ export default function MoleculeOrderPage({
     checkBoxUpdating: false,
     selectAllCheckBox: null
   }); */
-
-  // useEffect(() => {
-  //   // const socket = io(process.env.NEXT_PUBLIC_WEB_SOCKET_URL);
-  //   // const socket = i
-  // o('https://it8h43bqkj.execute-api.us-east-1.amazonaws.com/Dev/@connections', {
-  //   //   path: '/socket.io' // This is the default path for Socket.IO
-  //   // });
-  //   // const socket = 
-  // io('https://it8h43bqkj.execute-api.us-east-1.amazonaws.com/Dev/@connections')
-
-  //   const socket = io(
-  // 'https://it8h43bqkj.execute-api.us-east-1.amazonaws.com/Dev/@connections', {
-  //     transports: ['websocket'], // Optional: specify transport method
-  //     path: '/socket.io' // Ensure the correct path for Socket.IO
-  //   });
-
-
-  //   socket.on('connect', () => {
-  //     console.log('Connected to WebSocket server');
-  //   });
-
-  //   socket.on('response', (data) => {
-  //     console.log('Response from server:', data);
-  //     // setResponse(data);
-  //   });
-
-  //   setSocket(socket);
-
-  //   return () => {
-  //     socket.disconnect();
-  //   };
-  // }, []);
-
-
-  // useEffect(() => {
-  //   const socket = new WebSocket(
-  // 'https://it8h43bqkj.execute-api.us-east-1.amazonaws.com/Dev/@connections');
-
-  //   socket.onopen = () => {
-  //     console.log("WebSocket connection established");
-  //     setConnected(true);
-  //   };
-
-  //   socket.onmessage = (event) => {
-  //     console.log("Message received: ", event.data);
-  //     setMessage(event.data);
-  //   };
-
-  //   socket.onclose = () => {
-  //     console.log("WebSocket connection closed");
-  //     setConnected(false);
-  //   };
-
-  //   return () => {
-  //     socket.close();
-  //   };
-  // }, []);
 
   const rowGroupName = () => {
     if (type === OrganizationType.External || customerOrgId) {
@@ -1000,97 +1009,16 @@ export default function MoleculeOrderPage({
     setSelecteLabJobOrder(selectedMolecule)
   }
 
-  const setPath = async (data: MoleculeOrder) => {
-    const reactionIndex: PathObjectType[] = [];
+  const setLocalPath = (data: MoleculeOrder) => {
     prepareLabOrderData(data)
-    if (data) {
-      setSelecterdMoleculeId(data.molecule_id);
-      const pathways = await getReactionPathway(data.molecule_id);
-      let compounds: ReactionCompoundType[] = [];
-      const pathwayData = isOnlyProtocolApprover(myRoles)
-        || filterMoleculeStatus.includes(data.status)
-        ? [pathways.data[0]] : pathways.data;
-      const flattenedPathways = pathwayData?.map((pathway: PathwayType, pathIndex: number) => {
-        // Create an array to hold the nodes
-
-        const nodes: NodeType[] = [];
-        reactionIndex.push({ pathIndex: [] })
-        // Create a reaction node for each pathway's reaction detail
-
-        pathway.reaction_detail.reverse().map((reaction: ReactionDetailType, index: number) => {
-          reactionIndex[pathIndex].pathIndex.push(nodes.length ? nodes.length : 1);
-          let conditions = '';
-          if (reaction.solvent) {
-            conditions += `${reaction.solvent}`;
-          }
-          conditions += reaction.solvent ? ', ' : '';
-          conditions += reaction.temperature !== null ? `${reaction.temperature}°C` :
-            `${DEFAULT_TEMPERATURE}°C`;
-          const idx = pathway.reaction_detail.length - index;
-          const reactionNode: NodeType = {
-            id: reaction.id, // Ensure the ID is a string
-            type: "molecule",
-            name: reaction.reaction_name,
-            smiles: reaction.product_smiles_string,
-            condition: conditions,
-            reactionIndex: [idx],
-            pathway_instance_id: pathway.pathway_instance_id,
-          };
-          // Push the reaction node
-          if (reaction.product_type === 'F') {
-            nodes.push(reactionNode);
-          } else {
-            const molecule = compounds.find(compound =>
-              compound.smiles_string === reaction.product_smiles_string);
-            compounds = [];
-            if (molecule) {
-              const moleculeIndex = nodes.findIndex(val =>
-                val.smiles === reaction.product_smiles_string);
-              nodes[moleculeIndex].reactionIndex.push(idx);
-              reactionNode.id = molecule.id.toString();
-            }
-          }
-
-          // Add the pathway itself as a molecule node
-          const reactionColor: ReactionColorsType = `R${idx}` as ReactionColorsType;
-          const pathwayNode: NodeType = {
-            // need to add R here since if compound and reaction both ahve same ids, pathway breaks
-            id: reaction.product_type === 'F' ? `${pathway.id}R` : `${reaction.id}R`,
-            parentId: reactionNode.id?.toString(),
-            type: "reaction",
-            name: reactionNode.name,
-            condition: reactionNode.condition,
-            reactionIndex: [idx],
-            pathway_instance_id: reactionNode.pathway_instance_id,
-
-            reactionColor: ReactionColors[reactionColor],
-          };
-          nodes.push(pathwayNode);
-
-          // Create molecule nodes for each reaction compound
-          reaction.reaction_compound.forEach((compound: ReactionCompoundType) => {
-            compounds.push(compound);
-            if (compound.compound_type === COMPOUND_TYPE_R) {
-              const compoundNode = {
-                id: compound.id.toString(), // Ensure the ID is a string
-                parentId: pathwayNode.id, // Parent is the reaction
-                type: "molecule",
-                smiles: compound.smiles_string,
-                reactionIndex: [idx],
-                score: null, // Score is not defined for molecules in the provided format
-              };
-              nodes.push(compoundNode);
-            }
-          });
-        });
-        reactionIndex[pathIndex].pathIndex.reverse();
-        return nodes; // Return all nodes for the current pathway
-      });
-
-      setNodes(flattenedPathways);
-      setReactionIndexList(reactionIndex);
-      showPathway();
-    }
+    setPath({
+      rowData: data,
+      setSelectedMoleculeId,
+      myRoles: userData.myRoles,
+      setReactionIndexList,
+      setPathwayView,
+      setNodes
+    });
   }
 
   const updateMoleculeDataStatus = async (statusCode: number, statusLabel: any) => {
@@ -1231,11 +1159,25 @@ export default function MoleculeOrderPage({
   }
 
   const handleStructureZoom = (event: any, data: any) => {
+    const isCustomReaction = isCustomReactionCheck(data.projectMetadata);
+    if (isCustomReaction) {
+      setCustomReaction(true);
+      setPath({ rowData: data, myRoles: userData.myRoles, setNodes });
+      setClickedMolecule(data.molecule_id);
+      if (!data.disabled) {
+        setSelectRow(event.rowIndex);
+      }
+    } else {
+      setCellData(data);
+      setCustomReaction(false);
+    }
     const { x, y } = event.event.target.getBoundingClientRect();
     const screenHeight = window.innerHeight;
-    setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
+    setPopupCords({
+      x, y: y >= screenHeight / 2 ?
+        y - Number(`${isCustomReaction ? 350 : 125}`) : y
+    });
     setPopupVisible(true);
-    setCellData(data);
   }
 
   useEffect(() => {
@@ -1294,81 +1236,35 @@ export default function MoleculeOrderPage({
     setMoleculeOrderData(newMolecules);
   }
 
-  const prePareMolecule = (moleculeData: ReactionMoleculeType[]) => {
-    const moleculeInsert = moleculeData.map((item: ReactionMoleculeType, index: number) => ({
-      smiles_string: item.reagentSMILES,
-      compound_id: item.molID,
-      // reaction_id: index,
-      compound_type: item.reactionPart.charAt(0).toUpperCase(),
-      compound_name: item.reagentName,
-      role: item.role,
-      compound_label: String(index + 1),
-      source: 'IN',
-      inventory_id: item.inventoryID,
-      inventory_url: item.inventoryURL,
-      created_by: userData.id,
-      molar_ratio: item.molarRatio,
-      dispense_time: Number(item.dispenseTime),
-    }));
-    return moleculeInsert;
-  }
+  // const groupOrders = (data: MoleculeOrder[]) => {
+  //   const groupedData: any = {};
 
-  const prepareReaction = (reaction: ReactionJsonType[]) => {
-    const reactionInsert = reaction.map((item: ReactionJsonType, index) => ({
-      reaction_template: item.rxnTemplate || '',
-      reaction_name: item.nameRXN.label,
-      pathway_instance_id: 0,
-      reaction_sequence_no: item.rxnindex,
-      confidence: item.Confidence || null,
-      temperature: item.conditions.temperature,
-      solvent: item.conditions.solvent,
-      product_smiles_string: item.productSMILES,
-      reaction_smiles_string: item.rxnSMILES,
-      product_type: index === reaction.length - 1 ? "F" : "I",
-      status: ReactionStatus.New,
-      created_by: userData.id,
-      reaction_compound: prePareMolecule(item.molecules),
-    }));
-    return reactionInsert;
-  }
+  //   data.forEach(item => {
+  //     const orderId = item.order_id;
 
-  const extractJsonData = async (data: any, molecules: MoleculeOrder[]) => {
-    const synthesisData: PathwayType[] = [];
-    molecules.map(mol => {
-      const pathwayData = data.target.pathways.map((pathway: PathwayJsonType) => ({
-        molecule_id: mol.molecule_id,  //data.target.targetID,
-        parent_id: 0,
-        pathway_instance_id: mol.pathway_instance_id,
-        pathway_index: pathway.pathIndex,
-        pathway_score: pathway.pathConfidence,
-        description: pathway.description,
-        selected: false,
-        created_by: userData.id,
-        reaction_detail: prepareReaction(pathway.reactions)
-      }));
-      synthesisData.push(...pathwayData);
-    });
-    try {
-      setLoader(false);
-      await saveReactionPathway(synthesisData);
-      await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
-      setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
-    } catch (err) {
-      if (err) {
-        await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Failed, userData.id);
-        setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
-      }
-    }
-
-    // setToIntroQueue(transformedData.filter(molecule => 
-    // !isSelectable.includes(molecule.status)))
-    // const response = await saveReactionPathway(pathways);
-    // if (response.error) {
-    //   const toastId = toast.error(`${response.error}`);
-    //   await delay(DELAY);
-    //   toast.remove(toastId);
-    // }
-  }
+  //     if (!groupedData[orderId]) {
+  //       groupedData[orderId] = {
+  //         orderId: orderId,
+  //       };
+  //     }
+  //     const isCustomReaction = isCustomReactionCheck(item.projectMetadata);
+  //     groupedData[orderId].reactions = [];
+  //     groupedData[orderId].molecules = [];
+  //     if (isCustomReaction) {
+  //       groupedData[orderId].reactions.push({
+  //         id: `${item.molecule_id}`,
+  //         smile: item.smiles_string
+  //       });
+  //     }
+  //     else {
+  //       groupedData[orderId].molecules.push({
+  //         id: `${item.molecule_id}`,
+  //         smile: item.smiles_string
+  //       });
+  //     }
+  //   });
+  //   return Object.values(groupedData);
+  // }
 
   const generateReactionPathway = async () => {
     setSendForSynthesisEnabled(true);
@@ -1385,9 +1281,13 @@ export default function MoleculeOrderPage({
     setToIntroQueue(moleculeData);
     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
     setSelectedRows([]);
-    extractJsonData(PathwayData, moleculeData);
+    extractJsonData({
+      molecules: moleculeData, id: userData.id, setLoader, setMoleculeStatus
+    });
     setMoleculeData([]);
     setDisableAnalysis(false);
+    // New API Generate Pathway Payload
+    // const orderedData: any = groupOrders(moleculeData)
     //needed for api
     // const groupedOrder = moleculeData.reduce((
     //   acc: Map<number, MoleculeOrder[]>, molecule: MoleculeOrder) => {
@@ -1399,35 +1299,26 @@ export default function MoleculeOrderPage({
     //   return acc;
     // }, new Map<number, MoleculeOrder[]>());
 
-    // const formData = {
+    // const formData: GeneratePathwayType = {
     //   submittedBy: userData.id,
     //   submittedAt: new Date().toISOString(),
-    //   submittedMolecules: Array.from(groupedOrder.entries()).map(([key, value]) => {
-    //     return {
-    //       orderId: key.toString(),
-    //       molecules: value.map(molecule => ({
-    //         id: molecule.molecule_id.toString(),
-    //         smile: molecule.smiles_string,
-    //       }))
-    //     }
-    //   })
-    // }
-
+    //   submittedMolecules: orderedData
+    // };
+    // console.log(formData, "formData");
     // const response = await generatePathway(formData);
-    // console.log('aqaqa', response)
+    // console.log(response, "RESPONSE")
     // if (response.status === 200) {
+    //   setMoleculeStatus(moleculeData, MoleculeStatusLabel.InRetroQueue);
+    //   setToIntroQueue(moleculeData);
     //   await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
-    //   setStatus(tempData, MoleculeStatusCode.InRetroQueue);
-    //   // if (socket) {
-    //   //   socket.emit('sent-for-synthesis', response.message_id);
-    //   // }
-    // } else {
-    //   if (!response) {
-    //     extractJsonData(PathwayData);
-    //     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
-    //   }
-    // await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Failed, userData.id);
-    // setStatus(tempData, MoleculeStatusCode.Failed);
+    //   const messageIds: string[] = [...pathwayKeys];
+    //   messageIds.push(response.error.message_id);
+    //   setPathwayKeys(messageIds);
+    // }
+    // else {
+    //   const toastId = toast.error('error in synthesis');
+    //   await delay(DELAY);
+    //   toast.remove(toastId);
     // }
   }
 
@@ -1522,10 +1413,6 @@ export default function MoleculeOrderPage({
     setMoleculeData(selectedProjectMolecule);
   } */
 
-  const showPathway = () => {
-    setPathwayView(true);
-  }
-
   useEffect(() => {
     if (selectedMoleculeOrder[0]?.molecule_status === MoleculeStatusLabel.InProgress &&
       selectedPathwayIndex === -1
@@ -1548,7 +1435,7 @@ export default function MoleculeOrderPage({
       visible: permitSubmitAnalysis
     },
     {
-      text: `Send for Retrosynthesis (${selectedRows.length})`,
+      text: `Send for Processing (${selectedRows.length})`,
       onClick: handleSendForSynthesis,
       disabled: isSendForSynthesisEnabled,
       class: isSendForSynthesisEnabled ? 'mol-ord-btn-disable' : 'btn-primary',
@@ -1589,26 +1476,6 @@ export default function MoleculeOrderPage({
     }
   };
 
-  useEffect(() => {
-    if (reactionDetail?.reactionTemplate) {
-      fetchSolventTemperatureList(reactionDetail.reactionTemplate)
-    }
-  }, [reactionDetail])
-
-  // Fetch Solvent and Temperature List
-  const fetchSolventTemperatureList = async (reactionTemplate: string) => {
-    try {
-      const response: SolventTemperatureResponse | null =
-        await getSolventTemperature(reactionTemplate);
-      setSolventList(response?.solvent?.split(',').map((s: string) => s.trim()) || []);
-      setTemperatureList(response?.temperature?.split(',').map((t: string) =>
-        Number(t.trim())) || []);
-    } catch (error) {
-      console.error('Error fetching solvent/temperature list:', error);
-    }
-  };
-
-  // Save Reaction Changes
   const handleSaveReaction = async (type: number) => {
     setResetReaction(ResetState.SUBMIT);
     setPopUpType(FormState.DEFAULT);
@@ -1661,7 +1528,7 @@ export default function MoleculeOrderPage({
     if (pathway_instance_id === 0 && isEditpathWay) {
       const data = insertPathWayInstance(selectedPathway, payload);
       const extractedReactionData = data.reaction_detail.map((data: any) => ({
-        reaction_template: data.reaction_template_master.name,
+        reaction_template: data.reaction_template_master.reaction_template.reaction_type,
         reaction_sequence_no: data.reaction_sequence_no,
         reaction_name: data.reaction_name,
         pathway_instance_id: data.pathway_instance_id,
@@ -1947,8 +1814,6 @@ export default function MoleculeOrderPage({
           isReactantList: false,
           data: reaction,
           onDataChange: handleDataChange,
-          solventList,
-          temperatureList,
           onSolventChange: handleSolventChange,
           onTemperatureChange: handleTemperatureChange,
           setReactionDetail: setReactionDetail,
@@ -2026,7 +1891,7 @@ export default function MoleculeOrderPage({
       appContext?.pathwayReaction?.parent_id
       ? appContext.pathwayReaction.id : nodeValuepathwayId;
     setPathwayID(Number(pathwayId));
-    setEditPahway(true)
+    setEditPathway(true)
     setActiveTab(tab || 0);
     setLoadingButtonIndex(index);
     await fetchData(pathwayId, index);
@@ -2063,13 +1928,20 @@ export default function MoleculeOrderPage({
     if (e.rowType === 'data') {
       const rowData = e.data;
       if (!buttonClicked) {
-        const isClickableRow = clickableRow(rowData);
+        const customReaction = isCustomReactionCheck(rowData.projectMetadata)
+        const isClickableRow = clickableRow(rowData) || customReaction;
         if (isClickableRow) {
-          if (rowData.molecule_status === MoleculeStatusLabel.Validated) {
-            setReactionOnlyView(true)
+          if (rowData.molecule_status === MoleculeStatusLabel.Validated ||
+            isCustomReactionCheck(rowData.projectMetadata)) {
+            setReactionOnlyView(true);
+            if (customReaction) {
+              if (rowData.molecule_status === MoleculeStatusLabel.Ordered) {
+                setCustomReaction(true);
+              }
+            }
           }
-          setPath(rowData);
-          setEditPahway(true);
+          setLocalPath(rowData);
+          setEditPathway(true);
           setSelectedMoleculeOrder([rowData]);
           setActiveTab(0);
           setNextReaction(false);
@@ -2094,7 +1966,7 @@ export default function MoleculeOrderPage({
         )) {
         e.data.disabled = true;
       }
-      const isClickableRow = clickableRow(e.data);
+      const isClickableRow = clickableRow(e.data) || isCustomReactionCheck(e.data.projectMetadata);
       if (isClickableRow) {
         e.rowElement.style.cursor = 'pointer';
         if (selectedRow === e.rowIndex)
@@ -2179,6 +2051,24 @@ export default function MoleculeOrderPage({
     onSelectionUpdated(updateSelectedRows, updatedData);
   }
 
+  const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
+    window.innerHeight - 100 : 'auto');
+
+  const adjustGridHeight = () => {
+    const newHeight = window.innerHeight; // Subtract any offset if needed
+    setGridHeight(newHeight);
+  };
+
+  useEffect(() => {
+    // Adjust height when the window is resized
+    window.addEventListener('resize', adjustGridHeight);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', adjustGridHeight);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Breadcrumb breadcrumbs={breadcrumbs} />
@@ -2192,6 +2082,7 @@ export default function MoleculeOrderPage({
             columns={orderColumns}
             onRowClick={onRowClick}
             data={moleculeOrderData}
+            height={gridHeight}
             groupingColumn={rowGroupName()}
             enableRowSelection
             enableGrouping
@@ -2213,7 +2104,7 @@ export default function MoleculeOrderPage({
 
         {synthesisView &&
           <Popup
-            title='Send Molecules for Retrosynthesis?'
+            title='Send Molecules for Processing?'
             visible={synthesisView}
             contentRender={() => (
               <SendMoleculesForSynthesis
@@ -2676,26 +2567,52 @@ export default function MoleculeOrderPage({
               left: `${popupCords.x + 225}px`,
               zIndex: 2000,
             }}
-            className="fixed
-                            transform -translate-x-1/2 -translate-y-1/2
-                            bg-gray-100
-                            bg-opacity-80
-                            w-[250px]
-                            h-[250px]"
+            className={`fixed
+            ${isCustomReaction ? 'w-[835px] h-[350px]' :
+                'transform -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px]'}
+            bg-gray-100
+            bg-opacity-80
+            z-50
+            `}
           >
             <div
-              className="absolute
-                                top-1/2
-                                left-1/2
-                                transform -translate-x-1/2 -translate-y-1/2"
+              className={`absolute
+              ${!isCustomReaction ? `top-1/2
+                      left-1/2
+                      transform -translate-x-1/2 -translate-y-1/2` : `
+                      top-0
+                      left-0
+                      w-[100%] h-[100%]
+                      `}`}
             >
-              <MoleculeStructure
-                structure={cellData?.smiles_string}
-                width={200}
-                height={200}
-                svgMode={true}
-                structureName={cellData.source_molecule_name}
-              />
+              {isCustomReaction ? (
+                <div className="bg-themelightGreyColor relative p-[16px]">
+                  <p>{`Molecule Id: ${clickedMolecule}`}</p>
+                  <PathwayImage
+                    pathwayId={`node-${0}`}
+                    nodes={nodeValue[0]}
+                    updatedAt={Date.now()}
+                    key={`node-${0}`}
+                    style={{
+                      position: 'relative',
+                      background: "#fff"
+                    }}
+                    width={pathwayWidth}
+                    height={300}
+                    currentReaction={0}
+                  >
+                    <PathwayAction
+                      pathwayId={`node-${0}`} />
+                  </PathwayImage>
+                </div>
+              ) :
+                <MoleculeStructure
+                  structure={cellData?.smiles_string}
+                  width={200}
+                  height={200}
+                  svgMode={true}
+                  structureName={cellData.source_molecule_name}
+                />}
             </div>
           </div>
         )}

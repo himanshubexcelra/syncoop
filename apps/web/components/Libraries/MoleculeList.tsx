@@ -15,6 +15,7 @@ import {
     LibraryFields,
     MoleculeStatusCode,
     MoleculeType,
+    NodeType,
     ProjectDataFields,
     Status,
     UserData,
@@ -29,6 +30,7 @@ import {
 import {
     COLOR_SCHEME,
     DELAY,
+    PATHWAY_BOX_WIDTH,
     moleculeStatus,
     sample_molecule_ids
 } from "@/utils/constants";
@@ -40,7 +42,9 @@ import {
     getADMEColor,
     delay,
     isCustomReactionCheck,
-    createAssayColumns
+    createAssayColumns,
+    setPath,
+    popupPositionValue,
 } from "@/utils/helpers";
 import { Popup, Tooltip } from 'devextreme-react';
 import AddMolecule from '../Molecule/AddMolecule/AddMolecule';
@@ -59,6 +63,9 @@ import AddCustomReaction from '../Molecule/AddCustomReaction/AddCustomReaction';
 import CopyDialog from '../Molecule/CopyTo/CopyDialog';
 import saveAs from 'file-saver';
 import { DataGridTypes } from 'devextreme-react/cjs/data-grid';
+import { RowClickEvent } from 'devextreme/ui/data_grid';
+import PathwayAction from '../PathwayImage/PathwayAction';
+import PathwayImage from '../PathwayImage/PathwayImage';
 
 type MoleculeListType = {
     /* moleculeLoader: boolean, */
@@ -74,6 +81,7 @@ type MoleculeListType = {
     organizationId: string,
     fetchLibraries: FetchUserType,
     editEnabled: boolean,
+    projectPermission: boolean,
 }
 
 const MoleculeStructure = dynamic(
@@ -91,8 +99,10 @@ export default function MoleculeList({
     fetchLibraries,
     editEnabled,
     projectData,
+    projectPermission,
 }: MoleculeListType) {
     const context: any = useContext(AppContext);
+    const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const appContext = context.state;
     const cartEnabled = editEnabled;
     const [editMolecules, setEditMolecules] = useState<any[]>([]);
@@ -104,7 +114,8 @@ export default function MoleculeList({
     const [isAddToCartEnabled, setIsAddToCartEnabled] = useState(true);
     const [reloadMolecules, setReloadMolecules] = useState(false);
     const [popupVisible, setPopupVisible] = useState(false);
-    const [viewImage, setViewImage] = useState(false)
+    const [viewImage, setViewImage] = useState(false);
+    const [pathwayWidth] = useState<number>(PATHWAY_BOX_WIDTH);
     const [cellData, setCellData] = useState<CellData>({
         smiles_string: "",
         source_molecule_name: ''
@@ -119,6 +130,13 @@ export default function MoleculeList({
     const [loadingCartEnabled, setLoadingCartEnabled] = useState(false);
     const [assays, setAssays] = useState<Map<number, object[]>>();
     const [groupingEnabled, setGroupingEnabled] = useState<boolean>(false);
+    const [buttonClicked, setButtonClicked] = useState(false);
+    const [selectedRow, setSelectRow] = useState(-1);
+    const [nodeValue, setNodes] = useState<NodeType[][]>([]);
+    const [clickedMolecule, setClickedMolecule] = useState(-1);
+    const [pathwayView, setPathwayView] = useState(false);
+    const [popupWidth, setPopupWidth] = useState(PATHWAY_BOX_WIDTH);
+    const [synthesisPopupPos, setSynthesisPopupPosition] = useState<any>({});
 
     const groupOptions = [
         { id: 'molecule', category: "Molecule" },
@@ -137,17 +155,36 @@ export default function MoleculeList({
     const rowGroupName = () => groupOptions[0].id;
 
     const [copyDialog, setCopyDialog] = useState(false);
+
     const closeMagnifyPopup = (event: any) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
             setPopupVisible(false);
+            setButtonClicked(false);
         }
     };
+
     const handleStructureZoom = (event: any, data: any) => {
+        if (isCustomReaction) {
+            setPath({
+                rowData: data, myRoles: userData.myRoles, setNodes,
+                setPathwayView: setPopupVisible
+            });
+            setClickedMolecule(data.molecule_id);
+            if (!data.disabled) {
+                setSelectRow(event.rowIndex);
+            }
+        } else {
+            setCellData(data);
+        }
         const { x, y } = event.event.target.getBoundingClientRect();
         const screenHeight = window.innerHeight;
-        setPopupCords({ x, y: y >= screenHeight / 2 ? y - 125 : y });
-        setPopupVisible(true);
-        setCellData(data);
+        setPopupCords({
+            x, y: y >= screenHeight / 2 ?
+                y - Number(`${isCustomReaction ? 350 : 125}`) : y
+        });
+        if (!isCustomReaction) {
+            setPopupVisible(true);
+        }
     }
 
     const isCustomReaction = isCustomReactionCheck(projectData.metadata);
@@ -199,7 +236,11 @@ export default function MoleculeList({
                     smilesString={data.smiles_string}
                     structureName={data.source_molecule_name}
                     molecule_id={data.id}
-                    onZoomClick={(e: any) => handleStructureZoom(e, data)}
+                    onZoomClick={(e: any) => {
+                        e.event.stopPropagation();
+                        setButtonClicked(true);
+                        handleStructureZoom(e, data);
+                    }}
                     enableEdit={data.status === MoleculeStatusCode.New && editEnabled
                         && !isCustomReaction}
                     enableDelete={data.status === MoleculeStatusCode.New &&
@@ -211,12 +252,23 @@ export default function MoleculeList({
         },
         {
             dataField: 'molecule_id',
-            title: isCustomReaction ? 'Reaction ID' : 'Molecule ID',
+            title: 'Molecule ID',
             allowHeaderFiltering: false,
             alignment: "center",
             width: 140,
             defaultSortOrder: "desc",
             allowSorting: true,
+            customRender: (data) => {
+                return isCustomReaction ? (
+                    <button
+                        className="text-themeBlueColor underline"
+                    >
+                        {data.molecule_id}
+                    </button>
+                ) : (
+                    <p>{data.molecule_id}</p>
+                );
+            }
         },
         {
             dataField: 'source_molecule_name',
@@ -806,6 +858,7 @@ export default function MoleculeList({
 
     useEffect(() => {
         fetchMoleculeData(selectedLibraryId, projectId);
+        setSynthesisPopupPosition(popupPositionValue());
     }, [selectedLibraryId]);
 
 
@@ -858,6 +911,21 @@ export default function MoleculeList({
             e.cellElement.style.opacity = 0.5;
         }
     }; */
+
+    const onRowClick = (e: RowClickEvent) => {
+        if (e.rowType === 'data') {
+            const rowData = e.data;
+            if (!buttonClicked) {
+                if (isCustomReaction) {
+                    setPath({
+                        rowData, myRoles: userData.myRoles, setNodes,
+                        setPathwayView: setPathwayView
+                    });
+                    setSelectRow(e.rowIndex);
+                }
+            }
+        }
+    };
 
     const onExporting = (e: any) => {
         // Create a new workbook and worksheet.
@@ -924,7 +992,7 @@ export default function MoleculeList({
 
     /* const onSelectionChanged = async (e: any) => {
         setIsAddToCartEnabled(!e.selectedRowKeys.length);
-
+    
         const totalOrderedMolecules = [...inOrderMolecules, ...isMoleculeInCart];
         let updatedselectedRowsData: any = [];
         let updateSelectedRowKeys: number[] = [];
@@ -940,7 +1008,7 @@ export default function MoleculeList({
                     ];
                 }
             });
-
+    
         setSelectedRows(updateSelectedRowKeys);
         setSelectedRowsData(updatedselectedRowsData)
         const selectedLibraryMolecule = updatedselectedRowsData.map((item: MoleculeType) => {
@@ -981,6 +1049,11 @@ export default function MoleculeList({
     const onRowPrepared = (e: DataGridTypes.RowPreparedEvent) => {
         if (e.rowType === 'data') {
             e.rowElement.style.height = "90px";
+            if (e.rowType === 'data' && isCustomReaction) {
+                e.rowElement.style.cursor = 'pointer';
+                if (selectedRow === e.rowIndex)
+                    e.rowElement.style.backgroundColor = 'var(--rowHoverColor)';
+            }
         }
     }
 
@@ -991,7 +1064,7 @@ export default function MoleculeList({
         if (result) {
             toast.success(Messages.deleteMoleculeMsg(deleteMoleculeId.name));
             setDeleteMolecules({ id: 0, name: '', favorite_id: 0 });
-            setReloadMolecules(true);
+            callLibraryId()
             setLoader(false);
         }
     }
@@ -1080,6 +1153,10 @@ export default function MoleculeList({
     useEffect(() => {
         fetchAssays();
     }, [projectData.other_container?.length, appContext?.refreshAssayTable]);
+
+    useEffect(() => {
+        setPopupVisible(false);
+    }, [expanded]);
 
     const callLibraryId = async () => {
         setReloadMolecules(true);
@@ -1187,6 +1264,36 @@ export default function MoleculeList({
         }
     };
 
+    const handleResize = (e: any) => {
+        if (resizeTimeoutRef.current) {
+            clearTimeout(resizeTimeoutRef.current);
+        }
+
+        resizeTimeoutRef.current = setTimeout(() => {
+            if (e.component.option("width") >= PATHWAY_BOX_WIDTH)
+                setPopupWidth(e.component.option("width"));
+            else setPopupWidth(PATHWAY_BOX_WIDTH);
+        }, 500);
+    };
+
+    const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
+        window.innerHeight - 100 : 'auto');
+
+    const adjustGridHeight = () => {
+        const newHeight = window.innerHeight; // Subtract any offset if needed
+        setGridHeight(newHeight);
+    };
+
+    useEffect(() => {
+        // Adjust height when the window is resized
+        window.addEventListener('resize', adjustGridHeight);
+
+        // Cleanup the event listener on component unmount
+        return () => {
+            window.removeEventListener('resize', adjustGridHeight);
+        };
+    }, []);
+
     return (
         <>
             {confirm && (
@@ -1211,6 +1318,7 @@ export default function MoleculeList({
                     <CustomDataGrid
                         columns={moleculeColumns}
                         data={tableData}
+                        height={gridHeight}
                         enableRowSelection
                         enableGrouping={groupingEnabled}
                         enableSorting
@@ -1231,19 +1339,29 @@ export default function MoleculeList({
                         dropdownButtons={dropdownButtons}
                         onRowUpdated={onRowUpdated}
                         onRowPrepared={onRowPrepared}
+                        onRowClick={onRowClick}
                     />
                     {viewAddMolecule && <Popup
                         titleRender={renderTitleField}
                         visible={viewAddMolecule}
                         contentRender={() => (
-                            isCustomReaction ? <AddCustomReaction /> : <AddMolecule
-                                libraryId={selectedLibraryId}
-                                projectId={projectId}
-                                organizationId={organizationId}
-                                userData={userData}
-                                setViewAddMolecule={setViewAddMolecule}
-                                callLibraryId={callLibraryId}
-                            />
+                            isCustomReaction ?
+                                <AddCustomReaction
+                                    libraryId={selectedLibraryId}
+                                    projectId={projectId}
+                                    organizationId={organizationId}
+                                    userData={userData}
+                                    setViewAddMolecule={setViewAddMolecule}
+                                    callLibraryId={callLibraryId}
+                                /> :
+                                <AddMolecule
+                                    libraryId={selectedLibraryId}
+                                    projectId={projectId}
+                                    organizationId={organizationId}
+                                    userData={userData}
+                                    setViewAddMolecule={setViewAddMolecule}
+                                    callLibraryId={callLibraryId}
+                                />
                         )}
                         resizeEnabled={true}
                         hideOnOutsideClick={false}
@@ -1302,6 +1420,73 @@ export default function MoleculeList({
                                 class: "create-popup mr-[15px]"
                             }
                         } />
+                    }
+                    {pathwayView &&
+                        <Popup
+                            title='Custom Reaction'
+                            visible={pathwayView}
+                            contentRender={() => (
+                                <div>
+                                    {nodeValue?.length > 0 && (
+                                        <div style={{
+                                        }}>{
+                                                // nodeValue.map((node, idx) => {
+                                                // return (
+                                                <div key={`node-${0}`}
+                                                    className="mt-[10px] mb-[10px]">
+                                                    <PathwayImage
+                                                        pathwayId={`node-${0}`}
+                                                        nodes={nodeValue[0]}
+                                                        updatedAt={Date.now()}
+                                                        key={`node-${0}`}
+                                                        style={{
+                                                            position: 'relative',
+                                                            background: "#fff"
+                                                        }}
+                                                        width={pathwayWidth}
+                                                        height={300}
+                                                        currentReaction={0}
+                                                    >
+                                                        <PathwayAction
+                                                            pathwayId={`node-${0}`} />
+                                                    </PathwayImage>
+                                                </div>
+                                                // )
+                                                // })
+                                            }
+                                        </div>
+                                    )
+                                    }
+                                </div>
+                            )}
+                            hideOnOutsideClick={false}
+                            defaultWidth={popupWidth}
+                            minWidth={PATHWAY_BOX_WIDTH}
+                            dragEnabled={false}
+                            resizeEnabled={true}
+                            onResize={handleResize}
+                            height="100%"
+                            minHeight={'100%'}
+                            position={synthesisPopupPos}
+                            onHiding={() => {
+                                context?.addToState({
+                                    ...appContext,
+                                    pathwayReaction: {}
+                                })
+                                setPathwayView(false);
+                                setSelectRow(-1);
+                                if (typeof window !== "undefined") {
+                                    localStorage.setItem('pathway_box_width',
+                                        JSON.stringify(popupWidth));
+                                }
+                            }}
+                            showCloseButton={true}
+                            wrapperAttr={
+                                {
+                                    class: "pathway-popup"
+                                }
+                            }
+                        />
                     }
                     {viewImage && (
                         <Popup
@@ -1366,31 +1551,58 @@ export default function MoleculeList({
                 <div
                     ref={popupRef}
                     style={{
-                        top: `${popupCords.y}px`,
-                        left: `${popupCords.x + 225}px`,
+                        top: `${isCustomReaction && expanded ?
+                            `${popupCords.y}px` : `${popupCords.y}px`}`,
+                        left: `${isCustomReaction && expanded ? `${popupCords.x - 750}px`
+                            : `${popupCords.x + 225}px`}`,
                     }}
-                    className="fixed
-                            transform -translate-x-1/2 -translate-y-1/2
+                    className={`fixed
+                    ${isCustomReaction ? 'w-[835px] h-[350px]' :
+                            'transform -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px]'}
                             bg-gray-100
                             bg-opacity-80
                             z-50
-                            w-[250px]
-                            h-[250px]"
+                            `}
                 >
                     <div
-                        className="absolute
-                                top-1/2
+                        className={`absolute
+                        ${!isCustomReaction ? `top-1/2
                                 left-1/2
-                                transform -translate-x-1/2 -translate-y-1/2"
+                                transform -translate-x-1/2 -translate-y-1/2` : `
+                                top-0
+                                left-0
+                                w-[100%] h-[100%]
+                                `}`}
                     >
-                        <MoleculeStructure
-                            structure={cellData?.smiles_string}
-                            width={200}
-                            height={200}
-                            svgMode={true}
-                            structureName=
-                            {cellData.source_molecule_name}
-                        />
+                        {isCustomReaction ? (
+                            <div className="bg-themelightGreyColor relative p-[16px]">
+                                <p>{`Molecule Id: ${clickedMolecule}`}</p>
+                                <PathwayImage
+                                    pathwayId={`node-${0}`}
+                                    nodes={nodeValue[0]}
+                                    updatedAt={Date.now()}
+                                    key={`node-${0}`}
+                                    style={{
+                                        position: 'relative',
+                                        background: "#fff"
+                                    }}
+                                    width={pathwayWidth}
+                                    height={300}
+                                    currentReaction={0}
+                                >
+                                    <PathwayAction
+                                        pathwayId={`node-${0}`} />
+                                </PathwayImage>
+                            </div>
+                        ) :
+                            <MoleculeStructure
+                                structure={cellData?.smiles_string}
+                                width={200}
+                                height={200}
+                                svgMode={true}
+                                structureName=
+                                {cellData.source_molecule_name}
+                            />}
                     </div>
                 </div>
             )}
@@ -1399,13 +1611,14 @@ export default function MoleculeList({
                 contentRender={() => (
                     <CopyDialog
                         selectedMolecules={selectedRowsData}
-                        projectData={projectData}
                         setCopyDialog={setCopyDialog}
                         user_id={userData.id}
                         callLibraryId={callLibraryId}
                         myRoles={userData.myRoles}
                         currentLibraryId={selectedLibraryId}
                         organizationId={organizationId}
+                        projectId={projectId}
+                        projectPermission={projectPermission}
                     />
                 )}
                 resizeEnabled={false}

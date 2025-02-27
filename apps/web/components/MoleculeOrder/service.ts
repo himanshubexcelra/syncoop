@@ -61,31 +61,6 @@ export async function getReactionPathway(molecule_id: number, pathwayId?: string
     }
 }
 
-export async function getSolventTemperature(name: string) {
-    const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/reaction_template_master`);
-    url.searchParams.append("name", name);
-
-    try {
-        const response = await fetch(url.toString(), {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        return data;
-    } catch (error) {
-        console.error("Error fetching pathways", error);
-        throw error;
-    }
-}
-
 export async function updateReaction(payLoad: any) {
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/pathway`);
     try {

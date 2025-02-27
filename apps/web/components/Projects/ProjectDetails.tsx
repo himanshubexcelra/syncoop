@@ -40,7 +40,7 @@ export default function ProjectDetails({
     const formRef = useRef<FormRef>(null);
     const [loader, setLoader] = useState(true);
     const [sort, setSort] = useState(false);
-    const [orgProj, setOrgProjects] = useState([]);
+    const [orgProj, setOrgProjects] = useState<ProjectDataFields[]>([]);
 
     const { myRoles } = userData;
     const createEnabled = actionsEnabled.includes('create_project')
@@ -124,18 +124,18 @@ export default function ProjectDetails({
                 filteredValue = filteredData.filter((item) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.metadata.type.toLowerCase().includes(value.toLowerCase()) ||
-                    item.target?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.last_name?.toLowerCase().includes(value.toLowerCase()));
+                    item.metadata.type?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.metadata.target?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.userWhoCreated?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.userWhoCreated?.last_name?.toLowerCase().includes(value.toLowerCase()));
             } else {
                 filteredValue = orgProj.filter((item: ProjectDataFields) =>
                     item.name.toLowerCase().includes(value.toLowerCase()) ||
                     item.description?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.metadata.type.toLowerCase().includes(value.toLowerCase()) ||
-                    item.target?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
-                    item.user?.last_name?.toLowerCase().includes(value.toLowerCase()));
+                    item.metadata.type?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.metadata.target?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.userWhoCreated?.first_name?.toLowerCase().includes(value.toLowerCase()) ||
+                    item.userWhoCreated?.last_name?.toLowerCase().includes(value.toLowerCase()));
             }
         } else {
             filteredValue = orgProj || [];
@@ -243,16 +243,19 @@ export default function ProjectDetails({
                                 <Button
                                     text="Filter"
                                     icon="filter"
-                                    elementAttr={{ class: "btn-secondary mr-[20px]" }}
+                                    elementAttr={{ class: "btn-disable mr-[20px]" }}
                                     disabled={true}
                                     render={() => (
                                         <>
                                             <Image
-                                                src="/icons/filter.svg"
-                                                width={24}
-                                                height={24}
+                                                src="/icons/filter-disable-icon.svg"
+                                                width={14}
+                                                height={14}
                                                 alt="Filter" />
-                                            <span>Filter</span>
+                                            <span
+                                                className='ml-[10px] text-disabledTextButtonBlue'>
+                                                Filter
+                                            </span>
                                         </>
                                     )} />
                                 <Button

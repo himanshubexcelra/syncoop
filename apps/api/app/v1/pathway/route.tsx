@@ -31,7 +31,7 @@ export async function GET(request: Request) {
                     pathway_instance_id: 'desc',
                 },
                 {
-                    updated_at: 'desc', // Sort by updated_at for the distinct pathway_index
+                    updated_at: 'desc', 
                 }],
                 where: {
                     molecule_id: Number(moleculeId),
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
                             },
                             reaction_template_master: {
                                 select: {
-                                    name: true, // Include the name of the template
+                                    reaction_template: true,
                                 }
                             },
                         },
@@ -90,7 +90,9 @@ type ReactionCompoundType = {
 type ReactionDetailType = {
     id?: string,
     type: string,
-    reaction_template: string,
+    reaction_template: {
+        reaction_type: string,
+    },
     reaction_sequence_no?: number,
     condition?: string,
     temperature?: number,
@@ -111,6 +113,7 @@ export async function POST(request: Request) {
 
     const createPathways = async (req: any) => {
         const createdPathways = [];
+        
         for (const pathway of req) {
             const { molecule_id, pathway_instance_id, parent_id, pathway_score,
                 pathway_index, description, selected, created_by, updated_by } = pathway;
@@ -136,12 +139,23 @@ export async function POST(request: Request) {
                     reaction_detail: {
                         create: await Promise.all(pathway.reaction_detail.map(
                             async (reaction: ReactionDetailType) => {
-                                // Fetch the reaction template master by name to get the ID
+                                // Get the latest reaction template based on version
                                 const reactionTemplate =
-                                    await prisma.reaction_template_master.findUnique({
+                                    await prisma.reaction_template_master.findFirst({
                                         where: {
-                                            name: reaction.reaction_template
-                                        }
+                                            reaction_template: {
+                                                path: ['reaction_type'],
+                                                equals: reaction.reaction_template,
+                                            },
+                                        },
+                                        orderBy: {
+                                            version: 'desc', // Ensure latest version
+                                        },
+                                        select: {
+                                            id: true,
+                                            version: true,
+                                            reaction_template: true,
+                                        },
                                     });
 
                                 return {
@@ -176,8 +190,6 @@ export async function POST(request: Request) {
                                             compound_type: compound.compound_type,
                                             compound_label: compound.compound_label,
                                             role: compound.role,
-                                            // inventory_id: compound.inventory_id,
-                                            // inverntory_url: compound.inventory_url,
                                             created_at: getUTCTime(new Date().toISOString()),
                                         }))
                                     }

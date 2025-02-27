@@ -2,7 +2,6 @@
 import {
     getMoleculesOrder,
     getReactionPathway,
-    getSolventTemperature,
     updateReaction,
     saveReactionPathway,
     searchInventory
@@ -77,34 +76,6 @@ describe('getMoleculesOrder', () => {
             })
         ) as jest.Mock;
         await expect(getReactionPathway(moleculeId)).rejects.toThrow(`Error: ${errorMessage}`);
-    });
-
-    test('getSolventTemperature API responds with a 200 status', async () => {
-        const mockData = { temperature: 25 };
-        const name = 'water';
-
-        // Mock fetch with `ok` property
-        global.fetch = jest.fn(() =>
-            Promise.resolve({
-                status: 200,
-                ok: true, // Add the `ok` property to indicate a successful response
-                json: jest.fn().mockResolvedValue(mockData),
-            })
-        ) as jest.Mock;
-
-        const result = await getSolventTemperature(name);
-
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(
-            `${process.env.NEXT_API_HOST_URL}/v1/reaction_template_master?name=${name}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-        expect(result).toEqual(mockData);
     });
 
     test('updateReaction API responds with a 200 status', async () => {

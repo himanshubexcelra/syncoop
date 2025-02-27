@@ -77,7 +77,7 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
         });
 
         setHeaderCount(headerStatusCount);
-        setGraphDataSource(graphDataSource);
+        setGraphDataSource([...graphDataSource]);
     }
 
     useEffect(() => {
@@ -106,7 +106,7 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
 
                 </div>
             </div>
-            <div className="w-[900px] ml-[80px] mb-[20px]">
+            <div className="w-[900px] ml-[80px] pb-[20px]">
                 <Chart
                     id="chart"
                     dataSource={graphDataSource}
@@ -140,7 +140,7 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
                         <Label
                             position="outside"
                             visible={true}
-                            backgroundColor="#ffffff">
+                            backgroundColor="none">
                             <Font color="#000000" size="14"></Font>
                         </Label>
                     </Series>

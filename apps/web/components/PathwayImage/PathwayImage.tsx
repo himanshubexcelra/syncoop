@@ -37,7 +37,7 @@ type PathwayImageProps = {
     currentReaction?: number;
     updatedAt?: number;
     updatedKey?: string;
-    setHideOpen: (disable: boolean) => void;
+    setHideOpen?: (disable: boolean) => void;
 };
 
 type ElementType = {
@@ -139,7 +139,9 @@ const PathwayImage: React.FC<PathwayImageProps> = ({
     }, []);
 
     useEffect(() => {
-        setHideOpen(!isLoading);
+        if (setHideOpen) {
+            setHideOpen(!isLoading);
+        }
     }, [isLoading]);
 
     return (

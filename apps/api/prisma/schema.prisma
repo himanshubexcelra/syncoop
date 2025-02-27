@@ -468,24 +468,11 @@ model reaction_detail {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model reaction_template_master {
-  id               Int               @id(map: "con_pk_reaction_template_master_id") @default(autoincrement())
-  name             String            @unique(map: "con_uk_reaction_template_name") @db.VarChar(255)
-  template_group   String            @db.VarChar(255)
-  version          BigInt
-  chemical_1       String?           @db.VarChar(100)
-  chemical_2       String?           @db.VarChar(100)
-  chemical_3       String?           @db.VarChar(100)
-  chemical_4       String?           @db.VarChar(100)
-  chemical_5       String?           @db.VarChar(100)
-  chemical_6       String?           @db.VarChar(100)
-  no_of_components Int?
-  solvent          String?           @db.VarChar(255)
-  temperature      String?           @db.VarChar(100)
-  is_active        Boolean           @default(true)
-  last_synced_at   DateTime          @db.Timestamptz(6)
-  reaction_detail  reaction_detail[]
-
-  @@index([is_active], map: "idx_reaction_template_master_is_active")
+  id                Int               @id(map: "con_pk_reaction_template_master_id") @default(autoincrement())
+  version           BigInt
+  reaction_template Json
+  last_synced_at    DateTime          @db.Timestamptz(6)
+  reaction_detail   reaction_detail[]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

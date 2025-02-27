@@ -84,7 +84,6 @@ const data = {
             id: 1,
             name: 'EGFR-v1',
             description: 'Smaple data',
-            target: 'Target',
             project_id: 2,
             created_at: '2024-10-17T09:53:33.045Z',
             updated_at: null,
@@ -101,7 +100,6 @@ const data = {
             id: 2,
             name: 'Lib3',
             description: 'Smaple data',
-            target: 'Target',
             project_id: 2,
             created_at: '2024-10-17T09:53:33.070Z',
             updated_at: null,
@@ -176,7 +174,6 @@ const userData = {
 const projectData = {
     id: 1,
     name: 'Proj2',
-    target: '',
     type: 'Optimization',
     description: 'Example data',
     rganizationId: 1,

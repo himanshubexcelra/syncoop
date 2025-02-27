@@ -22,9 +22,11 @@ describe('Lab Job Order API', () => {
         expect(response.status).toBe(STATUS_TYPE.SUCCESS);
         expect(data).toEqual(mockMoleculeData);
         expect(prismaMock.molecule.findUnique).toHaveBeenCalledWith({
-            where: { id: {
-                in: [1]
-            } },
+            where: {
+                id: {
+                    in: [1]
+                }
+            },
             include: expect.any(Object),
         });
     });

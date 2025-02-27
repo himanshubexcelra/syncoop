@@ -66,6 +66,8 @@ export interface sharedUserType {
 
 export interface metaDataType {
   assay: AssayFieldList[];
+  type?: string;
+  target?: string;
 }
 
 export type FORMULA_CONFIG = {
@@ -96,6 +98,9 @@ export interface OrganizationDataFields {
   inherits_bioassays: boolean;
   parent_id?: number;
   container?: any;
+  description?: string,
+  userWhoCreated: User;
+  updated_at: Date;
 }
 
 export interface OrganizationTableProps {
@@ -161,6 +166,7 @@ export interface MoleculeType {
   reaction_data: any;
   functional_assays: ColorSchemeFormat[],
   assays: any[],
+  pathway_instance_id?: number,
 }
 
 
@@ -221,11 +227,9 @@ export interface ProjectDataFields {
   container: OrganizationDataFields,
   user: userType;
   container_access_permission: sharedUserType[];
-  target: string;
   userWhoUpdated: userType;
   userWhoCreated: userType;
   updated_at: Date;
-  user_id?: number;
   owner: User;
   owner_id: number;
   orgUser?: OrgUser;
@@ -657,6 +661,11 @@ export interface MoleculeOrder {
     functionalAssay4: string;
   } | null;
   assays: any[];
+  projectMetadata?: {
+    target?: string;
+    assay?: AssayFieldList[];
+  };
+
 }
 
 export enum OrganizationType {
@@ -669,6 +678,11 @@ export interface MoleculeObj {
   smiles_string: string;
   project: {
     name: string;
+    metadata: {
+      target: string,
+      type: string,
+      assay?: AssayFieldList[],
+    };
   };
   library: {
     name: string;
@@ -716,6 +730,11 @@ export interface CartDetail {
   smiles_string: string;
   "Project / Library": string;
   "Organization / Order": string;
+  metadata: {
+    target: string,
+    type: string,
+    assay?: AssayFieldList[],
+  };
 }
 export interface OrderDetail {
   order_id: number;
@@ -858,6 +877,7 @@ export type ReactionCompoundType = {
   link?: string;
   status?: boolean;
   source?: string;
+  roleList?: string[];
 }
 
 export type ReactionDetailType = {
@@ -880,7 +900,13 @@ export type ReactionDetailType = {
   created_by?: number,
   product_smiles_string: string,
   reaction_compound: ReactionCompoundType[],
-  reaction_template_master: { name: string }
+  reaction_template_master: {
+    reaction_template: {
+      Solvents: string;
+      temperature: string;
+      [key: string]: string | null;
+    };
+  }
 }
 
 export type PathwayType = {
@@ -956,6 +982,70 @@ export type SelectedPathwayInstance = {
   created_by: number;
   id: number;
 }
+
+export type PathObjectType = {
+  pathIndex: number[]; // pathIndex is an array of numbers
+}
+
+type ReactionNameType = {
+  label: string,
+}
+
+type ConditionType = {
+  temperature: string,
+  solvent: string,
+}
+
+export type ReactionMoleculeType = {
+  reagentSMILES: string,
+  molID: number,
+  reagentName: string,
+  index: number,
+  inventoryID: number,
+  reactionPart: string,
+  molarRatio: number,
+  dispenseTime: number,
+  role: string,
+  inventoryURL: string
+}
+
+export type ReactionJsonType = {
+  rxnTemplate: string,
+  nameRXN: ReactionNameType,
+  rxnindex: number,
+  Confidence: number,
+  conditions: ConditionType,
+  productSMILES: string,
+  product_type: string,
+  reaction_compound: ReactionMoleculeType,
+  molecules: ReactionMoleculeType[],
+  rxnTemplateGroup: string,
+  rxnSMILES: string,
+}
+
+export type PathwayJsonType = {
+  pathIndex: number,
+  pathConfidence: number,
+  moleculeId: number,
+  description: string,
+  reactions: ReactionJsonType[],
+}
+
+export type SetPathType = {
+  rowData: MoleculeOrder | MoleculeType,
+  setSelectedMoleculeId?: (value: number) => void,
+  myRoles: string[],
+  setReactionIndexList?: (value: PathObjectType[]) => void,
+  setPathwayView?: (value: boolean) => void,
+  setNodes: (Value: NodeType[][]) => void,
+}
+
+export type ExtractJSONDataType = {
+  molecules: MoleculeOrder[] | MoleculeType[],
+  id: number,
+  setLoader: (value: boolean) => void,
+  setMoleculeStatus?: (moleculeArray: MoleculeOrder[], value: MoleculeStatusLabel) => void,
+}
 export interface CellData {
   smiles_string: string;
   source_molecule_name: string;
@@ -978,15 +1068,12 @@ export interface ReactionDetailsProps {
   isReactantList: boolean;
   data: ReactionDetailType;
   onDataChange: (changes: RowChange[]) => void;
-  solventList?: string[];
-  temperatureList?: number[];
   onSolventChange: (value: string) => void;
   onTemperatureChange: (value: number) => void;
   setReactionDetail: (reactionDetail: {
     solvent?: string;
     temperature?: number;
     id?: string | number;
-    reactionTemplate?: string;
   }) => void;
   handleSwapReaction: (value: ReactionCompoundType[]) => void;
   resetReaction?: number;
@@ -1031,4 +1118,30 @@ export interface AmsInventoryItem {
 
 export interface CopyMolecules {
   smiles: string;
+}
+
+export type AddMoleculeProps = {
+  userData: UserData;
+  libraryId: number;
+  projectId: string;
+  organizationId: string;
+  setViewAddMolecule: (val: boolean) => void;
+  callLibraryId: () => void;
+}
+
+type MoleculeDetail = {
+  id: string;
+  smile: string;
+}
+
+type SubmittedMoleculesType = {
+  orderId: string;
+  molecules?: MoleculeDetail[];
+  reactions?: MoleculeDetail[];
+}
+
+export type GeneratePathwayType = {
+  submittedBy: number;
+  submittedAt: string;
+  submittedMolecules: SubmittedMoleculesType[];
 }

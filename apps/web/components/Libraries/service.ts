@@ -6,16 +6,28 @@ import {
     MoleculeOrder,
     OrderType,
     SaveLabJobOrder,
-    CreateLabJobOrder
+    CreateLabJobOrder,
+    GeneratePathwayType
 } from "@/lib/definition";
 import { Messages } from "@/utils/message";
 
-export async function getLibraries(withRelation: string[] = [], project_id: string) {
+export async function getLibraries(/* 
+    withRelation: string[] = [],
+    project_id: string,
+    user_id?: number */ params: object) {
     const url = new URL(`${process.env.NEXT_API_HOST_URL}/v1/project`);
-    url.searchParams.append('project_id', project_id);
+    if (params) {
+        Object.entries(params).map(([key, value]: any) => {
+            url.searchParams.append(key, value);
+        });
+    }
+    /* url.searchParams.append('project_id', project_id);
+    if (user_id) {
+        url.searchParams.append('userId', String(user_id))
+    }
     if (withRelation.length) {
         url.searchParams.append('with', JSON.stringify(withRelation));
-    }
+    } */
     const response = await fetch(url, {
         mode: "no-cors",
         method: "GET",
@@ -338,20 +350,6 @@ export async function updateMoleculeStatus(formData: MoleculeOrder[],
     }
 }
 
-type MoleculeType = {
-    id: string;
-    smile: string;
-}
-
-type SubmittedMoleculesType = {
-    orderId: string;
-    molecules: MoleculeType[];
-}
-
-type GeneratePathwayType = {
-    submittedBy: number;
-    submittedMolecules: SubmittedMoleculesType[];
-}
 
 export async function generatePathway(formData: GeneratePathwayType) {
     try {

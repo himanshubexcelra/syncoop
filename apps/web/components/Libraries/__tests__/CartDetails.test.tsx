@@ -59,7 +59,11 @@ describe('CartDetails Component', () => {
                     }
                 },
                 "project": {
-                    "name": "Test Project 2"
+                    "name": "Test Project 2",
+                    "metadata": {
+                        type: 'Custom Reaction',
+                        target: ''
+                    }
                 }
             },
             "organization": {
@@ -915,7 +919,7 @@ describe("Accordion with Switch Component", () => {
 
         // Verify columns
         const columns = screen.getAllByRole("columnheader");
-        expect(columns.length).toBe(6); // Verify 6 columns
+        expect(columns.length).toBe(4); // Verify 6 columns
     });
 
 

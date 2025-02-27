@@ -22,7 +22,7 @@ export default function DiscardCustomReaction({ onClose, onSubmit }: DiscardCust
                 onClick={onClose} />
         </div>
             <div className="header-text text-messageDarkBlue">
-                Discard uploaded file / Custom Reaction?
+                Discard uploaded file(s) / Custom Reaction(s)?
             </div>
             <div className="flex justify-start gap-2 mt-5">
                 <button className='secondary-button' onClick={reset}>Yes</button>

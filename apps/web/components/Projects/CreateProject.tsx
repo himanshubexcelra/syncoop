@@ -74,7 +74,9 @@ export default function CreateProject({
   );
   const context: any = useContext(AppContext);
   const appContext = context.state;
-
+  const owner = edit
+    ? `${projectData?.owner?.first_name} ${projectData?.owner?.last_name}`
+    : `${userData.owner?.first_name} ${userData.owner?.last_name}`
   const filterUsers = (filteredUsers: User[] = []) => {
     if (edit && projectData) {
       const filteredUser = filteredUsers.filter(u => u.id !== projectData.owner_id);
@@ -350,7 +352,7 @@ export default function CreateProject({
           {
             placeholder: "Project Owner",
             disabled: true,
-            value: `${userData.owner?.first_name} ${userData.owner?.last_name}`
+            value: owner
           }
         }
       >

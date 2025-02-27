@@ -33,8 +33,6 @@ const ReactionDetails = ({
     isReactantList,
     data,
     onDataChange,
-    solventList = [],
-    temperatureList = [],
     onSolventChange,
     onTemperatureChange,
     setReactionDetail,
@@ -43,34 +41,26 @@ const ReactionDetails = ({
     status
 }: ReactionDetailsProps,) => {
 
-
     const [reactionData, setReactionData] =
         useState<ReactionDetailType | []>(data);
     const [resetReactionData, setResetReactionData] =
         useState<ReactionDetailType | []>(data);
-    const [tableData, setTableData] = useState<ReactionCompoundType[]>(() => {
-        if (data.hasOwnProperty('reaction_compound')) {
-            return (data as ReactionDetailType).reaction_compound.map((compound, i) => ({
-                ...compound,
-                compound_label:
-                    compound.compound_label !== undefined && compound.compound_label !== null
-                        ? compound.compound_label
-                        : String(i + 1),
-            }));
-        }
-        return [];
-    });
+       
     const [selectedSolvent, setSelectedSolvent] =
         useState<string>((data as ReactionDetailType)?.solvent || '');
     const [selectedTemperature, setSelectedTemperature] = useState<number>
         ((data as ReactionDetailType)?.temperature ?? DEFAULT_TEMPERATURE);
-    const agentList: ReactionCompoundType[] =
-        data?.reaction_compound?.filter(
-            (item: ReactionCompoundType) => item.compound_type === COMPOUND_TYPE_A
-        ) || [];
-    const [agentsList,] = useState<ReactionCompoundType[]>(agentList);
     const readOnly = status === MoleculeStatusLabel.InProgress ||
         status === MoleculeStatusLabel.Done || status === MoleculeStatusLabel.Failed;
+
+    const solventList =
+        data?.reaction_template_master?.reaction_template?.
+        ["Solvents"]?.split(';')?.map((s: string) =>
+            s.trim()) || [];
+    const temperatureList =
+        data?.reaction_template_master?.
+            reaction_template?.["temperature"]?.split(',')?.map((t: string) =>
+                Number(t.trim())) || [];
 
     useEffect(() => {
         if (Array.isArray(data) || !data) {
@@ -80,18 +70,15 @@ const ReactionDetails = ({
             solvent: data.solvent,
             temperature: data.temperature,
             id: data.id,
-            reactionTemplate: data?.reaction_template_master?.name,
         });
+
     }, [data, setReactionDetail]);
 
-
-    // Reusable function to update initialData
-    const updateInitialData = (reactionData: ReactionDetailType | []) => {
-        if (!reactionData || !Object.keys(reactionData).length) return;
+    const processData = (data: any) => {
         let initialData: ReactionCompoundType[] = [];
 
-        if (!isReactantList && Object(reactionData).hasOwnProperty('reaction_compound')) {
-            const reactionCompounds = (reactionData as ReactionDetailType).reaction_compound;
+        if (!isReactantList && Object(data).hasOwnProperty('reaction_compound')) {
+            const reactionCompounds = (data as ReactionDetailType).reaction_compound;
 
             const compoundLabels = reactionCompounds.map((compound, i) =>
                 compound.compound_label !== undefined && compound.compound_label !== null
@@ -100,7 +87,6 @@ const ReactionDetails = ({
             );
 
             const uniqueLabels = Array.from(new Set(compoundLabels)).sort((a, b) => +a - +b);
-
             let index = 1;
             uniqueLabels.forEach((label, i) => {
                 if (label !== String(index)) {
@@ -113,17 +99,55 @@ const ReactionDetails = ({
                 ...compound,
                 compound_label: uniqueLabels[i] ?? String(i + 1),
             }));
+
+            // Add roleList by re-processing with reactionTemplate
+            const reactionTemplate = (data as ReactionDetailType)?.
+                reaction_template_master?.reaction_template || {};
+            const reagentMap: { [key: string]: string | null } = {};
+            Object.keys(reactionTemplate).forEach((key) => {
+                if (key.match(/^Reagent \d+ Role$/)) {
+                    const role = reactionTemplate[key]?.trim().toLowerCase();
+                    const reagentNumber = key.split(' ')[1];
+                    const choicesKey = `Reagent ${reagentNumber} Choices`;
+                    const choices = reactionTemplate.hasOwnProperty(choicesKey) ?
+                        reactionTemplate[choicesKey] : null;
+                    if (role) {
+                        reagentMap[role] = choices;
+                    }
+                }
+            });
+
+            initialData = initialData.map((compound) => {
+                const compoundRole = compound.role?.trim().toLowerCase();
+                const roleChoices = reagentMap[compoundRole];
+                if (roleChoices !== undefined) {
+                    return {
+                        ...compound,
+                        roleList: roleChoices ?
+                            roleChoices.split(';').map(s => s.trim()) : undefined,
+                    };
+                }
+                return compound;
+            });
         } else {
-            initialData = reactionData as ReactionCompoundType[];
+            initialData = data as ReactionCompoundType[];
         }
 
+        return initialData;
+    };
+    const drigData = processData(reactionData);
+    const [tableData, setTableData] = useState<ReactionCompoundType[]>(drigData);
+
+    const updateInitialData = (reactionData: ReactionDetailType | []) => {
+        if (!reactionData || !Object.keys(reactionData).length) return;
+        const initialData = processData(reactionData);
         // Set table data and other state variables
         setTableData(initialData);
         setSelectedSolvent((reactionData as ReactionDetailType).solvent || '');
         setSelectedTemperature(
-            (reactionData as ReactionDetailType).temperature ?? DEFAULT_TEMPERATURE);
+            (reactionData as ReactionDetailType).temperature ?? DEFAULT_TEMPERATURE
+        );
     };
-
 
     // Update on initial render or when `data` changes
     useEffect(() => {
@@ -143,10 +167,12 @@ const ReactionDetails = ({
             setReactionData((prev) => ({
                 ...prev,
                 ...updatedData,
+                reaction_compound: updatedData.reaction_compound || [],
             }));
             setResetReactionData((prev) => ({
                 ...prev,
                 ...updatedData,
+                reaction_compound: updatedData.reaction_compound || [],
             }));
         } else {
             updateInitialData(resetReactionData);
@@ -165,7 +191,7 @@ const ReactionDetails = ({
 
     // Handle row changes
     const handleRowChange = (id: number, field: string, value: string | number): RowChange[] => {
-        const updatedData = tableData.map((item: ReactionCompoundType) =>
+        const updatedData = (tableData ?? []).map((item: ReactionCompoundType) =>
             item.id === id ? { ...item, [field]: value } : item
         );
         setTableData(updatedData);
@@ -182,7 +208,7 @@ const ReactionDetails = ({
 
     const handleReorder = (newOrder: any) => {
         const { itemData, toIndex } = newOrder;
-        const newData = [...tableData];
+        const newData = tableData ? [...tableData] : [];
         const fromIndex = newData.findIndex(item => item.id === itemData.id);
 
         if (fromIndex !== -1) {
@@ -218,9 +244,9 @@ const ReactionDetails = ({
                 defaultValue={data.compound_name}
                 onChange={(e) => handleRowChange(data.id, 'compound_name', e.target.value)}
             >
-                {agentsList.map((agent: ReactionCompoundType, index: number) => (
-                    <option key={index} value={agent.compound_name}>
-                        {capitalizeFirstLetter(agent.compound_name)}
+                {data?.roleList?.map((agent: string, index: number) => (
+                    <option key={index} value={agent}>
+                        {capitalizeFirstLetter(agent)}
                     </option>
                 ))}
             </select>
@@ -359,7 +385,7 @@ const ReactionDetails = ({
         const [first, second] = reagentCompounds;
 
         // Create a new array where only the swapped compounds will be updated
-        const updatedData = tableData.map((compound: ReactionCompoundType) => {
+        const updatedData = (tableData ?? []).map((compound: ReactionCompoundType) => {
             if (compound?.compound_id === first?.compound_id) {
                 // Swap compound_name and smiles_string with second
                 return {
@@ -390,7 +416,7 @@ const ReactionDetails = ({
         // Filter out only the items that have changed (only those with updated fields)
         const updatedData = changes
             .map((change) => {
-                const originalItem = tableData.find(item => item.id === change.id);
+                const originalItem = tableData?.find(item => item.id === change.id);
 
                 // Check if either compound_name or smiles_string has changed
                 if (
@@ -544,12 +570,18 @@ const ReactionDetails = ({
                                         value={selectedTemperature}
                                         onChange={handleTemperatureChange}
                                     >
-                                        {temperatureList?.map((temperature: number,
-                                            index: number) => (
-                                            <option key={index} value={temperature}>
-                                                {`${temperature}°C`}
+                                        {temperatureList?.length > 0 ? (
+                                            temperatureList.map(
+                                                (temperature: number, index: number) => (
+                                                    <option key={index} value={temperature}>
+                                                        {`${temperature}°C`}
+                                                    </option>
+                                                ))
+                                        ) : (
+                                            <option value={DEFAULT_TEMPERATURE}>
+                                                {`${DEFAULT_TEMPERATURE}°C`}
                                             </option>
-                                        ))}
+                                        )}
                                     </select>
                                 </div>
                             </div>
@@ -572,7 +604,7 @@ const ReactionDetails = ({
 
             <CustomDataGrid
                 columns={!isReactantList ? reactionCompoundColumns : reactantListColumns}
-                data={tableData.length > 0 ? tableData : []}
+                data={tableData && tableData.length > 0 ? tableData : []}
                 loader={false}
                 enableRowSelection={false}
                 enableHeaderFiltering={false}

@@ -263,8 +263,8 @@ export const PathwayData =
                             "code": "2.1.4",
                             "label": "N-Alkylation"
                         },
-                        "rxnTemplateGroup": "N-alkylation",
-                        "rxnTemplate": "N-alkylation",
+                        "rxnTemplateGroup": "Glaser",
+                        "rxnTemplate": "Glaser",
                         "rxnConfidence": 0.9946215748786926,
                         "rxnSMILES": "O=C(c1occc1)Cl.COc1ccc(C2(CCOCC2)CN)cc1>>COc1ccc(C2(CCOCC2)CNC(c3occc3)=O)cc1",
                         "productSMILES": "COc1ccc(C2(CCOCC2)CNC(c3occc3)=O)cc1",
@@ -318,8 +318,8 @@ export const PathwayData =
                             "code": "2.1.2",
                             "label": "Carboxylic acid + amine condensation"
                         },
-                        "rxnTemplateGroup": "amide coupling",
-                        "rxnTemplate": "amide coupling",
+                        "rxnTemplateGroup": "Suzuki",
+                        "rxnTemplate": "Suzuki",
                         "rxnConfidence": 0.9946215748786926,
                         "rxnSMILES": "COc1ccc(C2(CCOCC2)CNC(c3occc3)=O)cc1.Nc1ccc(C(=O)O)cc1>>COc1ccc(C2(CNC(=O)c3ccc(NC(=O)c4ccco4)cc3)CCOCC2)cc1",
                         "productSMILES": "COc1ccc(C2(CNC(=O)c3ccc(NC(=O)c4ccco4)cc3)CCOCC2)cc1",
@@ -404,8 +404,8 @@ export const PathwayData =
                             "code": "2.1.40",
                             "label": "Alcohol + acid esterification reaction"
                         },
-                        "rxnTemplateGroup": "Esterification",
-                        "rxnTemplate": "Esterification",
+                        "rxnTemplateGroup": "Buchwald",
+                        "rxnTemplate": "Buchwald",
                         "rxnConfidence": 0.9995532631874084,
                         "rxnSMILES": "On1c2ncccc2nn1.O=C(c1occc1)O>>O=C(c1occc1)On2c3ncccc3nn2",
                         "productSMILES": "O=C(c1occc1)On2c3ncccc3nn2",
@@ -459,8 +459,8 @@ export const PathwayData =
                             "code": "2.1.40",
                             "label": "O-acylhydroxylamine + amine reaction"
                         },
-                        "rxnTemplateGroup": "amide coupling",
-                        "rxnTemplate": "amide coupling",
+                        "rxnTemplateGroup": "Ullmann",
+                        "rxnTemplate": "Ullmann",
                         "rxnConfidence": 0.9995532631874084,
                         "rxnSMILES": "O=C(c1occc1)On2c3ncccc3nn2.Oc1ccc(C2(CCOCC2)CN)cc1>>Oc1ccc(C2(CCOCC2)CNC(c3occc3)=O)cc1",
                         "productSMILES": "Oc1ccc(C2(CCOCC2)CNC(c3occc3)=O)cc1",
@@ -524,10 +524,10 @@ export const PathwayData =
                         "rxnindex": 2,
                         "nameRXN": {
                             "code": "2.1.4",
-                            "label": "O-Alkylation"
+                            "label": "Sonogashira"
                         },
-                        "rxnTemplateGroup": "O-alkylation",
-                        "rxnTemplate": "O-alkylation",
+                        "rxnTemplateGroup": "Sonogashira",
+                        "rxnTemplate": "Sonogashira",
                         "rxnConfidence": 0.9946213748786926,
                         "rxnSMILES": "Oc1ccc(C2(CCOCC2)CNC(c3occc3)=O)cc1>>O=C(c1occc1)NCC2(CCOCC2)c3ccc(OC)cc3",
                         "productSMILES": "O=C(c1occc1)NCC2(CCOCC2)c3ccc(OC)cc3",
@@ -581,8 +581,8 @@ export const PathwayData =
                             "code": "2.1.2",
                             "label": "Carboxylic acid + amine condensation"
                         },
-                        "rxnTemplateGroup": "amide coupling",
-                        "rxnTemplate": "amide coupling",
+                        "rxnTemplateGroup": "Kumada",
+                        "rxnTemplate": "Kumada",
                         "rxnConfidence": 0.9946215748786926,
                         "rxnSMILES": "O=C(c1occc1)NCC2(CCOCC2)c3ccc(OC)cc3.Nc1ccc(C(=O)O)cc1>>COc1ccc(C2(CNC(=O)c3ccc(NC(=O)c4ccco4)cc3)CCOCC2)cc1",
                         "productSMILES": "COc1ccc(C2(CNC(=O)c3ccc(NC(=O)c4ccco4)cc3)CCOCC2)cc1",

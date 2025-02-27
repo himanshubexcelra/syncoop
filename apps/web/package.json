@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npx tsx server.ts",
+    "dev": "next dev",
     "build": "next build",
-    "start": "npx tsx server.ts",
+    "start": "next start",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch"

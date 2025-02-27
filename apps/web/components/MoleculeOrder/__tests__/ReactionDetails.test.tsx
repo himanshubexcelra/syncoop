@@ -5,7 +5,6 @@ import '@testing-library/jest-dom';
 import ReactionDetails from '../ReactionDetails';
 import {
     ReactionCompoundType,
-    ReactionDetailType,
     ReactionDetailsProps
 } from '@/lib/definition';
 import CustomDataGrid from '@/ui/dataGrid';
@@ -21,19 +20,37 @@ const mockReactionCompound: ReactionCompoundType = {
     inventory_id: 123,
     dispense_time: 0,
     role: 'Reagent',
+    compound_id: '101',
 };
 
-const mockReactionDetail: ReactionDetailType = {
-    id: '1',
-    reaction_name: 'Test Reaction',
-    solvent: 'Water',
-    temperature: 25,
-    reaction_compound: [mockReactionCompound],
-    reaction_template_master: { name: 'Template 1' },
-    product_smiles_string: 'O=C=O',
-    type: '',
-    name: '',
-    smiles: '',
+const defaultProps: ReactionDetailsProps = {
+    isReactantList: false,
+    data: {
+        id: '1',
+        type: 'test',
+        name: 'test',
+        reaction_name: 'Test Reaction',
+        solvent: 'Water',
+        temperature: 25,
+        reaction_compound: [mockReactionCompound],
+        reaction_template_master: {
+            reaction_template: {
+                Solvents: 'DMA;Ethanol;DMF',
+                temperature: '25,50,75',
+            },
+        },
+        product_smiles_string: 'O=C=O',
+        smiles: 'C',
+        confidence: 0.95,
+        reaction_smiles_string: 'C>>O=C=O',
+    },
+    onDataChange: jest.fn(),
+    onSolventChange: jest.fn(),
+    onTemperatureChange: jest.fn(),
+    setReactionDetail: jest.fn(),
+    handleSwapReaction: jest.fn(),
+    resetReaction: 0,
+    status: 'Pending',
 };
 
 const mockColumns = [
@@ -53,20 +70,6 @@ describe('ReactionDetails Component', () => {
         jest.clearAllMocks();
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
-    
-    const defaultProps: ReactionDetailsProps = {
-        isReactantList: false,
-        data: mockReactionDetail,
-        onDataChange: jest.fn(),
-        solventList: ['Water', 'Ethanol'],
-        temperatureList: [25, 50],
-        onSolventChange: jest.fn(),
-        onTemperatureChange: jest.fn(),
-        setReactionDetail: jest.fn(),
-        handleSwapReaction: jest.fn(),
-        resetReaction: 1,
-        status: 'InProgress',
-    };
 
     test('renders the component without crashing', () => {
         const { container } = render(<ReactionDetails {...defaultProps} />);
@@ -115,7 +118,7 @@ describe('ReactionDetails Component', () => {
         });
 
         defaultProps.onDataChange([
-            { id: Number(mockReactionDetail.id), solvent: 'Ethanol' }
+            { id: Number(defaultProps.data.id), solvent: 'Ethanol' }
         ]);
     });
 
@@ -135,7 +138,6 @@ describe('ReactionDetails Component', () => {
         render(<ReactionDetails {...defaultProps} resetReaction={1} />);
         expect(defaultProps.setReactionDetail).toHaveBeenCalledWith({
             id: '1',
-            reactionTemplate: 'Template 1',
             solvent: 'Water',
             temperature: 25,
         });
@@ -151,7 +153,7 @@ describe('ReactionDetails Component', () => {
         const updatedProps = {
             ...defaultProps,
             data: {
-                ...mockReactionDetail,
+                ...defaultProps.data,
                 reaction_compound: [
                     { ...mockReactionCompound },
                     { ...mockReactionCompound },
@@ -163,7 +165,6 @@ describe('ReactionDetails Component', () => {
             solvent: 'Water',
             temperature: 25,
             id: '1',
-            reactionTemplate: 'Template 1',
         });
 
         const table = document.querySelector('.dx-datagrid');

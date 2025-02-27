@@ -46,10 +46,22 @@ export default function CreateLibrary({
   const [showIcon, setShowIcon] = useState({ name: 'arrow-both', permission: 'arrow-both' });
   const [filters, setFilters] = useState({ search: '', filter: false, permission: '', name: '' });
   const [userList, setUsers] = useState<User[]>([]);
+
   const entityLabel = isCustomReaction
     ? 'reactions'
     : 'molecules';
-
+  
+  const targetLib = projectData.other_container?.[library_idx]
+  const owner = library_idx !== -1
+    ? `${targetLib?.owner.first_name} ${targetLib?.owner?.last_name}`
+    : `${userData?.first_name} ${userData?.last_name}`
+  const initialFormData = {
+    organization: projectData?.container?.name || '',
+    owner: `${userData.first_name} ${userData.last_name}` || '',
+    projectName: projectData.name || '',
+    name: ''
+  }
+        
   const handleSubmit = async () => {
     const values = formRef?.current!.instance().option("formData");
     if (formRef.current!.instance().validate().isValid) {
@@ -95,7 +107,7 @@ export default function CreateLibrary({
         await delay(DELAY);
         context?.addToState({ ...appContext, refreshCart: true })
         toast.remove(toastId);
-        setLoadIndicatorVisible(false)
+        setLoadIndicatorVisible(false);
       } else {
         const toastId = toast.error(`${response.error}`);
         await delay(DELAY);
@@ -244,7 +256,9 @@ export default function CreateLibrary({
       <Form
         ref={formRef}
         showValidationSummary={true}
-        formData={library_idx !== -1 ? projectData.other_container?.[library_idx] : {}
+        formData={library_idx !== -1
+          ? projectData.other_container?.[library_idx]
+          : initialFormData
         }>
         {deleteLibraryEnabled
           && <ButtonItem cssClass="delete-button">
@@ -275,7 +289,7 @@ export default function CreateLibrary({
           editorOptions={
             {
               placeholder: "Library Owner",
-              disabled: true, value: `${userData.first_name} ${userData.last_name}`
+              disabled: true, value: owner
             }
           }
         >
@@ -387,27 +401,46 @@ export default function CreateLibrary({
             </div>
           </GroupItem>
         )}
-        <GroupItem cssClass="buttons-group" colCount={2}>
-          <div className="flex items-center">
-            <button className={
-              loadIndicatorVisible
-                ? `disableButton ${library_idx !== -1 ? 'w-[65px]' : 'w-[108px]'} h-[37px]`
-                : 'primary-button'}
+        <GroupItem
+          cssClass="buttons-group"
+          colCountByScreen={{ xs: 2, sm: 2, md: 2, lg: 2 }}
+        >
+          <ButtonItem >
+            <ButtonOptions
+              text={loadIndicatorVisible
+                ? ''
+                : library_idx !== -1 ? 'Update' : 'Create Library'}
+              useSubmitBehavior={true}
               onClick={handleSubmit}
-              disabled={loadIndicatorVisible}>
-              <LoadIndicator className={
-                `button-indicator`
-              }
-                visible={loadIndicatorVisible}
-                height={20}
-                width={20}
-              />
-              {loadIndicatorVisible ? '' : library_idx !== -1 ? 'Update' : 'Create Library'}
-            </button>
-            <button className='secondary-button ml-[15px]' onClick={cancelSave}>
-              Discard
-            </button>
-          </div>
+              elementAttr={{
+                class: loadIndicatorVisible
+                  ? `disableButton ${library_idx !== -1 ?
+                    'w-[65px]'
+                    : 'w-[108px]'} h-[37px]`
+                  : 'btn-primary'
+              }}
+              disabled={isLoading}
+              render={(btn) => (
+
+                <>{loadIndicatorVisible && (
+                  <LoadIndicator
+                    width={20}
+                    height={20}
+                    visible={true}
+                  />
+                )}
+                  <span>{btn.text}</span>
+                </>
+              )}
+            />
+          </ButtonItem>
+          <ButtonItem >
+            <ButtonOptions
+              text="Cancel"
+              onClick={cancelSave}
+              elementAttr={{ class: "btn-secondary" }}
+            />
+          </ButtonItem>
         </GroupItem>
       </Form>
       {confirm && (

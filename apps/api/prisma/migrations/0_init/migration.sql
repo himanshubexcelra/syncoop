@@ -304,19 +304,8 @@ CREATE TABLE "reaction_detail" (
 -- CreateTable
 CREATE TABLE "reaction_template_master" (
     "id" SERIAL NOT NULL,
-    "name" VARCHAR(255) NOT NULL,
-    "template_group" VARCHAR(255) NOT NULL,
     "version" BIGINT NOT NULL,
-    "chemical_1" VARCHAR(100),
-    "chemical_2" VARCHAR(100),
-    "chemical_3" VARCHAR(100),
-    "chemical_4" VARCHAR(100),
-    "chemical_5" VARCHAR(100),
-    "chemical_6" VARCHAR(100),
-    "no_of_components" INTEGER,
-    "solvent" VARCHAR(255),
-    "temperature" VARCHAR(100),
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "reaction_template" JSONB NOT NULL,
     "last_synced_at" TIMESTAMPTZ(6) NOT NULL,
 
     CONSTRAINT "con_pk_reaction_template_master_id" PRIMARY KEY ("id")
@@ -371,7 +360,7 @@ CREATE TABLE "timezone" (
 );
 
 -- CreateTable
-CREATE TABLE "user_favourite_molecule" (
+CREATE TABLE "user_favorite_molecule" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "molecule_id" BIGINT NOT NULL,
@@ -584,12 +573,6 @@ CREATE INDEX "idx_reaction_product_type" ON "reaction_detail"("product_type");
 CREATE INDEX "idx_reaction_status" ON "reaction_detail"("status");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "con_uk_reaction_template_name" ON "reaction_template_master"("name");
-
--- CreateIndex
-CREATE INDEX "idx_reaction_template_master_is_active" ON "reaction_template_master"("is_active");
-
--- CreateIndex
 CREATE UNIQUE INDEX "con_uk_role_name" ON "role"("name");
 
 -- CreateIndex
@@ -605,7 +588,7 @@ CREATE UNIQUE INDEX "con_uk_timezone_name" ON "timezone"("name");
 CREATE INDEX "idx_timezone_is_active" ON "timezone"("is_active");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "con_uk_user_favourite_molecule" ON "user_favourite_molecule"("user_id", "molecule_id");
+CREATE UNIQUE INDEX "con_uk_user_favorite_molecule" ON "user_favorite_molecule"("user_id", "molecule_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "con_uk_user_email_id" ON "users"("email_id");
@@ -809,10 +792,10 @@ ALTER TABLE "timezone" ADD CONSTRAINT "con_fk_timezone_created_by" FOREIGN KEY (
 ALTER TABLE "timezone" ADD CONSTRAINT "con_fk_timezone_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "user_favourite_molecule" ADD CONSTRAINT "con_fk_user_fav_molecule" FOREIGN KEY ("molecule_id") REFERENCES "molecule"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "user_favorite_molecule" ADD CONSTRAINT "con_fk_user_fav_molecule" FOREIGN KEY ("molecule_id") REFERENCES "molecule"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "user_favourite_molecule" ADD CONSTRAINT "con_fk_user_fav_molecule_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "user_favorite_molecule" ADD CONSTRAINT "con_fk_user_fav_molecule_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "user_role" ADD CONSTRAINT "con_fk_user_role_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

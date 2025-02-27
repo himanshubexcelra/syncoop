@@ -18,6 +18,7 @@ import DataGrid, {
     ColumnChooser,
     DataGridRef,
     Editing,
+    Scrolling,
 } from 'devextreme-react/data-grid';
 
 import CheckBox from 'devextreme-react/check-box';
@@ -41,7 +42,7 @@ interface ToolbarButtonConfig {
 interface CustomDataGridProps {
     data: any[];
     selectionEnabledRows?: any[];
-    height?: string;
+    height?: string | number;
     maxHeight?: string;
     columns: ColumnConfig[];
     toolbarButtons?: ToolbarButtonConfig[];
@@ -122,6 +123,7 @@ const CustomDataGrid = ({
     }, [selectedRow]);
     /* const [gridHeight, setGridHeight] = useState(typeof window !== 'undefined' ?
         window.innerHeight - 100 : height); // Default height */
+    const [gridHeight,] = useState(height); // Default height
     const grid = useRef<DataGridRef>(null);
     const [currentSort, setCurrentSort] = useState<{
         field: string | null;
@@ -292,6 +294,7 @@ const CustomDataGrid = ({
                 paging={{ enabled: paging }}
                 dataSource={data}
                 keyExpr="id"
+                height={gridHeight}
                 allowColumnReordering={false}
                 showBorders={true}
                 width="100%"
@@ -310,7 +313,10 @@ const CustomDataGrid = ({
                 onContentReady={onContentReady}
                 onRowUpdating={onRowUpdating}
             >
-                {/* {scrollMode && <Scrolling mode={scrollMode} />} */}
+                <Scrolling
+                    rowRenderingMode='virtual'
+                    columnRenderingMode='virtual'>
+                </Scrolling>
                 {enableColumnChooser &&
                     <ColumnChooser
                         enabled={true}
@@ -394,6 +400,7 @@ const CustomDataGrid = ({
                         allowSorting={true}
                     />
                 )}
+
                 {enableToolbar && <Toolbar>
                     {enableGrouping && groupByColumn && dropdownButtons &&
                         dropdownButtons.map((dropdown: any, index: number) => <Item key={index}>

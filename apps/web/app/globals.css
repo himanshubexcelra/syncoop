@@ -144,7 +144,7 @@ body {
 }
 
 .padding-sub-heading {
-  padding: 0px 20px 20px 0px;
+  padding: 10px 20px 20px 10px;
 }
 
 .main-heading {
@@ -169,7 +169,7 @@ body {
 }
 
 .content-wrapper {
-  padding: 20px;
+  /* padding: 20px; */
   background: var(--themeSilverGreyColor);
 }
 
@@ -708,4 +708,17 @@ body {
   font-weight: 700;
   line-height: normal;
   background-color: transparent;
+}
+
+.dx-datagrid-borders>.dx-datagrid-header-panel{
+  background: var(--background);
+}
+ 
+.dx-datagrid-rowsview .dx-row.dx-group-row:not(.dx-row-focused){
+  background: var(--themeGreyBorder);
+}
+
+.libraryBackgroundGrey {
+  background:  var(--themeGreyBorder);
+  border-radius: 5px;
 }

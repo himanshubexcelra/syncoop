@@ -3,7 +3,7 @@ import { useEffect } from "react"
 
 type PathwayActionProps = {
     pathwayId: string
-    selectedReaction: (value: number, id: number) => void,
+    selectedReaction?: (value: number, id: number) => void,
     updatedAt?: number,
 }
 
@@ -17,7 +17,9 @@ export default function PathwayAction({ pathwayId, selectedReaction, updatedAt }
         }
         // @ts-expect-error JSX element not proper typed
         element.addEventListener("reaction-pathway-click", (e: any) => {
-            selectedReaction(e.detail.eventSource?.[0], Number(pathwayId.split('-')[1]));
+            if (selectedReaction) {
+                selectedReaction(e.detail.eventSource?.[0], Number(pathwayId.split('-')[1]));
+            }
         });
 
         const zoomInButton: any = element?.nextElementSibling?.querySelector(".zoom-in");

@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { DELAY } from '@/utils/constants';
 import { delay } from '@/utils/helpers';
 import KetcherDrawBox from '@/components/KetcherTool/KetcherBox';
-import { UserData } from '@/lib/definition';
+import { AddMoleculeProps } from '@/lib/definition';
 import { RejectedSmiles } from '@/lib/definition';
 import RejectedDialog from './RejectedDialog';
 import { LoadIndicator } from 'devextreme-react';
@@ -25,15 +25,6 @@ const DiscardDialogProperties = {
 const RejectDialogProperties = {
     width: 465,
     height: 180,
-}
-
-type AddMoleculeProps = {
-    userData: UserData;
-    libraryId: number;
-    projectId: string;
-    organizationId: string;
-    setViewAddMolecule: (val: boolean) => void;
-    callLibraryId: () => void;
 }
 
 export default function AddMolecule({
@@ -56,7 +47,7 @@ export default function AddMolecule({
     const [loadIndicatorVisibleSave, setSaveLoadIndicatorVisible] = useState(false);
     const [saveButtonText, setSaveButtonText] = useState('Save Molecule');
     const [rejectedMessage, setRejectedMessage] = useState<string[]>([]);
-    const [duplicateSmiles, setDuplicateSmiles] = useState<string[]>([]);
+    const [duplicateSmiles, setDuplicateSmiles] = useState<RejectedSmiles[]>([]);
     const [updateSmiles, setUploadSmiles] = useState<number>(0);
     const [, startTransition] = useTransition()
     const [isLoader, setIsLoader] = useState(false);
@@ -74,12 +65,12 @@ export default function AddMolecule({
         removeItem()
         setViewAddMolecule(false)
     }
-    function getUniqueSmiles(molecules:any[]): string[] {
+    function getUniqueSmiles(molecules: RejectedSmiles[]): string[] {
         const uniqueSmiles = Array.from(new Set(molecules.map(mol => mol.smiles)));
         return uniqueSmiles;
     }
-    
-    
+
+
     const uploadDuplicateMolecule = () => {
         setIsLoader(true);
         const uniqueSmileList = getUniqueSmiles(duplicateSmiles);
@@ -282,8 +273,6 @@ export default function AddMolecule({
 
             startTransition(async () => {
                 await uploadMoleculeFile(formData).then(async (result) => {
-                    console.log(result,'RES');
-                    
                     setUploadSmiles(result?.uploaded_smiles_count)
                     setRejected(result?.rejected_smiles.
                         concat(result?.duplicate_smiles));

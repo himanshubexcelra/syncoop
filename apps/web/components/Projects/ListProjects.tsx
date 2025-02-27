@@ -55,7 +55,11 @@ export default function ListProjects({
 
     const fetchLibraryData = async (id: number) => {
         if (id) {
-            const projectData = await getLibraries(['libraries'/* , 'projects' */], id.toString());
+            const params: object = {
+                with: ['libraries', 'molecules'],
+                project_id: id.toString()
+            };
+            const projectData = await getLibraries(params);
             setSelectedItems([projectData]);
             setLoader(false);
         }

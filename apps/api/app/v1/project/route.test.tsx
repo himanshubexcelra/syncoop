@@ -16,7 +16,6 @@ describe('Project Handlers', () => {
                 json: async () => ({
                     name: 'Test Project',
                     type: ContainerType.PROJECT,
-                    target: 'Target1',
                     description: 'This is a test project.',
                     organization_id: 1,
                     user_id: 1,

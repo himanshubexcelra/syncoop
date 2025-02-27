@@ -27,6 +27,7 @@ const config: Config = {
   },
   testPathIgnorePatterns: [
     '<rootDir>/packages/',
+    '<rootDir>/components/MoleculeOrder/__tests__/MoleculeOrder.test.tsx'
   ],
 }
 

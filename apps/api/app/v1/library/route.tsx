@@ -210,7 +210,6 @@ export async function PUT(request: Request) {
             metadata,
             sharedUsers
         } = req;
-
         const existingLibrary = await prisma.container.findMany({
             where: {
                 AND: [
@@ -247,8 +246,8 @@ export async function PUT(request: Request) {
         }
         const incomingUserIds = new Set(sharedUsers?.map(({ id }: { id: number }) => id));
         const usersToRemove = existingLibrary[0]?.container_access_permission
-            .filter(user => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
-            .map(user => user.id);
+            .filter((user: any) => !incomingUserIds.has(user.user_id) && user.user_id != user_id)
+            .map((user: any) => user.id) || [];
         const updatedLibrary = await prisma.container.update({
             where: { id },
             data: {

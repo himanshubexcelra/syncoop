@@ -70,3 +70,21 @@ export async function updateMoleculeSmiles(formData: FormData) {
     }
 }
 
+export async function uploadReactionFile(formData: FormData) {
+    try {
+        const response = await fetch(`${process.env.PYTHON_API_HOST_URL}/upload_multiple_rdf_files`, {
+            method: "POST",
+            body: formData,
+        });
+        if (response.status === 200) {
+            const data = await response.json();
+            return data;
+        } else {
+            const error = await response.json();
+            return { status: response.status, error };
+        }
+    } catch (error: any) {
+        return error;
+    }
+}
+

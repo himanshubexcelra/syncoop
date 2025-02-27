@@ -42,14 +42,15 @@ export const Messages = {
         return `Molecule ${moleculeId} deleted from cart successfully`;
     },
     addMoleculeCartMessage(totalItem: number) {
-        const response = totalItem === 1 ? 'Molecule is added to cart' : 'Molecules are added to cart';
+        const response = totalItem === 1 ? 'Molecule/Reaction is added to cart' :
+            'Molecules/Reactions are added to cart';
         return response;
     },
     REMOVE_ALL_MESSAGE: "All the molecules are deleted from your cart.",
-    SUBMIT_ORDER: "Molecules order submitted successfully.",
+    SUBMIT_ORDER: "Molecules/Reactions order submitted successfully.",
     USER_ROLE_CHECK: "User role not supported or missing required parameters.",
     sentForSynthesis(count: number) {
-        return `${count} molecule(s) sent for retro synthesis!`;
+        return `${count} molecule(s)/reaction(s) sent for processing!`;
     },
     UPDATE_MOLECULE_SUCCESS: "Molecules updated successfully",
     CREATE_LAB_JOB_ORDER: "Pathway has been added to synthesis lab job cart",
@@ -67,7 +68,7 @@ export const Messages = {
         }
         return `You are ordering the ${parts.join(' and ')}.`;
     },
-    MOLECULES_VALIDATE_MSG: "Molecule have been validate successfully.",
+    MOLECULES_VALIDATE_MSG: "Molecule have been validated successfully.",
     ADD_USER: 'User created successfully',
     ADD_ORGANIZATION: 'Organization Created successfully',
     ORGANIZATION_NAME_REQUIRED: 'Organization name is required',
@@ -111,11 +112,12 @@ export const Messages = {
     },
     DELETE_LIBRARY_MESSAGE: 'Library Deleted Successfully.',
     DELETE_LIBRARY_ERROR_MESSAGE: 'Can not delete library. Some error occured while deleting the library',
-    displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number, duplicate_molecule_count: number) {
+    displayMoleculeSucessMsg(upload_molecule_count: number, rejected_molecule_count: number, duplicate_molecule_count: number, reaction?: boolean) {
         let messages: string[] = [];
+        const type = reaction ? 'reaction' : 'molecule';
         if (upload_molecule_count > 0 || rejected_molecule_count > 0) {
-            const uploadedMoleculeTxt = upload_molecule_count > 1 ? 'molecules' : 'molecule';
-            const rejectedMoleculeText = rejected_molecule_count > 1 ? 'molecules' : 'molecule';
+            const uploadedMoleculeTxt = upload_molecule_count > 1 ? `${type}s` : type;
+            const rejectedMoleculeText = rejected_molecule_count > 1 ? `${type}s` : type;
             const rejectedMsg = rejected_molecule_count > 0
                 ? `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected`
                 : "";
@@ -125,8 +127,8 @@ export const Messages = {
             messages = [`${rejectedMsg}${upload_molecule_count > 0 && rejected_molecule_count > 0 ? ' and ' : ''}${validMsg}`]
         }
         if ((duplicate_molecule_count > 0 || rejected_molecule_count > 0) && !upload_molecule_count) {
-            const rejectedMoleculeText = rejected_molecule_count > 1 ? 'molecules' : 'molecule';
-            const duplicateMoleculeText = duplicate_molecule_count > 1 ? 'molecules' : 'molecule';
+            const rejectedMoleculeText = rejected_molecule_count > 1 ? `${type}s` : type;
+            const duplicateMoleculeText = duplicate_molecule_count > 1 ? `${type}s` : type;
             const rejectedMsg = rejected_molecule_count > 0
                 ? `Invalid ${rejectedMoleculeText} (${rejected_molecule_count}) ${rejected_molecule_count > 1 ? 'are' : 'is'} rejected`
                 : "";

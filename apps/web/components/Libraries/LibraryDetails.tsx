@@ -105,7 +105,6 @@ const initialProjectData: ProjectDataFields = {
     container: {} as OrganizationDataFields, // Provide a default organization object
     user: {} as userType, // Provide a default user object
     container_access_permission: [],
-    target: '',
     metadata: {
         target: '',
         type: ''
@@ -113,7 +112,6 @@ const initialProjectData: ProjectDataFields = {
     userWhoUpdated: {} as userType, // Provide a default user object
     userWhoCreated: {} as userType, // Provide a default user object
     updated_at: new Date(),
-    user_id: undefined,
     owner: {} as User, // Provide a default owner object
     owner_id: 0,
     orgUser: undefined,
@@ -168,7 +166,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
         onSelectedIndexChange,
     } = usePopupAndReset();
     const appContext = context.state;
-
+    const [delayedExpand, setDelayedExpand] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
     const [breadcrumbValue, setBreadCrumbs] =
         useState(breadcrumbArr({ roles: userData.myRoles }));
@@ -186,7 +184,11 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
     } */
 
     const fetchLibraries = async (setSelectedLibrary: boolean = false) => {
-        const projectData = await getLibraries(['libraries'/* , 'organization' */], project_id);
+        const params: object = {
+            with: ['libraries', 'molecules'],
+            project_id
+        }
+        const projectData = await getLibraries(params);
         // let selectedLib = null;
         /* let selectedLib = { name: '' }; */
         /* if (library_id && !projectData.error) {
@@ -226,7 +228,13 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
             }
         }
     }
-
+    useEffect(() => {
+        setDelayedExpand(false)
+        const timer = setTimeout(() => {
+            setDelayedExpand(true);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [expanded]);
     useEffect(() => {
         const sharedUser = isContainerAccess(projectData.container_access_permission,
             userData.id, ContainerPermission.Admin);
@@ -297,6 +305,10 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                     ];
                     setBreadCrumbs(breadcrumbTemp);
                 }
+                else {
+                    setEditLibAccess(false)
+                    setAdminLibAccess(false)
+                }
             }
         }
     }, [library_id, projectData]);
@@ -345,8 +357,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                     /> :
                     <div>
                         {showPopup && popup}
-                        <div className='flex'>
-                            {expanded && (<div className='w-2/5 projects'>
+                        <div className='flex mt-[10px]'>
+                            {expanded && (<div className='w-2/5 projects libraryBackgroundGrey'>
                                 <div className="flex justify-between ">
                                     <main className="main padding-sub-heading flex 
                                     items-center justify-between w-full">
@@ -419,7 +431,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                 />
                             </div >
                             )}
-                            <div className={`${expanded ? 'w-3/5' : 'w-full relative'}`}>
+                            <div className={`${expanded ? 'w-3/5 ml-[10px]' : 'w-full relative'}`}>
                                 {expanded && library_id != 0 && (
                                     <>
                                         <main className="lib-heading padding-sub-heading">
@@ -502,7 +514,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     className='cursor-pointer absolute top-2.5 z-10'
                                     onClick={() => setExpanded(!expanded)}
                                 />}
-                                <MoleculeList
+                                {delayedExpand && <MoleculeList
                                     selectedLibraryName={selectedLibraryName}
                                     expanded={expanded}
                                     tableData={tableData}
@@ -515,7 +527,10 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     organizationId={organization_id || ''}
                                     editEnabled={adminAccess || editEnabled
                                         || adminLibAccess || editLibAccess}
-                                />
+                                    projectPermission={
+                                        adminAccess || editEnabled
+                                    }
+                                />}
                             </div>
                         </div>
                     </div>

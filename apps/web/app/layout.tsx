@@ -38,7 +38,8 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} antialiased`}
+        style={{ background: '#f9f8fd' }}>
         <LicenseCheckComponent />
         {children}
         <Toaster position="bottom-center" reverseOrder={false} />

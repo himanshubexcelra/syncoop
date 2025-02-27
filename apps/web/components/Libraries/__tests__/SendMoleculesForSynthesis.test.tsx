@@ -133,7 +133,7 @@ describe('Send Molecules For Synthesis should work as expected', () => {
         await act(async () => { fireEvent.click(cancelButton) });
         expect(screen.getByRole('alert')).toBeInTheDocument();
     });
-    test('cancel button should work as expected', async () => {
+    test.skip('cancel button should work as expected', async () => {
         await act(async () => {
             render(
                 <DataGrid

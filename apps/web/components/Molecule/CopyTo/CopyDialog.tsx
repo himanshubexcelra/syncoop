@@ -1,41 +1,37 @@
 import {
-    MoleculeType, ProjectDataFields, LibraryFields,
+    MoleculeType, LibraryFields,
     RejectedSmiles,
 } from "@/lib/definition"
 import Image from "next/image";
 import styles from './CopyDialog.module.css'
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { List, LoadIndicator } from "devextreme-react";
 import DataSource from "devextreme/data/data_source";
 import { uploadMoleculeSmiles } from "../service";
 import toast from "react-hot-toast";
-import { delay, isAdmin, transformMoleculeData } from "@/utils/helpers";
+import { delay, transformMoleculeData } from "@/utils/helpers";
 import { DELAY } from "@/utils/constants";
 import { Messages } from "@/utils/message";
 import RejectedDialog from "../AddMolecule/RejectedDialog";
 import DialogPopUp from "@/ui/DialogPopUp";
+import { getLibraries } from "@/components/Libraries/service";
 
 type CopyDialogProps = {
     selectedMolecules: MoleculeType[];
-    projectData: ProjectDataFields;
     setCopyDialog: (value: boolean) => void;
     user_id: number;
     myRoles: string[];
     callLibraryId: () => void;
     currentLibraryId?: number;
     organizationId: string;
+    projectId: string;
+    projectPermission: boolean;
 }
 const RejectDialogProperties = {
     width: 465,
     height: 180,
 }
-function filterLibrariesByUserAccess(libData: LibraryFields[] = [], userId: number) {
-    return libData.filter((lib: LibraryFields) =>
-        lib?.owner_id === userId ||
-        (lib.container_access_permission &&
-            lib.container_access_permission.some(permission => permission.user_id === userId))
-    );
-}
+
 const sortByFields = [
     { label: 'Name', field: 'name' },
     { label: 'Updation time', field: 'updated_at' },
@@ -44,14 +40,13 @@ const sortByFields = [
 export default function CopyDialog(props: CopyDialogProps) {
     const {
         selectedMolecules,
-        projectData,
         setCopyDialog,
         user_id,
         callLibraryId,
-        myRoles,
         currentLibraryId,
         organizationId,
-
+        projectId,
+        projectPermission
     } = props
     const [sortBy, setSortBy] = useState('name')
     const [selectedLibraries, setSelectedLibraries] = useState<LibraryFields[]>([])
@@ -65,6 +60,8 @@ export default function CopyDialog(props: CopyDialogProps) {
     const [isLoader, setIsLoader] = useState(false);
     const [selectedLibraryId, setSelectedLibraryId] = useState<number[]>([]);
     const [updateSmiles, setUploadSmiles] = useState<number>(0);
+    const [libData, setLibData] = useState<LibraryFields[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const filterCurrentLibrary = ['id', '<>', currentLibraryId]
     const hideRejectPopUp = () => {
@@ -74,11 +71,36 @@ export default function CopyDialog(props: CopyDialogProps) {
         }
         setCopyDialog(false)
     }
-    const admin = isAdmin(myRoles);
-    const libData = admin
-        ? projectData.other_container
-        : filterLibrariesByUserAccess(projectData.other_container, user_id)
+    const fetchData = async () => {
+        setIsLoading(true)
+        try {
+            let params: object = {
+                with: ['libraries'],
+                project_id: projectId
+            };
+            if (projectPermission) {
+                params = {
+                    ...params,
+                    userId: user_id
+                }
+            }
+            const data = await getLibraries(params);
+            setLibData(data.other_container);
+        } catch (error) {
+            console.log(error);
+            const msg = Messages.FETCH_ERROR
+            const toastId = toast.error(msg);
+            await delay(DELAY);
+            toast.remove(toastId);
+        }
+        finally {
+            setIsLoading(false)
+        }
+    };
+    useEffect(() => {
 
+        fetchData();
+    }, []);
     function getUniqueSmiles(molecules: any[]): string[] {
         const uniqueSmiles = Array.from(new Set(molecules.map(mol => mol.smiles)));
         return uniqueSmiles;
@@ -157,18 +179,16 @@ export default function CopyDialog(props: CopyDialogProps) {
         })
     );
 
+    useEffect(() => {
+        setDataSource(new DataSource({
+            store: libData,
+            filter: filterCurrentLibrary,
+            sort: [{ selector: sortBy, desc: sortBy !== 'name' }]
+        }));
+    }, [libData, sortBy]);
+
     const handleSortChange = (sortKey: string) => {
-        setSortBy(sortKey)
-        setDataSource(
-            new DataSource({
-                store: libData,
-                filter: filterCurrentLibrary,
-                sort: [{
-                    selector: sortKey,
-                    desc: sortKey !== 'name'
-                }]
-            })
-        );
+        setSortBy(sortKey);
     };
 
     const onSelectedItemKeysChange = useCallback(
@@ -265,14 +285,18 @@ export default function CopyDialog(props: CopyDialogProps) {
                 </select>
             </div>
             <div className={styles.borderGrid}>
-                <List
-                    dataSource={dataSource}
-                    height={330}
-                    showSelectionControls={true}
-                    selectionMode={"multiple"}
-                    displayExpr="name"
-                    onSelectedItemKeysChange={onSelectedItemKeysChange}
-                ></List>
+                {isLoading
+                    ? <div className="h-[330px] p-2">
+                        <LoadIndicator visible={isLoading} />
+                    </div>
+                    : <List
+                        dataSource={dataSource}
+                        height={330}
+                        showSelectionControls={true}
+                        selectionMode={"multiple"}
+                        displayExpr="name"
+                        onSelectedItemKeysChange={onSelectedItemKeysChange}
+                    ></List>}
             </div>
             <div className="flex justify-start gap-4 mt-5">
                 <button className={submitLoadIndicatorVisible || selectedLibraries.length === 0

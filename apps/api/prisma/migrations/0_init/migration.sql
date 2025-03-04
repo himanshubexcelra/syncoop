@@ -1,4 +1,4 @@
-CREATE EXTENSION btree_gist;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 -- CreateTable
 CREATE TABLE "container" (
@@ -102,13 +102,13 @@ CREATE TABLE "molecule" (
     "inchi_key" VARCHAR(27),
     "molecular_weight" DECIMAL NOT NULL,
     "finger_print" BYTEA NOT NULL,
+    "assays" JSONB,
     "status" SMALLINT NOT NULL,
     "is_added_to_cart" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "created_by" INTEGER NOT NULL,
     "updated_at" TIMESTAMPTZ(6),
     "updated_by" INTEGER,
-    "assays" JSONB,
 
     CONSTRAINT "con_pk_molecule_id" PRIMARY KEY ("id")
 );
@@ -145,10 +145,10 @@ CREATE TABLE "molecule_cart" (
     "library_id" BIGINT NOT NULL,
     "project_id" BIGINT NOT NULL,
     "organization_id" BIGINT NOT NULL,
+    "assays" JSONB,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "created_by" INTEGER NOT NULL,
     "updated_at" TIMESTAMPTZ(6),
-    "assays" JSONB,
     "updated_by" INTEGER,
 
     CONSTRAINT "con_pk_molecule_cart_id" PRIMARY KEY ("id")
@@ -173,7 +173,7 @@ CREATE TABLE "molecule_order" (
     "order_id" VARCHAR(100) NOT NULL,
     "order_name" VARCHAR(100) NOT NULL,
     "organization_id" BIGINT NOT NULL,
-    "ordered_molecules" INTEGER[],
+    "ordered_molecules" DECIMAL[],
     "synthesis_batch_submission" JSONB,
     "status" SMALLINT NOT NULL,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
@@ -292,6 +292,7 @@ CREATE TABLE "reaction_detail" (
     "product_smiles_string" TEXT,
     "product_molecular_weight" DECIMAL,
     "product_type" CHAR(1),
+    "metadata" JSONB,
     "status" SMALLINT NOT NULL,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "created_by" INTEGER NOT NULL,
@@ -393,12 +394,12 @@ CREATE TABLE "users" (
     "number_datetime_format_id" INTEGER,
     "image_url" VARCHAR(255),
     "organization_id" BIGINT,
+    "primary_contact_id" INTEGER,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "created_by" INTEGER,
     "updated_at" TIMESTAMPTZ(6),
     "updated_by" INTEGER,
-    "primary_contact_id" INTEGER,
 
     CONSTRAINT "con_pk_user_id" PRIMARY KEY ("id")
 );
@@ -426,7 +427,7 @@ CREATE TABLE "adme_parameter_detail" (
     "color_status" VARCHAR(50) NOT NULL,
     "formula_min_value" DECIMAL NOT NULL,
     "formula_max_value" DECIMAL NOT NULL,
-    "formula" JSONB,
+    "formula" JSONB NOT NULL,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "created_by" INTEGER,
     "updated_at" TIMESTAMPTZ(6),
@@ -454,8 +455,8 @@ CREATE TABLE "bioassay" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(150) NOT NULL,
     "description" TEXT NOT NULL,
-    "target" VARCHAR(150),
-    "clinical_indication" VARCHAR(150),
+    "clinical_indication" VARCHAR(255) NOT NULL,
+    "target" VARCHAR(255) NOT NULL,
     "supplier_name" VARCHAR(100) NOT NULL,
     "stock_keeping_unit" VARCHAR(255),
     "user_fields" JSONB NOT NULL,
@@ -465,6 +466,22 @@ CREATE TABLE "bioassay" (
     "updated_by" INTEGER,
 
     CONSTRAINT "con_pk_bioassay_id" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ams_inventory" (
+    "id" BIGSERIAL NOT NULL,
+    "version" BIGINT NOT NULL,
+    "structure_id" BIGINT NOT NULL,
+    "smiles_string" TEXT NOT NULL,
+    "inchi_key" VARCHAR(27) NOT NULL,
+    "supplier_aid" VARCHAR(100) NOT NULL,
+    "created_at" TIMESTAMPTZ(6) NOT NULL,
+    "created_by" INTEGER,
+    "updated_at" TIMESTAMPTZ(6),
+    "updated_by" INTEGER,
+
+    CONSTRAINT "con_pk_ams_inventory_id" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -480,7 +497,7 @@ CREATE INDEX "idx_container_parent_id" ON "container"("parent_id");
 CREATE INDEX "idx_container_type" ON "container"("type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "con_uk_container_type_and_name_and_parent_id" ON "container"("type", "name", "parent_id");
+CREATE UNIQUE INDEX "con_uk_container_type_and_name_parent_id" ON "container"("type", "name", "parent_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "con_uk_display_format_locale" ON "display_format"("locale");
@@ -607,6 +624,9 @@ CREATE UNIQUE INDEX "con_uk_container_access_permission_container_id_n_user_id" 
 
 -- CreateIndex
 CREATE UNIQUE INDEX "con_uk_bioassay_name" ON "bioassay"("name");
+
+-- CreateIndex
+CREATE INDEX "idx_ams_inventory_inchi_key" ON "ams_inventory"("inchi_key");
 
 -- AddForeignKey
 ALTER TABLE "container" ADD CONSTRAINT "con_fk_container_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -738,10 +758,13 @@ ALTER TABLE "product_module" ADD CONSTRAINT "con_fk_product_module_created_by" F
 ALTER TABLE "product_module" ADD CONSTRAINT "con_fk_product_module_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "product_module_action" ADD CONSTRAINT "con_fk_product_module_actn_created_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "product_module_action" ADD CONSTRAINT "con_fk_product_module_actn_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "product_module_action" ADD CONSTRAINT "con_fk_product_module_actn_module_id" FOREIGN KEY ("product_module_id") REFERENCES "product_module"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "product_module_action" ADD CONSTRAINT "con_fk_product_module_actn_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "product_module_action_role_permission" ADD CONSTRAINT "con_fk_product_module_actn_id" FOREIGN KEY ("product_module_action_id") REFERENCES "product_module_action"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -765,13 +788,13 @@ ALTER TABLE "reaction_compound" ADD CONSTRAINT "con_fk_reaction_compound_updated
 ALTER TABLE "reaction_detail" ADD CONSTRAINT "con_fk_reaction_detail_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
+ALTER TABLE "reaction_detail" ADD CONSTRAINT "con_fk_reaction_detail_pathway_id" FOREIGN KEY ("pathway_id") REFERENCES "pathway"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
 ALTER TABLE "reaction_detail" ADD CONSTRAINT "con_fk_reaction_detail_rxn_template_id" FOREIGN KEY ("reaction_template_id") REFERENCES "reaction_template_master"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "reaction_detail" ADD CONSTRAINT "con_fk_reaction_detail_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "reaction_detail" ADD CONSTRAINT "con_fk_reaction_detail_pathway_id" FOREIGN KEY ("pathway_id") REFERENCES "pathway"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "role" ADD CONSTRAINT "con_fk_role_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -853,4 +876,10 @@ ALTER TABLE "bioassay" ADD CONSTRAINT "con_fk_bioassay_created_by" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "bioassay" ADD CONSTRAINT "con_fk_bioassay_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ams_inventory" ADD CONSTRAINT "con_fk_ams_inventory_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ams_inventory" ADD CONSTRAINT "con_fk_ams_inventory_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 

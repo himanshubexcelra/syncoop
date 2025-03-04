@@ -63,8 +63,8 @@ const CartPopupComponent = ({
     }, [library_id, userData.id]);
 
     const removeItemFromCart = (obj: DeleteMoleculeCart) => {
-        const { molecule_id, library_id, project_id, created_by, pathway } = obj;
-        const statusType = pathway ?
+        const { molecule_id, library_id, project_id, created_by, status } = obj;
+        const statusType = status === MoleculeStatusCode.ValidatedInCart ?
             MoleculeStatusCode.Validated : MoleculeStatusCode.Ordered;
         const moleculeStatus = containsProjects ?
             MoleculeStatusCode.New : statusType;
@@ -102,7 +102,8 @@ const CartPopupComponent = ({
         // Helper function for handling cart deletion
         const handleDeleteCart = async (status: number, cartRecords: any[]) => {
             const res = await deleteMoleculeCart(
-                user_id, status,
+                user_id,
+                status,
                 cartRecords.map((item: any) => item.molecule_id),
                 cartRecords.map((item: any) => item.library_id),
                 cartRecords.map((item: any) => item.project_id),
@@ -125,8 +126,9 @@ const CartPopupComponent = ({
 
         try {
             if (type === "SubmitOrder" || type === "LabJobOrder") {
-                moleculeStatus = type === "SubmitOrder" ?
-                    MoleculeStatusCode.Ordered : MoleculeStatusCode.InProgress;
+                moleculeStatus = type === "SubmitOrder"
+                    ? MoleculeStatusCode.Ordered
+                    : MoleculeStatusCode.InProgress;
 
                 const res = await handleDeleteCart(moleculeStatus, cartData);
 
@@ -138,13 +140,15 @@ const CartPopupComponent = ({
                 const labJobRecords = filterCartDataForLabJob(cartData);
 
                 if (!containsProjects && analysisRecords.length > 0 && labJobRecords.length > 0) {
-                    // Handle bulk deletion for both statuses in parallel
-                    await Promise.all([
-                        handleDeleteCart(MoleculeStatusCode.Ordered, analysisRecords),
-                        handleDeleteCart(MoleculeStatusCode.Validated, labJobRecords),
-                    ]);
+                    // Handle sequential deletion instead of parallel
+                    const analysisResult =
+                        await handleDeleteCart(MoleculeStatusCode.Ordered, analysisRecords);
+                    const labJobResult =
+                        await handleDeleteCart(MoleculeStatusCode.Validated, labJobRecords);
 
-                    updateUIAfterDeletion(msg);
+                    if (analysisResult && labJobResult) {
+                        updateUIAfterDeletion(msg);
+                    }
                 } else if (!containsProjects && analysisRecords.length > 0) {
                     moleculeStatus = MoleculeStatusCode.Ordered;
                     const res = await handleDeleteCart(moleculeStatus, analysisRecords);

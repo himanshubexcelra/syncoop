@@ -116,7 +116,7 @@ export default function StatusComponent({ myRoles, orgUser, customerOrgId }: Sta
 
                     <Legend visible={false}></Legend>
 
-                    <ArgumentAxis visible={false}>
+                    <ArgumentAxis visible={false} inverted={true}>
                         <Grid visible={false}></Grid>
                         <Tick visible={false}></Tick>
                         <Label visible={true}>

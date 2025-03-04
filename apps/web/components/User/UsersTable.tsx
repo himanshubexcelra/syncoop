@@ -6,7 +6,13 @@ import DataGrid, {
     Column,
     Toolbar as GridToolbar,
     DataGridRef,
-    Paging
+    Paging,
+    Scrolling,
+    HeaderFilter,
+    Sorting,
+    GroupPanel,
+    Grouping,
+    SearchPanel
 } from "devextreme-react/data-grid";
 import Image from "next/image";
 import { Popup as MainPopup, } from "devextreme-react/popup";
@@ -259,29 +265,19 @@ export default function UsersTable({
                     showBorders={true}
                     ref={grid}
                     className="no-padding-header"
-                    sorting={{ mode: 'single' }}
                     height={'auto'}
                     style={{ maxHeight: '400px' }}
-                    groupPanel={{
-                        visible: type == OrganizationType.External
-                    }}
-                    headerFilter={{
-                        visible: true
-                    }}
-                    grouping={{
-                        autoExpandAll: true
-                    }}
-                    searchPanel={{
-                        visible: true,
-                        highlightSearchText: true
-                    }}
                     onOptionChanged={handleSortChanged}>
-                    <Paging defaultPageSize={5} defaultPageIndex={0} />
+                    <Paging enabled={false} />
+                    <HeaderFilter visible={true}></HeaderFilter>
+                    <Sorting mode="single"></Sorting>
+                    <GroupPanel visible={type == OrganizationType.External}></GroupPanel>
+                    <Grouping autoExpandAll={true}></Grouping>
+                    <SearchPanel visible={true} highlightSearchText={true}></SearchPanel>
                     <Column
                         dataField="email_id"
                         caption="Email Address"
                         width={350}
-                        allowHeaderFiltering={false}
                         cellRender={(data: any) => {
                             const user_id = data?.data?.id;
                             return (
@@ -301,13 +297,11 @@ export default function UsersTable({
                         alignment="left"
                         defaultSortIndex={0}
                         defaultSortOrder="asc"
-                        allowHeaderFiltering={false}
                     />
                     <Column
                         dataField="last_name"
                         width={140}
                         caption="Last Name"
-                        allowHeaderFiltering={false}
                     />
                     {type === OrganizationType.External && <Column
                         dataField="orgUser.name"
@@ -486,6 +480,10 @@ export default function UsersTable({
                             name="searchPanel"
                             location={type === OrganizationType.External ? 'after' : 'before'} />
                     </GridToolbar>
+                    <Scrolling
+                        rowRenderingMode='virtual'
+                        columnRenderingMode='virtual'>
+                    </Scrolling>
                 </DataGrid>}
         </>
     );

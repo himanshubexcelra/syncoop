@@ -26,7 +26,8 @@ const moleculeData = [
         adme_data: [],
         functional_assays: [],
         reaction_data: null,
-        organizationMetadata: null
+        organizationMetadata: null,
+        projectMetadata: { target: 100, type: "Retrosynthesis" }
     },
 ];
 

@@ -56,7 +56,6 @@ const breadcrumbArr = ({
     roles,
 }: breadCrumbParams) => {
     const admin = isAdmin(roles)
-
     return [
         {
             label: "Home",
@@ -213,7 +212,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                 projectTitle: `${projectData.name}`,
                 projectHref: `/${project_id}`,
                 orgData: (organizationId) ? projectData.container : '',
-                roles: userData.myRoles
+                roles: userData.myRoles,
+                projectState: true,
             });
 
             setBreadCrumbs(breadcrumbTemp);
@@ -287,7 +287,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                         projectTitle: `${projectData.name}`,
                         projectHref: `/${project_id}`,
                         orgData: (organizationId) ? projectData.container : undefined,
-                        roles: userData.myRoles
+                        roles: userData.myRoles,
+                        projectSvg: "/icons/project-inactive.svg"
                     });
                     breadcrumbTemp = [
                         ...breadcrumbTemp,
@@ -296,8 +297,8 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                             svgPath: "/icons/library-active.svg",
                             svgWidth: 16,
                             svgHeight: 16,
-                            href: projectData.container
-                                ? `/organization/${projectData.container.id}`
+                            href: organizationId
+                                ? `/organization/${organizationId}`
                                 + `/projects/${project_id}?library_id=${library_id}`
                                 : `/projects/${project_id}?library_id=${library_id}`,
                             isActive: true,
@@ -346,6 +347,15 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
 
     const isCustomReaction = isCustomReactionCheck(projectData.metadata);
 
+    const expandAndRedirect = () => {
+        if (expanded) {
+            const url =
+                `/projects/${project_id}` +
+                `?library_id=${library_id}`;
+            router.replace(url);
+        }
+        setExpanded(!expanded);
+    }
 
     return (
         <>
@@ -398,7 +408,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                                 height={30}
                                                 alt="showDetailedView"
                                                 className='cursor-pointer'
-                                                onClick={() => setExpanded(!expanded)}
+                                                onClick={expandAndRedirect}
                                             />
                                         </div>
                                     </main>
@@ -423,6 +433,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     setShowPopup={setShowPopup}
                                     adminAccess={adminAccess}
                                     organizationId={Number(organization_id)}
+                                    clickOrgId={organizationId}
                                     childRef={childRef}
                                     setDirtyField={setDirtyField}
                                     onSelectedIndexChange={onSelectedIndexChange}
@@ -512,7 +523,7 @@ export default function LibraryDetails(props: LibraryDetailsProps) {
                                     height={30}
                                     alt="showDetailedView"
                                     className='cursor-pointer absolute top-2.5 z-10'
-                                    onClick={() => setExpanded(!expanded)}
+                                    onClick={expandAndRedirect}
                                 />}
                                 {delayedExpand && <MoleculeList
                                     selectedLibraryName={selectedLibraryName}

@@ -13,6 +13,7 @@ import { MoleculeOrder } from "@/lib/definition";
 import { useRef, useState } from "react";
 import { LoadIndicator } from "devextreme-react";
 import MoleculeStructureActions from "@/ui/MoleculeStructureActions";
+import { isCustomReactionCheck, sortStringsConsideringNumeric } from "@/utils/helpers";
 
 type SendMoleculesForSynthesisProps = {
     moleculeData: MoleculeOrder[],
@@ -109,6 +110,44 @@ export default function SendMoleculesForSynthesis({
                     <Sorting mode="single" />
                     <Scrolling mode="infinite" />
                     <HeaderFilter visible={true} />
+                    <Column dataField="type"
+                        minWidth={50}
+                        allowHeaderFiltering={false}
+                        alignment="center"
+                        cellRender={(data) => {
+                            const projectMetaData = data.key.projectMetadata
+                            const isCustomReaction = isCustomReactionCheck(projectMetaData);
+                            if (isCustomReaction) {
+                                return (
+                                    <Button>
+                                        <Image
+                                            src="/icons/custom-reaction-md.svg"
+                                            width={20}
+                                            height={20}
+                                            alt="Custom Reaction"
+                                            style={{ alignItems: "center" }}
+                                        />
+                                    </Button>
+                                );
+                            }
+                            else {
+                                return (
+                                    <Button>
+
+                                        <Image
+                                            src="/icons/retrosynthesis-md.svg"
+                                            width={20}
+                                            height={20}
+                                            alt="Retrosynthesis"
+                                        />
+                                    </Button>
+
+                                )
+                            }
+                        }
+
+                        }
+                    />
                     <Column
                         dataField="molecule_id"
                         caption="Molecule ID"
@@ -138,6 +177,7 @@ export default function SendMoleculesForSynthesis({
                         caption="Molecular Weight"
                         alignment="center"
                         minWidth={120}
+                        sortingMethod={sortStringsConsideringNumeric}
                         cellRender={({ data }) => Number(data.molecular_weight).toFixed(2)}
                     />
                     <Column
@@ -156,7 +196,7 @@ export default function SendMoleculesForSynthesis({
                                 )}
                             />
                         )}
-                        caption="Remove"
+                        caption="Action"
                     />
                 </DataGrid>
             </div>

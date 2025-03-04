@@ -11,59 +11,42 @@ datasource db {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model container {
-  id                     BigInt    @id(map: "con_pk_container_id") @default(autoincrement())
-  parent_id              BigInt?
-  type                   String    @db.VarChar(2)
-  name                   String    @db.VarChar(255)
-  description            String?
-  owner_id               Int?
-  inherits_configuration Boolean?  @default(true)
-  inherits_bioassays     Boolean?  @default(true)
-  config                 Json?
-  metadata               Json?
-  is_active              Boolean
-  created_at             DateTime  @db.Timestamptz(6)
-  created_by             Int
-  updated_at             DateTime? @db.Timestamptz(6)
-  updated_by             Int?
-
-  // users_container_created_byTousers                        users                @relation("container_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_created_by")
-  userWhoCreated users @relation("container_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_created_by")
-
-  // users_container_owner_idTousers                          users?               @relation("container_owner_idTousers", fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_owner_id")
-  owner users? @relation("container_owner_idTousers", fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_owner_id")
-
-  container       container?  @relation("containerTocontainer", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_parent_id")
-  other_container container[] @relation("containerTocontainer")
-
-  // users_container_updated_byTousers                        users?               @relation("container_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_updated_by")
-  userWhoUpdated users? @relation("container_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_updated_by")
-
-  // molecule_molecule_library_idTocontainer                  molecule[]           @relation("molecule_library_idTocontainer")
-  libraryMolecules molecule[] @relation("molecule_library_idTocontainer")
-
-  // molecule_molecule_organization_idTocontainer             molecule[]           @relation("molecule_organization_idTocontainer")
-  organizationMolecules molecule[] @relation("molecule_organization_idTocontainer")
-
-  // molecule_molecule_project_idTocontainer                  molecule[]           @relation("molecule_project_idTocontainer")
-  projectMolecules molecule[] @relation("molecule_project_idTocontainer")
-
-  molecule_cart_molecule_cart_library_idTocontainer        molecule_cart[]      @relation("molecule_cart_library_idTocontainer")
-  molecule_cart_molecule_cart_organization_idTocontainer   molecule_cart[]      @relation("molecule_cart_organization_idTocontainer")
-  molecule_cart_molecule_cart_project_idTocontainer        molecule_cart[]      @relation("molecule_cart_project_idTocontainer")
-  molecule_order_molecule_order_organization_idTocontainer molecule_order[]     @relation("molecule_order_organization_idTocontainer")
+  id                                                       BigInt                        @id(map: "con_pk_container_id") @default(autoincrement())
+  parent_id                                                BigInt?
+  type                                                     String                        @db.VarChar(2)
+  name                                                     String                        @db.VarChar(255)
+  description                                              String?
+  owner_id                                                 Int?
+  inherits_configuration                                   Boolean?                      @default(true)
+  inherits_bioassays                                       Boolean?                      @default(true)
+  config                                                   Json?
+  metadata                                                 Json?
+  is_active                                                Boolean
+  created_at                                               DateTime                      @db.Timestamptz(6)
+  created_by                                               Int
+  updated_at                                               DateTime?                     @db.Timestamptz(6)
+  updated_by                                               Int?
+  userWhoCreated                                           users                         @relation("container_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_created_by")
+  owner                                                    users?                        @relation("container_owner_idTousers", fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_owner_id")
+  container                                                container?                    @relation("containerTocontainer", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_parent_id")
+  other_container                                          container[]                   @relation("containerTocontainer")
+  userWhoUpdated                                           users?                        @relation("container_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_updated_by")
+  container_access_permission                              container_access_permission[]
+  libraryMolecules                                         molecule[]                    @relation("molecule_library_idTocontainer")
+  organizationMolecules                                    molecule[]                    @relation("molecule_organization_idTocontainer")
+  projectMolecules                                         molecule[]                    @relation("molecule_project_idTocontainer")
+  molecule_cart_molecule_cart_library_idTocontainer        molecule_cart[]               @relation("molecule_cart_library_idTocontainer")
+  molecule_cart_molecule_cart_organization_idTocontainer   molecule_cart[]               @relation("molecule_cart_organization_idTocontainer")
+  molecule_cart_molecule_cart_project_idTocontainer        molecule_cart[]               @relation("molecule_cart_project_idTocontainer")
+  molecule_order_molecule_order_organization_idTocontainer molecule_order[]              @relation("molecule_order_organization_idTocontainer")
   org_product_module                                       org_product_module[]
+  orgUser                                                  users[]                       @relation("users_organization_idTocontainer")
 
-  // users_users_organization_idTocontainer                   users[]              @relation("users_organization_idTocontainer")
-  orgUser users[] @relation("users_organization_idTocontainer")
-  container_access_permission container_access_permission[] @relation(map: "con_fk_container_access_permission_container_id")
-
-  @@unique([type, name, parent_id], map: "con_uk_container_type_and_name_and_parent_id")
+  @@unique([type, name, parent_id], map: "con_uk_container_type_and_name_parent_id")
   @@index([is_active], map: "idx_container_is_active")
   @@index([owner_id], map: "idx_container_owner_id")
   @@index([parent_id], map: "idx_container_parent_id")
   @@index([type], map: "idx_container_type")
-  
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -129,7 +112,7 @@ model inventory_metadata {
 model lab_job_order {
   lab_job_order_id                        BigInt               @default(autoincrement())
   molecule_id                             BigInt
-  pathway_id                              BigInt?              // Optional field
+  pathway_id                              BigInt?
   product_smiles_string                   String
   product_molecular_weight                Decimal?             @db.Decimal
   no_of_steps                             Int?
@@ -159,44 +142,33 @@ model lab_job_order {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model molecule {
-  id                   BigInt          @id(map: "con_pk_molecule_id") @default(autoincrement())
-  source_molecule_name String?         @db.VarChar(150)
-  library_id           BigInt
-  project_id           BigInt
-  organization_id      BigInt
-  smiles_string        String
-  inchi_key            String?         @db.VarChar(27)
-  molecular_weight     Decimal         @db.Decimal
-  finger_print         Bytes
-  status               Int             @db.SmallInt
-  is_added_to_cart     Boolean         @default(false)
-  created_at           DateTime        @db.Timestamptz(6)
-  created_by           Int
-  updated_at           DateTime?       @db.Timestamptz(6)
-  updated_by           Int?
-  lab_job_order        lab_job_order[]
-  assays               Json?
-
-  // users_molecule_created_byTousers              users                     @relation("molecule_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_created_by")
-  userWhoCreated users @relation("molecule_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_created_by")
-
-  // container_molecule_library_idTocontainer      container                 @relation("molecule_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_library_id")
-  library container @relation("molecule_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_library_id")
-
-  // container_molecule_organization_idTocontainer container                 @relation("molecule_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_org_id")
-  organization container @relation("molecule_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_org_id")
-
-  // container_molecule_project_idTocontainer      container                 @relation("molecule_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_project_id")
-  project container @relation("molecule_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_project_id")
-
-  // users_molecule_updated_byTousers              users?                    @relation("molecule_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_updated_by")
-  userWhoUpdated users? @relation("molecule_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_updated_by")
-
-  molecule_adme_data      molecule_adme_data[]
-  molecule_bio_data       molecule_bio_data[]
-  molecule_cart           molecule_cart[]
-  molecule_chem_data      molecule_chem_data[]
-  pathway                 pathway[]
+  id                     BigInt                   @id(map: "con_pk_molecule_id") @default(autoincrement())
+  source_molecule_name   String?                  @db.VarChar(150)
+  library_id             BigInt
+  project_id             BigInt
+  organization_id        BigInt
+  smiles_string          String
+  inchi_key              String?                  @db.VarChar(27)
+  molecular_weight       Decimal                  @db.Decimal
+  finger_print           Bytes
+  assays                 Json?
+  status                 Int                      @db.SmallInt
+  is_added_to_cart       Boolean                  @default(false)
+  created_at             DateTime                 @db.Timestamptz(6)
+  created_by             Int
+  updated_at             DateTime?                @db.Timestamptz(6)
+  updated_by             Int?
+  lab_job_order          lab_job_order[]
+  userWhoCreated         users                    @relation("molecule_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_created_by")
+  library                container                @relation("molecule_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_library_id")
+  organization           container                @relation("molecule_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_org_id")
+  project                container                @relation("molecule_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_project_id")
+  userWhoUpdated         users?                   @relation("molecule_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_updated_by")
+  molecule_adme_data     molecule_adme_data[]
+  molecule_bio_data      molecule_bio_data[]
+  molecule_cart          molecule_cart[]
+  molecule_chem_data     molecule_chem_data[]
+  pathway                pathway[]
   user_favorite_molecule user_favorite_molecule[]
 
   @@index([finger_print], map: "idx_molecule_fingerprint")
@@ -236,35 +208,24 @@ model molecule_bio_data {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model molecule_cart {
-  id                BigInt    @id(map: "con_pk_molecule_cart_id") @default(autoincrement())
+  id                BigInt          @id(map: "con_pk_molecule_cart_id") @default(autoincrement())
   molecule_order_id Int?
   molecule_id       BigInt
   library_id        BigInt
   project_id        BigInt
   organization_id   BigInt
-  created_at        DateTime  @db.Timestamptz(6)
-  created_by        Int
-  updated_at        DateTime? @db.Timestamptz(6)
   assays            Json?
+  created_at        DateTime        @db.Timestamptz(6)
+  created_by        Int
+  updated_at        DateTime?       @db.Timestamptz(6)
   updated_by        Int?
-
-  // users_molecule_cart_created_byTousers              users           @relation("molecule_cart_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_created_by")
-  userWhoCreated users @relation("molecule_cart_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_created_by")
-
-  // container_molecule_cart_library_idTocontainer      container       @relation("molecule_cart_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_library_id")
-  library container @relation("molecule_cart_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_library_id")
-
-  molecule_order molecule_order? @relation(fields: [molecule_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_mol_order_id")
-  molecule       molecule        @relation(fields: [molecule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_molecule_id")
-
-  // container_molecule_cart_organization_idTocontainer container       @relation("molecule_cart_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_org_id")
-  organization container @relation("molecule_cart_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_org_id")
-
-  // container_molecule_cart_project_idTocontainer      container       @relation("molecule_cart_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_project_id")
-  project container @relation("molecule_cart_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_project_id")
-
-  // users_molecule_cart_updated_byTousers              users?          @relation("molecule_cart_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_updated_by")
-  userWhoUpdated users? @relation("molecule_cart_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_updated_by")
+  userWhoCreated    users           @relation("molecule_cart_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_created_by")
+  library           container       @relation("molecule_cart_library_idTocontainer", fields: [library_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_library_id")
+  molecule_order    molecule_order? @relation(fields: [molecule_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_mol_order_id")
+  molecule          molecule        @relation(fields: [molecule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_molecule_id")
+  organization      container       @relation("molecule_cart_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_org_id")
+  project           container       @relation("molecule_cart_project_idTocontainer", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_project_id")
+  userWhoUpdated    users?          @relation("molecule_cart_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_cart_updated_by")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -289,7 +250,7 @@ model molecule_order {
   order_id                   String          @unique(map: "con_uk_molecule_order_order_id") @db.VarChar(100)
   order_name                 String          @db.VarChar(100)
   organization_id            BigInt
-  ordered_molecules          Int[]
+  ordered_molecules          Decimal[]       @db.Decimal
   synthesis_batch_submission Json?
   status                     Int             @db.SmallInt
   created_at                 DateTime        @db.Timestamptz(6)
@@ -297,15 +258,9 @@ model molecule_order {
   updated_at                 DateTime?       @db.Timestamptz(6)
   updated_by                 Int?
   molecule_cart              molecule_cart[]
-
-  // users_molecule_order_created_byTousers              users           @relation("molecule_order_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_created_by")
-  userWhoCreated users @relation("molecule_order_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_created_by")
-
-  // container_molecule_order_organization_idTocontainer container       @relation("molecule_order_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_org_id")
-  organization container @relation("molecule_order_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_org_id")
-
-  // users_molecule_order_updated_byTousers              users?          @relation("molecule_order_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_updated_by")
-  userWhoUpdated users? @relation("molecule_order_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_updated_by")
+  userWhoCreated             users           @relation("molecule_order_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_created_by")
+  organization               container       @relation("molecule_order_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_org_id")
+  userWhoUpdated             users?          @relation("molecule_order_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_molecule_order_updated_by")
 
   @@index([status], map: "idx_molecule_order_status")
 }
@@ -342,13 +297,13 @@ model pathway {
   created_by                      Int
   updated_at                      DateTime?         @db.Timestamptz(6)
   updated_by                      Int?
+  lab_job_order                   lab_job_order[]
   users_pathway_created_byTousers users             @relation("pathway_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_pathway_created_by")
   molecule                        molecule          @relation(fields: [molecule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_pathway_molecule_id")
   pathway                         pathway?          @relation("pathwayTopathway", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_pathway_parent_id")
   other_pathway_instance          pathway[]         @relation("pathwayTopathway")
   users_pathway_updated_byTousers users?            @relation("pathway_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_pathway_updated_by")
   reaction_detail                 reaction_detail[]
-  lab_job_order                   lab_job_order[]   @relation(map: "con_fk_lab_job_order_pathway_id")
 
   @@unique([id, parent_id, pathway_instance_id], map: "con_uk_pathway_id_n_parent_id_n_instance_id")
   @@index([selected], map: "idx_pathway_selected")
@@ -356,41 +311,37 @@ model pathway {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model product_module {
-  id                                     Int                     @id(map: "con_pk_product_module_id") @default(autoincrement())
-  name                                   String                  @unique(map: "con_uk_product_module_name") @db.VarChar(255)
-  description                            String?
-  is_active                              Boolean                 @default(true)
-  created_at                             DateTime                @db.Timestamptz(6)
-  created_by                             Int
-  updated_at                             DateTime?               @db.Timestamptz(6)
-  updated_by                             Int?
-  org_product_module                     org_product_module[]
-
-  // users_product_module_created_byTousers users                   @relation("product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_created_by")
-  userWhoCreated                         users                   @relation("product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_created_by")
-
-  // users_product_module_updated_byTousers users?                  @relation("product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_updated_by")
-  userWhoUpdated                         users?                  @relation("product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_updated_by")
-
-  product_module_action                  product_module_action[]
+  id                    Int                     @id(map: "con_pk_product_module_id") @default(autoincrement())
+  name                  String                  @unique(map: "con_uk_product_module_name") @db.VarChar(255)
+  description           String?
+  is_active             Boolean                 @default(true)
+  created_at            DateTime                @db.Timestamptz(6)
+  created_by            Int
+  updated_at            DateTime?               @db.Timestamptz(6)
+  updated_by            Int?
+  org_product_module    org_product_module[]
+  userWhoCreated        users                   @relation("product_module_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_created_by")
+  userWhoUpdated        users?                  @relation("product_module_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_updated_by")
+  product_module_action product_module_action[]
 
   @@index([is_active], map: "idx_product_module_is_active")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model product_module_action {
-  id                                    Int                                     @id(map: "con_pk_product_module_action_id") @default(autoincrement())
-  name                                  String                                  @db.VarChar(255)
-  type                                  String                                  @db.VarChar(255)
-  product_module_id                     Int
-  route                                 String
-  created_at                            DateTime                                @db.Timestamptz(6)
-  created_by                            Int
-  updated_at                            DateTime?                               @db.Timestamptz(6)
-  updated_by                            Int?
-  users                                 users?                                  @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_actn_created_by")
-  product_module                        product_module                          @relation(fields: [product_module_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_actn_module_id")
-  product_module_action_role_permission product_module_action_role_permission[]
+  id                                            Int                                     @id(map: "con_pk_product_module_action_id") @default(autoincrement())
+  name                                          String                                  @db.VarChar(255)
+  type                                          String                                  @db.VarChar(255)
+  product_module_id                             Int
+  route                                         String
+  created_at                                    DateTime                                @db.Timestamptz(6)
+  created_by                                    Int
+  updated_at                                    DateTime?                               @db.Timestamptz(6)
+  updated_by                                    Int?
+  userWhoCreated                                users                                   @relation("product_module_action_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_actn_created_by")
+  product_module                                product_module                          @relation(fields: [product_module_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_actn_module_id")
+  userWhoUpdated                                users?                                  @relation("product_module_action_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_product_module_actn_updated_by")
+  product_module_action_role_permission         product_module_action_role_permission[]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -450,6 +401,7 @@ model reaction_detail {
   product_smiles_string                   String?
   product_molecular_weight                Decimal?                 @db.Decimal
   product_type                            String?                  @db.Char(1)
+  metadata                                Json?
   status                                  Int                      @db.SmallInt
   created_at                              DateTime                 @db.Timestamptz(6)
   created_by                              Int
@@ -457,9 +409,9 @@ model reaction_detail {
   updated_by                              Int?
   reaction_compound                       reaction_compound[]
   users_reaction_detail_created_byTousers users                    @relation("reaction_detail_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_detail_created_by")
+  pathway                                 pathway                  @relation(fields: [pathway_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_detail_pathway_id")
   reaction_template_master                reaction_template_master @relation(fields: [reaction_template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_detail_rxn_template_id")
   users_reaction_detail_updated_byTousers users?                   @relation("reaction_detail_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_detail_updated_by")
-  pathway                                 pathway                  @relation(fields: [pathway_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_reaction_detail_pathway_id")
 
   @@index([product_smiles_string], map: "idx_reaction_product_smiles", type: Gist)
   @@index([product_type], map: "idx_reaction_product_type")
@@ -561,164 +513,164 @@ model user_role {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
 model users {
-  id                                                      Int                       @id(map: "con_pk_user_id") @default(autoincrement())
-  title                                                   String?                   @db.VarChar(25)
-  first_name                                              String                    @db.VarChar(100)
-  last_name                                               String?                   @db.VarChar(100)
-  email_id                                                String                    @unique(map: "con_uk_user_email_id") @db.VarChar(100)
-  password_hash                                           String                    @db.VarChar(256)
-  timezone_id                                             Int?
-  number_datetime_format_id                               Int?
-  image_url                                               String?                   @db.VarChar(255)
-  organization_id                                         BigInt?
-  is_active                                               Boolean                   @default(true)
-  created_at                                              DateTime                  @db.Timestamptz(6)
-  created_by                                              Int?
-  updated_at                                              DateTime?                 @db.Timestamptz(6)
-  updated_by                                              Int?
-  primary_contact_id                                      Int?
-  container_container_created_byTousers                   container[]               @relation("container_created_byTousers")
-  // container_container_owner_idTousers                            container[]               @relation("container_owner_idTousers")
-  owner                                                   container[]               @relation("container_owner_idTousers")
-  container_container_updated_byTousers                   container[]               @relation("container_updated_byTousers")
-  display_format_display_format_created_byTousers         display_format[]          @relation("display_format_created_byTousers")
-  display_format_display_format_updated_byTousers         display_format[]          @relation("display_format_updated_byTousers")
-  lab_job_order_lab_job_order_created_byTousers           lab_job_order[]           @relation("lab_job_order_created_byTousers")
-  lab_job_order_lab_job_order_submitted_byTousers         lab_job_order[]           @relation("lab_job_order_submitted_byTousers")
-  lab_job_order_lab_job_order_updated_byTousers           lab_job_order[]           @relation("lab_job_order_updated_byTousers")
-  molecule_molecule_created_byTousers                     molecule[]                @relation("molecule_created_byTousers")
-  molecule_molecule_updated_byTousers                     molecule[]                @relation("molecule_updated_byTousers")
-  molecule_cart_molecule_cart_created_byTousers           molecule_cart[]           @relation("molecule_cart_created_byTousers")
-  molecule_cart_molecule_cart_updated_byTousers           molecule_cart[]           @relation("molecule_cart_updated_byTousers")
-  molecule_order_molecule_order_created_byTousers         molecule_order[]          @relation("molecule_order_created_byTousers")
-  molecule_order_molecule_order_updated_byTousers         molecule_order[]          @relation("molecule_order_updated_byTousers")
-  org_product_module_org_product_module_created_byTousers org_product_module[]      @relation("org_product_module_created_byTousers")
-  org_product_module_org_product_module_updated_byTousers org_product_module[]      @relation("org_product_module_updated_byTousers")
-  pathway_pathway_created_byTousers                       pathway[]                 @relation("pathway_created_byTousers")
-  pathway_pathway_updated_byTousers                       pathway[]                 @relation("pathway_updated_byTousers")
-  product_module_product_module_created_byTousers         product_module[]          @relation("product_module_created_byTousers")
-  product_module_product_module_updated_byTousers         product_module[]          @relation("product_module_updated_byTousers")
-  product_module_action                                   product_module_action[]
-  reaction_compound_reaction_compound_created_byTousers   reaction_compound[]       @relation("reaction_compound_created_byTousers")
-  reaction_compound_reaction_compound_updated_byTousers   reaction_compound[]       @relation("reaction_compound_updated_byTousers")
-  reaction_detail_reaction_detail_created_byTousers       reaction_detail[]         @relation("reaction_detail_created_byTousers")
-  reaction_detail_reaction_detail_updated_byTousers       reaction_detail[]         @relation("reaction_detail_updated_byTousers")
-  role_role_created_byTousers                             role[]                    @relation("role_created_byTousers")
-  role_role_updated_byTousers                             role[]                    @relation("role_updated_byTousers")
-  status_code_status_code_created_byTousers               status_code[]             @relation("status_code_created_byTousers")
-  status_code_status_code_updated_byTousers               status_code[]             @relation("status_code_updated_byTousers")
-  timezone_timezone_created_byTousers                     timezone[]                @relation("timezone_created_byTousers")
-  timezone_timezone_updated_byTousers                     timezone[]                @relation("timezone_updated_byTousers")
-  user_favorite_molecule                                 user_favorite_molecule[] @relation(map: "con_fk_user_fav_molecule_user")
-  user_role_user_role_created_byTousers                   user_role[]               @relation("user_role_created_byTousers")
-  user_role_user_role_updated_byTousers                   user_role[]               @relation("user_role_updated_byTousers")
-
-  // user_role_user_role_user_idTousers                             user_role[]               @relation("user_role_user_idTousers")
-  user_role user_role[] @relation("user_role_user_idTousers")
-
-  display_format_users_number_datetime_format_idTodisplay_format display_format? @relation("users_number_datetime_format_idTodisplay_format", fields: [number_datetime_format_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_display_format_id")
-  timezone_users_timezone_idTotimezone                           timezone?       @relation("users_timezone_idTotimezone", fields: [timezone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_timezone_id")
-
-  // container_users_organization_idTocontainer                     container?                @relation("users_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_users_org_id")
-  orgUser container? @relation("users_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_users_org_id")
-
-  primary_contact users?     @relation("usersTousers", fields: [primary_contact_id], references: [id], onDelete: Cascade, map: "con_fk_users_primary_contact_id")
-  other_users     users[]    @relation("usersTousers")
-  adme_parameter_detail_created_byTousers adme_parameter_detail[] @relation("adme_parameter_detail_created_byTousers")
-  adme_parameter_detail_updated_byTousers adme_parameter_detail[] @relation("adme_parameter_detail_updated_byTousers")
-  adme_parameter_created_byTousers adme_parameter[] @relation("adme_parameter_created_byTousers")
-  adme_parameter_updated_byTousers adme_parameter[] @relation("adme_parameter_updated_byTousers")
-  container_access_permission_created_byTousers container_access_permission[] @relation("container_access_permission_created_byTousers")
-  container_access_permission_updated_byTousers container_access_permission[] @relation("container_access_permission_updated_byTousers")
-  container_access_permission container_access_permission[] @relation("container_access_permission_user_idTousers")
+  id                                                             Int                           @id(map: "con_pk_user_id") @default(autoincrement())
+  title                                                          String?                       @db.VarChar(25)
+  first_name                                                     String                        @db.VarChar(100)
+  last_name                                                      String?                       @db.VarChar(100)
+  email_id                                                       String                        @unique(map: "con_uk_user_email_id") @db.VarChar(100)
+  password_hash                                                  String                        @db.VarChar(256)
+  timezone_id                                                    Int?
+  number_datetime_format_id                                      Int?
+  image_url                                                      String?                       @db.VarChar(255)
+  organization_id                                                BigInt?
+  primary_contact_id                                             Int?
+  is_active                                                      Boolean                       @default(true)
+  created_at                                                     DateTime                      @db.Timestamptz(6)
+  created_by                                                     Int?
+  updated_at                                                     DateTime?                     @db.Timestamptz(6)
+  updated_by                                                     Int?
+  adme_parameter_created_byTousers                               adme_parameter[]              @relation("adme_parameter_created_byTousers")
+  adme_parameter_updated_byTousers                               adme_parameter[]              @relation("adme_parameter_updated_byTousers")
+  adme_parameter_detail_created_byTousers                        adme_parameter_detail[]       @relation("adme_parameter_detail_created_byTousers")
+  adme_parameter_detail_updated_byTousers                        adme_parameter_detail[]       @relation("adme_parameter_detail_updated_byTousers")
+  ams_inventory_ams_inventory_created_byTousers                  ams_inventory[]               @relation("ams_inventory_created_byTousers")
+  ams_inventory_ams_inventory_updated_byTousers                  ams_inventory[]               @relation("ams_inventory_updated_byTousers")
   bioassay_bioassay_created_byTousers                            bioassay[]                    @relation("bioassay_created_byTousers")
   bioassay_bioassay_updated_byTousers                            bioassay[]                    @relation("bioassay_updated_byTousers")
+  container_container_created_byTousers                          container[]                   @relation("container_created_byTousers")
+  owner                                                          container[]                   @relation("container_owner_idTousers")
+  container_container_updated_byTousers                          container[]                   @relation("container_updated_byTousers")
+  container_access_permission_created_byTousers                  container_access_permission[] @relation("container_access_permission_created_byTousers")
+  container_access_permission_updated_byTousers                  container_access_permission[] @relation("container_access_permission_updated_byTousers")
+  container_access_permission                                    container_access_permission[] @relation("container_access_permission_user_idTousers")
+  display_format_display_format_created_byTousers                display_format[]              @relation("display_format_created_byTousers")
+  display_format_display_format_updated_byTousers                display_format[]              @relation("display_format_updated_byTousers")
+  lab_job_order_lab_job_order_created_byTousers                  lab_job_order[]               @relation("lab_job_order_created_byTousers")
+  lab_job_order_lab_job_order_submitted_byTousers                lab_job_order[]               @relation("lab_job_order_submitted_byTousers")
+  lab_job_order_lab_job_order_updated_byTousers                  lab_job_order[]               @relation("lab_job_order_updated_byTousers")
+  molecule_molecule_created_byTousers                            molecule[]                    @relation("molecule_created_byTousers")
+  molecule_molecule_updated_byTousers                            molecule[]                    @relation("molecule_updated_byTousers")
+  molecule_cart_molecule_cart_created_byTousers                  molecule_cart[]               @relation("molecule_cart_created_byTousers")
+  molecule_cart_molecule_cart_updated_byTousers                  molecule_cart[]               @relation("molecule_cart_updated_byTousers")
+  molecule_order_molecule_order_created_byTousers                molecule_order[]              @relation("molecule_order_created_byTousers")
+  molecule_order_molecule_order_updated_byTousers                molecule_order[]              @relation("molecule_order_updated_byTousers")
+  org_product_module_org_product_module_created_byTousers        org_product_module[]          @relation("org_product_module_created_byTousers")
+  org_product_module_org_product_module_updated_byTousers        org_product_module[]          @relation("org_product_module_updated_byTousers")
+  pathway_pathway_created_byTousers                              pathway[]                     @relation("pathway_created_byTousers")
+  pathway_pathway_updated_byTousers                              pathway[]                     @relation("pathway_updated_byTousers")
+  product_module_product_module_created_byTousers                product_module[]              @relation("product_module_created_byTousers")
+  product_module_product_module_updated_byTousers                product_module[]              @relation("product_module_updated_byTousers")
+  product_module_action_product_module_action_created_byTousers  product_module_action[]       @relation("product_module_action_created_byTousers")
+  product_module_action                                          product_module_action[]       @relation("product_module_action_updated_byTousers")
+  reaction_compound_reaction_compound_created_byTousers          reaction_compound[]           @relation("reaction_compound_created_byTousers")
+  reaction_compound_reaction_compound_updated_byTousers          reaction_compound[]           @relation("reaction_compound_updated_byTousers")
+  reaction_detail_reaction_detail_created_byTousers              reaction_detail[]             @relation("reaction_detail_created_byTousers")
+  reaction_detail_reaction_detail_updated_byTousers              reaction_detail[]             @relation("reaction_detail_updated_byTousers")
+  role_role_created_byTousers                                    role[]                        @relation("role_created_byTousers")
+  role_role_updated_byTousers                                    role[]                        @relation("role_updated_byTousers")
+  status_code_status_code_created_byTousers                      status_code[]                 @relation("status_code_created_byTousers")
+  status_code_status_code_updated_byTousers                      status_code[]                 @relation("status_code_updated_byTousers")
+  timezone_timezone_created_byTousers                            timezone[]                    @relation("timezone_created_byTousers")
+  timezone_timezone_updated_byTousers                            timezone[]                    @relation("timezone_updated_byTousers")
+  user_favorite_molecule                                         user_favorite_molecule[]
+  user_role_user_role_created_byTousers                          user_role[]                   @relation("user_role_created_byTousers")
+  user_role_user_role_updated_byTousers                          user_role[]                   @relation("user_role_updated_byTousers")
+  user_role                                                      user_role[]                   @relation("user_role_user_idTousers")
+  display_format_users_number_datetime_format_idTodisplay_format display_format?               @relation("users_number_datetime_format_idTodisplay_format", fields: [number_datetime_format_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_display_format_id")
+  timezone_users_timezone_idTotimezone                           timezone?                     @relation("users_timezone_idTotimezone", fields: [timezone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_user_timezone_id")
+  orgUser                                                        container?                    @relation("users_organization_idTocontainer", fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_users_org_id")
+  primary_contact                                                users?                        @relation("usersTousers", fields: [primary_contact_id], references: [id], onDelete: Cascade, map: "con_fk_users_primary_contact_id")
+  other_users                                                    users[]                       @relation("usersTousers")
 
-  @@index([is_active], map: "idx_user_is_active")  
+  @@index([is_active], map: "idx_user_is_active")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model adme_parameter {
-  id                                     Int                     @id(map: "con_pk_adme_parameter_id") @default(autoincrement())
-  name                                   String                  @unique(map: "con_uk_adme_parameter_name") @db.VarChar(100)
-  reference                              String                  @db.VarChar(255)
-  created_at                             DateTime                @db.Timestamptz(6)
-  created_by                             Int?
-  updated_at                             DateTime?               @db.Timestamptz(6)
-  updated_by                             Int?
-  // users_adme_parameter_created_byTousers users?                  @relation("adme_parameter_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_created_by")
-  userWhoCreated users?                  @relation("adme_parameter_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_created_by")
-  
-  // users_adme_parameter_updated_byTousers users?                  @relation("adme_parameter_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_updated_by")
-  userWhoUpdated users?                  @relation("adme_parameter_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_updated_by")
-  adme_parameter_detail                  adme_parameter_detail[]
+  id                    Int                     @id(map: "con_pk_adme_parameter_id") @default(autoincrement())
+  name                  String                  @unique(map: "con_uk_adme_parameter_name") @db.VarChar(100)
+  reference             String                  @db.VarChar(255)
+  created_at            DateTime                @db.Timestamptz(6)
+  created_by            Int?
+  updated_at            DateTime?               @db.Timestamptz(6)
+  updated_by            Int?
+  userWhoCreated        users?                  @relation("adme_parameter_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_created_by")
+  userWhoUpdated        users?                  @relation("adme_parameter_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_updated_by")
+  adme_parameter_detail adme_parameter_detail[]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model adme_parameter_detail {
-  id                                            Int            @id(map: "con_pk_adme_parameter_detail_id") @default(autoincrement())
-  adme_parameter_id                             Int
-  color_class_name                              String         @db.VarChar(50)
-  color_min_value                               Decimal        @db.Decimal
-  color_max_value                               Decimal        @db.Decimal
-  color_status                                  String         @db.VarChar(50)
-  formula_min_value                             Decimal        @db.Decimal
-  formula_max_value                             Decimal        @db.Decimal
-  formula                                       Json?
-  created_at                                    DateTime       @db.Timestamptz(6)
-  created_by                                    Int?
-  updated_at                                    DateTime?      @db.Timestamptz(6)
-  updated_by                                    Int?
-  adme_parameter                                adme_parameter @relation(fields: [adme_parameter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_adme_parameter_id")
-  // users_adme_parameter_detail_created_byTousers users?         @relation("adme_parameter_detail_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_created_by")
-  userWhoCreated users?         @relation("adme_parameter_detail_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_created_by")
-
-  // users_adme_parameter_detail_updated_byTousers users?         @relation("adme_parameter_detail_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_updated_by")
-  userWhoUpdated users?         @relation("adme_parameter_detail_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_updated_by")
+  id                Int            @id(map: "con_pk_adme_parameter_detail_id") @default(autoincrement())
+  adme_parameter_id Int
+  color_class_name  String         @db.VarChar(50)
+  color_min_value   Decimal        @db.Decimal
+  color_max_value   Decimal        @db.Decimal
+  color_status      String         @db.VarChar(50)
+  formula_min_value Decimal        @db.Decimal
+  formula_max_value Decimal        @db.Decimal
+  formula           Json
+  created_at        DateTime       @db.Timestamptz(6)
+  created_by        Int?
+  updated_at        DateTime?      @db.Timestamptz(6)
+  updated_by        Int?
+  adme_parameter    adme_parameter @relation(fields: [adme_parameter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_adme_parameter_id")
+  userWhoCreated    users?         @relation("adme_parameter_detail_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_created_by")
+  userWhoUpdated    users?         @relation("adme_parameter_detail_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_adme_parameter_detail_updated_by")
 
   @@unique([adme_parameter_id, color_class_name], map: "con_uk_adme_parameter_detail_param_id_n_color_class")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model container_access_permission {
-  id                                                  Int       @id(map: "con_pk_container_access_permission_id") @default(autoincrement())
-  container_id                                        BigInt
-  user_id                                             Int
-  access_type                                         Int       @db.SmallInt
-  created_at                                          DateTime  @db.Timestamptz(6)
-  created_by                                          Int?
-  updated_at                                          DateTime? @db.Timestamptz(6)
-  updated_by                                          Int?
-  container                                           container @relation(fields: [container_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "con_fk_container_access_permission_container_id")
-  // users_container_access_permission_created_byTousers users?    @relation("container_access_permission_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_created_by")
+  id             Int       @id(map: "con_pk_container_access_permission_id") @default(autoincrement())
+  container_id   BigInt
+  user_id        Int
+  access_type    Int       @db.SmallInt
+  created_at     DateTime  @db.Timestamptz(6)
+  created_by     Int?
+  updated_at     DateTime? @db.Timestamptz(6)
+  updated_by     Int?
+  container      container @relation(fields: [container_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "con_fk_container_access_permission_container_id")
   userWhoCreated users?    @relation("container_access_permission_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_created_by")
-
-  // users_container_access_permission_updated_byTousers users?    @relation("container_access_permission_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_updated_by") */
   userWhoUpdated users?    @relation("container_access_permission_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_updated_by")
-  
-  // users_container_access_permission_user_idTousers    users     @relation("container_access_permission_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_user_id")
-  user    users     @relation("container_access_permission_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_user_id")
+  user           users     @relation("container_access_permission_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_container_access_permission_user_id")
 
   @@unique([container_id, user_id], map: "con_uk_container_access_permission_container_id_n_user_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model bioassay {
-  id                               Int       @id(map: "con_pk_bioassay_id") @default(autoincrement())
-  name                             String    @unique(map: "con_uk_bioassay_name") @db.VarChar(150)
-  description                      String
-  target                           String?   @db.VarChar(150)
-  clinical_indication              String?   @db.VarChar(150)
-  supplier_name                    String    @db.VarChar(100)
-  stock_keeping_unit               String?   @db.VarChar(255)
-  user_fields                      Json
-  created_at                       DateTime  @db.Timestamptz(6)
-  created_by                       Int?
-  updated_at                       DateTime? @db.Timestamptz(6)
-  updated_by                       Int?
-  // users_bioassay_created_byTousers users?    @relation("bioassay_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_created_by")
-  userWhoCreated users?    @relation("bioassay_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_created_by")
-  
-  // users_bioassay_updated_byTousers users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
-  userWhoUpdated users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
+  id                  Int       @id(map: "con_pk_bioassay_id") @default(autoincrement())
+  name                String    @unique(map: "con_uk_bioassay_name") @db.VarChar(150)
+  description         String
+  clinical_indication String    @db.VarChar(255)
+  target              String    @db.VarChar(255)
+  supplier_name       String    @db.VarChar(100)
+  stock_keeping_unit  String?   @db.VarChar(255)
+  user_fields         Json
+  created_at          DateTime  @db.Timestamptz(6)
+  created_by          Int?
+  updated_at          DateTime? @db.Timestamptz(6)
+  updated_by          Int?
+  userWhoCreated      users?    @relation("bioassay_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_created_by")
+  userWhoUpdated      users?    @relation("bioassay_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_bioassay_updated_by")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ams_inventory {
+  id                                    BigInt    @id(map: "con_pk_ams_inventory_id") @default(autoincrement())
+  version                               BigInt
+  structure_id                          BigInt
+  smiles_string                         String
+  inchi_key                             String    @db.VarChar(27)
+  supplier_aid                          String    @db.VarChar(100)
+  created_at                            DateTime  @db.Timestamptz(6)
+  created_by                            Int?
+  updated_at                            DateTime? @db.Timestamptz(6)
+  updated_by                            Int?
+  users_ams_inventory_created_byTousers users?    @relation("ams_inventory_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_ams_inventory_created_by")
+  users_ams_inventory_updated_byTousers users?    @relation("ams_inventory_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "con_fk_ams_inventory_updated_by")
+
+  @@index([inchi_key], map: "idx_ams_inventory_inchi_key")
 }

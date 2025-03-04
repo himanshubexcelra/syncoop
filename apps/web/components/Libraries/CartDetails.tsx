@@ -40,7 +40,6 @@ import { Messages } from "@/utils/message";
 import { DELAY, LabJobStatus, ReactionStatus } from "@/utils/constants";
 import MoleculeStructureActions from "@/ui/MoleculeStructureActions";
 import Accordion, { Item } from 'devextreme-react/accordion';
-import { Switch } from "devextreme-react";
 import Link from "next/link";
 
 interface CartDetailsProps {
@@ -71,7 +70,6 @@ export default function CartDetails({
     source_molecule_name: ''
   });
   const [isSubmitOrderLoading, setSubmitOrderLoading] = useState(false);
-  const [showAccordion, setShowAccordion] = useState(true);
   const popupRef = useRef<HTMLDivElement>(null);
   const [analysisState, setAnalysisState] = useState<CartDetail[]>([]);
   const [labJobState, setLabJobState] = useState<CartDetail[]>([]);
@@ -105,7 +103,7 @@ export default function CartDetails({
   }
 
   const setExpandValue = (e: any) => {
-    if (e.columnIndex === 4) {
+    if (e.columnIndex === 5) {
       if (e.data?.id && !expanded.includes(e.data.id)) {
         setExpanded((prev) => [...prev, e.data.id]);
       }
@@ -114,10 +112,9 @@ export default function CartDetails({
 
   const columns: ColumnConfig[] = [
     {
-      dataField: 'metadata',
+      dataField: 'metadata.type',
       title: 'Type',
-      width: 50,
-      allowHeaderFiltering: false,
+      width: 65,
       allowSorting: false,
       customRender: (data) => {
         const isCustomReaction = isCustomReactionCheck(data.metadata);
@@ -138,6 +135,7 @@ export default function CartDetails({
       dataField: "molecule_id",
       title: "Molecule ID",
       width: 120,
+      dataType: 'numeric',
       customRender: (data) => (
         <span className="flex justify-center">
           {data.molecule_id}
@@ -169,6 +167,7 @@ export default function CartDetails({
       width: 120,
       alignment: 'center',
       allowHeaderFiltering: false,
+      dataType: 'numeric',
       customRender: (data) => Number(data.molecular_weight).toFixed(2)
     },
     {
@@ -423,11 +422,14 @@ export default function CartDetails({
     setConfirm(val);
   };
 
-  const handleToggleChange = () => {
-    setShowAccordion(!showAccordion);
-  };
-
   const data = useMemo(() => mapCartData(cartData, userData.id), [cartData, userData.id]);
+
+  // Determine visibility and default expanded state
+  const hasAnalysis = analysisState.length > 0;
+  const hasLabJob = labJobState.length > 0;
+  const showBoth = hasAnalysis && hasLabJob;
+  const showAnalysisOnly = hasAnalysis && !hasLabJob;
+  const showLabJobOnly = hasLabJob && !hasAnalysis;
 
   return (
     <>
@@ -437,6 +439,7 @@ export default function CartDetails({
             <div>
               <div className="popup-content">
                 <div className="popup-grid max-h-[550px]"
+                  style={!containsProjects && hasLabJob ? { overflowY: 'scroll' } : undefined}
                   onClick={closeMagnifyPopup}>
                   {containsProjects ? (
                     <div>
@@ -455,22 +458,22 @@ export default function CartDetails({
                         loader={false}
                       />
                     </div>
-                  ) : (
+                  ) :
                     <div>
-                      {/* Analysis Section */}
-                      {analysisState?.length > 0 &&
-                        <Accordion collapsible multiple={true}>
-                          <Item titleRender={() => "Molecules for Analysis"}>
+                      <Accordion
+                        collapsible={true}
+                        multiple={true}
+                      >
+                        {/* Analysis Section */}
+                        {(showBoth || showAnalysisOnly) && (
+                          <Item
+                            titleRender={() => `Molecules for Analysis (${analysisState.length})`}
+                          >
                             <div>
-                              <div className="flex flex-row items-center justify-end">
-                                <label className="mr-3 font-lato font-bold 
-                                  text-[12.69px] text-greyText">Show Products
-                                </label>
-                                <Switch value={showAccordion} onValueChanged={handleToggleChange} />
-                              </div>
                               <CustomDataGrid
                                 columns={columns}
-                                maxHeight="550px"
+                                height='auto'
+                                maxHeight='378px'
                                 data={analysisState}
                                 groupingColumn={rowGroupName()}
                                 onCellClick={setExpandValue}
@@ -484,22 +487,18 @@ export default function CartDetails({
                               />
                             </div>
                           </Item>
-                        </Accordion>}
+                        )}
 
-                      {/* Lab Job Section */}
-                      {labJobState?.length > 0 &&
-                        <Accordion collapsible multiple={true}>
-                          <Item titleRender={() => "Synthesis Lab Job"}>
+                        {/* Lab Job Section */}
+                        {(showBoth || showLabJobOnly) && (
+                          <Item
+                            titleRender={() => `Synthesis Lab Job (${labJobState.length})`}
+                          >
                             <div>
-                              <div className="flex flex-row items-center justify-end">
-                                <label className="mr-3 font-lato font-bold 
-                                  text-[12.69px] text-greyText">Show Products
-                                </label>
-                                <Switch value={showAccordion} onValueChanged={handleToggleChange} />
-                              </div>
                               <CustomDataGrid
                                 columns={columns}
-                                maxHeight="550px"
+                                height='auto'
+                                maxHeight='378px'
                                 data={labJobState}
                                 onCellClick={setExpandValue}
                                 groupingColumn={rowGroupName()}
@@ -514,9 +513,10 @@ export default function CartDetails({
                               />
                             </div>
                           </Item>
-                        </Accordion>}
+                        )}
+                      </Accordion>
                     </div>
-                  )
+
                   }
                 </div>
 

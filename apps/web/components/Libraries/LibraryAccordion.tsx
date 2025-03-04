@@ -70,6 +70,7 @@ type LibraryAccordionType = {
     organizationId: number,
     setReset: any,
     selectType?: (val: string) => void,
+    clickOrgId?: string,
     onSelectedIndexChange: () => void,
 }
 
@@ -98,6 +99,7 @@ export default function LibraryAccordion({
     setReset,
     selectType,
     onSelectedIndexChange,
+    clickOrgId,
 }: LibraryAccordionType) {
     const router = useRouter();
     const [createPopupVisible, setCreatePopupVisibility] = useState(false);
@@ -347,7 +349,9 @@ export default function LibraryAccordion({
                                 }}
                                 onClick={() => {
                                     setLibraryId(0)
-                                    const url = `/projects/${projectId}`
+                                    const url = clickOrgId
+                                        ? `/organization/${organizationId}/projects/${projectId}`
+                                        : `/projects/${projectId}`
                                     router.replace(url);
                                     fetchLibraries()
                                 }}
@@ -660,9 +664,10 @@ export default function LibraryAccordion({
                                 if (isDirty) {
                                     setShowPopup(true);
                                 } else {
-                                    const url =
-                                        `/projects/${projectId}` +
-                                        `?library_id=${item.id}`;
+                                    const url = clickOrgId
+                                        ? `/organization/${organizationId}`
+                                        + `/projects/${projectId}?library_id=${item.id}`
+                                        : `/projects/${projectId}?library_id=${item.id}`;
                                     router.replace(url);
                                     setLibraryId(item.id)
                                 }
@@ -811,9 +816,10 @@ export default function LibraryAccordion({
                                     onClick={() => {
                                         setExpanded(false);
                                         setLibraryId(item.id);
-                                        const url =
-                                            `/projects/${projectId}` +
-                                            `?library_id=${item.id}`;
+                                        const url = clickOrgId
+                                            ? `/organization/${organizationId}`
+                                            + `/projects/${projectId}?library_id=${item.id}`
+                                            : `/projects/${projectId}?library_id=${item.id}`;
                                         router.replace(url);
                                         /* getLibraryData(item); */
                                     }}

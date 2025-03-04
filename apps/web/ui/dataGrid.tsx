@@ -28,6 +28,7 @@ import './dataGrid.css';
 import { ToolbarItem } from 'devextreme/ui/file_manager';
 import Image from 'next/image';
 import { SelectBoxTypes } from 'devextreme-react/cjs/select-box';
+import { sortStringsConsideringNumeric } from '@/utils/helpers';
 
 interface ToolbarButtonConfig {
     text: string;
@@ -368,25 +369,36 @@ const CustomDataGrid = ({
                     alignment="center"
                 />}
 
-                {columns.map((column) => (
-                    <Column
-                        key={String(column.dataField)}
-                        allowEditing={column.editingEnabled || false}
-                        dataField={String(column.dataField)}
-                        visible={column.visible !== undefined ? column.visible : true}
-                        headerCellRender={column.headerCellRenderer}
-                        caption={typeof column.title === 'string' ? column.title : undefined}
-                        width={column.width ? String(column.width) : undefined}
-                        allowHeaderFiltering={column?.allowHeaderFiltering}
-                        allowSorting={column?.allowSorting}
-                        alignment={column.alignment !== undefined ? column.alignment : "left"}
-                        cellRender={column.customRender ? ({ data }) =>
-                            column.customRender!(data) : undefined}
-                        headerFilter={column.headerFilter}
-                        cssClass={column.cssClass}
-                        defaultSortOrder={column.defaultSortOrder}
-                    />
-                ))}
+                {columns.map((column) => {
+                    const props = {
+                        allowEditing: column.editingEnabled || false,
+                        dataField: String(column.dataField),
+                        visible: (column.visible !== undefined ? column.visible : true),
+                        headerCellRender: column.headerCellRenderer,
+                        caption: (typeof column.title === 'string' ? column.title : undefined),
+                        width: (column.width ? String(column.width) : undefined),
+                        allowHeaderFiltering: column?.allowHeaderFiltering,
+                        allowSorting: column?.allowSorting,
+                        alignment: (column.alignment !== undefined ? column.alignment : "left"),
+                        cellRender: (column.customRender ? ({ data }: any) =>
+                            column.customRender!(data) : undefined),
+                        headerFilter: column.headerFilter,
+                        cssClass: column.cssClass,
+                        defaultSortOrder: column.defaultSortOrder,
+                        ...(() => {
+                            if (column.dataType === 'numeric') {
+                                return {
+                                    sortingMethod: sortStringsConsideringNumeric
+                                }
+                            }
+                            return {};
+                        })()
+                    };
+                    return (<Column
+                        key={column.dataField}
+                        {...props}
+                    />)
+                })}
 
                 <Editing mode="cell" allowUpdating={true}></Editing>
 

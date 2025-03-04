@@ -45,7 +45,7 @@ const ReactionDetails = ({
         useState<ReactionDetailType | []>(data);
     const [resetReactionData, setResetReactionData] =
         useState<ReactionDetailType | []>(data);
-       
+
     const [selectedSolvent, setSelectedSolvent] =
         useState<string>((data as ReactionDetailType)?.solvent || '');
     const [selectedTemperature, setSelectedTemperature] = useState<number>
@@ -236,25 +236,31 @@ const ReactionDetails = ({
     };
 
     // Render compound name (dropdown or span)
-    const renderCompoundName = (data: ReactionCompoundType) =>
-        data.compound_type === COMPOUND_TYPE_A ? (
-            <select
-                disabled={readOnly}
-                className={styles.selectBox}
-                defaultValue={data.compound_name}
-                onChange={(e) => handleRowChange(data.id, 'compound_name', e.target.value)}
-            >
-                {data?.roleList?.map((agent: string, index: number) => (
-                    <option key={index} value={agent}>
-                        {capitalizeFirstLetter(agent)}
-                    </option>
-                ))}
-            </select>
-        ) : (
+    const renderCompoundName = (data: ReactionCompoundType) => {
+        if (data.compound_type === COMPOUND_TYPE_A) {
+            return data?.roleList?.length ? (
+                <select
+                    disabled={readOnly}
+                    className={styles.selectBox}
+                    value={data.compound_name}
+                    onChange={(e) => handleRowChange(data.id, 'compound_name', e.target.value)}
+                >
+                    {data.roleList?.map((agent: string, index: number) => (
+                        <option key={index} value={agent}>
+                            {capitalizeFirstLetter(agent)}
+                        </option>
+                    ))}
+                </select>
+            ) : (
+                "NA"
+            );
+        }
+        return (
             <span title={capitalizeFirstLetter(data.compound_name)}>
                 {capitalizeFirstLetter(data.compound_name)}
             </span>
         );
+    };
 
     // Custom render for molar_ratio
     const renderMolarRatioInput = useCallback(
@@ -294,6 +300,7 @@ const ReactionDetails = ({
         {
             dataField: 'molar_ratio',
             title: 'Ratio',
+            dataType: 'numeric',
             customRender: renderMolarRatioInput,
         },
         {
@@ -549,16 +556,19 @@ const ReactionDetails = ({
                                     <label className={styles.selectLabel}>Solvent</label>
                                     <select
                                         disabled={readOnly}
-                                        className={`${styles.selectBox} 
-                                            ${styles.moleculeSelect}`}
+                                        className={`${styles.selectBox} ${styles.moleculeSelect}`}
                                         value={selectedSolvent}
                                         onChange={handleSolventChange}
                                     >
-                                        {solventList?.map((solvent: string, index: number) => (
-                                            <option key={index} value={solvent}>
-                                                {capitalizeFirstLetter(solvent)}
-                                            </option>
-                                        ))}
+                                        {solventList?.length ? (
+                                            solventList.map((solvent: string, index: number) => (
+                                                <option key={index} value={solvent}>
+                                                    {capitalizeFirstLetter(solvent)}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="" disabled>NA</option>
+                                        )}
                                     </select>
                                 </div>
                                 <div className="flex flex-col gap-1 flex-1">

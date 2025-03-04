@@ -32,7 +32,8 @@ export default async function OrgProjectDetail({ params }: OrgProjectDetailProps
                 userData={userData}
                 actionsEnabled={actionsEnabled}
                 organizationId={organizationId}
-                projectId={projectId} />
+                projectId={projectId}
+            />
         </Layout>
     );
 }

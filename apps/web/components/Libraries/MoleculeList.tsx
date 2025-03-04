@@ -258,6 +258,7 @@ export default function MoleculeList({
             width: 140,
             defaultSortOrder: "desc",
             allowSorting: true,
+            dataType: 'numeric',
             customRender: (data) => {
                 return isCustomReaction ? (
                     <button
@@ -284,6 +285,7 @@ export default function MoleculeList({
             alignment: "center",
             allowHeaderFiltering: false,
             cssClass: 'moleculeStatus',
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.molecular_weight) {
                     const key = 'molecular_weight';
@@ -334,6 +336,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.reaction_data) {
                     const key = 'yield';
@@ -440,6 +443,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'Caco2_Papp';
@@ -478,6 +482,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'CLint_Human';
@@ -515,6 +520,7 @@ export default function MoleculeList({
             cssClass: 'moleculeStatus',
             allowHeaderFiltering: false,
             allowSorting: true,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'CLint_Rat';
@@ -553,6 +559,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'CLint_Mouse';
@@ -591,6 +598,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'Fub_Human';
@@ -629,6 +637,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'Fub_Rat';
@@ -667,6 +676,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'Fub_Mouse';
@@ -705,6 +715,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'HepG2_IC50';
@@ -743,6 +754,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'hERG_Ki';
@@ -781,6 +793,7 @@ export default function MoleculeList({
             allowHeaderFiltering: false,
             allowSorting: true,
             visible: !expanded,
+            dataType: 'numeric',
             customRender: (data) => {
                 if (data.adme_data) {
                     const key = 'Solubility';
@@ -835,7 +848,7 @@ export default function MoleculeList({
                 if (other_container?.length) {
                     setGroupingEnabled(other_container?.length > 1);
                 } else {
-                    setGroupingEnabled(true);
+                    setGroupingEnabled(false);
                 }
             };
 

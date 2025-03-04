@@ -55,6 +55,9 @@ const mockUserData: UserData = {
     first_name: '',
     last_name: '',
     is_active: true,
+    _count: {
+        owner: 0
+    }
 };
 
 const actionsEnabledMock = ['view_molecule_order', 'generate_pathway', 'edit_reactions',
@@ -365,7 +368,7 @@ describe('MoleculeOrderPage Component', () => {
                 columns={[
                     { dataField: "name", title: "Name" },
                     { dataField: "type", title: "Type" },
-                    { dataField: "weight", title: "Weight" },
+                    { dataField: "weight", title: "Weight", dataType: 'numeric' },
                     { dataField: "density", title: "Density" },
                     { dataField: "formula", title: "Formula" },
                 ]}

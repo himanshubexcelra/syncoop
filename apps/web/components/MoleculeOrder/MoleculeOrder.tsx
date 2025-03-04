@@ -27,6 +27,7 @@ import {
   ResetState,
   FormState,
   AmsInventoryItem,
+  GeneratePathwayType,
 } from '@/lib/definition';
 import Image from 'next/image';
 import {
@@ -46,7 +47,7 @@ import {
 import {
   getMoleculesOrder, saveReactionPathway,
   getReactionPathway, updateReaction,
-  searchInventory
+  searchInventory,
 } from '@/components/MoleculeOrder/service';
 import { Messages } from '@/utils/message';
 import toast from 'react-hot-toast';
@@ -58,6 +59,7 @@ import {
   getADMEColor,
   getAverage,
   getStatusObject,
+  groupOrders,
   isAdmin,
   isCustomReactionCheck,
   isLibraryManger,
@@ -67,7 +69,7 @@ import {
   isSystemAdmin,
   popupPositionValue,
   randomValue,
-  setPath
+  setPath,
 } from '@/utils/helpers';
 import './MoleculeOrder.css';
 import Breadcrumb from '../Breadcrumbs/BreadCrumbs';
@@ -75,6 +77,7 @@ import CustomTooltip from '@/ui/CustomTooltip';
 import MoleculeStructureActions from '@/ui/MoleculeStructureActions';
 import {
   addMoleculeToCart,
+  generatePathway,
   updateMoleculeStatus,
 } from '@/components/Libraries/service'
 import PathwayImage from '../PathwayImage/PathwayImage';
@@ -191,7 +194,7 @@ export default function MoleculeOrderPage({
   const [hideOpen, setHideOpen] = useState(false);
   const [clickedMolecule, setClickedMolecule] = useState(-1);
   const [isCustomReaction, setCustomReaction] = useState(false);
-  // const [pathwayKeys, setPathwayKeys] = useState<string[]>([]);
+  const [pathwayKeys, setPathwayKeys] = useState<string[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -200,6 +203,7 @@ export default function MoleculeOrderPage({
       setPopupWidth(width);
     }
   }, []);
+
 
   useEffect(() => {
     fetchMoleculeOrders();
@@ -336,6 +340,7 @@ export default function MoleculeOrderPage({
       width: 150,
       alignment: 'center',
       defaultSortOrder: "desc",
+      dataType: 'numeric',
       customRender: (data) => {
         /* const pathwaysCheck = ((data?.pathway_id !== null &&
           (data?.molecule_status === MoleculeStatusLabel.InProgress ||
@@ -364,6 +369,7 @@ export default function MoleculeOrderPage({
       allowSorting: true,
       alignment: 'center',
       cssClass: 'moleculeStatus',
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.molecular_weight) {
           const key = 'molecular_weight';
@@ -413,6 +419,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.reaction_data) {
           const key = 'yield';
@@ -516,6 +523,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'Caco2_Papp';
@@ -552,6 +560,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'CLint_Human';
@@ -588,6 +597,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'CLint_Rat';
@@ -624,6 +634,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'CLint_Mouse';
@@ -660,6 +671,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'Fub_Human';
@@ -696,6 +708,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'Fub_Rat';
@@ -732,6 +745,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'Fub_Mouse';
@@ -768,6 +782,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'HepG2_IC50';
@@ -804,6 +819,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'hERG_Ki';
@@ -840,6 +856,7 @@ export default function MoleculeOrderPage({
       cssClass: 'moleculeStatus',
       allowHeaderFiltering: false,
       allowSorting: true,
+      dataType: 'numeric',
       customRender: (data) => {
         if (data.adme_data) {
           const key = 'Solubility';
@@ -894,84 +911,84 @@ export default function MoleculeOrderPage({
   //   };
   // }, []);
 
-  // useEffect(() => {
-  //   if (pathwayKeys.length === 0) return;
+  useEffect(() => {
+    if (pathwayKeys.length === 0) return;
 
-  //   const headers = {
-  //     'accept': 'application/json',
-  //     'Content-Type': 'application/json'
-  //   }
-  //   const queryParams = new URLSearchParams(headers).toString();
-  //   // const socket = new WebSocket(
-  //   //   `${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/?${queryParams}`);
+    const headers = {
+      'accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+    const queryParams = new URLSearchParams(headers).toString();
+    // const socket = new WebSocket(
+    //   `${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/?${queryParams}`);
 
-  //   // New Socket URL  
-  //   // const socket = new WebSocket(
-  //   //   `wss://ia5cg5jeeb.execute-api.us-east-1.amazonaws.com/Dev/?${queryParams}`); 
-  //   const socket = new WebSocket(
-  //     `${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/?${queryParams}`);
-  //   socket.onopen = () => {
-  //     console.log('Onopen socket');
+    // New Socket URL  
+    // const socket = new WebSocket(
+    //   `wss://ia5cg5jeeb.execute-api.us-east-1.amazonaws.com/Dev/?${queryParams}`); 
+    const socket = new WebSocket(
+      `${process.env.NEXT_PUBLIC_WEB_SOCKET_URL}/?${queryParams}`);
+    socket.onopen = () => {
+      console.log('Onopen socket');
 
-  //     pathwayKeys.forEach(key => {
-  //       socket.send(JSON.stringify({ key })); // Send each key one at a time
-  //     });
-  //   };
+      pathwayKeys.forEach(key => {
+        socket.send(JSON.stringify({ key })); // Send each key one at a time
+      });
+    };
 
-  //   socket.onmessage = async (event) => {
-  //     console.log('onmessage socket');
+    socket.onmessage = async (event) => {
+      console.log('onmessage socket');
 
-  //     if (event.data && typeof event.data === "string") {
-  //       const parsedData = JSON.parse(event.data);
-  //       console.log(parsedData, "parsedDataparsedData");
+      if (event.data && typeof event.data === "string") {
+        const parsedData = JSON.parse(event.data);
+        console.log(parsedData, "parsedDataparsedData");
 
-  //       const message = parsedData.message;
-  //       if (typeof message === "string" && message !== "Forbidden") {
-  //         const parsedMessage = JSON.parse(message);
-  //         if (parsedMessage.status == true) {
-  //           setSelectedRows([]);
-  //           await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
-  //           setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
-  //           // extractJsonData(PathwayData, moleculeData);
-  //           setMoleculeData([]);
-  //         } else {
-  //           setSelectedRows([]);
-  //           setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
-  //           await updateMoleculeStatus
-  //             (moleculeData, MoleculeStatusCode.Failed, userData.id);
-  //         }
-  //       }
-  //       // since we use mock data this will be needed later
+        const message = parsedData.message;
+        if (typeof message === "string" && message !== "Forbidden") {
+          const parsedMessage = JSON.parse(message);
+          if (parsedMessage.status == true) {
+            setSelectedRows([]);
+            await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
+            setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
+            // extractJsonData(PathwayData, moleculeData);
+            setMoleculeData([]);
+          } else {
+            setSelectedRows([]);
+            setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
+            await updateMoleculeStatus
+              (moleculeData, MoleculeStatusCode.Failed, userData.id);
+          }
+        }
+        // since we use mock data this will be needed later
 
-  //       //   const foundMolecule = moleculeData.find((molecule: MoleculeOrder) =>
-  //       //     molecule.molecule_id === parsedMessage.molecule_id);
-  //       //   if (foundMolecule && parsedMessage.status == true) {
-  //       //     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
-  //       //     setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
-  //       //     const currentSelectedRows = selectedRows.filter(key =>
-  //       //       parsedMessage.molecule_id == key);
-  //       //     setSelectedRows(currentSelectedRows);
-  //       //     // extractJsonData(PathwayData, [foundMolecule]);
-  //       //     setMoleculeData(moleculeData.filter(molecule =>
-  //       //       foundMolecule.molecule_id == molecule.molecule_id));
-  //       //   } else if (moleculeData.includes(parsedMessage.molecule_id) &&
-  //       //     parsedMessage.status == false) {
-  //       //     setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
-  //       //     await updateMoleculeStatus
-  //       // (moleculeData, MoleculeStatusCode.Failed, userData.id);
-  //       //   }
-  //       // }
-  //     }
-  //   };
+        //   const foundMolecule = moleculeData.find((molecule: MoleculeOrder) =>
+        //     molecule.molecule_id === parsedMessage.molecule_id);
+        //   if (foundMolecule && parsedMessage.status == true) {
+        //     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.Ready, userData.id);
+        //     setMoleculeStatus(moleculeData, MoleculeStatusLabel.Ready);
+        //     const currentSelectedRows = selectedRows.filter(key =>
+        //       parsedMessage.molecule_id == key);
+        //     setSelectedRows(currentSelectedRows);
+        //     // extractJsonData(PathwayData, [foundMolecule]);
+        //     setMoleculeData(moleculeData.filter(molecule =>
+        //       foundMolecule.molecule_id == molecule.molecule_id));
+        //   } else if (moleculeData.includes(parsedMessage.molecule_id) &&
+        //     parsedMessage.status == false) {
+        //     setMoleculeStatus(moleculeData, MoleculeStatusLabel.Failed);
+        //     await updateMoleculeStatus
+        // (moleculeData, MoleculeStatusCode.Failed, userData.id);
+        //   }
+        // }
+      }
+    };
 
-  //   socket.onerror = (error) => {
-  //     console.log("WebSocket error", error);
-  //   };
+    socket.onerror = (error) => {
+      console.log("WebSocket error", error);
+    };
 
-  //   return () => {
-  //     socket.close();
-  //   };
-  // }, [pathwayKeys]);
+    return () => {
+      socket.close();
+    };
+  }, [pathwayKeys]);
 
   const [orderColumns, setMoleculeOrderColumns] = useState(columns);
 
@@ -1157,7 +1174,6 @@ export default function MoleculeOrderPage({
       setLoader(false);
     }
   }
-
   const handleStructureZoom = (event: any, data: any) => {
     const isCustomReaction = isCustomReactionCheck(data.projectMetadata);
     if (isCustomReaction) {
@@ -1236,37 +1252,7 @@ export default function MoleculeOrderPage({
     setMoleculeOrderData(newMolecules);
   }
 
-  // const groupOrders = (data: MoleculeOrder[]) => {
-  //   const groupedData: any = {};
-
-  //   data.forEach(item => {
-  //     const orderId = item.order_id;
-
-  //     if (!groupedData[orderId]) {
-  //       groupedData[orderId] = {
-  //         orderId: orderId,
-  //       };
-  //     }
-  //     const isCustomReaction = isCustomReactionCheck(item.projectMetadata);
-  //     groupedData[orderId].reactions = [];
-  //     groupedData[orderId].molecules = [];
-  //     if (isCustomReaction) {
-  //       groupedData[orderId].reactions.push({
-  //         id: `${item.molecule_id}`,
-  //         smile: item.smiles_string
-  //       });
-  //     }
-  //     else {
-  //       groupedData[orderId].molecules.push({
-  //         id: `${item.molecule_id}`,
-  //         smile: item.smiles_string
-  //       });
-  //     }
-  //   });
-  //   return Object.values(groupedData);
-  // }
-
-  const generateReactionPathway = async () => {
+  const generateReactionPathwayWithSocket = async () => {
     setSendForSynthesisEnabled(true);
     setLoader(true);
     const toastId = toast(Messages.sentForSynthesis(moleculeData.length), {
@@ -1277,95 +1263,61 @@ export default function MoleculeOrderPage({
     });
     await delay(DELAY);
     toast.remove(toastId);
+    const orderedData: any = groupOrders(moleculeData)
+    const formData: GeneratePathwayType = {
+      submittedBy: userData.id,
+      submittedAt: new Date().toISOString(),
+      submittedMolecules: orderedData
+    };
+    console.log(formData, "formData");
+    const response = await generatePathway(formData);
+    console.log(response, "RESPONSE")
+    if (response.status === 200) {
+      setMoleculeStatus(moleculeData, MoleculeStatusLabel.InRetroQueue);
+      setToIntroQueue(moleculeData);
+      await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
+      const messageIds: string[] = [...pathwayKeys];
+      messageIds.push(response.error.message_id);
+      setPathwayKeys(messageIds);
+    }
+    else {
+      const toastId = toast.error('error in synthesis');
+      await delay(DELAY);
+      toast.remove(toastId);
+    }
+  }
+
+  const generateReactionPathwayWithMock = async () => {
+    setSendForSynthesisEnabled(true);
+    setLoader(true);
+    const toastId = toast(Messages.sentForSynthesis(moleculeData.length), {
+      icon: 'ℹ️',
+      style: {
+        background: '#FFC832',
+      }
+    });
+    await delay(DELAY);
+    toast.remove(toastId);
+
     setMoleculeStatus(moleculeData, MoleculeStatusLabel.InRetroQueue);
     setToIntroQueue(moleculeData);
     await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
     setSelectedRows([]);
-    extractJsonData({
-      molecules: moleculeData, id: userData.id, setLoader, setMoleculeStatus
-    });
+      extractJsonData({
+        molecules: moleculeData, id: userData.id, setLoader, setMoleculeStatus
+      });
     setMoleculeData([]);
     setDisableAnalysis(false);
-    // New API Generate Pathway Payload
-    // const orderedData: any = groupOrders(moleculeData)
-    //needed for api
-    // const groupedOrder = moleculeData.reduce((
-    //   acc: Map<number, MoleculeOrder[]>, molecule: MoleculeOrder) => {
-    //   const key = molecule.order_id; // Use the appropriate key for grouping
-    //   if (!acc.has(key)) {
-    //     acc.set(key, []);
-    //   }
-    //   acc.get(key)!.push(molecule);
-    //   return acc;
-    // }, new Map<number, MoleculeOrder[]>());
-
-    // const formData: GeneratePathwayType = {
-    //   submittedBy: userData.id,
-    //   submittedAt: new Date().toISOString(),
-    //   submittedMolecules: orderedData
-    // };
-    // console.log(formData, "formData");
-    // const response = await generatePathway(formData);
-    // console.log(response, "RESPONSE")
-    // if (response.status === 200) {
-    //   setMoleculeStatus(moleculeData, MoleculeStatusLabel.InRetroQueue);
-    //   setToIntroQueue(moleculeData);
-    //   await updateMoleculeStatus(moleculeData, MoleculeStatusCode.InRetroQueue, userData.id);
-    //   const messageIds: string[] = [...pathwayKeys];
-    //   messageIds.push(response.error.message_id);
-    //   setPathwayKeys(messageIds);
-    // }
-    // else {
-    //   const toastId = toast.error('error in synthesis');
-    //   await delay(DELAY);
-    //   toast.remove(toastId);
-    // }
   }
 
-  /* const onEditorPreparing = useCallback((e: EditorPreparingEventEx<MoleculeOrder, number>) => {
-    const dataGrid = e.component;
-    if (e.type !== 'selection') return;
-    if (e.parentType === 'dataRow' && e.row &&
-      !isSelectable.includes(e.row.data.molecule_status as MoleculeStatusLabel))
-      e.editorOptions.disabled = true;
-    if (e.parentType === "headerRow") {
-      e.editorOptions.onInitialized = (e: ValueChangedEvent) => {
-        if (e.component)
-          selectionRef.current.selectAllCheckBox = e.component;
-      };
-      e.editorOptions.value = isSelectAll(dataGrid);
-      e.editorOptions.onValueChanged = (e: ValueChangedEvent) => {
-        if (!e.event) {
-          if (e.previousValue && selectionRef.current.checkBoxUpdating)
-            e.component.option("value", e.previousValue);
-          return;
-        }
-        if (isSelectAll(dataGrid) === e.value)
-          return;
-        if (e.value) {
-          dataGrid.selectAll();
-        } else {
-          dataGrid.deselectAll();
-        }
-        e.event.preventDefault();
-      }
-    }
 
-  }, []) */
-
-  /* function isSelectAll(dataGrid: dxDataGrid<MoleculeOrder, number>) {
-    let items: MoleculeOrder[] = [];
-    dataGrid.getDataSource().store().load().then((data) => {
-      items = data as MoleculeOrder[];
-    });
-    const selectableItems = items.filter(val => isSelectable.includes(
-      val.molecule_status as MoleculeStatusLabel));
-    const selectedRowKeys = dataGrid.option("selectedRowKeys");
-    if (!selectedRowKeys || !selectedRowKeys.length) {
-      return false;
+  const generateReactionPathway = () => {
+    if (process.env.NEXT_PUBLIC_ENABLE_RETRO_SYNTHESIS_PROCEDURE_PREDICTION_WEBSOCKET === 'TRUE') {
+      generateReactionPathwayWithSocket();
+    } else {
+      generateReactionPathwayWithMock();
     }
-    return selectedRowKeys.length >= selectableItems.length ? true : undefined;
-  } */
+  }
 
   const onSelectionUpdated = (selectedRowsKeys: number[], selectedRowsData: object[]) => {
     setSelectedRows(selectedRowsKeys);
@@ -2142,7 +2094,7 @@ export default function MoleculeOrderPage({
             }
           />
         }
-
+  
         {pathwayView &&
           <Popup
             title='Pathway Selection'

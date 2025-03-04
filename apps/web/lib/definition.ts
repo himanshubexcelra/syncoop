@@ -167,6 +167,10 @@ export interface MoleculeType {
   functional_assays: ColorSchemeFormat[],
   assays: any[],
   pathway_instance_id?: number,
+  projectMetadata?: {
+    target?: string;
+    assay?: AssayFieldList[];
+  };
 }
 
 
@@ -611,7 +615,7 @@ export interface DeleteMoleculeCart {
   project_id: number;
   moleculeName: string,
   created_by: number;
-  pathway: number;
+  status: number;
 }
 
 export interface MoleculeOrderParams {
@@ -754,6 +758,7 @@ export interface ColumnConfig {
   minWidth?: number;
   visible?: boolean;
   type?: string;
+  dataType?: string;
   alignment?: "center" | "left" | "right" | undefined,
   allowSorting?: boolean,
   allowHeaderFiltering?: boolean,

@@ -6,7 +6,6 @@ import { CartItem, UserData } from '@/lib/definition';
 import { Messages } from '@/utils/message';
 import "@testing-library/jest-dom";
 import Accordion, { Item } from "devextreme-react/accordion";
-import { Switch } from "devextreme-react";
 import CustomDataGrid from '@/ui/dataGrid';
 import { useRouter } from 'next/navigation';
 
@@ -99,7 +98,10 @@ describe('CartDetails Component', () => {
             type: ''
         },
         myRoles: [],
-        roles: [{ type: "admin" }]
+        roles: [{ type: "admin" }],
+        _count: {
+            owner: 0
+        }
     };
 
 
@@ -818,19 +820,17 @@ describe('CartDetails Component', () => {
 });
 
 describe("Accordion with Switch Component", () => {
-    const mockHandleToggleChange = jest.fn();
     const mockRowGroupName = jest.fn(() => "groupName");
     const columns = [
         { dataField: "name", headerName: "Name" },
         { dataField: "type", headerName: "Type" },
-        { dataField: "weight", headerName: "Weight" },
+        { dataField: "weight", headerName: "Weight", dataType: 'numeric' },
     ];
 
     const moleculeData = [
         { id: 1, name: "Benzene", type: "Aromatic", weight: "78.11 g/mol" },
         { id: 2, name: "Ethanol", type: "Alcohol", weight: "46.07 g/mol" },
     ];
-    const showAccordion = true;
 
     beforeEach(() => {
         render(
@@ -838,12 +838,6 @@ describe("Accordion with Switch Component", () => {
                 <Item visible={false} />
                 <Item titleRender={() => "Molecules for Analysis"}>
                     <div>
-                        <div className="flex flex-row items-center justify-end">
-                            <label className="mr-[12px] font-lato font-700 font-[13px]">
-                                Show Products
-                            </label>
-                            <Switch aria-label="switch" value={showAccordion} onValueChanged={mockHandleToggleChange} />
-                        </div>
                         <CustomDataGrid
                             columns={columns}
                             height="auto"
@@ -864,18 +858,6 @@ describe("Accordion with Switch Component", () => {
         );
     });
 
-    it("toggles Accordion Item correctly when clicked", () => {
-        const accordionTitle = screen.getByText("Molecules for Analysis");
-        expect(accordionTitle).toBeInTheDocument();
-
-        // Simulate a click to toggle the Accordion item
-        fireEvent.click(accordionTitle);
-
-        // Check if the content of the item becomes visible
-        const label = screen.getByText("Show Products");
-        expect(label).toBeInTheDocument();
-    });
-
     it("does not render the Item with visible={false}", () => {
         // DevExtreme items with `visible={false}` should not render
         expect(screen.queryByText("Hidden Item")).not.toBeInTheDocument();
@@ -887,7 +869,7 @@ describe("Accordion with Switch Component", () => {
                 columns={[
                     { dataField: "name", title: "Name" },
                     { dataField: "type", title: "Type" },
-                    { dataField: "weight", title: "Weight" },
+                    { dataField: "weight", title: "Weight", dataType: 'numeric' },
                     { dataField: "density", title: "Density" },
                     { dataField: "formula", title: "Formula" },
                 ]}

@@ -177,7 +177,7 @@ const userData: UserData = {
 
 const projectData: ProjectDataFields = {
     name: 'Test Project',
-    id: 1,    
+    id: 1,
     inherits_bioassays: true,
     container: {
         id: 1,
@@ -186,12 +186,27 @@ const projectData: ProjectDataFields = {
         is_active: true,
         orgUser: [],
         metadata: {
-            assay: []      
-        },        
+            assay: []
+        },
         inherits_bioassays: false,
         owner_id: 1,
         type: 'internal',
-        inherits_configuration: false
+        inherits_configuration: false,
+        userWhoCreated: {
+            id: 1,
+            first_name: 'Test',
+            last_name: 'User',
+            email_id: 'test.user@example.com',
+            status: 'active',
+            name: '',
+            organization: {
+                id: 1,
+                name: "string"
+            },
+            user_role: [],
+            type: ''
+        },
+        updated_at: new Date(),
     },
     user: {
         id: 1,
@@ -200,7 +215,6 @@ const projectData: ProjectDataFields = {
         email_id: 'test.user@example.com',
         status: 'active'
     },
-    target: '',
     userWhoUpdated: {
         id: 1,
         first_name: 'Test',
@@ -305,7 +319,7 @@ describe('MoleculeList Component', () => {
                     organizationId={''}
                     selectedLibraryName={''}
                     editEnabled={false}
-                />
+                    projectPermission={false} />
             </AppContext.Provider>
         );
     });
@@ -354,8 +368,7 @@ describe('MoleculeList Component', () => {
                     projectId={''}
                     organizationId={''}
                     selectedLibraryName={''}
-                    editEnabled={false}
-                />
+                    editEnabled={false} projectPermission={false} />
             </AppContext.Provider>
         );
 
@@ -546,8 +559,7 @@ describe('MoleculeList Component', () => {
                     projectId="1"
                     organizationId="1"
                     selectedLibraryName="Library 1"
-                    editEnabled={true}
-                />
+                    editEnabled={true} projectPermission={false} />
             </AppContext.Provider>
         );
 

@@ -52,7 +52,6 @@ type ElementType = {
 const PathwayImage: React.FC<PathwayImageProps> = ({
     pathwayId,
     nodes = [],
-    key,
     children,
     style = {},
     width = window.innerWidth,
@@ -159,7 +158,6 @@ const PathwayImage: React.FC<PathwayImageProps> = ({
                     width={width}
                     currentReaction={currentReaction}
                     updatedKey={updatedKey}
-                    key={key}
                     display-reaction-reference="true"
                     display-reaction-name="true"
                     display-reaction-condition="true"

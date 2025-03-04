@@ -38,7 +38,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -50,7 +50,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -62,7 +62,7 @@ export const PathwayData =
                                 "role": "amide coupling reagent",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -74,7 +74,7 @@ export const PathwayData =
                                 "role": "additive",
                                 "reactionPart": "agent",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -86,7 +86,7 @@ export const PathwayData =
                                 "role": "Base",
                                 "reactionPart": "agent",
                                 "molarRatio": 3,
-                                "dispenseTime": "2 hrs",
+                                "dispenseTime": 5,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }
@@ -117,7 +117,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -129,7 +129,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -141,7 +141,7 @@ export const PathwayData =
                                 "role": "amide coupling reagent",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -153,7 +153,7 @@ export const PathwayData =
                                 "role": "additive",
                                 "reactionPart": "agent",
                                 "molarRatio": 2,
-                                "dispenseTime": null,
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -196,7 +196,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -208,7 +208,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -220,7 +220,7 @@ export const PathwayData =
                                 "role": "amide coupling reagent",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -232,7 +232,7 @@ export const PathwayData =
                                 "role": "additive",
                                 "reactionPart": "agent",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -244,7 +244,7 @@ export const PathwayData =
                                 "role": "Base",
                                 "reactionPart": "agent",
                                 "molarRatio": 3,
-                                "dispenseTime": "2 hrs",
+                                "dispenseTime": 5,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }
@@ -282,7 +282,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -294,7 +294,7 @@ export const PathwayData =
                                 "role": "halide",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "3 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -306,7 +306,7 @@ export const PathwayData =
                                 "role": "Base",
                                 "reactionPart": "agent",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }
@@ -337,7 +337,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -349,7 +349,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -361,7 +361,7 @@ export const PathwayData =
                                 "role": "amide coupling reagent",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -373,7 +373,7 @@ export const PathwayData =
                                 "role": "additive",
                                 "reactionPart": "agent",
                                 "molarRatio": 2,
-                                "dispenseTime": null,
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -385,7 +385,7 @@ export const PathwayData =
                                 "role": "Base",
                                 "reactionPart": "agent",
                                 "molarRatio": 3,
-                                "dispenseTime": null,
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }
@@ -423,7 +423,7 @@ export const PathwayData =
                                 "role": "Alcohol",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -435,7 +435,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -447,7 +447,7 @@ export const PathwayData =
                                 "role": "ester",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }
@@ -478,7 +478,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -490,7 +490,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -502,7 +502,7 @@ export const PathwayData =
                                 "role": "amide coupling reagent",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -514,7 +514,7 @@ export const PathwayData =
                                 "role": "Base",
                                 "reactionPart": "agent",
                                 "molarRatio": 3,
-                                "dispenseTime": "2 hrs",
+                                "dispenseTime": 5,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }
@@ -545,7 +545,7 @@ export const PathwayData =
                                 "role": "Alcohol",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -557,7 +557,7 @@ export const PathwayData =
                                 "role": "alkylating agent",
                                 "reactionPart": "reactant",
                                 "molarRatio": 3,
-                                "dispenseTime": "2 hrs",
+                                "dispenseTime": 5,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -600,7 +600,7 @@ export const PathwayData =
                                 "role": "amine",
                                 "reactionPart": "reactant",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -612,7 +612,7 @@ export const PathwayData =
                                 "role": "acid",
                                 "reactionPart": "reactant",
                                 "molarRatio": 1,
-                                "dispenseTime": "1 hrs",
+                                "dispenseTime": 1,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -624,7 +624,7 @@ export const PathwayData =
                                 "role": "amide coupling reagent",
                                 "reactionPart": "agent",
                                 "molarRatio": 1.5,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 3,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -636,7 +636,7 @@ export const PathwayData =
                                 "role": "additive",
                                 "reactionPart": "agent",
                                 "molarRatio": 2,
-                                "dispenseTime": "0 hrs",
+                                "dispenseTime": 2,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             },
@@ -648,7 +648,7 @@ export const PathwayData =
                                 "role": "Base",
                                 "reactionPart": "agent",
                                 "molarRatio": 3,
-                                "dispenseTime": "2 hrs",
+                                "dispenseTime": 5,
                                 "inventoryID": null,
                                 "inventoryURL": null
                             }

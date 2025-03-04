@@ -56,7 +56,7 @@ const defaultProps: ReactionDetailsProps = {
 const mockColumns = [
     { dataField: "_id", title: "ID" },
     { dataField: "compound_name", title: "Compound Name" },
-    { dataField: "molar_ratio", title: "Molar Ratio" },
+    { dataField: "molar_ratio", title: "Molar Ratio", dataType: 'numeric' },
 ];
 
 
@@ -68,7 +68,7 @@ const mockData = [
 describe('ReactionDetails Component', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        jest.spyOn(console, 'error').mockImplementation(() => { });
     });
 
     test('renders the component without crashing', () => {
@@ -97,7 +97,7 @@ describe('ReactionDetails Component', () => {
             fireEvent.change(temperatureDropdown, { target: { value: '50' } });
             expect(defaultProps.onTemperatureChange).toHaveBeenCalledWith(50);
         });
-            });
+    });
 
     test('disables input fields when status is read-only', () => {
         render(<ReactionDetails {...defaultProps} status="Done" />);

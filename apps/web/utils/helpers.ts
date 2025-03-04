@@ -453,12 +453,12 @@ export const mapCartData = (cartData: any[], userId: number): CartDetail[] =>
 // Utility to filter cart data for analysis
 export const filterCartDataForAnalysis = (
   cartData: any[],
-): any[] => cartData.filter((item: any) => item?.molecule?.pathway?.length === 0);
+): any[] => cartData.filter((item: any) => item?.molecule?.status === MoleculeStatusCode.OrderedInCart);
 
 // Utility to filter cart data For Lab Job
 export const filterCartDataForLabJob = (
   cartData: any[],
-): any[] => cartData.filter((item: any) => item?.molecule?.pathway?.length > 0);
+): any[] => cartData.filter((item: any) => item?.molecule?.status === MoleculeStatusCode.ValidatedInCart);
 
 export const isCustomReactionCheck = (projectMetadata: any) =>
   projectMetadata.type === ChemistryType.CUSTOM_REACTION;
@@ -537,18 +537,22 @@ export const extractJsonData = async ({ molecules, id,
 
   const synthesisData: any[] = [];
   molecules.map(mol => {
-    const pathwayData = PathwayData.target.pathways.map((pathway: any) => ({
-      molecule_id: mol.molecule_id,  //data.target.targetID,
-      parent_id: 0,
-      pathway_instance_id: mol.pathway_instance_id,
-      pathway_index: pathway.pathIndex,
-      pathway_score: pathway.pathConfidence,
-      description: pathway.description,
-      selected: false,
-      created_by: id,
-      reaction_detail: prepareReaction(pathway.reactions, id)
-    }));
-    synthesisData.push(...pathwayData);
+    const isCustomReaction = isCustomReactionCheck(mol.projectMetadata);
+    if (!isCustomReaction) {
+      const pathwayData = PathwayData.target.pathways.map((pathway: any) => ({
+        molecule_id: mol.molecule_id,  //data.target.targetID,
+        parent_id: 0,
+        pathway_instance_id: mol.pathway_instance_id,
+        pathway_index: pathway.pathIndex,
+        pathway_score: pathway.pathConfidence,
+        description: pathway.description,
+        selected: false,
+        created_by: id,
+        reaction_detail: prepareReaction(pathway.reactions, id)
+      }));
+      synthesisData.push(...pathwayData);
+    }
+
   });
   try {
     setLoader(false);
@@ -684,3 +688,49 @@ export const transformMoleculeData = (inputData: any) => {
   };
 }
 
+export const groupOrders = (data: MoleculeOrder[]) => {
+  const groupedData: any = {};
+  data.forEach(item => {
+    const orderId: any = item.molecule_order_id;
+    if (!groupedData[orderId]) {
+      groupedData[orderId] = {
+        orderId: orderId,
+      };
+    }
+    const isCustomReaction = isCustomReactionCheck(item.projectMetadata);
+    groupedData[orderId].reactions = [];
+    groupedData[orderId].molecules = [];
+    if (isCustomReaction) {
+      groupedData[orderId].reactions.push({
+        id: `${item.molecule_id}`,
+        smile: item.smiles_string
+      });
+    }
+    else {
+      groupedData[orderId].molecules.push({
+        id: `${item.molecule_id}`,
+        smile: item.smiles_string
+      });
+    }
+  });
+  return Object.values(groupedData);
+}
+
+export function sortStringsConsideringNumeric(val1: string, val2: string) {
+  let value1 = Number(val1);
+  let value2 = Number(val2);
+  // Handling null values
+  if (!value1 && value2) return -1;
+  if (!value1 && !value2) return 0;
+  if (value1 && !value2) return 1;
+  // Determines whether two strings are equivalent in the current locale
+  if (value1 > value2) {
+    return 1;
+  } else if (value1 === value2) {
+    return 0;
+  } else if (value1 < value2) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
